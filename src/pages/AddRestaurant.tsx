@@ -18,6 +18,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { Json } from '@/integrations/supabase/types';
 
 // Define the form validation schema
 const formSchema = z.object({
@@ -29,6 +30,16 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+// Define the restaurant data response interface
+interface RestaurantResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  logo_url?: string | null;
+}
 
 const AddRestaurant = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -64,13 +75,16 @@ const AddRestaurant = () => {
       }
 
       if (restaurantData) {
+        // Cast the response to the correct type
+        const typedData = restaurantData as unknown as RestaurantResponse;
+        
         toast({
           title: "تم إضافة المطعم بنجاح",
           description: "يمكنك الآن إضافة بيانات الدخول للمطعم",
         });
         
         // Navigate to the credentials page with the new restaurant ID
-        navigate(`/restaurants/${restaurantData.id}/credentials`);
+        navigate(`/restaurants/${typedData.id}/credentials`);
       }
     } catch (error) {
       console.error("Error adding restaurant:", error);
