@@ -45,6 +45,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
   // Extract phone parts if initialData is provided
   const phoneParts = initialData?.phone ? parsePhoneNumber(initialData.phone) : { countryCode: '974', number: '' };
   
+  console.log("Initial data in RestaurantForm:", initialData);
   console.log("Initial phone data:", initialData?.phone, "Parsed:", phoneParts);
 
   // Initialize form
@@ -59,6 +60,23 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
       email: initialData?.email || '',
     },
   });
+
+  // Update form values when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("Setting form values from initialData:", initialData);
+      const phoneParts = parsePhoneNumber(initialData.phone);
+      
+      form.reset({
+        name: initialData.name || '',
+        manager: '', // Not used in editing for now
+        address: initialData.address || '',
+        phoneCountryCode: phoneParts.countryCode,
+        phoneNumber: phoneParts.number,
+        email: initialData.email || '',
+      });
+    }
+  }, [initialData, form]);
 
   const handleFormSubmit = async (values: RestaurantFormValues) => {
     setEmailError(null); // Reset email error on new submission
