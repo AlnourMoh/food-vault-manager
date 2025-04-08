@@ -480,6 +480,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_restaurant: {
+        Args: { p_email: string; p_password: string }
+        Returns: Json
+      }
       check_company_member_access: {
         Args: { company_member_id: string }
         Returns: boolean
@@ -514,6 +518,10 @@ export type Database = {
           p_logo_url?: string
           p_user_id?: string
         }
+        Returns: Json
+      }
+      create_restaurant_access: {
+        Args: { p_restaurant_id: string; p_email: string; p_password: string }
         Returns: Json
       }
       delete_all_branches: {
