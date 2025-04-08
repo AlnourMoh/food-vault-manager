@@ -12,7 +12,9 @@ import {
   Plus, 
   TrashIcon, 
   ArrowUp, 
-  ArrowDown 
+  ArrowDown,
+  Users,
+  BuildingIcon
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -23,7 +25,8 @@ interface MainSidebarProps {
 const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
   const location = useLocation();
   
-  const menuItems = [
+  // بيانات قوائم المشرف العام (السوبر أدمن)
+  const adminMenuItems = [
     { 
       name: 'لوحة التحكم', 
       path: '/', 
@@ -32,12 +35,16 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
     { 
       name: 'المطاعم', 
       path: '/restaurants', 
-      icon: <Box className="ml-2 h-5 w-5" /> 
+      icon: <BuildingIcon className="ml-2 h-5 w-5" /> 
     },
+  ];
+
+  // بيانات قوائم إدارة المطعم
+  const restaurantMenuItems = [
     { 
       name: 'فريق المخزن', 
       path: '/storage-team', 
-      icon: <Calendar className="ml-2 h-5 w-5" /> 
+      icon: <Users className="ml-2 h-5 w-5" /> 
     },
     { 
       name: 'إدخال المنتجات', 
@@ -75,19 +82,41 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
       </div>
       <div className="flex-1 overflow-auto py-2">
         <nav className="grid items-start px-2 gap-1">
-          {menuItems.map((item, index) => (
-            <Link 
-              key={index}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-1 rounded-md px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
-                location.pathname === item.path && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-              )}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </Link>
-          ))}
+          <div className="mb-2">
+            <h3 className="px-3 py-2 text-sm font-medium text-sidebar-foreground-muted">النظام الرئيسي</h3>
+            {adminMenuItems.map((item, index) => (
+              <Link 
+                key={index}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+                  location.pathname === item.path && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                )}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            ))}
+          </div>
+          
+          <Separator className="bg-sidebar-border my-2" />
+          
+          <div>
+            <h3 className="px-3 py-2 text-sm font-medium text-sidebar-foreground-muted">إدارة المطعم</h3>
+            {restaurantMenuItems.map((item, index) => (
+              <Link 
+                key={index}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+                  location.pathname === item.path && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                )}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            ))}
+          </div>
         </nav>
       </div>
       <Separator className="bg-sidebar-border" />

@@ -10,6 +10,7 @@ import StorageTeam from "./pages/StorageTeam";
 import AddProducts from "./pages/AddProducts";
 import RemoveProducts from "./pages/RemoveProducts";
 import Inventory from "./pages/Inventory";
+import Expired from "./pages/Expired";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/products/add" element={<AddProducts />} />
           <Route path="/products/remove" element={<RemoveProducts />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/expired" element={<Expired />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
