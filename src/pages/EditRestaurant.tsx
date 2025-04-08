@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import RestaurantForm from '@/components/restaurant/RestaurantForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { updateRestaurant } from '@/services/restaurantService';
 
 interface RestaurantData {
   name: string;
@@ -22,19 +21,10 @@ const EditRestaurant = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [restaurantData, setRestaurantData] = useState<RestaurantData | null>(null);
-  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
-      if (!id) {
-        toast({
-          variant: 'destructive',
-          title: 'خطأ',
-          description: 'لم يتم تحديد معرف المطعم',
-        });
-        navigate('/restaurants');
-        return;
-      }
+      if (!id) return;
 
       try {
         const { data, error } = await supabase
@@ -45,7 +35,6 @@ const EditRestaurant = () => {
 
         if (error) throw error;
 
-        console.log("Fetched restaurant data:", data);
         setRestaurantData(data);
       } catch (error: any) {
         console.error('Error fetching restaurant:', error);
@@ -64,50 +53,36 @@ const EditRestaurant = () => {
   }, [id, navigate, toast]);
 
   const handleSubmit = async (data: RestaurantData) => {
-    if (!id) {
-      toast({
-        variant: 'destructive',
-        title: 'خطأ',
-        description: 'لم يتم تحديد معرف المطعم',
-      });
-      return;
-    }
+    if (!id) return;
 
-    setUpdateError(null);
-    
     try {
       setIsLoading(true);
       
-      console.log("Updating restaurant with data:", data);
-      
-      // Use the updateRestaurant function from restaurantService.ts
-      const updatedRestaurant = await updateRestaurant(
-        id,
-        data.name,
-        data.phone,
-        data.address
-      );
-      
-      console.log("Update successful, response:", updatedRestaurant);
+      // Use the force_update_company function to update the restaurant
+      const { data: updatedData, error } = await supabase.rpc('force_update_company', {
+        p_company_id: id,
+        p_name: data.name,
+        p_phone: data.phone,
+        p_address: data.address,
+        p_logo_url: null
+      });
+
+      if (error) throw error;
 
       toast({
         title: 'تم تحديث المطعم',
         description: 'تم تحديث بيانات المطعم بنجاح',
       });
 
-      // تأخير قليل قبل التوجيه للتأكد من ظهور الإشعار
-      setTimeout(() => {
-        navigate('/restaurants');
-      }, 500);
-      
+      navigate('/restaurants');
     } catch (error: any) {
       console.error('Error updating restaurant:', error);
-      setUpdateError(error.message || 'حدث خطأ أثناء محاولة تحديث بيانات المطعم');
       toast({
         variant: 'destructive',
         title: 'خطأ في تحديث المطعم',
         description: error.message || 'حدث خطأ أثناء محاولة تحديث بيانات المطعم',
       });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -129,19 +104,12 @@ const EditRestaurant = () => {
                 <div className="animate-spin h-8 w-8 border-4 border-gray-300 rounded-full border-t-fvm-primary"></div>
               </div>
             ) : restaurantData ? (
-              <>
-                {updateError && (
-                  <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-200">
-                    {updateError}
-                  </div>
-                )}
-                <RestaurantForm
-                  initialData={restaurantData}
-                  onSubmit={handleSubmit}
-                  isSubmitting={isLoading}
-                  submitText="تحديث المطعم"
-                />
-              </>
+              <RestaurantForm
+                initialData={restaurantData}
+                onSubmit={handleSubmit}
+                isSubmitting={isLoading}
+                submitText="تحديث المطعم"
+              />
             ) : (
               <div className="text-center py-6 text-muted-foreground">
                 لم يتم العثور على المطعم. 
