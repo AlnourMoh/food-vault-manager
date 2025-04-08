@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import RestaurantForm from '@/components/restaurant/RestaurantForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { updateRestaurant } from '@/services/restaurantService';
 
 interface RestaurantData {
   name: string;
@@ -58,16 +59,13 @@ const EditRestaurant = () => {
     try {
       setIsLoading(true);
       
-      // Use the force_update_company function to update the restaurant
-      const { data: updatedData, error } = await supabase.rpc('force_update_company', {
-        p_company_id: id,
-        p_name: data.name,
-        p_phone: data.phone,
-        p_address: data.address,
-        p_logo_url: null
-      });
-
-      if (error) throw error;
+      // Use the updateRestaurant function from restaurantService.ts
+      await updateRestaurant(
+        id,
+        data.name,
+        data.phone,
+        data.address
+      );
 
       toast({
         title: 'تم تحديث المطعم',

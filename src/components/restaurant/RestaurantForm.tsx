@@ -22,50 +22,81 @@ import { countryCodes } from '@/constants/countryCodes';
 import { restaurantFormSchema, RestaurantFormValues } from '@/validations/restaurantSchema';
 import { createRestaurant } from '@/services/restaurantService';
 
-const RestaurantForm = () => {
-  const [isLoading, setIsLoading] = useState(false);
+// Define props interface for the form
+interface RestaurantFormProps {
+  initialData?: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+  onSubmit: (data: any) => Promise<void>;
+  isSubmitting?: boolean;
+  submitText?: string;
+}
+
+const RestaurantForm: React.FC<RestaurantFormProps> = ({
+  initialData,
+  onSubmit,
+  isSubmitting = false,
+  submitText = "إضافة المطعم"
+}) => {
   const [emailError, setEmailError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Parse phone number to extract country code and number if initialData is provided
+  const parsePhoneNumber = (phone: string) => {
+    if (!phone) return { countryCode: '974', number: '' };
+
+    // Check if the phone starts with + and has a country code
+    if (phone.startsWith('+')) {
+      // Extract country code (assuming it's between 1-4 digits after the +)
+      const match = phone.match(/^\+(\d{1,4})(\d+)$/);
+      if (match) {
+        return {
+          countryCode: match[1],
+          number: match[2]
+        };
+      }
+    }
+
+    // Default to Qatar country code if no valid format is found
+    return { countryCode: '974', number: phone };
+  };
+
+  // Extract phone parts if initialData is provided
+  const phoneParts = initialData?.phone ? parsePhoneNumber(initialData.phone) : { countryCode: '974', number: '' };
 
   // Initialize form
   const form = useForm<RestaurantFormValues>({
     resolver: zodResolver(restaurantFormSchema),
     defaultValues: {
-      name: '',
-      manager: '',
-      address: '',
-      phoneCountryCode: '974', // قطر كقيمة افتراضية
-      phoneNumber: '',
-      email: '',
+      name: initialData?.name || '',
+      manager: '', // Not used in editing for now
+      address: initialData?.address || '',
+      phoneCountryCode: phoneParts.countryCode,
+      phoneNumber: phoneParts.number,
+      email: initialData?.email || '',
     },
   });
 
-  const onSubmit = async (values: RestaurantFormValues) => {
-    setIsLoading(true);
+  const handleFormSubmit = async (values: RestaurantFormValues) => {
     setEmailError(null); // Reset email error on new submission
     
     try {
       // دمج مفتاح الدولة مع رقم الهاتف
       const fullPhoneNumber = `+${values.phoneCountryCode}${values.phoneNumber}`;
       
-      // Create the company (restaurant) in the database
-      const restaurantData = await createRestaurant(
-        values.name,
-        values.email,
-        fullPhoneNumber,
-        values.address
-      );
-
-      toast({
-        title: "تم إضافة المطعم بنجاح",
-        description: "يمكنك الآن إضافة بيانات الدخول للمطعم",
+      // Call the provided onSubmit function
+      await onSubmit({
+        name: values.name,
+        email: values.email,
+        phone: fullPhoneNumber,
+        address: values.address
       });
-      
-      // Navigate to the credentials page with the new restaurant ID
-      navigate(`/restaurants/${restaurantData.id}/credentials`);
     } catch (error) {
-      console.error("Error adding restaurant:", error);
+      console.error("Error in form submission:", error);
       
       // Handle duplicate email error
       if (error instanceof Error && error.message === 'duplicate_email') {
@@ -79,25 +110,27 @@ const RestaurantForm = () => {
         if (!emailError) {
           toast({
             variant: "destructive",
-            title: "خطأ في إضافة المطعم",
-            description: "حدث خطأ أثناء محاولة إضافة المطعم. يرجى المحاولة مرة أخرى.",
+            title: "خطأ في العملية",
+            description: "حدث خطأ أثناء محاولة حفظ البيانات. يرجى المحاولة مرة أخرى.",
           });
         }
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-xl">بيانات المطعم الجديد</CardTitle>
-        <CardDescription>أدخل معلومات المطعم بشكل صحيح لإضافته إلى النظام</CardDescription>
+        <CardTitle className="text-xl">{initialData ? 'تعديل بيانات المطعم' : 'بيانات المطعم الجديد'}</CardTitle>
+        <CardDescription>
+          {initialData 
+            ? 'قم بتعديل معلومات المطعم بشكل صحيح' 
+            : 'أدخل معلومات المطعم بشكل صحيح لإضافته إلى النظام'}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -112,19 +145,21 @@ const RestaurantForm = () => {
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="manager"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>اسم المدير</FormLabel>
-                  <FormControl>
-                    <Input placeholder="اسم المدير" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!initialData && (
+              <FormField
+                control={form.control}
+                name="manager"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>اسم المدير</FormLabel>
+                    <FormControl>
+                      <Input placeholder="اسم المدير" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <FormField
               control={form.control}
@@ -194,7 +229,13 @@ const RestaurantForm = () => {
                 <FormItem>
                   <FormLabel>البريد الإلكتروني</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="البريد الإلكتروني للمطعم" {...field} />
+                    <Input 
+                      type="email" 
+                      placeholder="البريد الإلكتروني للمطعم" 
+                      {...field} 
+                      readOnly={!!initialData} // Make email readonly in edit mode
+                      className={initialData ? "bg-gray-100" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                   {emailError && (
@@ -216,9 +257,9 @@ const RestaurantForm = () => {
               <Button 
                 type="submit"
                 className="bg-fvm-primary hover:bg-fvm-primary-light"
-                disabled={isLoading}
+                disabled={isSubmitting}
               >
-                {isLoading ? "جاري الحفظ..." : "إضافة المطعم"}
+                {isSubmitting ? "جاري الحفظ..." : submitText}
               </Button>
             </div>
           </form>
