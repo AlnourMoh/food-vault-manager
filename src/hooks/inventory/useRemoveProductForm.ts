@@ -14,6 +14,8 @@ export const useRemoveProductForm = () => {
   const [reason, setReason] = useState<string>('');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedProductDetails, setSelectedProductDetails] = useState<Product | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleRestaurantChange = (value: string) => {
     setSelectedRestaurant(value);
@@ -34,16 +36,14 @@ export const useRemoveProductForm = () => {
     setQuantity('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validateForm = (): boolean => {
     if (!selectedProduct || !quantity || Number(quantity) <= 0) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى التأكد من اختيار المنتج وإدخال كمية صحيحة",
         variant: "destructive"
       });
-      return;
+      return false;
     }
     
     if (selectedProductDetails && Number(quantity) > selectedProductDetails.quantity) {
@@ -52,27 +52,47 @@ export const useRemoveProductForm = () => {
         description: "الكمية المدخلة أكبر من الكمية المتوفرة في المخزون",
         variant: "destructive"
       });
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    console.log('Form submitted:', {
-      restaurantId: selectedRestaurant,
-      productId: selectedProduct,
-      quantity,
-      reason
-    });
+    if (!validateForm()) return;
     
-    // Show success message
-    toast({
-      title: "تم إخراج المنتج بنجاح",
-      description: `تم إخراج ${quantity} وحدة من ${selectedProductDetails?.name}`,
-    });
+    // Open confirmation dialog instead of immediately submitting
+    setIsDialogOpen(true);
+  };
+
+  const handleConfirmRemoval = () => {
+    setIsSubmitting(true);
     
-    // Reset form
-    setSelectedProduct('');
-    setQuantity('');
-    setReason('');
-    setSelectedProductDetails(null);
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      console.log('Product removed:', {
+        restaurantId: selectedRestaurant,
+        productId: selectedProduct,
+        quantity,
+        reason
+      });
+      
+      // Show success message
+      toast({
+        title: "تم إخراج المنتج بنجاح",
+        description: `تم إخراج ${quantity} وحدة من ${selectedProductDetails?.name}`,
+      });
+      
+      // Reset form
+      setSelectedProduct('');
+      setQuantity('');
+      setReason('');
+      setSelectedProductDetails(null);
+      setIsSubmitting(false);
+      setIsDialogOpen(false);
+    }, 1000);
   };
 
   return {
@@ -87,8 +107,12 @@ export const useRemoveProductForm = () => {
     setReason,
     filteredProducts,
     selectedProductDetails,
+    isDialogOpen,
+    setIsDialogOpen,
+    isSubmitting,
     handleRestaurantChange,
     handleProductChange,
-    handleSubmit
+    handleSubmit,
+    handleConfirmRemoval
   };
 };
