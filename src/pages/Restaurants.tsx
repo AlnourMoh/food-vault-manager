@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { getMockData } from '@/services/mockData';
 import { Button } from '@/components/ui/button';
@@ -18,10 +19,11 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Plus } from 'lucide-react';
+import { Plus, Key } from 'lucide-react';
 
 const Restaurants = () => {
   const { restaurants } = getMockData();
+  const navigate = useNavigate();
 
   return (
     <MainLayout>
@@ -50,6 +52,7 @@ const Restaurants = () => {
                   <TableHead className="text-right">البريد الإلكتروني</TableHead>
                   <TableHead className="text-right">تاريخ التسجيل</TableHead>
                   <TableHead className="text-right">الحالة</TableHead>
+                  <TableHead className="text-right">الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -73,6 +76,17 @@ const Restaurants = () => {
                           غير نشط
                         </span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => navigate(`/restaurants/${restaurant.id}/credentials`)}
+                        className="flex items-center gap-1"
+                      >
+                        <Key className="h-4 w-4" />
+                        <span>بيانات الدخول</span>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

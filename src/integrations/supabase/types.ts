@@ -405,6 +405,41 @@ export type Database = {
           },
         ]
       }
+      restaurant_access: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          password_hash: string
+          restaurant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          password_hash: string
+          restaurant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          password_hash?: string
+          restaurant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_access_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_member_permissions: {
         Row: {
           created_at: string
