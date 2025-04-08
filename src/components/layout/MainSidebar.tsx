@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   Archive, 
@@ -24,6 +24,7 @@ interface MainSidebarProps {
 
 const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // بيانات قوائم المشرف العام (السوبر أدمن)
   const adminMenuItems = [
@@ -121,7 +122,10 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
       </div>
       <Separator className="bg-sidebar-border" />
       <div className="p-4">
-        <Button className="w-full bg-fvm-primary text-white hover:bg-fvm-primary-light flex items-center justify-center gap-2">
+        <Button 
+          className="w-full bg-fvm-primary text-white hover:bg-fvm-primary-light flex items-center justify-center gap-2"
+          onClick={() => navigate('/restaurants/add')}
+        >
           <Plus className="h-4 w-4" />
           <span>إضافة مطعم جديد</span>
         </Button>

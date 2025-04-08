@@ -16,6 +16,7 @@ import RestaurantLogin from "./pages/RestaurantLogin";
 import RestaurantCredentials from "./pages/RestaurantCredentials";
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantStorageTeam from "./pages/restaurant/StorageTeam";
+import AddRestaurant from "./pages/AddRestaurant";
 
 // Restaurant route guard
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
@@ -40,6 +41,7 @@ const App = () => (
           {/* Super Admin Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/restaurants" element={<Restaurants />} />
+          <Route path="/restaurants/add" element={<AddRestaurant />} />
           <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
           
           {/* Old Restaurant Routes (To be removed later) */}
