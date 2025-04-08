@@ -1,4 +1,3 @@
-
 // Restaurant types
 export interface Restaurant {
   id: string;
@@ -7,8 +6,9 @@ export interface Restaurant {
   phone: string;
   email: string;
   manager: string;
-  registrationDate: Date;
+  registrationDate: string;
   isActive: boolean;
+  created_at: string;
 }
 
 // Storage Team Member types
