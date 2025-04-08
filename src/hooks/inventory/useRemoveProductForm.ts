@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/types';
-import { getMockData } from '@/services/mockData';
+import { getMockData } from '@/services/mockData'; // تصحيح مسار الاستيراد
 
 export const useRemoveProductForm = () => {
   const { restaurants, products } = getMockData();

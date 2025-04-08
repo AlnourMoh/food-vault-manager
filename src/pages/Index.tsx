@@ -2,7 +2,7 @@
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import StatsCard from '@/components/dashboard/StatsCard';
-import { getMockData } from '@/services/mockData';
+import { getMockData } from '@/services/mockData'; // تعديل المسار إلى الشكل الصحيح
 import { 
   Archive, 
   Box, 
@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const Index = () => {
+  // استخدام getMockData للحصول على البيانات
   const { dashboardStats } = getMockData();
 
   return (

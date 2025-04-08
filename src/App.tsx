@@ -79,7 +79,6 @@ const App = () => (
               <RestaurantStorageTeam />
             </RestaurantRoute>
           } />
-          {/* More restaurant routes would go here */}
           <Route path="/restaurant/products/add" element={
             <RestaurantRoute>
               <AddProducts />
