@@ -35,8 +35,8 @@ const RestaurantLogin = () => {
         throw error;
       }
 
-      // Cast the response data to our defined interface
-      const authData = data as AuthResponse;
+      // First cast data to unknown, then to our interface to fix TypeScript error
+      const authData = data as unknown as AuthResponse;
       
       if (authData && authData.authenticated) {
         // Store restaurant ID in localStorage for now (in a real app, use secure auth)
