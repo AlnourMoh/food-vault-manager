@@ -61,6 +61,11 @@ export async function updateRestaurant(
       throw error;
     }
 
+    if (!data) {
+      console.error("No data returned from update operation");
+      throw new Error("فشل تحديث بيانات المطعم. لم يتم إرجاع أي بيانات.");
+    }
+
     console.log("Update response:", data);
     return data as unknown as RestaurantResponse;
   } catch (error) {

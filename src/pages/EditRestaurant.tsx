@@ -22,10 +22,19 @@ const EditRestaurant = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [restaurantData, setRestaurantData] = useState<RestaurantData | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
-      if (!id) return;
+      if (!id) {
+        toast({
+          variant: 'destructive',
+          title: 'خطأ',
+          description: 'لم يتم تحديد معرف المطعم',
+        });
+        navigate('/restaurants');
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -55,35 +64,50 @@ const EditRestaurant = () => {
   }, [id, navigate, toast]);
 
   const handleSubmit = async (data: RestaurantData) => {
-    if (!id) return;
+    if (!id) {
+      toast({
+        variant: 'destructive',
+        title: 'خطأ',
+        description: 'لم يتم تحديد معرف المطعم',
+      });
+      return;
+    }
 
+    setUpdateError(null);
+    
     try {
       setIsLoading(true);
       
       console.log("Updating restaurant with data:", data);
       
       // Use the updateRestaurant function from restaurantService.ts
-      await updateRestaurant(
+      const updatedRestaurant = await updateRestaurant(
         id,
         data.name,
         data.phone,
         data.address
       );
+      
+      console.log("Update successful, response:", updatedRestaurant);
 
       toast({
         title: 'تم تحديث المطعم',
         description: 'تم تحديث بيانات المطعم بنجاح',
       });
 
-      navigate('/restaurants');
+      // تأخير قليل قبل التوجيه للتأكد من ظهور الإشعار
+      setTimeout(() => {
+        navigate('/restaurants');
+      }, 500);
+      
     } catch (error: any) {
       console.error('Error updating restaurant:', error);
+      setUpdateError(error.message || 'حدث خطأ أثناء محاولة تحديث بيانات المطعم');
       toast({
         variant: 'destructive',
         title: 'خطأ في تحديث المطعم',
         description: error.message || 'حدث خطأ أثناء محاولة تحديث بيانات المطعم',
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -105,12 +129,19 @@ const EditRestaurant = () => {
                 <div className="animate-spin h-8 w-8 border-4 border-gray-300 rounded-full border-t-fvm-primary"></div>
               </div>
             ) : restaurantData ? (
-              <RestaurantForm
-                initialData={restaurantData}
-                onSubmit={handleSubmit}
-                isSubmitting={isLoading}
-                submitText="تحديث المطعم"
-              />
+              <>
+                {updateError && (
+                  <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-200">
+                    {updateError}
+                  </div>
+                )}
+                <RestaurantForm
+                  initialData={restaurantData}
+                  onSubmit={handleSubmit}
+                  isSubmitting={isLoading}
+                  submitText="تحديث المطعم"
+                />
+              </>
             ) : (
               <div className="text-center py-6 text-muted-foreground">
                 لم يتم العثور على المطعم. 

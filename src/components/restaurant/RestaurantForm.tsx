@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +44,8 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
 
   // Extract phone parts if initialData is provided
   const phoneParts = initialData?.phone ? parsePhoneNumber(initialData.phone) : { countryCode: '974', number: '' };
+  
+  console.log("Initial phone data:", initialData?.phone, "Parsed:", phoneParts);
 
   // Initialize form
   const form = useForm<RestaurantFormValues>({
@@ -64,6 +66,9 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
     try {
       // Format phone number
       const fullPhoneNumber = formatPhoneNumber(values.phoneCountryCode, values.phoneNumber);
+      
+      console.log("Submitting form with values:", values);
+      console.log("Formatted phone number:", fullPhoneNumber);
       
       // Call the provided onSubmit function
       await onSubmit({
