@@ -7,6 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
+// Define a type for the authentication response
+interface AuthResponse {
+  authenticated: boolean;
+  restaurant_id: string;
+}
+
 const RestaurantLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,9 +35,12 @@ const RestaurantLogin = () => {
         throw error;
       }
 
-      if (data && data.authenticated) {
+      // Cast the response data to our defined interface
+      const authData = data as AuthResponse;
+      
+      if (authData && authData.authenticated) {
         // Store restaurant ID in localStorage for now (in a real app, use secure auth)
-        localStorage.setItem('restaurantId', data.restaurant_id);
+        localStorage.setItem('restaurantId', authData.restaurant_id);
         localStorage.setItem('isRestaurantLogin', 'true');
         
         toast({
