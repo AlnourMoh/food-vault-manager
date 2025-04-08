@@ -59,6 +59,7 @@ interface RestaurantResponse {
 
 const AddRestaurant = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -77,6 +78,7 @@ const AddRestaurant = () => {
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    setEmailError(null); // Reset email error on new submission
     
     try {
       // دمج مفتاح الدولة مع رقم الهاتف
@@ -91,6 +93,15 @@ const AddRestaurant = () => {
       });
 
       if (restaurantError) {
+        // Check specifically for duplicate email error
+        if (restaurantError.code === '23505' && restaurantError.message.includes('companies_email_key')) {
+          setEmailError('هذا البريد الإلكتروني مستخدم بالفعل. الرجاء استخدام بريد إلكتروني آخر.');
+          form.setError('email', { 
+            type: 'manual', 
+            message: 'هذا البريد الإلكتروني مستخدم بالفعل' 
+          });
+          throw new Error('هذا البريد الإلكتروني مستخدم بالفعل');
+        }
         throw restaurantError;
       }
 
@@ -108,11 +119,15 @@ const AddRestaurant = () => {
       }
     } catch (error) {
       console.error("Error adding restaurant:", error);
-      toast({
-        variant: "destructive",
-        title: "خطأ في إضافة المطعم",
-        description: "حدث خطأ أثناء محاولة إضافة المطعم. يرجى المحاولة مرة أخرى.",
-      });
+      // Only show general error toast if not a duplicate email error
+      // (since we already show a specific error for duplicate emails)
+      if (!emailError) {
+        toast({
+          variant: "destructive",
+          title: "خطأ في إضافة المطعم",
+          description: "حدث خطأ أثناء محاولة إضافة المطعم. يرجى المحاولة مرة أخرى.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -230,6 +245,9 @@ const AddRestaurant = () => {
                         <Input type="email" placeholder="البريد الإلكتروني للمطعم" {...field} />
                       </FormControl>
                       <FormMessage />
+                      {emailError && (
+                        <p className="text-sm font-medium text-destructive mt-1">{emailError}</p>
+                      )}
                     </FormItem>
                   )}
                 />
