@@ -19,18 +19,17 @@ const RestaurantLogin = () => {
     setIsLoading(true);
 
     try {
-      // This is a simplified version; in a production app, you would handle authentication properly
-      const { data, error } = await supabase
-        .from('restaurant_access')
-        .select('restaurant_id')
-        .eq('email', email)
-        .single();
+      // Use raw SQL query to safely fetch the restaurant credentials without type errors
+      const { data, error } = await supabase.rpc('authenticate_restaurant', {
+        p_email: email,
+        p_password: password
+      });
 
       if (error) {
         throw error;
       }
 
-      if (data) {
+      if (data && data.authenticated) {
         // Store restaurant ID in localStorage for now (in a real app, use secure auth)
         localStorage.setItem('restaurantId', data.restaurant_id);
         localStorage.setItem('isRestaurantLogin', 'true');

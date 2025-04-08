@@ -61,17 +61,12 @@ const RestaurantCredentials = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, you would hash the password properly on the server side
-      // This is a simplified version for demonstration purposes
-      const { error } = await supabase
-        .from('restaurant_access')
-        .insert([
-          { 
-            restaurant_id: id, 
-            email, 
-            password_hash: password // Note: In production, NEVER store plain passwords
-          }
-        ]);
+      // Use a stored procedure to handle the insertion with proper types
+      const { data, error } = await supabase.rpc('create_restaurant_access', {
+        p_restaurant_id: id,
+        p_email: email,
+        p_password: password // Note: In production, we should hash this on the server side
+      });
 
       if (error) {
         throw error;
