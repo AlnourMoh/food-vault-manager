@@ -76,34 +76,6 @@ const RestaurantCredentials = () => {
     });
   };
 
-  const handleUpdateEmail = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Update the restaurant email
-      const { error } = await supabase
-        .from('companies')
-        .update({ email })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "تم تحديث البريد الإلكتروني",
-        description: "تم تحديث البريد الإلكتروني للمطعم بنجاح",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في تحديث البريد الإلكتروني",
-        description: error.message,
-      });
-      console.error("Error updating email:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <MainLayout>
       <div className="rtl space-y-6">
@@ -126,24 +98,13 @@ const RestaurantCredentials = () => {
                   required 
                 />
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={handleUpdateEmail}
-                  disabled={isLoading}
-                  className="flex-1"
-                >
-                  تحديث البريد
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-fvm-primary hover:bg-fvm-primary-light flex-1"
-                  disabled={isLoading}
-                >
-                  إنشاء رابط الإعداد
-                </Button>
-              </div>
+              <Button 
+                type="submit" 
+                className="bg-fvm-primary hover:bg-fvm-primary-light w-full"
+                disabled={isLoading}
+              >
+                إنشاء رابط الإعداد
+              </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
