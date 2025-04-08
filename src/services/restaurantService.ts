@@ -45,19 +45,28 @@ export async function updateRestaurant(
   address: string,
   logo_url?: string | null
 ): Promise<RestaurantResponse> {
-  const { data, error } = await supabase.rpc('force_update_company', {
-    p_company_id: id,
-    p_name: name,
-    p_phone: phone,
-    p_address: address,
-    p_logo_url: logo_url
-  });
+  console.log("Calling updateRestaurant with:", { id, name, phone, address, logo_url });
+  
+  try {
+    const { data, error } = await supabase.rpc('force_update_company', {
+      p_company_id: id,
+      p_name: name,
+      p_phone: phone,
+      p_address: address,
+      p_logo_url: logo_url
+    });
 
-  if (error) {
+    if (error) {
+      console.error("RPC error:", error);
+      throw error;
+    }
+
+    console.log("Update response:", data);
+    return data as unknown as RestaurantResponse;
+  } catch (error) {
+    console.error("Update restaurant error:", error);
     throw error;
   }
-
-  return data as unknown as RestaurantResponse;
 }
 
 // Delete a restaurant from the database

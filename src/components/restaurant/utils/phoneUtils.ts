@@ -18,12 +18,14 @@ export const parsePhoneNumber = (phone: string) => {
   }
 
   // Default to Qatar country code if no valid format is found
-  return { countryCode: '974', number: phone };
+  return { countryCode: '974', number: phone.replace(/^\+974/, '') };
 };
 
 /**
  * Formats phone number with country code
  */
 export const formatPhoneNumber = (countryCode: string, phoneNumber: string) => {
-  return `+${countryCode}${phoneNumber}`;
+  // Clean the phoneNumber by removing any potential country code prefixes
+  const cleanNumber = phoneNumber.replace(/^\+?\d{1,4}/, '');
+  return `+${countryCode}${cleanNumber}`;
 };

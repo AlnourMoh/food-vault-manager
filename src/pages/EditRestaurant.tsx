@@ -36,6 +36,7 @@ const EditRestaurant = () => {
 
         if (error) throw error;
 
+        console.log("Fetched restaurant data:", data);
         setRestaurantData(data);
       } catch (error: any) {
         console.error('Error fetching restaurant:', error);
@@ -58,6 +59,8 @@ const EditRestaurant = () => {
 
     try {
       setIsLoading(true);
+      
+      console.log("Updating restaurant with data:", data);
       
       // Use the updateRestaurant function from restaurantService.ts
       await updateRestaurant(

@@ -2,6 +2,7 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
 import { RestaurantFormValues } from '@/validations/restaurantSchema';
 
@@ -18,7 +19,11 @@ const AddressField: React.FC<AddressFieldProps> = ({ form }) => {
         <FormItem>
           <FormLabel>العنوان</FormLabel>
           <FormControl>
-            <Input placeholder="عنوان المطعم" {...field} />
+            <Textarea 
+              placeholder="عنوان المطعم" 
+              className="min-h-[80px]" 
+              {...field} 
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
