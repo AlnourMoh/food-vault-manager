@@ -18,6 +18,7 @@ import RestaurantSetupPassword from "./pages/RestaurantSetupPassword";
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantStorageTeam from "./pages/restaurant/StorageTeam";
 import AddRestaurant from "./pages/AddRestaurant";
+import EditRestaurant from "./pages/EditRestaurant";
 
 // Restaurant route guard
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/restaurants" element={<Restaurants />} />
           <Route path="/restaurants/add" element={<AddRestaurant />} />
           <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
+          <Route path="/restaurants/:id/edit" element={<EditRestaurant />} />
           
           {/* Restaurant Setup Route */}
           <Route path="/restaurant/setup-password/:id" element={<RestaurantSetupPassword />} />

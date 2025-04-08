@@ -36,3 +36,38 @@ export async function createRestaurant(
 
   return data as unknown as RestaurantResponse;
 }
+
+// Update a restaurant in the database
+export async function updateRestaurant(
+  id: string,
+  name: string,
+  phone: string,
+  address: string,
+  logo_url?: string | null
+): Promise<RestaurantResponse> {
+  const { data, error } = await supabase.rpc('force_update_company', {
+    p_company_id: id,
+    p_name: name,
+    p_phone: phone,
+    p_address: address,
+    p_logo_url: logo_url
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as unknown as RestaurantResponse;
+}
+
+// Delete a restaurant from the database
+export async function deleteRestaurant(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('companies')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    throw error;
+  }
+}
