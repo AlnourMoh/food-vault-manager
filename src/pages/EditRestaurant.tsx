@@ -23,7 +23,6 @@ const EditRestaurant = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [restaurantData, setRestaurantData] = useState<RestaurantData | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -37,8 +36,6 @@ const EditRestaurant = () => {
         return;
       }
 
-      console.log("Fetching restaurant with ID:", id);
-
       try {
         const { data, error } = await supabase
           .from('companies')
@@ -46,29 +43,18 @@ const EditRestaurant = () => {
           .eq('id', id)
           .single();
 
-        if (error) {
-          console.error('Error fetching restaurant data:', error);
-          setFetchError(error.message);
-          throw error;
-        }
+        if (error) throw error;
 
         console.log("Fetched restaurant data:", data);
-        
-        if (!data) {
-          console.log("No restaurant data found");
-          setFetchError("لم يتم العثور على بيانات المطعم");
-          setRestaurantData(null);
-        } else {
-          setRestaurantData(data);
-        }
+        setRestaurantData(data);
       } catch (error: any) {
         console.error('Error fetching restaurant:', error);
-        setFetchError(error.message || 'حدث خطأ أثناء محاولة جلب بيانات المطعم');
         toast({
           variant: 'destructive',
           title: 'خطأ في جلب بيانات المطعم',
           description: error.message || 'حدث خطأ أثناء محاولة جلب بيانات المطعم',
         });
+        navigate('/restaurants');
       } finally {
         setIsLoading(false);
       }
@@ -138,11 +124,6 @@ const EditRestaurant = () => {
             <CardTitle>معلومات المطعم</CardTitle>
           </CardHeader>
           <CardContent>
-            {fetchError && (
-              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-200">
-                خطأ: {fetchError}
-              </div>
-            )}
             {isLoading ? (
               <div className="flex justify-center py-6">
                 <div className="animate-spin h-8 w-8 border-4 border-gray-300 rounded-full border-t-fvm-primary"></div>

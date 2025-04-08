@@ -67,8 +67,6 @@ const Expired = () => {
     setFilteredProducts(filtered);
   };
 
-  console.log("Loading Expired page with products:", products.length);
-
   return (
     <MainLayout>
       <div className="rtl space-y-6">

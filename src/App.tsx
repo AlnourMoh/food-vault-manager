@@ -31,18 +31,7 @@ const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Set up React Query with proper configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
-
-console.log("App is initializing...");
+const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -82,6 +71,7 @@ const App = () => (
               <RestaurantStorageTeam />
             </RestaurantRoute>
           } />
+          {/* More restaurant routes would go here */}
           <Route path="/restaurant/products/add" element={
             <RestaurantRoute>
               <AddProducts />
