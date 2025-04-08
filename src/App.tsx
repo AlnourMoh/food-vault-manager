@@ -14,6 +14,7 @@ import Expired from "./pages/Expired";
 import NotFound from "./pages/NotFound";
 import RestaurantLogin from "./pages/RestaurantLogin";
 import RestaurantCredentials from "./pages/RestaurantCredentials";
+import RestaurantSetupPassword from "./pages/RestaurantSetupPassword";
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
 import RestaurantStorageTeam from "./pages/restaurant/StorageTeam";
 import AddRestaurant from "./pages/AddRestaurant";
@@ -43,6 +44,9 @@ const App = () => (
           <Route path="/restaurants" element={<Restaurants />} />
           <Route path="/restaurants/add" element={<AddRestaurant />} />
           <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
+          
+          {/* Restaurant Setup Route */}
+          <Route path="/restaurant/setup-password/:id" element={<RestaurantSetupPassword />} />
           
           {/* Old Restaurant Routes (To be removed later) */}
           <Route path="/storage-team" element={<StorageTeam />} />

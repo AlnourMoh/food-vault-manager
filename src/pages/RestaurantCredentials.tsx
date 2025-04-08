@@ -7,14 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Copy } from 'lucide-react';
 
 const RestaurantCredentials = () => {
   const { id } = useParams();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [setupLink, setSetupLink] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -23,7 +25,7 @@ const RestaurantCredentials = () => {
       if (id) {
         const { data, error } = await supabase
           .from('companies')
-          .select('name')
+          .select('name, email')
           .eq('id', id)
           .single();
 
@@ -39,6 +41,7 @@ const RestaurantCredentials = () => {
 
         if (data) {
           setRestaurantName(data.name);
+          setEmail(data.email || '');
         }
       }
     };
@@ -46,45 +49,56 @@ const RestaurantCredentials = () => {
     fetchRestaurant();
   }, [id, toast]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGenerateLink = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password !== confirmPassword) {
+    if (!email) {
       toast({
         variant: "destructive",
-        title: "كلمات المرور غير متطابقة",
-        description: "يرجى التأكد من تطابق كلمات المرور",
+        title: "البريد الإلكتروني مطلوب",
+        description: "يرجى إدخال البريد الإلكتروني للمطعم",
       });
       return;
     }
 
+    // Create a setup link with the restaurant ID and email
+    const baseUrl = window.location.origin;
+    const link = `${baseUrl}/restaurant/setup-password/${id}?email=${encodeURIComponent(email)}`;
+    setSetupLink(link);
+    setShowDialog(true);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(setupLink);
+    toast({
+      title: "تم نسخ الرابط",
+      description: "يمكنك مشاركة الرابط مع مدير المطعم",
+    });
+  };
+
+  const handleUpdateEmail = async () => {
     setIsLoading(true);
     
     try {
-      // Use a stored procedure to handle the insertion with proper types
-      const { data, error } = await supabase.rpc('create_restaurant_access', {
-        p_restaurant_id: id,
-        p_email: email,
-        p_password: password // Note: In production, we should hash this on the server side
-      });
+      // Update the restaurant email
+      const { error } = await supabase
+        .from('companies')
+        .update({ email })
+        .eq('id', id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
-        title: "تم إنشاء بيانات الاعتماد بنجاح",
-        description: "يمكن للمطعم الآن تسجيل الدخول إلى النظام",
+        title: "تم تحديث البريد الإلكتروني",
+        description: "تم تحديث البريد الإلكتروني للمطعم بنجاح",
       });
-      
-      navigate('/restaurants');
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "خطأ في إنشاء بيانات الاعتماد",
+        title: "خطأ في تحديث البريد الإلكتروني",
         description: error.message,
       });
-      console.error("Error creating credentials:", error);
+      console.error("Error updating email:", error);
     } finally {
       setIsLoading(false);
     }
@@ -93,14 +107,14 @@ const RestaurantCredentials = () => {
   return (
     <MainLayout>
       <div className="rtl space-y-6">
-        <h1 className="text-3xl font-bold">إضافة بيانات اعتماد للمطعم</h1>
+        <h1 className="text-3xl font-bold">إرسال رابط إعداد حساب المطعم</h1>
         <Card className="w-full max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>إنشاء حساب للمطعم: {restaurantName}</CardTitle>
-            <CardDescription>أدخل بيانات الاعتماد التي سيتم استخدامها لتسجيل دخول المطعم</CardDescription>
+            <CardTitle>رابط إعداد الحساب للمطعم: {restaurantName}</CardTitle>
+            <CardDescription>أدخل البريد الإلكتروني الذي سيتم استخدامه لتسجيل دخول المطعم ثم قم بإنشاء رابط الإعداد</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleGenerateLink} className="space-y-4">
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</label>
                 <Input 
@@ -112,35 +126,24 @@ const RestaurantCredentials = () => {
                   required 
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">كلمة المرور</label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="أدخل كلمة المرور" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  required 
-                />
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={handleUpdateEmail}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  تحديث البريد
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-fvm-primary hover:bg-fvm-primary-light flex-1"
+                  disabled={isLoading}
+                >
+                  إنشاء رابط الإعداد
+                </Button>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium">تأكيد كلمة المرور</label>
-                <Input 
-                  id="confirmPassword" 
-                  type="password" 
-                  placeholder="أعد إدخال كلمة المرور" 
-                  value={confirmPassword} 
-                  onChange={(e) => setConfirmPassword(e.target.value)} 
-                  required 
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-fvm-primary hover:bg-fvm-primary-light"
-                disabled={isLoading}
-              >
-                {isLoading ? "جاري الإنشاء..." : "إنشاء حساب للمطعم"}
-              </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
@@ -152,6 +155,29 @@ const RestaurantCredentials = () => {
             </Button>
           </CardFooter>
         </Card>
+
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="rtl">
+            <DialogHeader>
+              <DialogTitle>رابط إعداد حساب المطعم</DialogTitle>
+              <DialogDescription>
+                شارك هذا الرابط مع مدير المطعم ليتمكن من إعداد كلمة المرور الخاصة به
+              </DialogDescription>
+            </DialogHeader>
+            <div className="bg-gray-100 p-3 rounded-md break-all text-sm">
+              {setupLink}
+            </div>
+            <DialogFooter>
+              <Button 
+                className="bg-fvm-primary hover:bg-fvm-primary-light w-full flex items-center gap-2 justify-center" 
+                onClick={handleCopyLink}
+              >
+                <Copy className="h-4 w-4" />
+                <span>نسخ الرابط</span>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
