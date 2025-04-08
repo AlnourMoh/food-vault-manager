@@ -87,7 +87,7 @@ const Inventory = () => {
                 <SelectValue placeholder="جميع المطاعم" />
               </SelectTrigger>
               <SelectContent position="popper">
-                <SelectItem value="">جميع المطاعم</SelectItem>
+                <SelectItem value="all">جميع المطاعم</SelectItem>
                 {restaurants.map((restaurant) => (
                   <SelectItem key={restaurant.id} value={restaurant.id}>
                     {restaurant.name}
