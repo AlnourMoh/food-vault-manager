@@ -31,6 +31,7 @@ const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Set up React Query with proper configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -40,6 +41,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+console.log("App is initializing...");
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { getMockData } from '@/services/mockData'; // تصحيح مسار الاستيراد
+import { getMockData } from '@/services/mockData';
 import { 
   Card, 
   CardContent, 
