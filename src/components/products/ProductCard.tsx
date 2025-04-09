@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Barcode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Product } from '@/types';
 import { format } from 'date-fns';
 
@@ -38,9 +38,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isRestaurantRoute })
     navigate(barcodesPath);
   };
   
+  // Default placeholder image for food products
+  const placeholderImageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200";
+  
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
-      <div className="aspect-video bg-gray-100 flex items-center justify-center">
+      <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
         {product.imageUrl ? (
           <img 
             src={product.imageUrl} 
@@ -48,11 +51,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isRestaurantRoute })
             className="w-full h-full object-cover"
           />
         ) : (
-          <Avatar className="h-24 w-24 bg-primary text-primary-foreground">
-            <AvatarFallback className="text-3xl">
-              {getProductInitials(product.name)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="w-full h-full flex items-center justify-center">
+            <img 
+              src={placeholderImageUrl}
+              alt="صورة توضيحية للمنتج" 
+              className="w-full h-full object-cover opacity-40"
+            />
+            <Avatar className="h-24 w-24 absolute">
+              <AvatarFallback className="text-3xl bg-primary text-white">
+                {getProductInitials(product.name)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
         )}
       </div>
       <CardContent className="p-4">

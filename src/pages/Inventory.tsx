@@ -51,20 +51,33 @@ const Inventory = () => {
         
         if (data) {
           // Transform the data to match our Product type
-          const transformedProducts: Product[] = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            category: item.category,
-            quantity: item.quantity,
-            expiryDate: new Date(item.expiry_date),
-            entryDate: new Date(item.production_date),
-            restaurantId: item.company_id,
-            status: item.status as "active" | "expired" | "removed",
-            imageUrl: null, // Set as null by default, since there's no imageUrl column in the database
-            restaurantName: '',
-            addedBy: '',
-            unit: ''
-          }));
+          // Add placeholder image URLs based on category for better visual experience
+          const transformedProducts: Product[] = data.map(item => {
+            // Generate a relevant placeholder based on category
+            let placeholderImage = null;
+            if (item.category === 'خضروات') {
+              placeholderImage = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c";
+            } else if (item.category === 'لحوم') {
+              placeholderImage = "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f";
+            } else if (item.category === 'بهارات') {
+              placeholderImage = "https://images.unsplash.com/photo-1532336414046-2a0e3a1dd7e5";
+            }
+            
+            return {
+              id: item.id,
+              name: item.name,
+              category: item.category,
+              quantity: item.quantity,
+              expiryDate: new Date(item.expiry_date),
+              entryDate: new Date(item.production_date),
+              restaurantId: item.company_id,
+              status: item.status as "active" | "expired" | "removed",
+              imageUrl: placeholderImage, // Use placeholder image based on category
+              restaurantName: '',
+              addedBy: '',
+              unit: ''
+            };
+          });
           
           setProducts(transformedProducts);
         }
