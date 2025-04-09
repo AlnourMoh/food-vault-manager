@@ -21,11 +21,38 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Plus } from 'lucide-react';
 
 const AddProducts = () => {
   const { restaurants } = getMockData();
   const { toast } = useToast();
   
+  // State for categories
+  const [categories, setCategories] = useState([
+    'بقالة',
+    'لحوم',
+    'ألبان',
+    'خضروات',
+    'فواكه',
+    'بهارات',
+    'زيوت',
+    'مجمدات',
+  ]);
+  
+  // State for new category
+  const [newCategory, setNewCategory] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Form data state
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -65,6 +92,21 @@ const AddProducts = () => {
     });
   };
 
+  // Handle adding a new category
+  const handleAddCategory = () => {
+    if (newCategory.trim() !== '' && !categories.includes(newCategory)) {
+      setCategories([...categories, newCategory]);
+      setFormData(prev => ({ ...prev, category: newCategory }));
+      setNewCategory('');
+      setDialogOpen(false);
+      
+      toast({
+        title: "تم إضافة التصنيف بنجاح",
+        description: `تم إضافة تصنيف "${newCategory}" إلى قائمة التصنيفات`,
+      });
+    }
+  };
+
   return (
     <MainLayout>
       <div className="rtl space-y-6">
@@ -92,24 +134,59 @@ const AddProducts = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="category">التصنيف</Label>
-                  <Select 
-                    value={formData.category} 
-                    onValueChange={(value) => handleSelectChange('category', value)}
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="اختر تصنيف المنتج" />
-                    </SelectTrigger>
-                    <SelectContent position="popper">
-                      <SelectItem value="groceries">بقالة</SelectItem>
-                      <SelectItem value="meat">لحوم</SelectItem>
-                      <SelectItem value="dairy">ألبان</SelectItem>
-                      <SelectItem value="vegetables">خضروات</SelectItem>
-                      <SelectItem value="fruits">فواكه</SelectItem>
-                      <SelectItem value="spices">بهارات</SelectItem>
-                      <SelectItem value="oils">زيوت</SelectItem>
-                      <SelectItem value="frozen">مجمدات</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select 
+                      value={formData.category} 
+                      onValueChange={(value) => handleSelectChange('category', value)}
+                    >
+                      <SelectTrigger id="category" className="flex-1">
+                        <SelectValue placeholder="اختر تصنيف المنتج" />
+                      </SelectTrigger>
+                      <SelectContent position="popper">
+                        {categories.map((category, index) => (
+                          <SelectItem key={index} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="icon" title="إضافة تصنيف جديد">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>إضافة تصنيف جديد</DialogTitle>
+                          <DialogDescription>
+                            أدخل اسم التصنيف الجديد لإضافته إلى قائمة التصنيفات المتاحة
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                          <Label htmlFor="new-category">اسم التصنيف</Label>
+                          <Input 
+                            id="new-category"
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value)}
+                            placeholder="أدخل اسم التصنيف الجديد"
+                            className="mt-2"
+                          />
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDialogOpen(false)}>إلغاء</Button>
+                          <Button 
+                            onClick={handleAddCategory}
+                            className="bg-fvm-primary hover:bg-fvm-primary-light"
+                            disabled={!newCategory.trim()}
+                          >
+                            إضافة
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
