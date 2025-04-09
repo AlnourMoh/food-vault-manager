@@ -34,9 +34,9 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
     // Open a print window with the generated HTML content
     openPrintWindow({
       barcode: barcodeToPrint,
-      productName: product?.name || '',
-      labelSize: labelSize,
-      barcodeImageHtml: barcodeImageHtml,
+      product,
+      labelSize,
+      barcodeImageHtml,
       toast
     });
   };

@@ -38,6 +38,21 @@ export interface Product {
   name: string;
   
   /**
+   * Product category
+   */
+  category?: string;
+  
+  /**
+   * Production date of the product
+   */
+  productionDate?: Date | string | null;
+  
+  /**
+   * Expiry date of the product
+   */
+  expiryDate?: Date | string | null;
+  
+  /**
    * Optional URL to the product image
    */
   imageUrl?: string;
@@ -76,4 +91,3 @@ export const LABEL_SIZES: LabelSize[] = [
   { id: 'medium', name: 'متوسط (50mm × 30mm)', width: 50, height: 30 },
   { id: 'large', name: 'كبير (70mm × 50mm)', width: 70, height: 50 },
 ];
-

@@ -1,10 +1,10 @@
 
-import { LabelSize, Barcode } from '../types';
+import { LabelSize, Barcode, Product } from '../types';
 import { generateBarcodeHtml } from './barcodeHtmlTemplate';
 
 interface PrintWindowParams {
   barcode: Barcode;
-  productName: string;
+  product: Product | null;
   labelSize: LabelSize;
   barcodeImageHtml: string;
   toast: any;
@@ -17,7 +17,7 @@ interface PrintWindowParams {
  */
 export const openPrintWindow = ({
   barcode,
-  productName,
+  product,
   labelSize,
   barcodeImageHtml,
   toast
@@ -37,7 +37,10 @@ export const openPrintWindow = ({
   // Generate complete HTML document with our template
   const barcodeHtml = generateBarcodeHtml({
     barcode,
-    productName,
+    productName: product?.name || '',
+    productCategory: product?.category,
+    productionDate: product?.productionDate,
+    expiryDate: product?.expiryDate,
     labelSize,
     barcodeImageHtml
   });
@@ -46,7 +49,7 @@ export const openPrintWindow = ({
   printWindow.document.write(barcodeHtml);
   printWindow.document.close();
 
-  // Add automatic printing functionality (moved from HTML template to here)
+  // Add automatic printing functionality
   setupAutoPrint(printWindow);
 };
 

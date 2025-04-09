@@ -31,7 +31,7 @@ export const useBarcodesData = (productId: string | undefined) => {
         
         console.log("Fetching barcodes for product ID:", productId);
         
-        // Step 1: Fetch the product information
+        // Step 1: Fetch the product information with additional fields
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select('*')
@@ -46,10 +46,13 @@ export const useBarcodesData = (productId: string | undefined) => {
         console.log("Product data:", productData);
         
         if (productData) {
-          // Step 2: Set product info in state
+          // Step 2: Set product info in state with additional fields
           setProduct({
             id: productData.id,
-            name: productData.name
+            name: productData.name,
+            category: productData.category,
+            productionDate: productData.production_date,
+            expiryDate: productData.expiry_date
           });
           
           // Step 3: Try to fetch barcodes from database

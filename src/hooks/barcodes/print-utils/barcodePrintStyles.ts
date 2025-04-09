@@ -41,6 +41,13 @@ export const getBasePrintStyles = (): string => {
       text-overflow: ellipsis;
     }
     
+    .product-category {
+      text-align: center;
+      width: 100%;
+      font-size: 0.85em;
+      margin-top: 0.5mm;
+    }
+    
     .barcode-image {
       display: flex;
       align-items: center;
@@ -71,6 +78,20 @@ export const getBasePrintStyles = (): string => {
       width: 100%;
       margin-top: 1mm;
     }
+    
+    .product-dates {
+      text-align: center;
+      width: 100%;
+      margin-top: 1mm;
+      font-size: 0.85em;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5mm;
+    }
+    
+    .production-date, .expiry-date {
+      display: block;
+    }
   `;
 };
 
@@ -86,13 +107,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
       return `
         .product-name {
           font-size: 6pt;
-          margin-bottom: 1mm;
+          margin-bottom: 0.5mm;
+        }
+        
+        .product-category {
+          font-size: 4pt;
+          margin-bottom: 0.3mm;
         }
         
         .barcode-image {
           height: 10mm;
           width: 35mm;
-          margin: 0.5mm 0;
+          margin: 0.3mm 0;
         }
         
         .barcode-number {
@@ -101,7 +127,12 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
         
         .product-id {
           font-size: 4pt;
-          margin-top: 0.5mm;
+          margin-top: 0.3mm;
+        }
+        
+        .product-dates {
+          font-size: 3.5pt;
+          margin-top: 0.3mm;
         }
       `;
     
@@ -109,13 +140,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
       return `
         .product-name {
           font-size: 8pt;
-          margin-bottom: 1.5mm;
+          margin-bottom: 0.8mm;
+        }
+        
+        .product-category {
+          font-size: 6pt;
+          margin-bottom: 0.5mm;
         }
         
         .barcode-image {
           height: 15mm;
           width: 45mm;
-          margin: 1mm 0;
+          margin: 0.5mm 0;
         }
         
         .barcode-number {
@@ -124,7 +160,12 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
         
         .product-id {
           font-size: 6pt;
-          margin-top: 1mm;
+          margin-top: 0.5mm;
+        }
+        
+        .product-dates {
+          font-size: 5pt;
+          margin-top: 0.5mm;
         }
       `;
     
@@ -133,13 +174,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
       return `
         .product-name {
           font-size: 10pt;
-          margin-bottom: 2mm;
+          margin-bottom: 1mm;
+        }
+        
+        .product-category {
+          font-size: 8pt;
+          margin-bottom: 0.8mm;
         }
         
         .barcode-image {
           height: 25mm;
           width: 60mm;
-          margin: 2mm 0;
+          margin: 1mm 0;
         }
         
         .barcode-number {
@@ -148,7 +194,12 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
         
         .product-id {
           font-size: 8pt;
-          margin-top: 1.5mm;
+          margin-top: 0.8mm;
+        }
+        
+        .product-dates {
+          font-size: 7pt;
+          margin-top: 0.8mm;
         }
       `;
   }
