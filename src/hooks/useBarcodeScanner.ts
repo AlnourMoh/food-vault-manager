@@ -1,5 +1,5 @@
 
-import { BarcodeScanner } from '@capacitor/barcode-scanner';
+import BarcodeScanner from '@capacitor/barcode-scanner';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
