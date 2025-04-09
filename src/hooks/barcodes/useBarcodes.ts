@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { generateBarcodesFromProduct } from '@/utils/barcodeUtils';
+import { generateBarcodesFromProduct, generateBarcodeImage } from '@/utils/barcodeUtils';
 
 interface Barcode {
   id: string;
