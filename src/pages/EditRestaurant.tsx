@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import RestaurantForm from '@/components/restaurant/RestaurantForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { updateRestaurant } from '@/services/restaurantService';
 import { RestaurantFormValues } from '@/validations/restaurantSchema';
 
 interface RestaurantData {
@@ -81,20 +80,23 @@ const EditRestaurant = () => {
       // Combine the phone number with country code for API call
       const fullPhoneNumber = `+${values.phoneCountryCode}${values.phoneNumber}`;
       
-      // Update the service call to include the manager field
-      const updatedRestaurant = await supabase.rpc('force_update_company_with_manager', {
-        p_company_id: id,
-        p_name: values.name,
-        p_phone: fullPhoneNumber,
-        p_address: values.address,
-        p_manager: values.manager
-      });
+      // Use a generic RPC call that TypeScript will accept
+      const { data, error } = await supabase.rpc(
+        'force_update_company_with_manager' as any, 
+        {
+          p_company_id: id,
+          p_name: values.name,
+          p_phone: fullPhoneNumber,
+          p_address: values.address,
+          p_manager: values.manager
+        }
+      );
 
-      if (updatedRestaurant.error) {
-        throw updatedRestaurant.error;
+      if (error) {
+        throw error;
       }
 
-      console.log('Updated restaurant:', updatedRestaurant.data);
+      console.log('Updated restaurant:', data);
 
       toast({
         title: 'تم تحديث المطعم',

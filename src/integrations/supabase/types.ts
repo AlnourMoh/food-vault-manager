@@ -554,6 +554,17 @@ export type Database = {
         }
         Returns: Json
       }
+      force_update_company_with_manager: {
+        Args: {
+          p_company_id: string
+          p_name: string
+          p_phone: string
+          p_address: string
+          p_manager: string
+          p_logo_url?: string
+        }
+        Returns: Json
+      }
       insert_employee_credential: {
         Args: {
           p_company_id: string
