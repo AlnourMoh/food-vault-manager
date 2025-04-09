@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -12,11 +12,22 @@ import RestaurantLayout from '@/components/layout/RestaurantLayout';
 const MobileRemoveProduct = () => {
   const { toast } = useToast();
   const [reason, setReason] = useState('');
-  const { startScan, isScanning, scannedCode, setScannedCode } = useBarcodeScanner();
+  const { startScan, stopScan, isScanning, scannedCode, setScannedCode } = useBarcodeScanner();
   const [productDetails, setProductDetails] = useState<any | null>(null);
   
+  // إيقاف المسح عند الخروج من الصفحة
+  useEffect(() => {
+    return () => {
+      if (isScanning) {
+        stopScan();
+      }
+    };
+  }, [isScanning, stopScan]);
+  
   const handleScanBarcode = async () => {
+    console.log("بدء مسح الباركود للإخراج");
     const code = await startScan();
+    console.log("نتيجة المسح للإخراج:", code);
     if (code) {
       setScannedCode(code);
       

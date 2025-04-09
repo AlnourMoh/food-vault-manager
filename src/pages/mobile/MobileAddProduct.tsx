@@ -16,7 +16,7 @@ const MobileAddProduct = () => {
   const [category, setCategory] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('');
-  const { startScan, isScanning, scannedCode, setScannedCode } = useBarcodeScanner();
+  const { startScan, stopScan, isScanning, scannedCode, setScannedCode } = useBarcodeScanner();
   
   const restaurantId = localStorage.getItem('restaurantId');
 
@@ -24,11 +24,21 @@ const MobileAddProduct = () => {
   const categories = ['خضروات', 'فواكه', 'لحوم', 'بهارات', 'بقالة', 'أخرى'];
   const units = ['كيلوجرام', 'جرام', 'لتر', 'قطعة', 'علبة', 'كرتون'];
 
+  // إيقاف المسح عند الخروج من الصفحة
+  useEffect(() => {
+    return () => {
+      if (isScanning) {
+        stopScan();
+      }
+    };
+  }, [isScanning, stopScan]);
+
   useEffect(() => {
     // When a barcode is scanned, we can either:
     // 1. Populate a form field with the barcode
     // 2. Fetch product info from the database based on the barcode
     if (scannedCode) {
+      console.log("تم مسح الباركود:", scannedCode);
       toast({
         title: "تم مسح الباركود بنجاح",
         description: `الرمز المقروء: ${scannedCode}`,
@@ -41,7 +51,9 @@ const MobileAddProduct = () => {
   }, [scannedCode, toast]);
 
   const handleScanBarcode = async () => {
+    console.log("بدء مسح الباركود");
     const code = await startScan();
+    console.log("نتيجة المسح:", code);
     if (code) {
       setScannedCode(code);
     }

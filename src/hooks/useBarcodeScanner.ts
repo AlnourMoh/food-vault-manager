@@ -1,6 +1,6 @@
 
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export const useBarcodeScanner = () => {
@@ -8,6 +8,27 @@ export const useBarcodeScanner = () => {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // تهيئة BarcodeScanner وإضافة المستمعين عند تحميل المكون
+  useEffect(() => {
+    const prepareScanner = async () => {
+      try {
+        await BarcodeScanner.prepare();
+      } catch (error) {
+        console.error('Error preparing barcode scanner:', error);
+      }
+    };
+
+    prepareScanner();
+
+    // تنظيف عند إزالة المكون
+    return () => {
+      if (isScanning) {
+        BarcodeScanner.stopScan();
+        BarcodeScanner.showBackground();
+      }
+    };
+  }, [isScanning]);
 
   // Check and request permissions
   const checkPermissions = async (): Promise<boolean> => {
@@ -54,11 +75,17 @@ export const useBarcodeScanner = () => {
       
       setIsScanning(true);
       
+      // إضافة CSS للصفحة لإخفاء المحتوى أثناء المسح
+      document.body.classList.add('barcode-scanner-active');
+      
       // Make the background visible behind the scanner
       await BarcodeScanner.hideBackground();
       
       // Start the scan process
       const result = await BarcodeScanner.startScan();
+      
+      // إزالة CSS عند الانتهاء من المسح
+      document.body.classList.remove('barcode-scanner-active');
       
       if (result.hasContent) {
         setScannedCode(result.content);
@@ -71,6 +98,10 @@ export const useBarcodeScanner = () => {
     } catch (error) {
       console.error('Scanning error:', error);
       setIsScanning(false);
+      // التأكد من إعادة الخلفية في حالة حدوث خطأ
+      document.body.classList.remove('barcode-scanner-active');
+      await BarcodeScanner.showBackground();
+      
       toast({
         title: "خطأ في المسح",
         description: "حدث خطأ أثناء مسح الباركود",
@@ -84,7 +115,9 @@ export const useBarcodeScanner = () => {
   const stopScan = async () => {
     try {
       setIsScanning(false);
+      document.body.classList.remove('barcode-scanner-active');
       await BarcodeScanner.stopScan();
+      await BarcodeScanner.showBackground();
     } catch (error) {
       console.error('Error stopping scan:', error);
     }
