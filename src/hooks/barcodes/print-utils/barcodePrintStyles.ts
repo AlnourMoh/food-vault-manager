@@ -32,29 +32,38 @@ export const getBasePrintStyles = (): string => {
       align-items: center;
     }
     
-    .product-name {
+    /* Header section with product info */
+    .header {
+      width: 100%;
       text-align: center;
+      padding-bottom: 0.5mm;
+      border-bottom: 0.2mm solid #ddd;
+    }
+    
+    .product-name {
       font-weight: bold;
       width: 100%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin: 0;
+      line-height: 1.1;
     }
     
     .product-category {
-      text-align: center;
       width: 100%;
-      font-size: 0.85em;
-      margin-top: 0.5mm;
+      margin: 0;
+      line-height: 1.1;
     }
     
+    /* Barcode section */
     .barcode-image {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
       flex-grow: 1;
-      padding: 1mm 0;
+      padding: 0.5mm 0;
     }
     
     .barcode-image svg {
@@ -67,30 +76,39 @@ export const getBasePrintStyles = (): string => {
       text-align: center;
       font-family: 'Courier New', monospace;
       font-weight: normal;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       width: 100%;
-      margin-top: -2mm;
+      margin-top: -1mm;
+      line-height: 1;
+    }
+    
+    /* Footer section */
+    .footer {
+      width: 100%;
+      border-top: 0.2mm solid #ddd;
+      padding-top: 0.3mm;
+      display: flex;
+      flex-direction: column;
     }
     
     .product-id {
-      text-align: center;
-      color: #666;
+      color: #555;
       width: 100%;
-      margin-top: 1mm;
+      line-height: 1.1;
+      margin: 0;
     }
     
-    .product-dates {
-      text-align: center;
+    .dates-container {
       width: 100%;
-      margin-top: 1mm;
-      font-size: 0.85em;
       display: flex;
-      flex-direction: column;
-      gap: 0.5mm;
+      justify-content: space-between;
+      margin: 0;
+      line-height: 1;
     }
     
     .production-date, .expiry-date {
-      display: block;
+      display: inline-block;
+      white-space: nowrap;
     }
   `;
 };
@@ -105,101 +123,116 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
   switch (labelSize.id) {
     case 'small':
       return `
+        .header {
+          padding-bottom: 0.3mm;
+        }
+        
         .product-name {
           font-size: 6pt;
-          margin-bottom: 0.5mm;
         }
         
         .product-category {
           font-size: 4pt;
-          margin-bottom: 0.3mm;
         }
         
         .barcode-image {
           height: 10mm;
           width: 35mm;
-          margin: 0.3mm 0;
+          margin: 0.2mm 0;
         }
         
         .barcode-number {
           font-size: 5pt;
         }
         
-        .product-id {
-          font-size: 4pt;
-          margin-top: 0.3mm;
+        .footer {
+          padding-top: 0.2mm;
         }
         
-        .product-dates {
+        .product-id {
+          font-size: 4pt;
+        }
+        
+        .dates-container {
           font-size: 3.5pt;
-          margin-top: 0.3mm;
+          margin-top: 0.1mm;
         }
       `;
     
     case 'medium':
       return `
+        .header {
+          padding-bottom: 0.4mm;
+        }
+        
         .product-name {
           font-size: 8pt;
-          margin-bottom: 0.8mm;
         }
         
         .product-category {
           font-size: 6pt;
-          margin-bottom: 0.5mm;
         }
         
         .barcode-image {
           height: 15mm;
           width: 45mm;
-          margin: 0.5mm 0;
+          margin: 0.3mm 0;
         }
         
         .barcode-number {
           font-size: 7pt;
         }
         
-        .product-id {
-          font-size: 6pt;
-          margin-top: 0.5mm;
+        .footer {
+          padding-top: 0.3mm;
         }
         
-        .product-dates {
+        .product-id {
+          font-size: 6pt;
+        }
+        
+        .dates-container {
           font-size: 5pt;
-          margin-top: 0.5mm;
+          margin-top: 0.2mm;
         }
       `;
     
     case 'large':
     default:
       return `
+        .header {
+          padding-bottom: 0.6mm;
+        }
+        
         .product-name {
           font-size: 10pt;
-          margin-bottom: 1mm;
         }
         
         .product-category {
           font-size: 8pt;
-          margin-bottom: 0.8mm;
         }
         
         .barcode-image {
           height: 25mm;
           width: 60mm;
-          margin: 1mm 0;
+          margin: 0.5mm 0;
         }
         
         .barcode-number {
           font-size: 9pt;
         }
         
-        .product-id {
-          font-size: 8pt;
-          margin-top: 0.8mm;
+        .footer {
+          padding-top: 0.4mm;
         }
         
-        .product-dates {
+        .product-id {
+          font-size: 8pt;
+        }
+        
+        .dates-container {
           font-size: 7pt;
-          margin-top: 0.8mm;
+          margin-top: 0.3mm;
         }
       `;
   }
