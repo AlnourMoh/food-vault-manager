@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Barcode, Image as ImageIcon } from 'lucide-react';
 import { Product } from '@/types';
+import { format } from 'date-fns';
 
 const Inventory = () => {
   const navigate = useNavigate();
@@ -56,10 +57,10 @@ const Inventory = () => {
             entryDate: new Date(item.production_date),
             restaurantId: item.company_id,
             status: item.status as "active" | "expired" | "removed",
-            imageUrl: (item as any).imageUrl || '', // Safely access potentially missing imageUrl property
+            imageUrl: null, // Set as null by default, since there's no imageUrl column in the database
             restaurantName: '',
             addedBy: '',
-            unit: (item as any).unit || ''
+            unit: ''
           }));
           
           setProducts(transformedProducts);
@@ -84,6 +85,11 @@ const Inventory = () => {
       ? `/restaurant/products/${productId}/barcodes` 
       : `/products/${productId}/barcodes`;
     navigate(barcodesPath);
+  };
+
+  // Format date in Gregorian format (DD/MM/YYYY)
+  const formatDate = (date: Date): string => {
+    return format(date, 'dd/MM/yyyy');
   };
 
   // Choose the appropriate layout based on the route
@@ -134,7 +140,7 @@ const Inventory = () => {
                   <div className="mt-2 space-y-1 text-sm">
                     <p><span className="font-medium">التصنيف:</span> {product.category}</p>
                     <p><span className="font-medium">الكمية:</span> {product.quantity}</p>
-                    <p><span className="font-medium">تاريخ الانتهاء:</span> {product.expiryDate.toLocaleDateString('ar-SA')}</p>
+                    <p><span className="font-medium">تاريخ الانتهاء:</span> {formatDate(product.expiryDate)}</p>
                   </div>
                   <div className="mt-3 pt-2 border-t flex justify-end">
                     <Button 

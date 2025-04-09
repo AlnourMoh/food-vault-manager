@@ -52,8 +52,7 @@ const ProductBarcodes = () => {
         if (productData) {
           setProduct({
             id: productData.id,
-            name: productData.name,
-            imageUrl: (productData as any).imageUrl || ''
+            name: productData.name
           });
         }
         
@@ -90,6 +89,19 @@ const ProductBarcodes = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Generate SVG barcode
+  const generateBarcodeImage = (code: string) => {
+    // Simple barcode representation
+    const bars = code.split('').map((char, index) => {
+      const width = Math.floor(Math.random() * 3) + 1; // Random width between 1-3
+      return `<rect key="${index}" x="${index * 6}" y="0" width="${width}" height="50" fill="black" />`;
+    });
+
+    return `<svg width="100%" height="100%" viewBox="0 0 ${code.length * 6} 50" xmlns="http://www.w3.org/2000/svg">
+      ${bars.join('')}
+    </svg>`;
   };
 
   // Choose the appropriate layout based on the route
@@ -136,12 +148,13 @@ const ProductBarcodes = () => {
                     <div className="w-full text-center py-2 border-b mb-2">
                       {product?.name}
                     </div>
-                    <div className="text-2xl font-mono my-2 text-center">
+                    <div className="text-lg font-mono my-2 text-center overflow-hidden">
                       {barcode.qr_code}
                     </div>
-                    {/* This is where we'd render an actual barcode or QR image */}
                     <div className="border-2 border-black w-full h-20 flex items-center justify-center my-2">
-                      {barcode.qr_code}
+                      <div dangerouslySetInnerHTML={{ 
+                        __html: generateBarcodeImage(barcode.qr_code) 
+                      }} className="w-full h-full" />
                     </div>
                     <div className="text-xs text-gray-500 mt-2">
                       رقم المنتج: {barcode.product_id.substring(0, 8)}

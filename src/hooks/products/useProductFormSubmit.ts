@@ -49,7 +49,7 @@ export const useProductFormSubmit = (
       // Generate a unique ID for the product
       const productId = uuidv4();
       
-      // Since we're having issues with storage bucket, we'll log this but not try to save it
+      // Log the image upload attempt even though we don't have storage yet
       if (formData.image) {
         console.log('Image upload skipped due to missing storage bucket');
         
@@ -60,7 +60,7 @@ export const useProductFormSubmit = (
         });
       }
 
-      // Create data object for insertion - removing unit field which doesn't exist in the database
+      // Create data object for insertion - removing fields that don't exist in the database
       const product = {
         id: productId,
         name: formData.name,
@@ -70,8 +70,7 @@ export const useProductFormSubmit = (
         production_date: new Date().toISOString(),
         company_id: restaurantId,
         status: 'active'
-        // Removed unit field as it doesn't exist in the database schema
-        // Removed imageUrl field as it doesn't exist in the database schema
+        // Note: unit and imageUrl fields are omitted since they don't exist in the database schema
       };
       
       // Insert data into Supabase
