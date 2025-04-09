@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,7 @@ import RestaurantStorageTeam from "./pages/restaurant/StorageTeam";
 import AddRestaurant from "./pages/AddRestaurant";
 import EditRestaurant from "./pages/EditRestaurant";
 import ProductBarcodes from '@/pages/ProductBarcodes';
+import EditProduct from '@/pages/EditProduct';
 
 // Restaurant route guard
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
@@ -58,6 +60,7 @@ function App() {
               <Route path="/products/remove" element={<RemoveProducts />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/expired" element={<Expired />} />
+              <Route path="/products/:productId/edit" element={<EditProduct />} />
               
               {/* Restaurant Authentication */}
               <Route path="/restaurant/login" element={<RestaurantLogin />} />
@@ -92,6 +95,11 @@ function App() {
               <Route path="/restaurant/expired" element={
                 <RestaurantRoute>
                   <Expired />
+                </RestaurantRoute>
+              } />
+              <Route path="/restaurant/products/:productId/edit" element={
+                <RestaurantRoute>
+                  <EditProduct />
                 </RestaurantRoute>
               } />
               
