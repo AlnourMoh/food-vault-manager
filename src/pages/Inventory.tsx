@@ -51,7 +51,7 @@ const Inventory = () => {
         
         if (data) {
           // Transform the data to match our Product type
-          // Add placeholder image URLs based on category for better visual experience
+          // Add appropriate placeholder images based on category
           const transformedProducts: Product[] = data.map(item => {
             // Generate a relevant placeholder based on category
             let placeholderImage = null;
@@ -61,6 +61,11 @@ const Inventory = () => {
               placeholderImage = "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f";
             } else if (item.category === 'بهارات') {
               placeholderImage = "https://images.unsplash.com/photo-1532336414046-2a0e3a1dd7e5";
+            } else if (item.category === 'بقالة') {
+              placeholderImage = "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f";
+            } else {
+              // Default placeholder for other categories
+              placeholderImage = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9";
             }
             
             return {

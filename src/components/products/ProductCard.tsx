@@ -38,8 +38,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isRestaurantRoute })
     navigate(barcodesPath);
   };
   
-  // Default placeholder image for food products
-  const placeholderImageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200";
+  // Get appropriate placeholder based on product category
+  const getPlaceholderImage = (category: string): string => {
+    switch (category) {
+      case 'خضروات':
+        return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200";
+      case 'لحوم':
+        return "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?q=80&w=200";
+      case 'بهارات':
+        return "https://images.unsplash.com/photo-1532336414046-2a0e3a1dd7e5?q=80&w=200";
+      case 'بقالة':
+        return "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?q=80&w=200";
+      default:
+        return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200";
+    }
+  };
+  
+  const placeholderImageUrl = getPlaceholderImage(product.category);
   
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
