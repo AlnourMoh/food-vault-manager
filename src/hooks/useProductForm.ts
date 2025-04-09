@@ -43,10 +43,16 @@ export const useProductForm = (): ProductFormHookReturn => {
   );
 
   const handleSubmit = (e: React.FormEvent) => {
-    const newErrors = submitHandler(e);
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    e.preventDefault(); // Ensure the form doesn't actually submit
+    const { isValid, errors: validationErrors } = validateForm(formData);
+    
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
     }
+    
+    // Only call submitHandler if validation passed
+    submitHandler(e);
   };
 
   // Use the isSubmitting state from the form submission hook

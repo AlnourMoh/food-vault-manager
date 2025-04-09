@@ -2,14 +2,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { FormData } from '@/components/products/types';
+import { FormData, FormError } from '@/components/products/types';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
 export const useProductFormSubmit = (
   formData: FormData, 
   setFormData: React.Dispatch<React.SetStateAction<FormData>>,
-  validateForm: (formData: FormData) => { isValid: boolean; errors: object }
+  validateForm: (formData: FormData) => { isValid: boolean; errors: FormError }
 ) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -86,6 +86,7 @@ export const useProductFormSubmit = (
         name: formData.name,
         category: formData.category,
         quantity: Number(formData.quantity),
+        unit: formData.unit, // Include unit field in database
         expiry_date: new Date(formData.expiryDate).toISOString(),
         production_date: new Date().toISOString(),
         company_id: restaurantId,

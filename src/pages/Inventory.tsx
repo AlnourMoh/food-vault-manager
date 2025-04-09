@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -55,10 +56,10 @@ const Inventory = () => {
             entryDate: new Date(item.production_date),
             restaurantId: item.company_id,
             status: item.status as "active" | "expired" | "removed",
-            imageUrl: item?.imageUrl || '', // Safely access imageUrl property
+            imageUrl: (item as any).imageUrl || '', // Safely access potentially missing imageUrl property
             restaurantName: '',
             addedBy: '',
-            unit: ''
+            unit: (item as any).unit || ''
           }));
           
           setProducts(transformedProducts);
