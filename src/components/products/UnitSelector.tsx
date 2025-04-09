@@ -21,20 +21,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { FormData, Unit } from '@/components/products/types';
+import { FormData, Unit, FormError } from '@/components/products/types';
 
 interface UnitSelectorProps {
   units: Unit[];
   setUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
   formData: FormData;
   handleSelectChange: (name: string, value: string) => void;
+  errors: FormError;
 }
 
 const UnitSelector: React.FC<UnitSelectorProps> = ({ 
   units, 
   setUnits, 
   formData, 
-  handleSelectChange 
+  handleSelectChange,
+  errors
 }) => {
   const { toast } = useToast();
   const [newUnit, setNewUnit] = useState<Unit>({ value: '', label: '' });
@@ -58,13 +60,16 @@ const UnitSelector: React.FC<UnitSelectorProps> = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="unit">وحدة القياس</Label>
+      <Label htmlFor="unit" className={errors.unit ? "text-destructive" : ""}>وحدة القياس</Label>
       <div className="flex gap-2">
         <Select 
           value={formData.unit} 
           onValueChange={(value) => handleSelectChange('unit', value)}
         >
-          <SelectTrigger id="unit" className="flex-1">
+          <SelectTrigger 
+            id="unit" 
+            className={`flex-1 ${errors.unit ? "border-destructive" : ""}`}
+          >
             <SelectValue placeholder="اختر وحدة القياس" />
           </SelectTrigger>
           <SelectContent position="popper">
@@ -124,6 +129,9 @@ const UnitSelector: React.FC<UnitSelectorProps> = ({
           </DialogContent>
         </Dialog>
       </div>
+      {errors.unit && (
+        <p className="text-xs text-destructive">{errors.unit}</p>
+      )}
     </div>
   );
 };

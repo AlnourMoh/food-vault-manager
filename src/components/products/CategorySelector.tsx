@@ -21,20 +21,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { FormData } from '@/components/products/types';
+import { FormData, FormError } from '@/components/products/types';
 
 interface CategorySelectorProps {
   categories: string[];
   setCategories: React.Dispatch<React.SetStateAction<string[]>>;
   formData: FormData;
   handleSelectChange: (name: string, value: string) => void;
+  errors: FormError;
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({ 
   categories, 
   setCategories, 
   formData, 
-  handleSelectChange 
+  handleSelectChange,
+  errors
 }) => {
   const { toast } = useToast();
   const [newCategory, setNewCategory] = useState('');
@@ -57,13 +59,16 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="category">التصنيف</Label>
+      <Label htmlFor="category" className={errors.category ? "text-destructive" : ""}>التصنيف</Label>
       <div className="flex gap-2">
         <Select 
           value={formData.category} 
           onValueChange={(value) => handleSelectChange('category', value)}
         >
-          <SelectTrigger id="category" className="flex-1">
+          <SelectTrigger 
+            id="category" 
+            className={`flex-1 ${errors.category ? "border-destructive" : ""}`}
+          >
             <SelectValue placeholder="اختر تصنيف المنتج" />
           </SelectTrigger>
           <SelectContent position="popper">
@@ -111,6 +116,9 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
           </DialogContent>
         </Dialog>
       </div>
+      {errors.category && (
+        <p className="text-xs text-destructive">{errors.category}</p>
+      )}
     </div>
   );
 };

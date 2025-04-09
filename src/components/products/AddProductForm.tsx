@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardFooter
 } from '@/components/ui/card';
-import { FormData } from '@/components/products/types';
+import { FormData, FormError } from '@/components/products/types';
 import CategorySelector from '@/components/products/CategorySelector';
 import UnitSelector from '@/components/products/UnitSelector';
 import ProductInfoFields from '@/components/products/ProductInfoFields';
@@ -23,6 +23,8 @@ interface AddProductFormProps {
   setCategories: React.Dispatch<React.SetStateAction<string[]>>;
   units: { value: string; label: string }[];
   setUnits: React.Dispatch<React.SetStateAction<{ value: string; label: string }[]>>;
+  errors: FormError;
+  isSubmitting: boolean;
 }
 
 const AddProductForm: React.FC<AddProductFormProps> = ({
@@ -33,7 +35,9 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
   categories,
   setCategories,
   units,
-  setUnits
+  setUnits,
+  errors,
+  isSubmitting
 }) => {
   return (
     <Card className="max-w-2xl mx-auto">
@@ -46,7 +50,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ProductInfoFields 
               formData={formData} 
-              handleInputChange={handleInputChange} 
+              handleInputChange={handleInputChange}
+              errors={errors} 
             />
             
             <CategorySelector 
@@ -54,6 +59,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
               setCategories={setCategories}
               formData={formData}
               handleSelectChange={handleSelectChange}
+              errors={errors}
             />
             
             <UnitSelector 
@@ -61,18 +67,20 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
               setUnits={setUnits}
               formData={formData}
               handleSelectChange={handleSelectChange}
+              errors={errors}
             />
           </div>
         </form>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline">إلغاء</Button>
+        <Button variant="outline" type="button">إلغاء</Button>
         <Button 
           type="submit" 
           form="add-product-form" 
           className="bg-fvm-primary hover:bg-fvm-primary-light"
+          disabled={isSubmitting}
         >
-          إضافة المنتج
+          {isSubmitting ? 'جاري الإضافة...' : 'إضافة المنتج'}
         </Button>
       </CardFooter>
     </Card>
