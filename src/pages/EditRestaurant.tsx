@@ -31,10 +31,10 @@ const EditRestaurant = () => {
       try {
         console.log('Fetching restaurant with ID:', id);
         
-        // استخدام الاستعلام المباشر للحصول على بيانات المطعم
+        // تعديل الاستعلام ليشمل حقل المدير
         const { data, error } = await supabase
           .from('companies')
-          .select('name, email, phone, address')
+          .select('name, email, phone, address, manager')
           .eq('id', id)
           .single();
 
@@ -46,13 +46,12 @@ const EditRestaurant = () => {
         console.log('Fetched restaurant data:', data);
         
         if (data) {
-          // Set the manager field as an empty string since it doesn't exist in the database
           setRestaurantData({
             name: data.name,
             email: data.email,
             phone: data.phone,
             address: data.address,
-            manager: '' // Set a default empty value since manager doesn't exist in companies table
+            manager: data.manager || '' // استخدام قيمة المدير من قاعدة البيانات أو إرجاع قيمة فارغة
           });
         }
       } catch (error: any) {
