@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -56,8 +55,7 @@ const Inventory = () => {
             entryDate: new Date(item.production_date),
             restaurantId: item.company_id,
             status: item.status as "active" | "expired" | "removed",
-            // The fix: Use optional chaining to safely access imageUrl or set default empty string
-            imageUrl: item.imageUrl || '', 
+            imageUrl: item?.imageUrl || '', // Safely access imageUrl property
             restaurantName: '',
             addedBy: '',
             unit: ''
