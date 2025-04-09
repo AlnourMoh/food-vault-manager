@@ -4,6 +4,9 @@ import MainLayout from '@/components/layout/MainLayout';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { getMockData } from '@/services/mockData';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
   CardContent, 
@@ -26,6 +29,7 @@ const Inventory = () => {
   const [activeProducts] = useState<Product[]>(products.filter(p => p.status === 'active'));
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(activeProducts);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const navigate = useNavigate();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -55,6 +59,13 @@ const Inventory = () => {
     return diffDays;
   };
 
+  const handleAddProduct = () => {
+    // توجيه المستخدم إلى صفحة إضافة المنتجات
+    const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
+    const addProductPath = isRestaurantRoute ? '/restaurant/products/add' : '/products/add';
+    navigate(addProductPath);
+  };
+
   // Check current route and use appropriate layout
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
@@ -62,7 +73,17 @@ const Inventory = () => {
   return (
     <Layout>
       <div className="rtl space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">المخزون</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">المخزون</h1>
+          
+          <Button 
+            onClick={handleAddProduct}
+            className="bg-fvm-primary hover:bg-fvm-primary-light flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>إضافة منتج</span>
+          </Button>
+        </div>
         
         <div className="w-full">
           <Input 
