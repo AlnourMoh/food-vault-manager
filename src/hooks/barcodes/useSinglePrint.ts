@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Barcode, Product, LabelSize } from './types';
 import { generateBarcodeImage } from '@/utils/barcodeUtils';
 import { generateBarcodeHtml } from './print-utils/barcodeHtmlTemplate';
+import { openPrintWindow } from './print-utils/printWindowManager';
 
 /**
  * Hook for handling single barcode printing functionality
@@ -28,32 +29,17 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
       return;
     }
 
-    // Create a new print window
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      // Show error if popup blocker is enabled
-      toast({
-        title: "خطأ في الطباعة",
-        description: "فشلت عملية فتح نافذة الطباعة. الرجاء التأكد من السماح بالنوافذ المنبثقة.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Generate barcode image HTML
     const barcodeImageHtml = generateBarcodeImage(barcodeToPrint.qr_code);
 
-    // Generate complete HTML document with our template
-    const barcodeHtml = generateBarcodeHtml({
+    // Open a print window with the generated HTML content
+    openPrintWindow({
       barcode: barcodeToPrint,
       productName: product?.name || '',
       labelSize: labelSize,
-      barcodeImageHtml: barcodeImageHtml
+      barcodeImageHtml: barcodeImageHtml,
+      toast
     });
-
-    // Write content to the window and close document
-    printWindow.document.write(barcodeHtml);
-    printWindow.document.close();
   };
 
   return { handlePrintSingle };

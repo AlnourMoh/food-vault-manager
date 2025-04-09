@@ -49,17 +49,6 @@ export const generateBarcodeHtml = ({
         </div>
         <div class="product-id">رقم المنتج: ${barcode.product_id.substring(0, 8)}</div>
       </div>
-      <script>
-        // Print automatically after loading
-        window.onload = function() {
-          setTimeout(function() {
-            window.print();
-            setTimeout(function() {
-              window.close();
-            }, 500);
-          }, 300);
-        };
-      </script>
     </body>
     </html>
   `;
