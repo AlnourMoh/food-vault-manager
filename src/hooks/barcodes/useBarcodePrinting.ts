@@ -33,6 +33,9 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
    * with optimized settings for the selected label size
    */
   const handlePrint = () => {
+    // Add label size class to body for CSS targeting
+    document.body.classList.add(`label-size-${selectedLabelSize.id}`);
+    
     // Create a custom print stylesheet with the selected size
     const style = document.createElement('style');
     style.innerHTML = `
@@ -40,29 +43,16 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
         size: ${selectedLabelSize.width}mm ${selectedLabelSize.height}mm;
         margin: 0mm;
       }
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      .barcode-card {
-        width: ${selectedLabelSize.width - 2}mm;
-        height: ${selectedLabelSize.height - 2}mm;
-        padding: 1mm;
-        page-break-after: always;
-        box-sizing: border-box;
-      }
-      .barcode-grid {
-        display: block !important;
-      }
     `;
     document.head.appendChild(style);
     
-    // إظهار نافذة الطباعة
+    // Show print dialog
     window.print();
     
-    // إزالة نمط الطباعة المخصص بعد الطباعة
+    // Clean up after printing
     setTimeout(() => {
       document.head.removeChild(style);
+      document.body.classList.remove(`label-size-${selectedLabelSize.id}`);
     }, 1000);
   };
 
@@ -88,16 +78,6 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
       });
       return;
     }
-
-    // Adjust font sizes and layout based on label size
-    const fontSizes = {
-      productName: selectedLabelSize.id === 'small' ? '6pt' : selectedLabelSize.id === 'medium' ? '8pt' : '10pt',
-      barcodeNumber: selectedLabelSize.id === 'small' ? '5pt' : selectedLabelSize.id === 'medium' ? '7pt' : '9pt',
-      productId: selectedLabelSize.id === 'small' ? '4pt' : selectedLabelSize.id === 'medium' ? '6pt' : '8pt',
-    };
-    
-    // Adjust barcode image height based on label size
-    const barcodeHeight = selectedLabelSize.id === 'small' ? '10mm' : selectedLabelSize.id === 'medium' ? '14mm' : '25mm';
 
     // Create HTML content for printing with appropriate styling for the selected label size
     const barcodeHtml = `
@@ -130,24 +110,25 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
           .product-name {
             text-align: center;
             font-weight: bold;
-            font-size: ${fontSizes.productName};
+            font-size: ${selectedLabelSize.id === 'small' ? '6pt' : selectedLabelSize.id === 'medium' ? '8pt' : '10pt'};
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 1mm;
+            margin-bottom: ${selectedLabelSize.id === 'small' ? '0.3mm' : selectedLabelSize.id === 'medium' ? '0.5mm' : '1mm'};
           }
           .barcode-number {
             text-align: center;
             font-family: monospace;
-            font-size: ${fontSizes.barcodeNumber};
+            font-size: ${selectedLabelSize.id === 'small' ? '5pt' : selectedLabelSize.id === 'medium' ? '7pt' : '9pt'};
             margin: 0.5mm 0;
           }
           .barcode-image {
-            height: ${barcodeHeight};
+            height: ${selectedLabelSize.id === 'small' ? '10mm' : selectedLabelSize.id === 'medium' ? '14mm' : '25mm'};
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 0;
+            margin: ${selectedLabelSize.id === 'small' ? '0.5mm' : selectedLabelSize.id === 'medium' ? '1mm' : '2mm'} 0;
           }
           .barcode-image svg {
             max-width: 100%;
@@ -155,7 +136,7 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
           }
           .product-id {
             text-align: center;
-            font-size: ${fontSizes.productId};
+            font-size: ${selectedLabelSize.id === 'small' ? '4pt' : selectedLabelSize.id === 'medium' ? '6pt' : '8pt'};
             color: #666;
             margin-top: 0.5mm;
           }

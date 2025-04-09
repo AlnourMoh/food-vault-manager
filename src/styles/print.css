@@ -1,12 +1,20 @@
 
-/* Print styles - Optimized for various label sizes */
+/* 
+ * Print Styles
+ * ===========
+ * Optimized styles for printing barcodes and labels of various sizes
+ */
+
+/* Base print settings */
 @media print {
+  /* General print setup */
   body {
     background-color: white;
     margin: 0;
     padding: 0;
   }
   
+  /* Utility classes for print visibility */
   .print-hidden {
     display: none !important;
   }
@@ -15,11 +23,13 @@
     display: block !important;
   }
   
+  /* RTL support for printed content */
   .rtl {
     direction: rtl;
     text-align: right;
   }
   
+  /* Generic print item style */
   .print-item {
     page-break-inside: avoid;
     background-color: white;
@@ -28,7 +38,7 @@
     padding: 5mm;
   }
   
-  /* Hide all UI elements except the barcode content */
+  /* Hide UI elements during printing */
   header, 
   nav,
   aside,
@@ -39,7 +49,10 @@
     display: none !important;
   }
   
-  /* Ensure white background for barcode card */
+  /* 
+   * Barcode Card Base Styles
+   * ========================
+   */
   .barcode-card {
     background-color: white !important;
     border: 1px solid #000 !important;
@@ -51,7 +64,7 @@
     margin: 0 !important;
   }
   
-  /* Adjust barcode grid layout for printing */
+  /* Adjust barcode grid for printing */
   .barcode-grid {
     display: block !important;
     padding: 0 !important;
@@ -59,13 +72,13 @@
     gap: 0 !important;
   }
   
-  /* Ensure proper barcode visibility */
+  /* Ensure barcode visibility */
   .barcode-image {
     background-color: white !important;
     max-height: 100% !important;
   }
   
-  /* Adjust text size for labels */
+  /* Text adjustments for all labels */
   .barcode-card .text-center,
   .barcode-card .text-lg,
   .barcode-card .font-mono {
@@ -74,7 +87,7 @@
     line-height: 1.2 !important;
   }
   
-  /* Adjust product name for labels */
+  /* Product name styling */
   .barcode-card .w-full.text-center.py-2.border-b.mb-2 {
     font-weight: bold !important;
     padding: 0.5mm 0 !important;
@@ -84,10 +97,101 @@
     text-overflow: ellipsis !important;
   }
   
-  /* Adjust product ID for small labels */
+  /* Product ID adjustments */
   .barcode-card .text-xs.text-gray-500.mt-2 {
     margin-top: 0.5mm !important;
   }
+
+  /* 
+   * Label Size-specific adjustments
+   * ==============================
+   */
+   
+  /* Small labels (40mm × 25mm) */
+  .label-size-small .barcode-card {
+    width: 38mm !important;
+    height: 23mm !important;
+    max-width: 38mm !important;
+    max-height: 23mm !important;
+  }
   
-  /* Dynamic label sizes are now handled via JavaScript and inline styles */
+  .label-size-small .product-name {
+    font-size: 6pt !important;
+    margin-bottom: 0.3mm !important;
+  }
+  
+  .label-size-small .barcode-number {
+    font-size: 5pt !important;
+  }
+  
+  .label-size-small .barcode-image {
+    height: 10mm !important;
+    margin: 0.5mm 0 !important;
+  }
+  
+  .label-size-small .product-id {
+    font-size: 4pt !important;
+  }
+  
+  /* Medium labels (50mm × 30mm) */
+  .label-size-medium .barcode-card {
+    width: 48mm !important;
+    height: 28mm !important;
+    max-width: 48mm !important;
+    max-height: 28mm !important;
+  }
+  
+  .label-size-medium .product-name {
+    font-size: 8pt !important;
+    margin-bottom: 0.5mm !important;
+  }
+  
+  .label-size-medium .barcode-number {
+    font-size: 7pt !important;
+  }
+  
+  .label-size-medium .barcode-image {
+    height: 14mm !important;
+    margin: 1mm 0 !important;
+  }
+  
+  .label-size-medium .product-id {
+    font-size: 6pt !important;
+  }
+  
+  /* Large labels (70mm × 50mm) */
+  .label-size-large .barcode-card {
+    width: 68mm !important;
+    height: 48mm !important;
+    max-width: 68mm !important;
+    max-height: 48mm !important;
+  }
+  
+  .label-size-large .product-name {
+    font-size: 10pt !important;
+    margin-bottom: 1mm !important;
+  }
+  
+  .label-size-large .barcode-number {
+    font-size: 9pt !important;
+  }
+  
+  .label-size-large .barcode-image {
+    height: 25mm !important;
+    margin: 2mm 0 !important;
+  }
+  
+  .label-size-large .product-id {
+    font-size: 8pt !important;
+  }
+  
+  /* 
+   * Page size adjustments
+   * ====================
+   */
+  @page {
+    /* Default page size, will be overridden by JavaScript */
+    size: auto;
+    margin: 0mm;
+  }
 }
