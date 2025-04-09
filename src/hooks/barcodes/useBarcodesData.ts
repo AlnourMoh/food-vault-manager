@@ -5,6 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { generateBarcodesFromProduct } from '@/utils/barcodeUtils';
 import { Barcode, Product } from './types';
 
+/**
+ * Hook for fetching and managing barcode data for a specific product
+ * 
+ * @param productId - The ID of the product to fetch barcodes for
+ * @returns An object containing the barcodes, product information, and loading state
+ */
 export const useBarcodesData = (productId: string | undefined) => {
   const { toast } = useToast();
   const [barcodes, setBarcodes] = useState<Barcode[]>([]);
@@ -12,6 +18,10 @@ export const useBarcodesData = (productId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    /**
+     * Fetches barcode and product data from the database
+     * Falls back to generating barcodes if none exist in the database
+     */
     const fetchBarcodesAndProduct = async () => {
       setIsLoading(true);
       try {
@@ -21,7 +31,7 @@ export const useBarcodesData = (productId: string | undefined) => {
         
         console.log("Fetching barcodes for product ID:", productId);
         
-        // Fetch the product
+        // Step 1: Fetch the product information
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select('*')
@@ -36,12 +46,13 @@ export const useBarcodesData = (productId: string | undefined) => {
         console.log("Product data:", productData);
         
         if (productData) {
+          // Step 2: Set product info in state
           setProduct({
             id: productData.id,
             name: productData.name
           });
           
-          // Try to fetch barcodes from database first
+          // Step 3: Try to fetch barcodes from database
           const { data: barcodeData, error: barcodeError } = await supabase
             .from('product_codes')
             .select('*')
@@ -49,7 +60,7 @@ export const useBarcodesData = (productId: string | undefined) => {
           
           if (barcodeError) {
             console.error("Error fetching barcodes:", barcodeError);
-            // Instead of throwing error, we'll generate barcodes dynamically
+            // Instead of throwing error, generate barcodes dynamically
             const generatedBarcodes = generateBarcodesFromProduct(productData);
             setBarcodes(generatedBarcodes);
             return;
@@ -57,6 +68,7 @@ export const useBarcodesData = (productId: string | undefined) => {
           
           console.log("Barcode data:", barcodeData);
           
+          // Step 4: Use existing barcodes or generate new ones if none exist
           if (barcodeData && barcodeData.length > 0) {
             setBarcodes(barcodeData);
           } else {
@@ -78,6 +90,7 @@ export const useBarcodesData = (productId: string | undefined) => {
       }
     };
     
+    // Only fetch data if we have a product ID
     if (productId) {
       fetchBarcodesAndProduct();
     }

@@ -4,24 +4,38 @@ import { useToast } from '@/hooks/use-toast';
 import { Barcode, Product } from './types';
 import { generateBarcodeImage } from '@/utils/barcodeUtils';
 
+/**
+ * Hook for handling barcode printing functionality
+ * 
+ * @param barcodes - Array of barcodes to be printed
+ * @param product - The product associated with the barcodes
+ * @returns Object containing functions to handle different printing scenarios
+ */
 export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null) => {
   const { toast } = useToast();
   const printFrameRef = useRef<HTMLIFrameElement | null>(null);
 
-  // Function to print all barcodes
+  /**
+   * Handles printing all barcodes at once using the browser's print dialog
+   */
   const handlePrint = () => {
     window.print();
   };
 
-  // Function to print a specific barcode
+  /**
+   * Handles printing a single barcode in a new window with optimized print settings
+   * 
+   * @param barcodeId - The ID of the specific barcode to print
+   */
   const handlePrintSingle = (barcodeId: string) => {
-    // Find the selected barcode
+    // Find the selected barcode to print
     const barcodeToPrint = barcodes.find(b => b.id === barcodeId);
     if (!barcodeToPrint) return;
 
     // Create a new print window
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
+      // Show error if popup blocker is enabled
       toast({
         title: "خطأ في الطباعة",
         description: "فشلت عملية فتح نافذة الطباعة. الرجاء التأكد من السماح بالنوافذ المنبثقة.",
@@ -30,7 +44,7 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
       return;
     }
 
-    // Create HTML content for printing
+    // Create HTML content for printing with appropriate styling
     const barcodeHtml = `
       <!DOCTYPE html>
       <html dir="rtl">
