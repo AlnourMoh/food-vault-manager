@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useStorageTeam } from '@/hooks/useStorageTeam';
 import { StorageTeamMember } from '@/types';
 import { TeamMemberFormData } from '@/types/team';
+import { generateWelcomeMessage } from '@/utils/welcomeMessageUtils';
 
 export const useStorageTeamPage = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
