@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -22,26 +22,90 @@ import { countryCodes } from '@/constants/countryCodes';
 import { restaurantFormSchema, RestaurantFormValues } from '@/validations/restaurantSchema';
 import { createRestaurant } from '@/services/restaurantService';
 
-const RestaurantForm = () => {
+interface RestaurantFormProps {
+  initialData?: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    manager?: string;
+  };
+  onSubmit: (values: RestaurantFormValues) => Promise<void>;
+  isSubmitting?: boolean;
+  submitText?: string;
+  isEditMode?: boolean;
+}
+
+const RestaurantForm: React.FC<RestaurantFormProps> = ({ 
+  initialData, 
+  onSubmit, 
+  isSubmitting = false, 
+  submitText = "إضافة المطعم",
+  isEditMode = false
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // استخراج مفتاح الدولة ورقم الهاتف من الرقم الكامل إذا كان موجوداً
+  const extractPhoneInfo = (phone: string | undefined) => {
+    if (!phone) return { countryCode: '974', phoneNumber: '' };
+    
+    // تحقق ما إذا كان الرقم يبدأ ب +
+    if (phone.startsWith('+')) {
+      // البحث عن مفتاح الدولة المطابق
+      for (const code of countryCodes) {
+        if (phone.startsWith(`+${code.value}`)) {
+          return {
+            countryCode: code.value,
+            phoneNumber: phone.substring(code.value.length + 1) // +1 للإشارة +
+          };
+        }
+      }
+    }
+    
+    // إذا لم يتم العثور على مفتاح دولة، استخدم القيمة الافتراضية
+    return { countryCode: '974', phoneNumber: phone };
+  };
+
+  const { countryCode, phoneNumber } = initialData?.phone 
+    ? extractPhoneInfo(initialData.phone) 
+    : { countryCode: '974', phoneNumber: '' };
+
+  console.log('Initial data:', initialData);
+  console.log('Extracted phone info:', { countryCode, phoneNumber });
+
   // Initialize form
   const form = useForm<RestaurantFormValues>({
     resolver: zodResolver(restaurantFormSchema),
     defaultValues: {
-      name: '',
-      manager: '',
-      address: '',
-      phoneCountryCode: '974', // قطر كقيمة افتراضية
-      phoneNumber: '',
-      email: '',
+      name: initialData?.name || '',
+      manager: initialData?.manager || '',
+      address: initialData?.address || '',
+      phoneCountryCode: countryCode,
+      phoneNumber: phoneNumber,
+      email: initialData?.email || '',
     },
   });
 
-  const onSubmit = async (values: RestaurantFormValues) => {
+  // تحديث قيم النموذج عند تغيير البيانات الأولية
+  useEffect(() => {
+    if (initialData) {
+      const { countryCode, phoneNumber } = extractPhoneInfo(initialData.phone);
+      
+      form.reset({
+        name: initialData.name || '',
+        manager: initialData.manager || '',
+        address: initialData.address || '',
+        phoneCountryCode: countryCode,
+        phoneNumber: phoneNumber,
+        email: initialData.email || '',
+      });
+    }
+  }, [initialData, form]);
+
+  const handleFormSubmit = async (values: RestaurantFormValues) => {
     setIsLoading(true);
     setEmailError(null); // Reset email error on new submission
     
@@ -49,23 +113,17 @@ const RestaurantForm = () => {
       // دمج مفتاح الدولة مع رقم الهاتف
       const fullPhoneNumber = `+${values.phoneCountryCode}${values.phoneNumber}`;
       
-      // Create the company (restaurant) in the database
-      const restaurantData = await createRestaurant(
-        values.name,
-        values.email,
-        fullPhoneNumber,
-        values.address
-      );
-
-      toast({
-        title: "تم إضافة المطعم بنجاح",
-        description: "يمكنك الآن إضافة بيانات الدخول للمطعم",
-      });
+      // استبدال قيم الهاتف في النموذج بالرقم الكامل
+      const formData = {
+        ...values,
+        phoneNumber: fullPhoneNumber,
+      };
       
-      // Navigate to the credentials page with the new restaurant ID
-      navigate(`/restaurants/${restaurantData.id}/credentials`);
+      // استدعاء وظيفة التقديم المرسلة من الأب
+      await onSubmit(values);
+      
     } catch (error) {
-      console.error("Error adding restaurant:", error);
+      console.error("Error submitting form:", error);
       
       // Handle duplicate email error
       if (error instanceof Error && error.message === 'duplicate_email') {
@@ -76,13 +134,11 @@ const RestaurantForm = () => {
         });
       } else {
         // Only show general error toast if not a duplicate email error
-        if (!emailError) {
-          toast({
-            variant: "destructive",
-            title: "خطأ في إضافة المطعم",
-            description: "حدث خطأ أثناء محاولة إضافة المطعم. يرجى المحاولة مرة أخرى.",
-          });
-        }
+        toast({
+          variant: "destructive",
+          title: isEditMode ? "خطأ في تحديث المطعم" : "خطأ في إضافة المطعم",
+          description: "حدث خطأ أثناء المحاولة. يرجى المحاولة مرة أخرى.",
+        });
       }
     } finally {
       setIsLoading(false);
@@ -92,12 +148,12 @@ const RestaurantForm = () => {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-xl">بيانات المطعم الجديد</CardTitle>
-        <CardDescription>أدخل معلومات المطعم بشكل صحيح لإضافته إلى النظام</CardDescription>
+        <CardTitle className="text-xl">{isEditMode ? "تعديل بيانات المطعم" : "بيانات المطعم الجديد"}</CardTitle>
+        <CardDescription>أدخل معلومات المطعم بشكل صحيح {isEditMode ? "لتحديثها" : "لإضافته إلى النظام"}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -150,6 +206,7 @@ const RestaurantForm = () => {
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -194,7 +251,12 @@ const RestaurantForm = () => {
                 <FormItem>
                   <FormLabel>البريد الإلكتروني</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="البريد الإلكتروني للمطعم" {...field} />
+                    <Input 
+                      type="email" 
+                      placeholder="البريد الإلكتروني للمطعم" 
+                      {...field} 
+                      disabled={isEditMode} // تعطيل حقل البريد الإلكتروني في وضع التعديل
+                    />
                   </FormControl>
                   <FormMessage />
                   {emailError && (
@@ -216,9 +278,9 @@ const RestaurantForm = () => {
               <Button 
                 type="submit"
                 className="bg-fvm-primary hover:bg-fvm-primary-light"
-                disabled={isLoading}
+                disabled={isSubmitting || isLoading}
               >
-                {isLoading ? "جاري الحفظ..." : "إضافة المطعم"}
+                {isSubmitting || isLoading ? "جاري الحفظ..." : submitText}
               </Button>
             </div>
           </form>

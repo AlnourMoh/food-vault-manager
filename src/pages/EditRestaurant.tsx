@@ -1,18 +1,21 @@
 
+// تأكد من إضافة استيراد supabase في بداية الملف
+import { supabase } from '@/integrations/supabase/client';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import RestaurantForm from '@/components/restaurant/RestaurantForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { updateRestaurant } from '@/services/restaurantService';
 
 interface RestaurantData {
   name: string;
   email: string;
   phone: string;
   address: string;
+  manager?: string; // إضافة حقل المدير
 }
 
 const EditRestaurant = () => {
@@ -27,15 +30,31 @@ const EditRestaurant = () => {
       if (!id) return;
 
       try {
-        const { data, error } = await supabase
+        console.log('Fetching restaurant with ID:', id);
+        
+        // استخدام الاستعلام المباشر للحصول على بيانات المطعم
+        const { data: companies, error } = await supabase
           .from('companies')
           .select('name, email, phone, address')
           .eq('id', id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching restaurant data:', error);
+          throw error;
+        }
 
-        setRestaurantData(data);
+        console.log('Fetched restaurant data:', companies);
+        
+        if (companies) {
+          setRestaurantData({
+            name: companies.name,
+            email: companies.email,
+            phone: companies.phone,
+            address: companies.address,
+            manager: '', // قيمة افتراضية فارغة للمدير
+          });
+        }
       } catch (error: any) {
         console.error('Error fetching restaurant:', error);
         toast({
@@ -58,16 +77,15 @@ const EditRestaurant = () => {
     try {
       setIsLoading(true);
       
-      // Use the force_update_company function to update the restaurant
-      const { data: updatedData, error } = await supabase.rpc('force_update_company', {
-        p_company_id: id,
-        p_name: data.name,
-        p_phone: data.phone,
-        p_address: data.address,
-        p_logo_url: null
-      });
+      // استخدام خدمة تحديث المطعم من restaurantService
+      const updatedRestaurant = await updateRestaurant(
+        id,
+        data.name,
+        data.phone,
+        data.address
+      );
 
-      if (error) throw error;
+      console.log('Updated restaurant:', updatedRestaurant);
 
       toast({
         title: 'تم تحديث المطعم',
@@ -109,6 +127,7 @@ const EditRestaurant = () => {
                 onSubmit={handleSubmit}
                 isSubmitting={isLoading}
                 submitText="تحديث المطعم"
+                isEditMode={true}
               />
             ) : (
               <div className="text-center py-6 text-muted-foreground">
