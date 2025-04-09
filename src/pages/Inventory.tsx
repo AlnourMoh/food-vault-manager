@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Input } from '@/components/ui/input';
@@ -22,13 +22,78 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Product } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Inventory = () => {
-  // Initialize with empty arrays instead of mock data
-  const [activeProducts] = useState<Product[]>([]);
+  const [activeProducts, setActiveProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get restaurant ID from localStorage (assuming it's stored there)
+      const restaurantId = localStorage.getItem('restaurantId');
+      
+      if (!restaurantId) {
+        console.error('No restaurant ID found in localStorage');
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('restaurantId', restaurantId)
+        .eq('status', 'active');
+      
+      if (error) {
+        console.error('Error fetching products:', error);
+        toast({
+          title: "خطأ في جلب بيانات المنتجات",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Convert data to match our Product type
+      const formattedProducts = data.map((product: any): Product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        unit: product.unit,
+        quantity: product.quantity,
+        expiryDate: new Date(product.expiryDate),
+        entryDate: new Date(product.entryDate || new Date()),
+        restaurantId: product.restaurantId,
+        restaurantName: product.restaurantName || "",
+        addedBy: product.addedBy || "",
+        status: product.status,
+        imageUrl: product.imageUrl || ""
+      }));
+      
+      setActiveProducts(formattedProducts);
+      setFilteredProducts(formattedProducts);
+    } catch (error) {
+      console.error('Error in fetchProducts:', error);
+      toast({
+        title: "خطأ غير متوقع",
+        description: "حدث خطأ أثناء محاولة جلب بيانات المنتجات",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -102,6 +167,7 @@ const Inventory = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="text-right">صورة المنتج</TableHead>
                   <TableHead className="text-right">اسم المنتج</TableHead>
                   <TableHead className="text-right">التصنيف</TableHead>
                   <TableHead className="text-right">الكمية</TableHead>
@@ -111,12 +177,33 @@ const Inventory = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.length > 0 ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10">
+                      جاري تحميل البيانات...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredProducts.length > 0 ? (
                   filteredProducts.map((product) => {
                     const daysUntilExpiry = getDaysUntilExpiry(product.expiryDate);
                     
                     return (
                       <TableRow key={product.id}>
+                        <TableCell>
+                          {product.imageUrl ? (
+                            <div className="h-12 w-12 rounded-md overflow-hidden">
+                              <img 
+                                src={product.imageUrl} 
+                                alt={product.name} 
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-12 w-12 rounded-md bg-gray-200 flex items-center justify-center">
+                              <span className="text-xs text-gray-500">لا توجد صورة</span>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.category}</TableCell>
                         <TableCell>{product.quantity} {product.unit}</TableCell>
@@ -146,7 +233,7 @@ const Inventory = () => {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <p className="text-lg">لا توجد منتجات في المخزون</p>
                         <p className="text-sm text-muted-foreground mb-4">قم بإضافة منتجات جديدة لتظهر هنا</p>

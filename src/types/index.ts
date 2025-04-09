@@ -37,6 +37,7 @@ export interface Product {
   restaurantName: string;
   addedBy: string;
   status: 'active' | 'expired' | 'removed';
+  imageUrl?: string;
 }
 
 // Inventory Transaction types
