@@ -8,11 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Copy } from 'lucide-react';
+import { Copy, KeyRound } from 'lucide-react';
 
 const RestaurantCredentials = () => {
   const { id } = useParams();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
@@ -76,6 +77,52 @@ const RestaurantCredentials = () => {
     });
   };
 
+  const handleOpenAccount = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Check if restaurant has credentials set up
+      const { data: credentialsData, error: credentialsError } = await supabase
+        .from('restaurant_credentials')
+        .select('*')
+        .eq('restaurant_id', id)
+        .single();
+      
+      if (credentialsError && credentialsError.code !== 'PGRST116') {
+        throw credentialsError;
+      }
+      
+      // If credentials exist, simulate login
+      if (credentialsData) {
+        localStorage.setItem('restaurantId', id as string);
+        localStorage.setItem('isRestaurantLogin', 'true');
+        
+        toast({
+          title: "تم فتح حساب المطعم",
+          description: "تم تسجيل الدخول إلى حساب المطعم بنجاح",
+        });
+        
+        navigate('/restaurant/dashboard');
+      } else {
+        // No credentials, alert user
+        toast({
+          variant: "destructive",
+          title: "لم يتم إعداد الحساب بعد",
+          description: "يجب على مدير المطعم إعداد كلمة المرور أولاً",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error accessing restaurant account:", error);
+      toast({
+        variant: "destructive",
+        title: "خطأ في الوصول إلى حساب المطعم",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="rtl space-y-6">
@@ -107,10 +154,20 @@ const RestaurantCredentials = () => {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center">
+          <CardFooter className="flex flex-col gap-2">
+            <Button 
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2 text-fvm-primary border-fvm-primary hover:bg-fvm-primary-light hover:text-white"
+              onClick={handleOpenAccount}
+              disabled={isLoading}
+            >
+              <KeyRound className="h-4 w-4" />
+              <span>فتح حساب المطعم</span>
+            </Button>
             <Button 
               variant="outline" 
               onClick={() => navigate('/restaurants')}
+              className="w-full"
             >
               العودة إلى قائمة المطاعم
             </Button>
