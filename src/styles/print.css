@@ -62,14 +62,16 @@
     page-break-after: always;
     padding: 1mm !important;
     margin: 0 !important;
+    visibility: visible !important;
+    display: block !important;
   }
   
   /* Adjust barcode grid for printing */
   .barcode-grid {
-    display: block !important;
+    display: grid !important;
     padding: 0 !important;
     margin: 0 !important;
-    gap: 0 !important;
+    gap: 5mm !important;
   }
   
   /* Ensure barcode visibility */
@@ -85,6 +87,7 @@
   .barcode-image svg {
     width: 100% !important;
     height: 100% !important;
+    display: block !important;
   }
   
   /* Text adjustments for all labels */
@@ -205,5 +208,15 @@
     /* Default page size, will be overridden by JavaScript */
     size: auto;
     margin: 0mm;
+  }
+  
+  /* Critical fix for batch printing - make barcode elements visible */
+  body * {
+    visibility: hidden;
+  }
+  
+  .barcode-card,
+  .barcode-card * {
+    visibility: visible !important;
   }
 }

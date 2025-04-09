@@ -40,6 +40,31 @@ export const useBatchPrint = () => {
       .barcode-image svg {
         width: 100% !important;
         height: 100% !important;
+        display: block !important;
+      }
+      
+      /* Fix for barcode visibility in batch printing */
+      body * {
+        visibility: hidden;
+      }
+      
+      .barcode-card {
+        visibility: visible !important;
+        position: relative !important;
+        left: 0 !important;
+        top: 0 !important;
+      }
+      
+      .barcode-card * {
+        visibility: visible !important;
+      }
+      
+      /* Ensure proper spacing and sizing for batch printed barcodes */
+      .barcode-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(${labelWidth - 5}mm, 1fr)) !important;
+        gap: 5mm !important;
+        padding: 5mm !important;
       }
     `;
     document.head.appendChild(style);
