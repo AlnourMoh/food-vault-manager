@@ -5,6 +5,7 @@ export interface FormData {
   unit: string;
   quantity: string;
   expiryDate: string;
+  productionDate?: string; // Add optional productionDate field
   image: File | null;
   imageUrl: string;
 }

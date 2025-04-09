@@ -5,59 +5,53 @@ import MainLayout from '@/components/layout/MainLayout';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ImageUploader from '@/components/products/ImageUploader';
 import { Card, CardContent } from '@/components/ui/card';
+import { useEditProductForm } from '@/hooks/products/useEditProductForm';
+import EditProductForm from '@/components/products/EditProductForm';
+
+// Define a type for the raw product data from Supabase
+interface RawProductData {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  expiry_date: string;
+  production_date: string;
+  company_id: string;
+  status: string;
+  image_url?: string | null;
+  created_at: string;
+  updated_at: string;
+  unit?: string; // Add the unit property that was missing
+}
 
 const EditProduct = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [productData, setProductData] = useState<any>(null);
-  const [image, setImage] = useState<File | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    quantity: 0,
-    expiryDate: '',
-    productionDate: '',
-    unit: '',
-    imageUrl: ''
-  });
-  
-  // Default categories
-  const [categories, setCategories] = useState([
-    'بقالة',
-    'لحوم',
-    'ألبان',
-    'خضروات',
-    'فواكه',
-    'بهارات',
-    'زيوت',
-    'مجمدات',
-    'أخرى'
-  ]);
-  
-  // Default units
-  const [units, setUnits] = useState([
-    { value: 'kg', label: 'كيلوغرام' },
-    { value: 'g', label: 'غرام' },
-    { value: 'l', label: 'لتر' },
-    { value: 'ml', label: 'مليلتر' },
-    { value: 'piece', label: 'قطعة' },
-    { value: 'box', label: 'صندوق' },
-    { value: 'pack', label: 'عبوة' },
-  ]);
+  const [productData, setProductData] = useState<RawProductData | null>(null);
   
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
   const inventoryPath = isRestaurantRoute ? '/restaurant/inventory' : '/inventory';
+
+  // Initialize the form hook with default empty values
+  const {
+    formData,
+    setFormData,
+    errors,
+    isSubmitting,
+    categories,
+    setCategories,
+    units,
+    setUnits,
+    handleInputChange,
+    handleSelectChange,
+    handleImageChange,
+    handleSubmit: submitForm
+  } = useEditProductForm(productId, () => navigate(inventoryPath));
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -79,7 +73,7 @@ const EditProduct = () => {
           throw new Error('المنتج غير موجود');
         }
         
-        setProductData(data);
+        setProductData(data as RawProductData);
         
         // Format dates for input fields
         const expiryDate = new Date(data.expiry_date);
@@ -88,10 +82,11 @@ const EditProduct = () => {
         setFormData({
           name: data.name,
           category: data.category,
-          quantity: data.quantity,
+          quantity: data.quantity.toString(),
           expiryDate: expiryDate.toISOString().split('T')[0],
           productionDate: productionDate.toISOString().split('T')[0],
-          unit: data.unit || 'piece', // Default to 'piece' if unit is not available
+          unit: (data as any).unit || 'piece', // Default to 'piece' if unit is not available
+          image: null,
           imageUrl: data.image_url || ''
         });
       } catch (error: any) {
@@ -109,105 +104,7 @@ const EditProduct = () => {
     };
     
     fetchProductDetails();
-  }, [productId, toast, navigate, inventoryPath]);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleImageChange = (file: File | null, url: string) => {
-    setImage(file);
-    setFormData(prev => ({
-      ...prev,
-      imageUrl: url
-    }));
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      setIsSubmitting(true);
-      
-      // Format dates for database
-      const expiryDate = new Date(formData.expiryDate);
-      const productionDate = new Date(formData.productionDate);
-      
-      let imageUrl = formData.imageUrl;
-      
-      // Upload image if a new one was selected
-      if (image) {
-        const restaurantId = localStorage.getItem('restaurantId');
-        if (!restaurantId) {
-          throw new Error('معرف المطعم غير موجود');
-        }
-        
-        const fileExt = image.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `${restaurantId}/${fileName}`;
-        
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, image);
-          
-        if (uploadError) {
-          throw uploadError;
-        }
-        
-        // Get public URL for the uploaded image
-        const { data: urlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-          
-        imageUrl = urlData?.publicUrl || '';
-      }
-      
-      const { error } = await supabase
-        .from('products')
-        .update({
-          name: formData.name,
-          category: formData.category,
-          quantity: formData.quantity,
-          expiry_date: expiryDate.toISOString(),
-          production_date: productionDate.toISOString(),
-          unit: formData.unit,
-          image_url: imageUrl
-        })
-        .eq('id', productId);
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "تم تحديث المنتج",
-        description: "تم تحديث بيانات المنتج بنجاح",
-      });
-      
-      // Navigate back to inventory
-      navigate(inventoryPath);
-    } catch (error: any) {
-      console.error('Error updating product:', error);
-      toast({
-        title: "خطأ في تحديث المنتج",
-        description: error.message || "حدث خطأ أثناء محاولة تحديث بيانات المنتج",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  }, [productId, toast, navigate, inventoryPath, setFormData]);
   
   const handleCancel = () => {
     navigate(inventoryPath);
@@ -226,126 +123,20 @@ const EditProduct = () => {
         ) : (
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">اسم المنتج</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="category">التصنيف</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => handleSelectChange('category', value)}
-                    >
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="اختر التصنيف" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category, index) => (
-                          <SelectItem key={index} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">الكمية</Label>
-                    <Input
-                      type="number"
-                      id="quantity"
-                      name="quantity"
-                      value={formData.quantity}
-                      onChange={handleInputChange}
-                      min="1"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="unit">وحدة القياس</Label>
-                    <Select
-                      value={formData.unit}
-                      onValueChange={(value) => handleSelectChange('unit', value)}
-                    >
-                      <SelectTrigger id="unit">
-                        <SelectValue placeholder="اختر وحدة القياس" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {units.map((unit, index) => (
-                          <SelectItem key={index} value={unit.value}>
-                            {unit.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="productionDate">تاريخ الإنتاج</Label>
-                    <Input
-                      type="date"
-                      id="productionDate"
-                      name="productionDate"
-                      value={formData.productionDate}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="expiryDate">تاريخ الانتهاء</Label>
-                    <Input
-                      type="date"
-                      id="expiryDate"
-                      name="expiryDate"
-                      value={formData.expiryDate}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="col-span-1 md:col-span-2">
-                    <ImageUploader 
-                      imageUrl={formData.imageUrl}
-                      onImageChange={handleImageChange}
-                      error=""
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex justify-end space-x-4 space-x-reverse pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
-                  >
-                    إلغاء
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري الحفظ...
-                      </>
-                    ) : (
-                      "حفظ التعديلات"
-                    )}
-                  </Button>
-                </div>
-              </form>
+              <EditProductForm
+                formData={formData}
+                errors={errors}
+                isSubmitting={isSubmitting}
+                categories={categories}
+                setCategories={setCategories}
+                units={units}
+                setUnits={setUnits}
+                handleInputChange={handleInputChange}
+                handleSelectChange={handleSelectChange}
+                handleImageChange={handleImageChange}
+                handleSubmit={submitForm}
+                handleCancel={handleCancel}
+              />
             </CardContent>
           </Card>
         )}
