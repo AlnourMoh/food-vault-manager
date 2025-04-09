@@ -23,7 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from '@/components/ui/button';
-import { Copy, Edit, Trash2 } from 'lucide-react';
+import { Copy, Edit, MessageSquare, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TeamMemberTableProps {
@@ -31,13 +31,17 @@ interface TeamMemberTableProps {
   isLoading: boolean;
   onEditMember: (member: StorageTeamMember) => void;
   onDeleteMember: (member: StorageTeamMember) => void;
+  onCopyWelcomeMessage: (member: StorageTeamMember) => void;
+  generateWelcomeMessage: (member: StorageTeamMember) => string;
 }
 
 const TeamMemberTable: React.FC<TeamMemberTableProps> = ({
   teamMembers,
   isLoading,
   onEditMember,
-  onDeleteMember
+  onDeleteMember,
+  onCopyWelcomeMessage,
+  generateWelcomeMessage
 }) => {
   const { toast } = useToast();
 
@@ -52,6 +56,10 @@ const TeamMemberTable: React.FC<TeamMemberTableProps> = ({
       title: 'تم النسخ',
       description: 'تم نسخ معلومات العضو إلى الحافظة',
     });
+  };
+
+  const copyMemberWelcomeMessage = (member: StorageTeamMember) => {
+    onCopyWelcomeMessage(member);
   };
 
   if (isLoading) {
@@ -107,6 +115,21 @@ const TeamMemberTable: React.FC<TeamMemberTableProps> = ({
                           <Button 
                             variant="ghost" 
                             size="icon"
+                            onClick={() => copyMemberWelcomeMessage(member)}
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>نسخ رسالة الترحيب</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
                             onClick={() => onEditMember(member)}
                           >
                             <Edit className="h-4 w-4" />
@@ -135,13 +158,20 @@ const TeamMemberTable: React.FC<TeamMemberTableProps> = ({
                   </TableCell>
                 </TableRow>
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-48">
+              <ContextMenuContent className="w-64">
                 <ContextMenuItem 
                   onClick={() => copyMemberInfo(member)}
                   className="flex items-center gap-2"
                 >
                   <Copy className="h-4 w-4" />
                   <span>نسخ بيانات العضو</span>
+                </ContextMenuItem>
+                <ContextMenuItem 
+                  onClick={() => copyMemberWelcomeMessage(member)}
+                  className="flex items-center gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>نسخ رسالة الترحيب</span>
                 </ContextMenuItem>
                 <ContextMenuItem 
                   onClick={() => onEditMember(member)}
