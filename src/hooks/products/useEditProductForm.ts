@@ -82,13 +82,18 @@ export const useEditProductForm = (productId: string | undefined, onSuccess: () 
         const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `${restaurantId}/${fileName}`;
         
+        console.log('Uploading image to path:', filePath);
+        
         const { error: uploadError, data: uploadData } = await supabase.storage
           .from('product-images')
           .upload(filePath, formData.image);
           
         if (uploadError) {
+          console.error('Image upload error:', uploadError);
           throw uploadError;
         }
+        
+        console.log('Image uploaded successfully:', uploadData);
         
         // Get public URL for the uploaded image
         const { data: urlData } = supabase.storage
@@ -96,7 +101,18 @@ export const useEditProductForm = (productId: string | undefined, onSuccess: () 
           .getPublicUrl(filePath);
           
         imageUrl = urlData?.publicUrl || '';
+        console.log('Image public URL:', imageUrl);
       }
+      
+      console.log('Updating product with data:', {
+        name: formData.name,
+        category: formData.category,
+        quantity: Number(formData.quantity),
+        expiry_date: expiryDate.toISOString(),
+        production_date: productionDate.toISOString(),
+        unit: formData.unit,
+        image_url: imageUrl
+      });
       
       const { error } = await supabase
         .from('products')
@@ -112,6 +128,7 @@ export const useEditProductForm = (productId: string | undefined, onSuccess: () 
         .eq('id', productId);
         
       if (error) {
+        console.error('Supabase update error:', error);
         throw error;
       }
       

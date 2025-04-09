@@ -1,95 +1,74 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { FormData, FormError } from '@/components/products/types';
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
+import { FormData } from '@/components/products/types';
 
 export const useProductFormSubmit = (
-  formData: FormData, 
+  formData: FormData,
   setFormData: React.Dispatch<React.SetStateAction<FormData>>,
-  validateForm: (formData: FormData) => { isValid: boolean; errors: FormError }
+  validateForm: (data: FormData) => { isValid: boolean; errors: any }
 ) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form before submission
+    // Validate the form data
     const { isValid, errors } = validateForm(formData);
     
     if (!isValid) {
+      // Don't proceed if validation fails
       toast({
         title: "خطأ في البيانات المدخلة",
-        description: "يرجى التحقق من صحة البيانات والمحاولة مرة أخرى",
+        description: "يرجى التحقق من البيانات المدخلة والمحاولة مرة أخرى.",
         variant: "destructive",
       });
-      return errors;
+      return;
     }
     
-    setIsSubmitting(true);
-    
     try {
-      // Get restaurant ID from localStorage
-      const restaurantId = localStorage.getItem('restaurantId');
+      setIsSubmitting(true);
       
+      // Get the restaurant ID from localStorage
+      const restaurantId = localStorage.getItem('restaurantId');
       if (!restaurantId) {
-        toast({
-          title: "خطأ في إضافة المنتج",
-          description: "لم يتم العثور على معرف المطعم",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return {};
+        throw new Error('معرف المطعم غير موجود');
       }
-
-      // Generate a unique ID for the product
-      const productId = uuidv4();
       
       let imageUrl = '';
       
-      // Upload image to Supabase Storage if an image is provided
+      // Upload image if selected
       if (formData.image) {
         const fileExt = formData.image.name.split('.').pop();
-        const fileName = `${productId}.${fileExt}`;
+        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `${restaurantId}/${fileName}`;
         
-        try {
-          // Upload the image to the product_images bucket
-          const { data: uploadData, error: uploadError } = await supabase
-            .storage
-            .from('product_images')
-            .upload(filePath, formData.image);
+        console.log('Uploading image to path:', filePath);
+        
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, formData.image);
           
-          if (uploadError) {
-            console.error('Error uploading image:', uploadError);
-            throw uploadError;
-          }
-          
-          // Get public URL for the uploaded image
-          const { data: urlData } = supabase
-            .storage
-            .from('product_images')
-            .getPublicUrl(filePath);
-          
-          imageUrl = urlData.publicUrl;
-          console.log('Image uploaded successfully:', imageUrl);
-        } catch (uploadError: any) {
-          console.error('Error handling image upload:', uploadError);
-          toast({
-            title: "خطأ في رفع الصورة",
-            description: uploadError.message || "حدث خطأ أثناء رفع الصورة",
-            variant: "destructive",
-          });
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw uploadError;
         }
+        
+        console.log('Image uploaded successfully:', uploadData);
+        
+        // Get public URL for the uploaded image
+        const { data: urlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+          
+        imageUrl = urlData?.publicUrl || '';
+        console.log('Image public URL:', imageUrl);
       }
-
-      // Create data object for insertion
-      const product = {
-        id: productId,
+      
+      // Prepare product data for Supabase
+      const productData = {
         name: formData.name,
         category: formData.category,
         quantity: Number(formData.quantity),
@@ -103,33 +82,33 @@ export const useProductFormSubmit = (
         unit: formData.unit
       };
       
-      // Insert data into Supabase
-      const { error: insertError } = await supabase
-        .from('products')
-        .insert(product);
+      console.log('Inserting product with data:', productData);
       
-      if (insertError) {
-        console.error('Error inserting product:', insertError);
-        toast({
-          title: "خطأ في إضافة المنتج",
-          description: insertError.message,
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return {};
+      // Insert data into Supabase
+      const { error, data } = await supabase
+        .from('products')
+        .insert([productData])
+        .select();
+        
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
       }
       
-      // Generate unique barcodes for each unit of the product
-      const quantity = Number(formData.quantity);
+      console.log('Product added successfully:', data);
       
-      // Create barcodes directly via a Postgres function or modify RLS policy
-      // For now, we'll skip this step with a notification to the user
       toast({
-        title: "تم إضافة المنتج بنجاح",
-        description: `تم إضافة ${formData.name} إلى المخزون بنجاح.`,
+        title: "تمت الإضافة بنجاح",
+        description: "تم إضافة المنتج بنجاح إلى المخزون",
       });
       
-      // Reset form
+      // Generate default QR codes for the new product
+      if (data && data[0]) {
+        const productId = data[0].id;
+        await generateProductCodes(productId);
+      }
+      
+      // Reset form after successful submission
       setFormData({
         name: '',
         category: '',
@@ -141,27 +120,39 @@ export const useProductFormSubmit = (
         imageUrl: '',
       });
       
-      // توجيه المستخدم إلى صفحة المخزون
-      const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
-      const inventoryPath = isRestaurantRoute ? '/restaurant/inventory' : '/inventory';
-      navigate(inventoryPath);
-      
-      return {};
     } catch (error: any) {
-      console.error('Error in form submission:', error);
+      console.error('Error adding product:', error);
       toast({
-        title: "خطأ غير متوقع",
-        description: error.message || "حدث خطأ أثناء إضافة المنتج",
+        title: "خطأ في إضافة المنتج",
+        description: error.message || "حدث خطأ أثناء محاولة إضافة المنتج",
         variant: "destructive",
       });
-      return {};
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  // Helper function to generate product codes
+  const generateProductCodes = async (productId: string) => {
+    try {
+      // Generate a QR code for the product (for demonstration)
+      const qrCode = `PROD-${productId.substring(0, 8)}`;
+      
+      // Insert the product code
+      await supabase
+        .from('product_codes')
+        .insert([
+          { product_id: productId, qr_code: qrCode, is_used: false }
+        ]);
+        
+    } catch (error) {
+      console.error('Error generating product codes:', error);
+      // Don't throw the error, just log it to avoid stopping the main flow
+    }
+  };
 
-  return { 
+  return {
     handleSubmit,
-    isSubmitting 
+    isSubmitting
   };
 };
