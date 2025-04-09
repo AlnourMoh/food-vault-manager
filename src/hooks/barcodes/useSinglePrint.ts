@@ -2,7 +2,6 @@
 import { useToast } from '@/hooks/use-toast';
 import { Barcode, Product, LabelSize } from './types';
 import { generateBarcodeImage } from '@/utils/barcodeUtils';
-import { generateBarcodeHtml } from './print-utils/barcodeHtmlTemplate';
 import { openPrintWindow } from './print-utils/printWindowManager';
 
 /**
