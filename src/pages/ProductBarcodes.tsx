@@ -38,6 +38,12 @@ const ProductBarcodes = () => {
     const fetchBarcodesAndProduct = async () => {
       setIsLoading(true);
       try {
+        if (!productId) {
+          throw new Error("No product ID provided");
+        }
+        
+        console.log("Fetching barcodes for product ID:", productId);
+        
         // Fetch the product
         const { data: productData, error: productError } = await supabase
           .from('products')
@@ -46,8 +52,11 @@ const ProductBarcodes = () => {
           .single();
         
         if (productError) {
+          console.error("Error fetching product:", productError);
           throw productError;
         }
+        
+        console.log("Product data:", productData);
         
         if (productData) {
           setProduct({
@@ -60,15 +69,19 @@ const ProductBarcodes = () => {
         const { data: barcodeData, error: barcodeError } = await supabase
           .from('product_codes')
           .select('*')
-          .eq('product_id', productId)
-          .order('created_at', { ascending: true });
+          .eq('product_id', productId);
         
         if (barcodeError) {
+          console.error("Error fetching barcodes:", barcodeError);
           throw barcodeError;
         }
         
-        if (barcodeData) {
+        console.log("Barcode data:", barcodeData);
+        
+        if (barcodeData && barcodeData.length > 0) {
           setBarcodes(barcodeData);
+        } else {
+          console.log("No barcodes found for product ID:", productId);
         }
       } catch (error: any) {
         console.error('Error fetching barcodes:', error);
@@ -91,16 +104,40 @@ const ProductBarcodes = () => {
     window.print();
   };
 
-  // Generate SVG barcode
+  // Generate a more realistic barcode SVG
   const generateBarcodeImage = (code: string) => {
-    // Simple barcode representation
-    const bars = code.split('').map((char, index) => {
-      const width = Math.floor(Math.random() * 3) + 1; // Random width between 1-3
-      return `<rect key="${index}" x="${index * 6}" y="0" width="${width}" height="50" fill="black" />`;
-    });
-
-    return `<svg width="100%" height="100%" viewBox="0 0 ${code.length * 6} 50" xmlns="http://www.w3.org/2000/svg">
-      ${bars.join('')}
+    // Create a more complex visualization using the barcode string
+    const barcodeDigits = code.replace(/\D/g, ''); // Only use numeric values
+    const barsCount = barcodeDigits.length * 2; // Each digit gets 2 bars
+    const svgWidth = barsCount * 3; // 3 pixels per bar
+    
+    let bars = '';
+    let xPosition = 0;
+    
+    // Create alternating bars with varying widths based on the digits
+    for (let i = 0; i < barcodeDigits.length; i++) {
+      const digit = parseInt(barcodeDigits[i]);
+      
+      // Bar width based on digit (1-3 pixels)
+      const width1 = (digit % 3) + 1;
+      const width2 = ((digit + 1) % 3) + 1;
+      
+      // Add a black bar
+      bars += `<rect x="${xPosition}" y="0" width="${width1}" height="50" fill="black" />`;
+      xPosition += width1 + 1; // Add 1 pixel space
+      
+      // Add a white space (represented by not adding a bar)
+      xPosition += 2;
+      
+      // Add another black bar
+      bars += `<rect x="${xPosition}" y="0" width="${width2}" height="50" fill="black" />`;
+      xPosition += width2 + 1;
+    }
+    
+    // Add border and return complete SVG
+    return `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} 50" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="${svgWidth}" height="50" fill="white" stroke="black" stroke-width="1" />
+      ${bars}
     </svg>`;
   };
 
@@ -167,7 +204,7 @@ const ProductBarcodes = () => {
             {barcodes.length === 0 && (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-medium">لا توجد باركودات لهذا المنتج</h3>
-                <p className="text-gray-500 mt-2">يرجى التحقق من معرف المنتج</p>
+                <p className="text-gray-500 mt-2">يتم إنشاء الباركود تلقائيًا عند إضافة المنتج. تأكد من المعرف الصحيح للمنتج.</p>
               </div>
             )}
           </>

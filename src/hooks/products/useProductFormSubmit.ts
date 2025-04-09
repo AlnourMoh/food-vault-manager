@@ -95,7 +95,11 @@ export const useProductFormSubmit = (
       
       for (let i = 0; i < quantity; i++) {
         // Generate a unique barcode for each product unit
-        const barcode = `${productId.substring(0, 8)}-${i+1}`;
+        // This format creates a unique 12-digit barcode based on the product ID and unit number
+        const productDigits = productId.replace(/-/g, '').substring(0, 8);
+        const unitNumber = String(i+1).padStart(4, '0');
+        const barcode = `${productDigits}${unitNumber}`;
+        
         barcodeInserts.push({
           product_id: productId,
           qr_code: barcode,

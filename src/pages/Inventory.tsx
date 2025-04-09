@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Plus, Barcode, Image as ImageIcon } from 'lucide-react';
 import { Product } from '@/types';
 import { format } from 'date-fns';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const Inventory = () => {
   const navigate = useNavigate();
@@ -36,6 +37,8 @@ const Inventory = () => {
           return;
         }
         
+        console.log('Fetching products for restaurant:', restaurantId);
+        
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -43,8 +46,11 @@ const Inventory = () => {
           .eq('status', 'active');
         
         if (error) {
+          console.error('Supabase error:', error);
           throw error;
         }
+        
+        console.log('Fetched products:', data);
         
         if (data) {
           // Transform the data to match our Product type
@@ -91,6 +97,16 @@ const Inventory = () => {
   const formatDate = (date: Date): string => {
     return format(date, 'dd/MM/yyyy');
   };
+  
+  // Get product initials for the avatar fallback
+  const getProductInitials = (productName: string): string => {
+    return productName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   // Choose the appropriate layout based on the route
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
@@ -121,26 +137,28 @@ const Inventory = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product) => (
               <div key={product.id} className="border rounded-lg overflow-hidden shadow-sm">
-                {product.imageUrl ? (
-                  <div className="h-48 overflow-hidden">
+                <div className="h-48 bg-gray-100 flex items-center justify-center">
+                  {product.imageUrl ? (
                     <img 
                       src={product.imageUrl} 
                       alt={product.name} 
                       className="w-full h-full object-cover"
                     />
-                  </div>
-                ) : (
-                  <div className="h-48 bg-gray-100 flex items-center justify-center">
-                    <ImageIcon className="h-16 w-16 text-gray-300" />
-                    <span className="sr-only">لا توجد صورة</span>
-                  </div>
-                )}
+                  ) : (
+                    <Avatar className="h-20 w-20 bg-primary text-primary-foreground">
+                      <AvatarFallback className="text-2xl">
+                        {getProductInitials(product.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
                 <div className="p-4">
                   <h3 className="font-bold text-lg">{product.name}</h3>
                   <div className="mt-2 space-y-1 text-sm">
                     <p><span className="font-medium">التصنيف:</span> {product.category}</p>
                     <p><span className="font-medium">الكمية:</span> {product.quantity}</p>
                     <p><span className="font-medium">تاريخ الانتهاء:</span> {formatDate(product.expiryDate)}</p>
+                    <p><span className="font-medium">رقم المنتج:</span> {product.id.substring(0, 8)}</p>
                   </div>
                   <div className="mt-3 pt-2 border-t flex justify-end">
                     <Button 
