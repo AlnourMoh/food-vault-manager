@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
-import { getMockData } from '@/services/mockData';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -25,9 +24,9 @@ import {
 import { Product } from '@/types';
 
 const Inventory = () => {
-  const { products } = getMockData();
-  const [activeProducts] = useState<Product[]>(products.filter(p => p.status === 'active'));
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(activeProducts);
+  // Initialize with empty arrays instead of mock data
+  const [activeProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
 
@@ -147,8 +146,18 @@ const Inventory = () => {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                      لا توجد منتجات متطابقة مع معايير البحث
+                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <p className="text-lg">لا توجد منتجات في المخزون</p>
+                        <p className="text-sm text-muted-foreground mb-4">قم بإضافة منتجات جديدة لتظهر هنا</p>
+                        <Button 
+                          onClick={handleAddProduct}
+                          className="bg-fvm-primary hover:bg-fvm-primary-light flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>إضافة منتج جديد</span>
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
