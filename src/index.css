@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -121,4 +120,65 @@
 .ltr {
   direction: ltr;
   text-align: left;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background-color: white;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .print-hidden {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .rtl {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  .print-item {
+    page-break-inside: avoid;
+    background-color: white;
+    border: 1px solid #ddd;
+    margin: 5mm;
+    padding: 5mm;
+  }
+  
+  /* Hide all UI elements except the barcode content */
+  header, 
+  nav,
+  aside,
+  .sidebar,
+  .header,
+  footer,
+  button:not(.print-action) {
+    display: none !important;
+  }
+  
+  /* Ensure white background for barcode card */
+  .barcode-card {
+    background-color: white !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  
+  /* Adjust barcode grid layout for printing */
+  .barcode-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10mm !important;
+  }
+  
+  /* Ensure proper barcode visibility */
+  .barcode-image {
+    background-color: white !important;
+  }
 }

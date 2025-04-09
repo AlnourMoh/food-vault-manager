@@ -9,7 +9,7 @@ import { useBarcodes } from '@/hooks/barcodes/useBarcodes';
 
 const ProductBarcodes = () => {
   const { productId } = useParams<{ productId: string }>();
-  const { barcodes, product, isLoading, handlePrint } = useBarcodes(productId);
+  const { barcodes, product, isLoading, handlePrint, handlePrintSingle } = useBarcodes(productId);
   
   // Determine current route type
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
@@ -37,6 +37,7 @@ const ProductBarcodes = () => {
             <BarcodeGrid 
               barcodes={barcodes} 
               productName={product?.name || 'منتج غير معروف'} 
+              onPrintSingle={handlePrintSingle}
             />
           </>
         )}
