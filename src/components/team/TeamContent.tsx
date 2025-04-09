@@ -9,13 +9,17 @@ interface TeamContentProps {
   isLoading: boolean;
   onEditMember: (member: StorageTeamMember) => void;
   onDeleteMember: (member: StorageTeamMember) => void;
+  onCopyWelcomeMessage: (member: StorageTeamMember) => void;
+  generateWelcomeMessage: (member: StorageTeamMember) => string;
 }
 
 const TeamContent: React.FC<TeamContentProps> = ({
   teamMembers,
   isLoading,
   onEditMember,
-  onDeleteMember
+  onDeleteMember,
+  onCopyWelcomeMessage,
+  generateWelcomeMessage
 }) => {
   return (
     <Card>
@@ -29,6 +33,8 @@ const TeamContent: React.FC<TeamContentProps> = ({
           isLoading={isLoading}
           onEditMember={onEditMember}
           onDeleteMember={onDeleteMember}
+          onCopyWelcomeMessage={onCopyWelcomeMessage}
+          generateWelcomeMessage={generateWelcomeMessage}
         />
       </CardContent>
     </Card>

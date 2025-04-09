@@ -54,6 +54,35 @@ const RestaurantStorageTeam = () => {
     });
   };
 
+  // New handler for copying welcome message for an existing member
+  const handleCopyWelcomeMessageForMember = (member: StorageTeamMember) => {
+    // Convert StorageTeamMember to the format expected by the copyWelcomeMessage function
+    const memberData = {
+      name: member.name,
+      email: member.email,
+      role: member.role,
+      phoneCountryCode: member.phone?.substring(1, 3) || '',
+      phoneNumber: member.phone?.substring(3) || '',
+    };
+    
+    copyWelcomeMessage(memberData);
+  };
+
+  // Helper function to generate welcome message for any team member
+  const generateWelcomeMessageForMember = (member: StorageTeamMember) => {
+    if (!member) return '';
+    
+    const memberData = {
+      name: member.name,
+      email: member.email,
+      role: member.role,
+      phoneCountryCode: member.phone?.substring(1, 3) || '',
+      phoneNumber: member.phone?.substring(3) || '',
+    };
+    
+    return generateWelcomeMessage(memberData);
+  };
+
   return (
     <RestaurantLayout>
       <div className="space-y-6">
@@ -64,6 +93,8 @@ const RestaurantStorageTeam = () => {
           isLoading={isLoading}
           onEditMember={handleEditMember}
           onDeleteMember={handleDeleteMember}
+          onCopyWelcomeMessage={handleCopyWelcomeMessageForMember}
+          generateWelcomeMessage={generateWelcomeMessageForMember}
         />
 
         <AddMemberDialog

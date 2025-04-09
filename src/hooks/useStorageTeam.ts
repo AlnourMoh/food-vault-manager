@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +34,6 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
       }
       
       if (data) {
-        // Convert database result to StorageTeamMember type
         const formattedMembers: StorageTeamMember[] = data.map(member => ({
           id: member.id,
           name: member.name,
@@ -43,7 +41,7 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
           phone: member.phone || '',
           email: member.email,
           restaurantId: member.company_id,
-          restaurantName: '', // This would be populated if needed
+          restaurantName: '',
           joinDate: new Date(member.created_at),
           isActive: member.is_active
         }));
@@ -68,7 +66,6 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     setIsLoading(true);
     
     try {
-      // تنسيق رقم الهاتف ليشمل مفتاح الدولة
       const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
       
       const { data, error } = await supabase
@@ -81,7 +78,7 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
             phone: formattedPhone,
             email: memberData.email,
             is_active: true,
-            user_id: crypto.randomUUID() // Placeholder for now
+            user_id: crypto.randomUUID()
           }
         ])
         .select();
@@ -95,10 +92,8 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
         description: 'تم إضافة عضو الفريق بنجاح',
       });
       
-      // Save the last added member data for welcome message
       setLastAddedMember(memberData);
       
-      // Refresh team members
       fetchTeamMembers();
     } catch (error: any) {
       console.error('Error adding team member:', error);
@@ -118,7 +113,6 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     setIsLoading(true);
     
     try {
-      // تنسيق رقم الهاتف ليشمل مفتاح الدولة
       const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
       
       const { error } = await supabase
@@ -141,7 +135,6 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
         description: 'تم تحديث بيانات عضو الفريق بنجاح',
       });
       
-      // Refresh team members
       fetchTeamMembers();
     } catch (error: any) {
       console.error('Error updating team member:', error);
