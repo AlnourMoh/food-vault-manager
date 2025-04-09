@@ -19,7 +19,9 @@ import {
   MoreVertical 
 } from 'lucide-react';
 import AddMemberDialog from '@/components/team/AddMemberDialog';
+import EditMemberDialog from '@/components/team/EditMemberDialog';
 import { useStorageTeam } from '@/hooks/useStorageTeam';
+import { StorageTeamMember } from '@/types';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -37,6 +39,8 @@ import { useToast } from '@/hooks/use-toast';
 
 const RestaurantStorageTeam = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<StorageTeamMember | null>(null);
   const restaurantId = localStorage.getItem('restaurantId');
   const { toast } = useToast();
   
@@ -45,6 +49,7 @@ const RestaurantStorageTeam = () => {
     isLoading,
     fetchTeamMembers,
     addTeamMember,
+    updateTeamMember,
     lastAddedMember,
     generateWelcomeMessage,
     copyWelcomeMessage
@@ -60,7 +65,7 @@ const RestaurantStorageTeam = () => {
   
   const welcomeMessage = generateWelcomeMessage(lastAddedMember);
 
-  const copyMemberInfo = (member: any) => {
+  const copyMemberInfo = (member: StorageTeamMember) => {
     const memberInfo = `الاسم: ${member.name}
 الدور: ${member.role === 'manager' ? 'مدير المخزن' : 'عضو فريق'}
 رقم الهاتف: ${member.phone}
@@ -73,15 +78,16 @@ const RestaurantStorageTeam = () => {
     });
   };
 
-  const handleEditMember = (member: any) => {
-    // For future implementation
-    toast({
-      title: 'قريباً',
-      description: 'سيتم إضافة خاصية تعديل بيانات العضو قريباً',
-    });
+  const handleEditMember = (member: StorageTeamMember) => {
+    setSelectedMember(member);
+    setShowEditDialog(true);
   };
 
-  const handleDeleteMember = (member: any) => {
+  const handleUpdateMember = (id: string, data: any) => {
+    return updateTeamMember(id, data);
+  };
+
+  const handleDeleteMember = (member: StorageTeamMember) => {
     // For future implementation
     toast({
       title: 'قريباً',
@@ -227,6 +233,14 @@ const RestaurantStorageTeam = () => {
           lastAddedMember={lastAddedMember}
           onCopyWelcomeMessage={copyWelcomeMessage}
           welcomeMessage={welcomeMessage}
+        />
+
+        <EditMemberDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          member={selectedMember}
+          onUpdateMember={handleUpdateMember}
+          isLoading={isLoading}
         />
       </div>
     </RestaurantLayout>

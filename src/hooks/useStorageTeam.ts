@@ -112,6 +112,49 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     }
   };
 
+  const updateTeamMember = async (memberId: string, memberData: TeamMemberFormData) => {
+    if (!restaurantId) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // تنسيق رقم الهاتف ليشمل مفتاح الدولة
+      const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
+      
+      const { error } = await supabase
+        .from('company_members')
+        .update({
+          name: memberData.name,
+          role: memberData.role === 'manager' ? 'admin' : 'staff',
+          phone: formattedPhone,
+          email: memberData.email,
+        })
+        .eq('id', memberId)
+        .eq('company_id', restaurantId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: 'تم التحديث بنجاح',
+        description: 'تم تحديث بيانات عضو الفريق بنجاح',
+      });
+      
+      // Refresh team members
+      fetchTeamMembers();
+    } catch (error: any) {
+      console.error('Error updating team member:', error);
+      toast({
+        variant: 'destructive',
+        title: 'خطأ في تحديث بيانات عضو الفريق',
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const generateWelcomeMessage = (memberData: TeamMemberFormData | null) => {
     if (!memberData) return '';
     
@@ -154,6 +197,7 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     isLoading,
     fetchTeamMembers,
     addTeamMember,
+    updateTeamMember,
     lastAddedMember,
     generateWelcomeMessage,
     copyWelcomeMessage
