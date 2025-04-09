@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEditProductForm } from '@/hooks/products/useEditProductForm';
 import EditProductForm from '@/components/products/EditProductForm';
+import { FormData } from '@/components/products/types';
 
 // Define a type for the raw product data from Supabase
 interface RawProductData {
@@ -23,7 +24,7 @@ interface RawProductData {
   image_url?: string | null;
   created_at: string;
   updated_at: string;
-  unit?: string; // Add the unit property that was missing
+  unit?: string;
 }
 
 const EditProduct = () => {
@@ -37,7 +38,7 @@ const EditProduct = () => {
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
   const inventoryPath = isRestaurantRoute ? '/restaurant/inventory' : '/inventory';
 
-  // Initialize the form hook with default empty values
+  // Initialize the form hook with productId and navigation callback
   const {
     formData,
     setFormData,
@@ -77,7 +78,7 @@ const EditProduct = () => {
         
         // Format dates for input fields
         const expiryDate = new Date(data.expiry_date);
-        const productionDate = new Date(data.production_date);
+        const productionDate = data.production_date ? new Date(data.production_date) : new Date();
         
         setFormData({
           name: data.name,

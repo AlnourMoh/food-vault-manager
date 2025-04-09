@@ -5,49 +5,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { FormData, FormError } from '@/components/products/types';
 import { useProductFormValidation } from '@/hooks/products/useProductFormValidation';
 import { useProductFormHandlers } from '@/hooks/products/useProductFormHandlers';
+import { useProductFormState } from '@/hooks/products/useProductFormState';
 
 export const useEditProductForm = (productId: string | undefined, onSuccess: () => void) => {
   const { toast } = useToast();
-  const [errors, setErrors] = useState<FormError>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Default categories
-  const [categories, setCategories] = useState([
-    'بقالة',
-    'لحوم',
-    'ألبان',
-    'خضروات',
-    'فواكه',
-    'بهارات',
-    'زيوت',
-    'مجمدات',
-    'أخرى'
-  ]);
-  
-  // Default units
-  const [units, setUnits] = useState([
-    { value: 'kg', label: 'كيلوغرام' },
-    { value: 'g', label: 'غرام' },
-    { value: 'l', label: 'لتر' },
-    { value: 'ml', label: 'مليلتر' },
-    { value: 'piece', label: 'قطعة' },
-    { value: 'box', label: 'صندوق' },
-    { value: 'pack', label: 'عبوة' },
-  ]);
-  
-  // Form data state
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    category: '',
-    unit: '',
-    quantity: '',
-    expiryDate: '',
-    image: null,
-    imageUrl: '',
-  });
+  // Use shared form state management
+  const {
+    formData,
+    setFormData,
+    errors,
+    setErrors,
+    categories,
+    setCategories,
+    units,
+    setUnits
+  } = useProductFormState();
 
+  // Use shared form validation
   const { validateForm } = useProductFormValidation();
   
+  // Use shared form handlers
   const {
     handleInputChange,
     handleSelectChange,
