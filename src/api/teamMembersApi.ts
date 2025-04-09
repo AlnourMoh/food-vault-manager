@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { StorageTeamMember } from '@/types';
 
@@ -84,6 +83,18 @@ export const updateTeamMemberApi = async (
       phone: formattedPhone,
       email: memberData.email,
     })
+    .eq('id', memberId)
+    .eq('company_id', restaurantId);
+  
+  if (error) {
+    throw error;
+  }
+};
+
+export const deleteTeamMemberApi = async (restaurantId: string, memberId: string) => {
+  const { error } = await supabase
+    .from('company_members')
+    .delete()
     .eq('id', memberId)
     .eq('company_id', restaurantId);
   

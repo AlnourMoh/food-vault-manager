@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { StorageTeamMember } from '@/types';
@@ -6,7 +5,8 @@ import { TeamMemberFormData } from '@/types/team';
 import { 
   fetchTeamMembersApi, 
   addTeamMemberApi, 
-  updateTeamMemberApi 
+  updateTeamMemberApi,
+  deleteTeamMemberApi
 } from '@/api/teamMembersApi';
 import { 
   generateWelcomeMessage,
@@ -93,6 +93,32 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     }
   };
 
+  const deleteTeamMember = async (memberId: string) => {
+    if (!restaurantId) return;
+    
+    setIsLoading(true);
+    
+    try {
+      await deleteTeamMemberApi(restaurantId, memberId);
+      
+      toast({
+        title: 'تم الحذف بنجاح',
+        description: 'تم حذف عضو الفريق بنجاح',
+      });
+      
+      fetchTeamMembers();
+    } catch (error: any) {
+      console.error('Error deleting team member:', error);
+      toast({
+        variant: 'destructive',
+        title: 'خطأ في حذف عضو الفريق',
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const copyWelcomeMessage = async (memberData: TeamMemberFormData | null) => {
     if (!memberData) return;
     
@@ -119,6 +145,7 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     fetchTeamMembers,
     addTeamMember,
     updateTeamMember,
+    deleteTeamMember,
     lastAddedMember,
     generateWelcomeMessage,
     copyWelcomeMessage

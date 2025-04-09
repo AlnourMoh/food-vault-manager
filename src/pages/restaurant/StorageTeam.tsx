@@ -9,11 +9,13 @@ import TeamHeader from '@/components/team/TeamHeader';
 import TeamContent from '@/components/team/TeamContent';
 import AddMemberDialog from '@/components/team/AddMemberDialog';
 import EditMemberDialog from '@/components/team/EditMemberDialog';
+import DeleteMemberDialog from '@/components/team/DeleteMemberDialog';
 import { generateWelcomeMessage } from '@/utils/welcomeMessageUtils';
 
 const RestaurantStorageTeam = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedMember, setSelectedMember] = useState<StorageTeamMember | null>(null);
   const restaurantId = localStorage.getItem('restaurantId');
   const { toast } = useToast();
@@ -24,6 +26,7 @@ const RestaurantStorageTeam = () => {
     fetchTeamMembers,
     addTeamMember,
     updateTeamMember,
+    deleteTeamMember,
     lastAddedMember,
     copyWelcomeMessage
   } = useStorageTeam(restaurantId || undefined);
@@ -48,11 +51,12 @@ const RestaurantStorageTeam = () => {
   };
 
   const handleDeleteMember = (member: StorageTeamMember) => {
-    // For future implementation
-    toast({
-      title: 'قريباً',
-      description: 'سيتم إضافة خاصية حذف العضو قريباً',
-    });
+    setSelectedMember(member);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = (id: string) => {
+    return deleteTeamMember(id);
   };
 
   // New handler for copying welcome message for an existing member
@@ -120,6 +124,14 @@ const RestaurantStorageTeam = () => {
           onOpenChange={setShowEditDialog}
           member={selectedMember}
           onUpdateMember={handleUpdateMember}
+          isLoading={isLoading}
+        />
+
+        <DeleteMemberDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          member={selectedMember}
+          onDeleteMember={handleConfirmDelete}
           isLoading={isLoading}
         />
       </div>
