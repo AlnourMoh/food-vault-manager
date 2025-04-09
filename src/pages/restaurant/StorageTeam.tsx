@@ -23,7 +23,10 @@ const RestaurantStorageTeam = () => {
     teamMembers,
     isLoading,
     fetchTeamMembers,
-    addTeamMember
+    addTeamMember,
+    lastAddedMember,
+    generateWelcomeMessage,
+    copyWelcomeMessage
   } = useStorageTeam(restaurantId || undefined);
 
   useEffect(() => {
@@ -32,8 +35,9 @@ const RestaurantStorageTeam = () => {
 
   const handleAddMember = (data: any) => {
     addTeamMember(data);
-    setShowAddDialog(false);
   };
+  
+  const welcomeMessage = generateWelcomeMessage(lastAddedMember);
 
   return (
     <RestaurantLayout>
@@ -91,6 +95,9 @@ const RestaurantStorageTeam = () => {
           onOpenChange={setShowAddDialog}
           onAddMember={handleAddMember}
           isLoading={isLoading}
+          lastAddedMember={lastAddedMember}
+          onCopyWelcomeMessage={copyWelcomeMessage}
+          welcomeMessage={welcomeMessage}
         />
       </div>
     </RestaurantLayout>

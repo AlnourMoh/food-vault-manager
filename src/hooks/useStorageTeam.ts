@@ -15,6 +15,7 @@ interface TeamMemberFormData {
 export const useStorageTeam = (restaurantId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(false);
   const [teamMembers, setTeamMembers] = useState<StorageTeamMember[]>([]);
+  const [lastAddedMember, setLastAddedMember] = useState<TeamMemberFormData | null>(null);
   const { toast } = useToast();
 
   const fetchTeamMembers = async () => {
@@ -94,6 +95,9 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
         description: 'تم إضافة عضو الفريق بنجاح',
       });
       
+      // Save the last added member data for welcome message
+      setLastAddedMember(memberData);
+      
       // Refresh team members
       fetchTeamMembers();
     } catch (error: any) {
@@ -108,10 +112,50 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     }
   };
 
+  const generateWelcomeMessage = (memberData: TeamMemberFormData | null) => {
+    if (!memberData) return '';
+    
+    return `مرحباً ${memberData.name}،
+
+نرحب بك في فريق إدارة المخزن. لتتمكن من الوصول إلى تطبيق إدارة المخزن، يرجى اتباع الخطوات التالية:
+
+1. قم بتحميل تطبيق إدارة المخزن من الرابط: [تحميل التطبيق]
+2. عند فتح التطبيق، قم بإدخال البريد الإلكتروني أو رقم الهاتف الذي تم تسجيلك به: ${memberData.email || `+${memberData.phoneCountryCode}${memberData.phoneNumber}`}
+3. قم بإنشاء كلمة مرور خاصة بك للدخول إلى النظام
+
+إذا كان لديك أي استفسار، لا تتردد في التواصل مع مدير النظام.
+
+مع تحياتنا،
+فريق إدارة المخزن`;
+  };
+
+  const copyWelcomeMessage = async (memberData: TeamMemberFormData | null) => {
+    if (!memberData) return;
+    
+    const message = generateWelcomeMessage(memberData);
+    try {
+      await navigator.clipboard.writeText(message);
+      toast({
+        title: 'تم نسخ الرسالة',
+        description: 'تم نسخ رسالة الترحيب إلى الحافظة',
+      });
+    } catch (error) {
+      console.error('Failed to copy message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'فشل نسخ الرسالة',
+        description: 'حدث خطأ أثناء محاولة نسخ الرسالة',
+      });
+    }
+  };
+
   return {
     teamMembers,
     isLoading,
     fetchTeamMembers,
-    addTeamMember
+    addTeamMember,
+    lastAddedMember,
+    generateWelcomeMessage,
+    copyWelcomeMessage
   };
 };
