@@ -24,10 +24,10 @@ const BarcodeCard: React.FC<BarcodeCardProps> = ({
   return (
     <Card className="print:border-2 print:shadow-none barcode-card">
       <CardContent className="p-4 flex flex-col items-center">
-        <div className="w-full text-center py-2 border-b mb-2">
+        <div className="w-full text-center py-2 border-b mb-2 product-name">
           {productName}
         </div>
-        <div className="text-lg font-mono my-2 text-center overflow-hidden">
+        <div className="text-lg font-mono my-2 text-center overflow-hidden barcode-number">
           {barcode.qr_code}
         </div>
         <div className="border-2 border-black w-full h-20 flex items-center justify-center my-2 barcode-image">
@@ -38,7 +38,7 @@ const BarcodeCard: React.FC<BarcodeCardProps> = ({
             className="w-full h-full" 
           />
         </div>
-        <div className="text-xs text-gray-500 mt-2">
+        <div className="text-xs text-gray-500 mt-2 product-id">
           رقم المنتج: {barcode.product_id.substring(0, 8)}
         </div>
         

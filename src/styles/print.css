@@ -76,6 +76,15 @@
   .barcode-image {
     background-color: white !important;
     max-height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .barcode-image svg {
+    width: 100% !important;
+    height: 100% !important;
   }
   
   /* Text adjustments for all labels */
@@ -126,6 +135,7 @@
   
   .label-size-small .barcode-image {
     height: 10mm !important;
+    width: 30mm !important;
     margin: 0.5mm 0 !important;
   }
   
@@ -152,6 +162,7 @@
   
   .label-size-medium .barcode-image {
     height: 14mm !important;
+    width: 40mm !important;
     margin: 1mm 0 !important;
   }
   
@@ -178,6 +189,7 @@
   
   .label-size-large .barcode-image {
     height: 25mm !important;
+    width: 60mm !important;
     margin: 2mm 0 !important;
   }
   

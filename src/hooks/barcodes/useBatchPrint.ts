@@ -28,6 +28,19 @@ export const useBatchPrint = () => {
         size: ${labelWidth}mm ${labelHeight}mm;
         margin: 0mm;
       }
+      
+      /* Ensure barcode images display properly */
+      .barcode-image {
+        width: ${labelSizeId === 'small' ? '30mm' : labelSizeId === 'medium' ? '40mm' : '60mm'} !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      
+      .barcode-image svg {
+        width: 100% !important;
+        height: 100% !important;
+      }
     `;
     document.head.appendChild(style);
     

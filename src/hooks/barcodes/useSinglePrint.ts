@@ -1,6 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { Barcode, Product } from './types';
+import { Barcode, Product, LabelSize } from './types';
 import { generateBarcodeImage } from '@/utils/barcodeUtils';
 
 /**
@@ -19,7 +19,7 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
    * @param barcodeId - The ID of the specific barcode to print
    * @param labelSize - The selected label size for printing
    */
-  const handlePrintSingle = (barcodeId: string, labelSize: { id: string; width: number; height: number }) => {
+  const handlePrintSingle = (barcodeId: string, labelSize: LabelSize) => {
     // Find the selected barcode to print
     const barcodeToPrint = barcodes.find(b => b.id === barcodeId);
     if (!barcodeToPrint) return;
@@ -63,6 +63,7 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            align-items: center;
           }
           .product-name {
             text-align: center;
@@ -72,15 +73,18 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
             overflow: hidden;
             text-overflow: ellipsis;
             margin-bottom: ${labelSize.id === 'small' ? '0.3mm' : labelSize.id === 'medium' ? '0.5mm' : '1mm'};
+            width: 100%;
           }
           .barcode-number {
             text-align: center;
             font-family: monospace;
             font-size: ${labelSize.id === 'small' ? '5pt' : labelSize.id === 'medium' ? '7pt' : '9pt'};
             margin: 0.5mm 0;
+            width: 100%;
           }
           .barcode-image {
             height: ${labelSize.id === 'small' ? '10mm' : labelSize.id === 'medium' ? '14mm' : '25mm'};
+            width: ${labelSize.id === 'small' ? '30mm' : labelSize.id === 'medium' ? '40mm' : '60mm'};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -88,14 +92,15 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
             margin: ${labelSize.id === 'small' ? '0.5mm' : labelSize.id === 'medium' ? '1mm' : '2mm'} 0;
           }
           .barcode-image svg {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
           }
           .product-id {
             text-align: center;
             font-size: ${labelSize.id === 'small' ? '4pt' : labelSize.id === 'medium' ? '6pt' : '8pt'};
             color: #666;
             margin-top: 0.5mm;
+            width: 100%;
           }
         </style>
       </head>
