@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,24 +46,37 @@ export const useProductFormSubmit = (
         
         console.log('Uploading image to path:', filePath);
         
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, formData.image);
+        try {
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('product-images')
+            .upload(filePath, formData.image);
+            
+          if (uploadError) {
+            console.error('Image upload error:', uploadError);
+            throw uploadError;
+          }
           
-        if (uploadError) {
-          console.error('Image upload error:', uploadError);
-          throw uploadError;
+          console.log('Image uploaded successfully:', uploadData);
+          
+          // Get public URL for the uploaded image
+          const { data: urlData } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(filePath);
+            
+          imageUrl = urlData?.publicUrl || '';
+          console.log('Image public URL:', imageUrl);
+        } catch (uploadErr: any) {
+          console.error('Failed to upload image:', uploadErr);
+          // Continue with product creation but without image
+          toast({
+            title: "تحذير: لم يتم رفع الصورة",
+            description: "تمت إضافة المنتج ولكن حدث خطأ أثناء رفع الصورة",
+            variant: "destructive",
+          });
         }
-        
-        console.log('Image uploaded successfully:', uploadData);
-        
-        // Get public URL for the uploaded image
-        const { data: urlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-          
-        imageUrl = urlData?.publicUrl || '';
-        console.log('Image public URL:', imageUrl);
+      } else if (formData.imageUrl) {
+        // Keep existing image URL if available
+        imageUrl = formData.imageUrl;
       }
       
       // Prepare product data for Supabase
@@ -78,8 +90,8 @@ export const useProductFormSubmit = (
           new Date().toISOString(),
         company_id: restaurantId,
         status: 'active',
-        image_url: imageUrl, // Include the image URL in the product data
-        unit: formData.unit
+        image_url: imageUrl,
+        unit: formData.unit || 'piece' // استخدام وحدة القياس المحددة أو القيمة الافتراضية
       };
       
       console.log('Inserting product with data:', productData);

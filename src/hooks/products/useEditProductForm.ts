@@ -84,47 +84,52 @@ export const useEditProductForm = (productId: string | undefined, onSuccess: () 
         
         console.log('Uploading image to path:', filePath);
         
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, formData.image);
-          
-        if (uploadError) {
-          console.error('Image upload error:', uploadError);
-          throw uploadError;
+        try {
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('product-images')
+            .upload(filePath, formData.image);
+            
+          if (uploadError) {
+            console.error('Image upload error:', uploadError);
+            // Continue with product update but without changing the image
+            toast({
+              title: "تحذير: لم يتم تحديث الصورة",
+              description: "تم تحديث بيانات المنتج ولكن حدث خطأ أثناء رفع الصورة",
+              variant: "warning",
+            });
+          } else {
+            console.log('Image uploaded successfully:', uploadData);
+            
+            // Get public URL for the uploaded image
+            const { data: urlData } = supabase.storage
+              .from('product-images')
+              .getPublicUrl(filePath);
+              
+            imageUrl = urlData?.publicUrl || '';
+            console.log('Image public URL:', imageUrl);
+          }
+        } catch (uploadErr) {
+          console.error('Failed to upload image:', uploadErr);
+          // Continue with product update but without changing the image
         }
-        
-        console.log('Image uploaded successfully:', uploadData);
-        
-        // Get public URL for the uploaded image
-        const { data: urlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-          
-        imageUrl = urlData?.publicUrl || '';
-        console.log('Image public URL:', imageUrl);
       }
       
-      console.log('Updating product with data:', {
+      const productData = {
         name: formData.name,
         category: formData.category,
         quantity: Number(formData.quantity),
         expiry_date: expiryDate.toISOString(),
         production_date: productionDate.toISOString(),
-        unit: formData.unit,
+        unit: formData.unit || 'piece', // استخدام وحدة القياس المحددة أو القيمة الافتراضية
         image_url: imageUrl
-      });
+      };
       
+      console.log('Updating product with data:', productData);
+      
+      // Update product in Supabase
       const { error } = await supabase
         .from('products')
-        .update({
-          name: formData.name,
-          category: formData.category,
-          quantity: Number(formData.quantity),
-          expiry_date: expiryDate.toISOString(),
-          production_date: productionDate.toISOString(),
-          unit: formData.unit,
-          image_url: imageUrl
-        })
+        .update(productData)
         .eq('id', productId);
         
       if (error) {

@@ -373,6 +373,7 @@ export type Database = {
           production_date: string
           quantity: number
           status: string
+          unit: string | null
           updated_at: string
         }
         Insert: {
@@ -386,6 +387,7 @@ export type Database = {
           production_date: string
           quantity: number
           status: string
+          unit?: string | null
           updated_at?: string
         }
         Update: {
@@ -399,6 +401,7 @@ export type Database = {
           production_date?: string
           quantity?: number
           status?: string
+          unit?: string | null
           updated_at?: string
         }
         Relationships: [
