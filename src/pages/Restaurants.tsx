@@ -41,7 +41,7 @@ interface Restaurant {
   address: string;
   created_at: string;
   isActive?: boolean; // This will be managed on the frontend
-  manager?: string; // This will be placeholder for now
+  manager?: string | null; // Updated to handle null values
 }
 
 const Restaurants = () => {
@@ -60,9 +60,10 @@ const Restaurants = () => {
     setIsLoading(true);
     
     try {
+      // Update query to explicitly include the manager field
       const { data, error } = await supabase
         .from('companies')
-        .select('*')
+        .select('id, name, email, phone, address, created_at, manager')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -71,11 +72,10 @@ const Restaurants = () => {
       const formattedRestaurants = data.map((restaurant: any) => ({
         ...restaurant,
         isActive: true, // Assume all fetched restaurants are active for now
-        manager: "مدير المطعم", // Placeholder for now
-        registrationDate: restaurant.created_at
       }));
 
       setRestaurants(formattedRestaurants);
+      console.log("Fetched restaurants with manager data:", formattedRestaurants);
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       toast({

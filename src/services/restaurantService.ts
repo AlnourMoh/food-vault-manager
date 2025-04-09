@@ -10,6 +10,7 @@ export interface RestaurantResponse {
   phone: string;
   address: string;
   logo_url?: string | null;
+  manager?: string | null;
 }
 
 // Create a restaurant in the database
@@ -43,13 +44,15 @@ export async function updateRestaurant(
   name: string,
   phone: string,
   address: string,
+  manager?: string | null,
   logo_url?: string | null
 ): Promise<RestaurantResponse> {
-  const { data, error } = await supabase.rpc('force_update_company', {
+  const { data, error } = await supabase.rpc('force_update_company_with_manager', {
     p_company_id: id,
     p_name: name,
     p_phone: phone,
     p_address: address,
+    p_manager: manager,
     p_logo_url: logo_url
   });
 

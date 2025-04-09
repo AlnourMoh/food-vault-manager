@@ -90,7 +90,7 @@ const EditRestaurant = () => {
       
       // Use a generic RPC call that TypeScript will accept
       const { data, error } = await supabase.rpc(
-        'force_update_company_with_manager' as any, 
+        'force_update_company_with_manager', 
         {
           p_company_id: id,
           p_name: values.name,
