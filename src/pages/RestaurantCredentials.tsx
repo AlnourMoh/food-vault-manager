@@ -81,19 +81,18 @@ const RestaurantCredentials = () => {
     setIsLoading(true);
     
     try {
-      // Check if restaurant has credentials set up
+      // Check if restaurant has credentials set up - use maybeSingle() instead of single()
       const { data: credentialsData, error: credentialsError } = await supabase
         .from('restaurant_access')
         .select('*')
-        .eq('restaurant_id', id)
-        .single();
+        .eq('restaurant_id', id);
       
-      if (credentialsError && credentialsError.code !== 'PGRST116') {
+      if (credentialsError) {
         throw credentialsError;
       }
       
-      // If credentials exist, simulate login
-      if (credentialsData) {
+      // If credentials exist (array has items), simulate login
+      if (credentialsData && credentialsData.length > 0) {
         localStorage.setItem('restaurantId', id as string);
         localStorage.setItem('isRestaurantLogin', 'true');
         
