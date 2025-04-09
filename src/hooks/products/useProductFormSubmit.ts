@@ -49,35 +49,22 @@ export const useProductFormSubmit = (
       // Generate a unique ID for the product
       const productId = uuidv4();
       
-      // Process image if it exists
+      // Since we're having issues with storage bucket, we'll skip image upload for now
       let imageUrl = '';
+      
       if (formData.image) {
-        const fileExt = formData.image.name.split('.').pop();
-        const fileName = `${productId}.${fileExt}`;
-        const filePath = `products/${fileName}`;
+        // Instead of uploading, we'll just note that there was an image
+        console.log('Image upload skipped due to missing storage bucket');
         
-        // Upload image to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, formData.image);
+        // We could set a placeholder image URL if needed
+        imageUrl = 'https://via.placeholder.com/150';
         
-        if (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          toast({
-            title: "خطأ في رفع الصورة",
-            description: uploadError.message,
-            variant: "destructive",
-          });
-          setIsSubmitting(false);
-          return {};
-        }
-        
-        // Get public URL for the uploaded image
-        const { data: { publicUrl } } = supabase.storage
-          .from('products')
-          .getPublicUrl(filePath);
-        
-        imageUrl = publicUrl;
+        // Show a warning about the image not being uploaded
+        toast({
+          title: "تنبيه",
+          description: "تم تخطي رفع الصورة - يرجى التواصل مع مسؤول النظام لإنشاء بكت التخزين",
+          variant: "default",
+        });
       }
 
       // Create data object for insertion
@@ -86,12 +73,12 @@ export const useProductFormSubmit = (
         name: formData.name,
         category: formData.category,
         quantity: Number(formData.quantity),
-        unit: formData.unit, // Include unit field in database
+        unit: formData.unit,
         expiry_date: new Date(formData.expiryDate).toISOString(),
         production_date: new Date().toISOString(),
         company_id: restaurantId,
         status: 'active',
-        imageUrl // Include imageUrl in the insertion
+        imageUrl
       };
       
       // Insert data into Supabase
