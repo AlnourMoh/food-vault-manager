@@ -1,18 +1,10 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  CardDescription,
-  CardFooter
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { FormData, FormError } from '@/components/products/types';
-import CategorySelector from '@/components/products/CategorySelector';
-import UnitSelector from '@/components/products/UnitSelector';
-import ProductInfoFields from '@/components/products/ProductInfoFields';
+import ProductFormHeader from '@/components/products/ProductFormHeader';
+import ProductFormFields from '@/components/products/ProductFormFields';
+import ProductFormFooter from '@/components/products/ProductFormFooter';
 
 interface AddProductFormProps {
   formData: FormData;
@@ -43,49 +35,25 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
 }) => {
   return (
     <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-xl">إضافة منتج جديد</CardTitle>
-        <CardDescription>أدخل بيانات المنتج الجديد لإضافته إلى المخزون</CardDescription>
-      </CardHeader>
+      <ProductFormHeader />
+      
       <CardContent>
         <form id="add-product-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ProductInfoFields 
-              formData={formData} 
-              handleInputChange={handleInputChange}
-              handleImageChange={handleImageChange}
-              errors={errors} 
-            />
-            
-            <CategorySelector 
-              categories={categories}
-              setCategories={setCategories}
-              formData={formData}
-              handleSelectChange={handleSelectChange}
-              errors={errors}
-            />
-            
-            <UnitSelector 
-              units={units}
-              setUnits={setUnits}
-              formData={formData}
-              handleSelectChange={handleSelectChange}
-              errors={errors}
-            />
-          </div>
+          <ProductFormFields 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSelectChange={handleSelectChange}
+            handleImageChange={handleImageChange}
+            categories={categories}
+            setCategories={setCategories}
+            units={units}
+            setUnits={setUnits}
+            errors={errors}
+          />
         </form>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" type="button">إلغاء</Button>
-        <Button 
-          type="submit" 
-          form="add-product-form" 
-          className="bg-fvm-primary hover:bg-fvm-primary-light"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'جاري الإضافة...' : 'إضافة المنتج'}
-        </Button>
-      </CardFooter>
+      
+      <ProductFormFooter isSubmitting={isSubmitting} />
     </Card>
   );
 };

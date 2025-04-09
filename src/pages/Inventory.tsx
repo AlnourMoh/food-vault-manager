@@ -45,23 +45,25 @@ const Inventory = () => {
           throw error;
         }
         
-        // Transform the data to match our Product type
-        const transformedProducts = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          category: item.category,
-          quantity: item.quantity,
-          expiryDate: new Date(item.expiry_date),
-          entryDate: new Date(item.production_date),
-          restaurantId: item.company_id,
-          status: item.status,
-          imageUrl: item.imageUrl || '',
-          restaurantName: '',
-          addedBy: '',
-          unit: ''
-        }));
-        
-        setProducts(transformedProducts);
+        if (data) {
+          // Transform the data to match our Product type
+          const transformedProducts: Product[] = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            quantity: item.quantity,
+            expiryDate: new Date(item.expiry_date),
+            entryDate: new Date(item.production_date),
+            restaurantId: item.company_id,
+            status: item.status as "active" | "expired" | "removed",
+            imageUrl: item.imageUrl || '',
+            restaurantName: '',
+            addedBy: '',
+            unit: ''
+          }));
+          
+          setProducts(transformedProducts);
+        }
       } catch (error: any) {
         console.error('Error fetching products:', error);
         toast({
