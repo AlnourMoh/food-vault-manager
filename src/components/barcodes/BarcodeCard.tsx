@@ -40,6 +40,10 @@ const BarcodeCard: React.FC<BarcodeCardProps> = ({
           />
         </div>
         
+        <div className="text-xs text-center font-mono tracking-wide barcode-number">
+          {barcode.qr_code}
+        </div>
+        
         <div className="text-xs text-gray-500 mt-1 sm:mt-2 product-id">
           رقم المنتج: {barcode.product_id.substring(0, 8)}
         </div>

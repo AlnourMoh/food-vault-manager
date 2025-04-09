@@ -46,6 +46,7 @@ export const generateBarcodeHtml = ({
         <div class="barcode-image">
           ${barcodeImageHtml}
         </div>
+        <div class="barcode-number">${barcode.qr_code}</div>
         <div class="product-id">رقم المنتج: ${barcode.product_id.substring(0, 8)}</div>
       </div>
     </body>

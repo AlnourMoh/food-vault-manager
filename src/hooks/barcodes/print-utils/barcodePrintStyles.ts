@@ -1,3 +1,4 @@
+
 /**
  * Shared styles for barcode printing
  * This module contains reusable style generators for barcode print functionality
@@ -55,10 +56,20 @@ export const getBasePrintStyles = (): string => {
       object-fit: contain;
     }
     
+    .barcode-number {
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      font-weight: normal;
+      letter-spacing: 1px;
+      width: 100%;
+      margin-top: -2mm;
+    }
+    
     .product-id {
       text-align: center;
       color: #666;
       width: 100%;
+      margin-top: 1mm;
     }
   `;
 };
@@ -79,14 +90,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
         }
         
         .barcode-image {
-          height: 15mm;
+          height: 10mm;
           width: 35mm;
           margin: 0.5mm 0;
         }
         
+        .barcode-number {
+          font-size: 5pt;
+        }
+        
         .product-id {
           font-size: 4pt;
-          margin-top: 1mm;
+          margin-top: 0.5mm;
         }
       `;
     
@@ -98,14 +113,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
         }
         
         .barcode-image {
-          height: 20mm;
+          height: 15mm;
           width: 45mm;
           margin: 1mm 0;
         }
         
+        .barcode-number {
+          font-size: 7pt;
+        }
+        
         .product-id {
           font-size: 6pt;
-          margin-top: 1.5mm;
+          margin-top: 1mm;
         }
       `;
     
@@ -118,14 +137,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
         }
         
         .barcode-image {
-          height: 35mm;
-          width: 65mm;
+          height: 25mm;
+          width: 60mm;
           margin: 2mm 0;
+        }
+        
+        .barcode-number {
+          font-size: 9pt;
         }
         
         .product-id {
           font-size: 8pt;
-          margin-top: 2mm;
+          margin-top: 1.5mm;
         }
       `;
   }

@@ -25,6 +25,7 @@
   
   .label-size-small .barcode-number {
     font-size: 5pt !important;
+    margin-top: -1mm !important;
   }
   
   .label-size-small .barcode-image {
@@ -52,6 +53,7 @@
   
   .label-size-medium .barcode-number {
     font-size: 7pt !important;
+    margin-top: -1mm !important;
   }
   
   .label-size-medium .barcode-image {
@@ -79,6 +81,7 @@
   
   .label-size-large .barcode-number {
     font-size: 9pt !important;
+    margin-top: -1.5mm !important;
   }
   
   .label-size-large .barcode-image {

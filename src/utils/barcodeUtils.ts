@@ -27,58 +27,122 @@ export const generateBarcodesFromProduct = (product: any) => {
 
 // Generate a barcode SVG visual representation
 export const generateBarcodeImage = (code: string) => {
-  // Create a linear barcode (EAN/UPC style) to match the provided image
-  const barcodeDigits = code.replace(/\D/g, ''); // Only use numeric values
-  const svgWidth = 240; // Fixed width for the barcode
-  const svgHeight = 80; // Height including the digits below
-  const barcodeHeight = 60; // Height of just the bars
-  const digitHeight = 20; // Height of the digit area
+  // Create a more accurate EAN/UPC style barcode similar to the image
+  const svgWidth = 240;
+  const svgHeight = 80;
+  const barHeight = 50;
+  const textHeight = 15;
+  const marginX = 15;
+  const marginTop = 5;
   
-  // Calculate bar widths
-  const spaceBetweenBars = 1;
-  const thinBarWidth = 2;
-  const thickBarWidth = 4;
-  const marginSide = 10;
+  // Prepare the barcode data
+  const cleanCode = code.replace(/\D/g, '').substring(0, 13); // Clean code and limit to 13 digits
+  const paddedCode = cleanCode.padEnd(13, '0'); // Ensure we have 13 digits
+  
+  // Calculate bar widths and positions
+  const barWidth = 2;
+  const barGap = 1;
+  const digitWidth = 7;
   
   let bars = '';
   let digits = '';
-  let xPosition = marginSide;
+  let xPosition = marginX;
   
-  // Create the barcode pattern
-  for (let i = 0; i < barcodeDigits.length; i++) {
-    const digit = parseInt(barcodeDigits[i]);
-    const digitX = xPosition + (i === 0 ? -2 : 0); // Adjust first digit position
+  // Start guard bars (taller than regular bars)
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap + 4; // Add a little extra space
+  
+  // Add the first set of bars and digits
+  for (let i = 0; i < 6; i++) {
+    const digitVal = parseInt(paddedCode[i]);
+    const digitX = marginX + 3 + (i * (digitWidth + 1));
     
-    // Add digit below the barcode
-    digits += `<text x="${digitX}" y="${barcodeHeight + 15}" font-family="Arial" font-size="12">${digit}</text>`;
+    // Add digit below bars
+    digits += `<text x="${digitX}" y="${barHeight + textHeight + marginTop}" font-family="Arial" font-size="12" text-anchor="middle">${digitVal}</text>`;
     
-    // Determine if we need thin or thick bar based on digit value
-    // Even digits get thin bars, odd digits get thick bars
-    const barWidth = digit % 2 === 0 ? thinBarWidth : thickBarWidth;
+    // Add bars (pattern based on digit)
+    const patterns = [
+      [3, 2, 1, 1], // 0
+      [2, 2, 2, 1], // 1
+      [2, 1, 2, 2], // 2
+      [1, 4, 1, 1], // 3
+      [1, 1, 3, 2], // 4
+      [1, 2, 3, 1], // 5
+      [1, 1, 1, 4], // 6
+      [1, 3, 1, 2], // 7
+      [1, 2, 1, 3], // 8
+      [3, 1, 1, 2]  // 9
+    ];
     
-    // Add a black bar
-    bars += `<rect x="${xPosition}" y="0" width="${barWidth}" height="${barcodeHeight}" fill="black" />`;
-    xPosition += barWidth + spaceBetweenBars;
-    
-    // Add a separator after every 6th digit (similar to the example image)
-    if (i === 6) {
-      xPosition += 6; // Extra space for the separator
+    // Generate bars based on the digit pattern
+    const pattern = patterns[digitVal % 10];
+    for (let j = 0; j < pattern.length; j++) {
+      if (j % 2 === 0) { // Only draw black bars
+        bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth * pattern[j]}" height="${barHeight}" fill="black" />`;
+      }
+      xPosition += (barWidth * pattern[j]) + barGap;
     }
   }
   
-  // Add guard bars (the longer bars at start, middle and end)
-  // Start guard bars
-  bars = `<rect x="${marginSide - 8}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />
-          <rect x="${marginSide - 4}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />` + bars;
+  // Middle guard bars (taller)
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap + 4; // Add a little extra space
   
-  // Middle guard bars (after the 6th digit)
-  const middleX = marginSide + (thinBarWidth + spaceBetweenBars) * 12 + 2;
-  bars += `<rect x="${middleX}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />
-           <rect x="${middleX + 4}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />`;
+  // Add the second set of bars and digits
+  for (let i = 6; i < 12; i++) {
+    const digitVal = parseInt(paddedCode[i]);
+    const digitX = marginX + 85 + ((i-6) * (digitWidth + 1));
+    
+    // Add digit below bars
+    digits += `<text x="${digitX}" y="${barHeight + textHeight + marginTop}" font-family="Arial" font-size="12" text-anchor="middle">${digitVal}</text>`;
+    
+    // Add bars (pattern based on digit)
+    const patterns = [
+      [3, 2, 1, 1], // 0
+      [2, 2, 2, 1], // 1
+      [2, 1, 2, 2], // 2
+      [1, 4, 1, 1], // 3
+      [1, 1, 3, 2], // 4
+      [1, 2, 3, 1], // 5
+      [1, 1, 1, 4], // 6
+      [1, 3, 1, 2], // 7
+      [1, 2, 1, 3], // 8
+      [3, 1, 1, 2]  // 9
+    ];
+    
+    // Generate bars based on the digit pattern
+    const pattern = patterns[digitVal % 10];
+    for (let j = 0; j < pattern.length; j++) {
+      if (j % 2 === 0) { // Only draw black bars
+        bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth * pattern[j]}" height="${barHeight}" fill="black" />`;
+      }
+      xPosition += (barWidth * pattern[j]) + barGap;
+    }
+  }
   
-  // End guard bars
-  bars += `<rect x="${svgWidth - marginSide - 8}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />
-           <rect x="${svgWidth - marginSide - 4}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />`;
+  // End guard bars (taller)
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  xPosition += barWidth + barGap;
+  bars += `<rect x="${xPosition}" y="${marginTop}" width="${barWidth}" height="${barHeight + 5}" fill="black" />`;
+  
+  // Add the checksum digit at the end
+  const checksumX = xPosition + 10;
+  const checksumDigit = paddedCode[12];
+  digits += `<text x="${checksumX}" y="${barHeight + textHeight + marginTop}" font-family="Arial" font-size="12" text-anchor="middle">${checksumDigit}</text>`;
   
   // Return the complete SVG
   return `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
