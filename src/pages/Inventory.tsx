@@ -6,7 +6,7 @@ import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Barcode } from 'lucide-react';
+import { Plus, Barcode, Image as ImageIcon } from 'lucide-react';
 import { Product } from '@/types';
 
 const Inventory = () => {
@@ -115,13 +115,18 @@ const Inventory = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product) => (
               <div key={product.id} className="border rounded-lg overflow-hidden shadow-sm">
-                {product.imageUrl && (
+                {product.imageUrl ? (
                   <div className="h-48 overflow-hidden">
                     <img 
                       src={product.imageUrl} 
                       alt={product.name} 
                       className="w-full h-full object-cover"
                     />
+                  </div>
+                ) : (
+                  <div className="h-48 bg-gray-100 flex items-center justify-center">
+                    <ImageIcon className="h-16 w-16 text-gray-300" />
+                    <span className="sr-only">لا توجد صورة</span>
                   </div>
                 )}
                 <div className="p-4">
