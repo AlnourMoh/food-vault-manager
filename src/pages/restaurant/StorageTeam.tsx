@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { useStorageTeam } from '@/hooks/useStorageTeam';
@@ -72,15 +71,23 @@ const RestaurantStorageTeam = () => {
   const generateWelcomeMessageForMember = (member: StorageTeamMember) => {
     if (!member) return '';
     
-    const memberData = {
-      name: member.name,
-      email: member.email,
-      role: member.role,
-      phoneCountryCode: member.phone?.substring(1, 3) || '',
-      phoneNumber: member.phone?.substring(3) || '',
-    };
+    // Extract phone country code and number from full phone
+    const phoneCountryCode = member.phone?.substring(1, 3) || '';
+    const phoneNumber = member.phone?.substring(3) || '';
     
-    return generateWelcomeMessage(memberData);
+    return `مرحباً ${member.name}，
+
+نرحب بك في فريق إدارة المخزن. لتتمكن من الوصول إلى تطبيق إدارة المخزن، يرجى اتباع الخطوات التالية:
+
+1. قم بتحميل تطبيق إدارة المخزن من الرابط: https://storage-app.example.com/download
+2. عند فتح التطبيق، قم بإدخال البريد الإلكتروني أو رقم الهاتف الذي تم تسجيلك به: ${member.email || member.phone}
+3. قم بإنشاء كلمة مرور خاصة بك للدخول إلى النظام
+4. بعد تسجيل الدخول، يمكنك البدء في استخدام النظام وإدارة المخزن
+
+إذا كان لديك أي استفسار، لا تتردد في التواصل مع مدير النظام.
+
+مع تحياتنا،
+فريق إدارة المخزن`;
   };
 
   return (
