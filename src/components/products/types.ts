@@ -21,5 +21,6 @@ export interface FormError {
   unit?: string;
   quantity?: string;
   expiryDate?: string;
+  productionDate?: string;
   image?: string;
 }

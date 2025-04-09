@@ -94,10 +94,13 @@ export const useProductFormSubmit = (
         category: formData.category,
         quantity: Number(formData.quantity),
         expiry_date: new Date(formData.expiryDate).toISOString(),
-        production_date: new Date().toISOString(),
+        production_date: formData.productionDate ? 
+          new Date(formData.productionDate).toISOString() : 
+          new Date().toISOString(),
         company_id: restaurantId,
         status: 'active',
-        image_url: imageUrl // Include the image URL in the product data
+        image_url: imageUrl, // Include the image URL in the product data
+        unit: formData.unit
       };
       
       // Insert data into Supabase
@@ -133,6 +136,7 @@ export const useProductFormSubmit = (
         unit: '',
         quantity: '',
         expiryDate: '',
+        productionDate: '',
         image: null,
         imageUrl: '',
       });

@@ -28,6 +28,8 @@ export const productFormSchema = z.object({
       return selectedDate >= currentDate;
     }, { message: 'تاريخ الانتهاء يجب أن يكون بعد اليوم الحالي' }),
   
+  productionDate: z.string().optional(),
+  
   image: z.instanceof(File)
     .refine(file => file.size <= MAX_FILE_SIZE, { message: 'حجم الصورة يجب أن يكون أقل من 5 ميجابايت' })
     .refine(file => ACCEPTED_IMAGE_TYPES.includes(file.type), { message: 'يجب أن تكون الصورة بصيغة JPEG أو PNG أو WebP' })

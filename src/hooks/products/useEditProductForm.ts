@@ -63,6 +63,8 @@ export const useEditProductForm = (productId: string | undefined, onSuccess: () 
       
       // Format dates for database
       const expiryDate = new Date(formData.expiryDate);
+      
+      // Handle production date properly - use provided date or fallback to current
       const productionDate = formData.productionDate ? 
         new Date(formData.productionDate) : 
         new Date(); // Default to current date if not provided

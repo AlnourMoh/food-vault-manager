@@ -36,6 +36,7 @@ export const useProductFormState = () => {
     unit: '',
     quantity: '',
     expiryDate: '',
+    productionDate: '',
     image: null,
     imageUrl: '',
   });

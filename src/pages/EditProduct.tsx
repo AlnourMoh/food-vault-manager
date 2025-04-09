@@ -86,7 +86,7 @@ const EditProduct = () => {
           quantity: data.quantity.toString(),
           expiryDate: expiryDate.toISOString().split('T')[0],
           productionDate: productionDate.toISOString().split('T')[0],
-          unit: (data as any).unit || 'piece', // Default to 'piece' if unit is not available
+          unit: (data as any).unit || 'piece',
           image: null,
           imageUrl: data.image_url || ''
         });

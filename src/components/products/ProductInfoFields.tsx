@@ -70,6 +70,17 @@ const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({
           <p className="text-xs text-destructive">{errors.expiryDate}</p>
         )}
       </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="productionDate">تاريخ الإنتاج</Label>
+        <Input 
+          id="productionDate" 
+          name="productionDate" 
+          type="date" 
+          value={formData.productionDate || ''}
+          onChange={handleInputChange}
+        />
+      </div>
 
       <div className="col-span-1 md:col-span-2">
         <ImageUploader 
