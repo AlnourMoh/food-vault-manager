@@ -3,17 +3,25 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LabelSize } from '@/hooks/barcodes/types';
 
 interface BarcodePageHeaderProps {
   productName: string;
   barcodeCount: number;
   handlePrint: () => void;
+  selectedLabelSize: LabelSize;
+  changeLabelSize: (labelSizeId: string) => void;
+  labelSizes: LabelSize[];
 }
 
 const BarcodePageHeader: React.FC<BarcodePageHeaderProps> = ({ 
   productName, 
   barcodeCount, 
-  handlePrint 
+  handlePrint,
+  selectedLabelSize,
+  changeLabelSize,
+  labelSizes
 }) => {
   const navigate = useNavigate();
   
@@ -44,6 +52,26 @@ const BarcodePageHeader: React.FC<BarcodePageHeaderProps> = ({
       <div className="mb-6 pb-4 border-b print:hidden">
         <h2 className="text-xl font-semibold">{productName}</h2>
         <p className="text-gray-600">عدد الباركود: {barcodeCount}</p>
+        
+        {/* Barcode Label Size Selector */}
+        <div className="mt-4 flex items-center gap-2">
+          <p className="text-gray-600">حجم الملصق:</p>
+          <Select 
+            value={selectedLabelSize.id} 
+            onValueChange={changeLabelSize}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="اختر حجم الملصق" />
+            </SelectTrigger>
+            <SelectContent>
+              {labelSizes.map(size => (
+                <SelectItem key={size.id} value={size.id}>
+                  {size.name} ({size.width}mm × {size.height}mm)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </>
   );

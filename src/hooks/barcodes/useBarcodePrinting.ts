@@ -1,7 +1,7 @@
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Barcode, Product } from './types';
+import { Barcode, LabelSize, LABEL_SIZES, Product } from './types';
 import { generateBarcodeImage } from '@/utils/barcodeUtils';
 
 /**
@@ -14,17 +14,30 @@ import { generateBarcodeImage } from '@/utils/barcodeUtils';
 export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null) => {
   const { toast } = useToast();
   const printFrameRef = useRef<HTMLIFrameElement | null>(null);
+  const [selectedLabelSize, setSelectedLabelSize] = useState<LabelSize>(LABEL_SIZES[1]); // Default to medium size
+
+  /**
+   * Updates the selected label size
+   * 
+   * @param labelSizeId - The ID of the selected label size
+   */
+  const changeLabelSize = (labelSizeId: string) => {
+    const newSize = LABEL_SIZES.find(size => size.id === labelSizeId);
+    if (newSize) {
+      setSelectedLabelSize(newSize);
+    }
+  };
 
   /**
    * Handles printing all barcodes at once using the browser's print dialog
-   * with optimized settings for small label stickers
+   * with optimized settings for the selected label size
    */
   const handlePrint = () => {
-    // Create a custom print stylesheet
+    // Create a custom print stylesheet with the selected size
     const style = document.createElement('style');
     style.innerHTML = `
       @page {
-        size: 50mm 30mm; /* حجم ملصق صغير قياسي */
+        size: ${selectedLabelSize.width}mm ${selectedLabelSize.height}mm;
         margin: 0mm;
       }
       body {
@@ -32,8 +45,8 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
         padding: 0;
       }
       .barcode-card {
-        width: 48mm;
-        height: 28mm;
+        width: ${selectedLabelSize.width - 2}mm;
+        height: ${selectedLabelSize.height - 2}mm;
         padding: 1mm;
         page-break-after: always;
         box-sizing: border-box;
@@ -55,7 +68,7 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
 
   /**
    * Handles printing a single barcode in a new window with optimized print settings
-   * specifically designed for small label stickers
+   * specifically designed for the selected label size
    * 
    * @param barcodeId - The ID of the specific barcode to print
    */
@@ -76,7 +89,17 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
       return;
     }
 
-    // Create HTML content for printing with appropriate styling for small labels
+    // Adjust font sizes and layout based on label size
+    const fontSizes = {
+      productName: selectedLabelSize.id === 'small' ? '6pt' : selectedLabelSize.id === 'medium' ? '8pt' : '10pt',
+      barcodeNumber: selectedLabelSize.id === 'small' ? '5pt' : selectedLabelSize.id === 'medium' ? '7pt' : '9pt',
+      productId: selectedLabelSize.id === 'small' ? '4pt' : selectedLabelSize.id === 'medium' ? '6pt' : '8pt',
+    };
+    
+    // Adjust barcode image height based on label size
+    const barcodeHeight = selectedLabelSize.id === 'small' ? '10mm' : selectedLabelSize.id === 'medium' ? '14mm' : '25mm';
+
+    // Create HTML content for printing with appropriate styling for the selected label size
     const barcodeHtml = `
       <!DOCTYPE html>
       <html dir="rtl">
@@ -84,7 +107,7 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
         <title>طباعة الباركود - ${product?.name}</title>
         <style>
           @page {
-            size: 50mm 30mm; /* حجم ملصق صغير قياسي */
+            size: ${selectedLabelSize.width}mm ${selectedLabelSize.height}mm;
             margin: 0mm;
           }
           body {
@@ -92,8 +115,8 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
             padding: 2mm;
             background-color: white;
             font-family: Arial, sans-serif;
-            width: 46mm;
-            height: 26mm;
+            width: ${selectedLabelSize.width - 4}mm;
+            height: ${selectedLabelSize.height - 4}mm;
             box-sizing: border-box;
             overflow: hidden;
           }
@@ -107,7 +130,7 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
           .product-name {
             text-align: center;
             font-weight: bold;
-            font-size: 8pt;
+            font-size: ${fontSizes.productName};
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -116,11 +139,11 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
           .barcode-number {
             text-align: center;
             font-family: monospace;
-            font-size: 7pt;
+            font-size: ${fontSizes.barcodeNumber};
             margin: 0.5mm 0;
           }
           .barcode-image {
-            height: 14mm;
+            height: ${barcodeHeight};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -132,7 +155,7 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
           }
           .product-id {
             text-align: center;
-            font-size: 6pt;
+            font-size: ${fontSizes.productId};
             color: #666;
             margin-top: 0.5mm;
           }
@@ -167,5 +190,11 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
     printWindow.document.close();
   };
 
-  return { handlePrint, handlePrintSingle };
+  return { 
+    handlePrint, 
+    handlePrintSingle, 
+    selectedLabelSize, 
+    changeLabelSize, 
+    labelSizes: LABEL_SIZES 
+  };
 };

@@ -122,7 +122,7 @@
   text-align: left;
 }
 
-/* Print styles */
+/* Print styles - Optimized for various label sizes */
 @media print {
   body {
     background-color: white;
@@ -168,12 +168,10 @@
     border: 1px solid #000 !important;
     box-shadow: none !important;
     break-inside: avoid;
-    width: 48mm !important;
-    height: 28mm !important;
+    overflow: hidden !important;
+    page-break-after: always;
     padding: 1mm !important;
     margin: 0 !important;
-    page-break-after: always;
-    overflow: hidden !important;
   }
   
   /* Adjust barcode grid layout for printing */
@@ -187,23 +185,20 @@
   /* Ensure proper barcode visibility */
   .barcode-image {
     background-color: white !important;
-    height: 14mm !important;
-    max-height: 14mm !important;
+    max-height: 100% !important;
   }
   
-  /* Adjust text size for small labels */
+  /* Adjust text size for labels */
   .barcode-card .text-center,
   .barcode-card .text-lg,
   .barcode-card .font-mono {
-    font-size: 7pt !important;
     margin: 0.5mm 0 !important;
     padding: 0 !important;
     line-height: 1.2 !important;
   }
   
-  /* Adjust product name for small labels */
+  /* Adjust product name for labels */
   .barcode-card .w-full.text-center.py-2.border-b.mb-2 {
-    font-size: 8pt !important;
     font-weight: bold !important;
     padding: 0.5mm 0 !important;
     margin-bottom: 0.5mm !important;
@@ -214,13 +209,8 @@
   
   /* Adjust product ID for small labels */
   .barcode-card .text-xs.text-gray-500.mt-2 {
-    font-size: 6pt !important;
     margin-top: 0.5mm !important;
   }
   
-  /* Set page size for small labels */
-  @page {
-    size: 50mm 30mm;
-    margin: 0mm;
-  }
+  /* Dynamic label sizes are now handled via JavaScript and inline styles */
 }

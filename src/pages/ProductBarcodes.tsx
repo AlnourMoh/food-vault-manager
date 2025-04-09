@@ -9,7 +9,16 @@ import { useBarcodes } from '@/hooks/barcodes/useBarcodes';
 
 const ProductBarcodes = () => {
   const { productId } = useParams<{ productId: string }>();
-  const { barcodes, product, isLoading, handlePrint, handlePrintSingle } = useBarcodes(productId);
+  const { 
+    barcodes, 
+    product, 
+    isLoading, 
+    handlePrint, 
+    handlePrintSingle,
+    selectedLabelSize,
+    changeLabelSize,
+    labelSizes
+  } = useBarcodes(productId);
   
   // Determine current route type
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
@@ -31,6 +40,9 @@ const ProductBarcodes = () => {
                 productName={product.name} 
                 barcodeCount={barcodes.length}
                 handlePrint={handlePrint}
+                selectedLabelSize={selectedLabelSize}
+                changeLabelSize={changeLabelSize}
+                labelSizes={labelSizes}
               />
             )}
             

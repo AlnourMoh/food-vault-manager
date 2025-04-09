@@ -1,7 +1,7 @@
 
 import { useBarcodesData } from './useBarcodesData';
 import { useBarcodePrinting } from './useBarcodePrinting';
-import { Barcode, Product } from './types';
+import { Barcode, Product, LabelSize, LABEL_SIZES } from './types';
 
 /**
  * Main hook for barcode functionality that combines data fetching and printing
@@ -15,17 +15,27 @@ export const useBarcodes = (productId: string | undefined) => {
   const { barcodes, product, isLoading } = useBarcodesData(productId);
   
   // Get barcode printing functionality
-  const { handlePrint, handlePrintSingle } = useBarcodePrinting(barcodes, product);
+  const { 
+    handlePrint, 
+    handlePrintSingle, 
+    selectedLabelSize, 
+    changeLabelSize, 
+    labelSizes 
+  } = useBarcodePrinting(barcodes, product);
 
   // Combine and return all barcode functionality
   return {
-    barcodes,      // Array of barcodes for the product
-    product,       // Product information
-    isLoading,     // Loading state indicator
-    handlePrint,   // Function to print all barcodes
-    handlePrintSingle  // Function to print a single barcode
+    barcodes,             // Array of barcodes for the product
+    product,              // Product information
+    isLoading,            // Loading state indicator
+    handlePrint,          // Function to print all barcodes
+    handlePrintSingle,    // Function to print a single barcode
+    selectedLabelSize,    // Currently selected label size
+    changeLabelSize,      // Function to change the label size
+    labelSizes            // Available label size options
   };
 };
 
 // Re-export types for easier imports elsewhere
-export type { Barcode, Product };
+export type { Barcode, Product, LabelSize };
+export { LABEL_SIZES };
