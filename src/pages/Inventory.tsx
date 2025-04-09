@@ -51,23 +51,7 @@ const Inventory = () => {
         
         if (data) {
           // Transform the data to match our Product type
-          // Add appropriate placeholder images based on category
           const transformedProducts: Product[] = data.map(item => {
-            // Generate a relevant placeholder based on category
-            let placeholderImage = null;
-            if (item.category === 'خضروات') {
-              placeholderImage = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c";
-            } else if (item.category === 'لحوم') {
-              placeholderImage = "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f";
-            } else if (item.category === 'بهارات') {
-              placeholderImage = "https://images.unsplash.com/photo-1532336414046-2a0e3a1dd7e5";
-            } else if (item.category === 'بقالة') {
-              placeholderImage = "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f";
-            } else {
-              // Default placeholder for other categories
-              placeholderImage = "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9";
-            }
-            
             return {
               id: item.id,
               name: item.name,
@@ -77,7 +61,7 @@ const Inventory = () => {
               entryDate: new Date(item.production_date),
               restaurantId: item.company_id,
               status: item.status as "active" | "expired" | "removed",
-              imageUrl: placeholderImage, // Use placeholder image based on category
+              imageUrl: item.image_url || getPlaceholderImage(item.category), // Use actual image URL if available, otherwise use placeholder
               restaurantName: '',
               addedBy: '',
               unit: ''
@@ -100,6 +84,22 @@ const Inventory = () => {
     
     fetchProducts();
   }, [toast]);
+
+  // Function to get placeholder image based on category
+  const getPlaceholderImage = (category: string): string => {
+    switch (category) {
+      case 'خضروات':
+        return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200";
+      case 'لحوم':
+        return "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?q=80&w=200";
+      case 'بهارات':
+        return "https://images.unsplash.com/photo-1532336414046-2a0e3a1dd7e5?q=80&w=200";
+      case 'بقالة':
+        return "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?q=80&w=200";
+      default:
+        return "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?q=80&w=200";
+    }
+  };
 
   // Choose the appropriate layout based on the route
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;

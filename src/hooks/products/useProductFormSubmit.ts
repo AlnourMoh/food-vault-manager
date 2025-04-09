@@ -49,18 +49,45 @@ export const useProductFormSubmit = (
       // Generate a unique ID for the product
       const productId = uuidv4();
       
-      // Log the image upload attempt even though we don't have storage yet
+      let imageUrl = '';
+      
+      // Upload image to Supabase Storage if an image is provided
       if (formData.image) {
-        console.log('Image upload skipped due to missing storage bucket');
+        const fileExt = formData.image.name.split('.').pop();
+        const fileName = `${productId}.${fileExt}`;
+        const filePath = `${restaurantId}/${fileName}`;
         
-        toast({
-          title: "تنبيه",
-          description: "تم تخطي رفع الصورة - يرجى التواصل مع مسؤول النظام لإنشاء بكت التخزين",
-          variant: "default",
-        });
+        try {
+          // Upload the image to the product_images bucket
+          const { data: uploadData, error: uploadError } = await supabase
+            .storage
+            .from('product_images')
+            .upload(filePath, formData.image);
+          
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            throw uploadError;
+          }
+          
+          // Get public URL for the uploaded image
+          const { data: urlData } = supabase
+            .storage
+            .from('product_images')
+            .getPublicUrl(filePath);
+          
+          imageUrl = urlData.publicUrl;
+          console.log('Image uploaded successfully:', imageUrl);
+        } catch (uploadError: any) {
+          console.error('Error handling image upload:', uploadError);
+          toast({
+            title: "خطأ في رفع الصورة",
+            description: uploadError.message || "حدث خطأ أثناء رفع الصورة",
+            variant: "destructive",
+          });
+        }
       }
 
-      // Create data object for insertion - removing fields that don't exist in the database
+      // Create data object for insertion
       const product = {
         id: productId,
         name: formData.name,
@@ -69,8 +96,8 @@ export const useProductFormSubmit = (
         expiry_date: new Date(formData.expiryDate).toISOString(),
         production_date: new Date().toISOString(),
         company_id: restaurantId,
-        status: 'active'
-        // Note: unit and imageUrl fields are omitted since they don't exist in the database schema
+        status: 'active',
+        image_url: imageUrl // Include the image URL in the product data
       };
       
       // Insert data into Supabase
@@ -96,7 +123,7 @@ export const useProductFormSubmit = (
       // For now, we'll skip this step with a notification to the user
       toast({
         title: "تم إضافة المنتج بنجاح",
-        description: `تم إضافة ${formData.name} إلى المخزون، لكن عملية إنشاء الباركود تتطلب تعديل إعدادات قاعدة البيانات.`,
+        description: `تم إضافة ${formData.name} إلى المخزون بنجاح.`,
       });
       
       // Reset form

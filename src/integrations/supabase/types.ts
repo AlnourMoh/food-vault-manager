@@ -368,6 +368,7 @@ export type Database = {
           created_at: string
           expiry_date: string
           id: string
+          image_url: string | null
           name: string
           production_date: string
           quantity: number
@@ -380,6 +381,7 @@ export type Database = {
           created_at?: string
           expiry_date: string
           id?: string
+          image_url?: string | null
           name: string
           production_date: string
           quantity: number
@@ -392,6 +394,7 @@ export type Database = {
           created_at?: string
           expiry_date?: string
           id?: string
+          image_url?: string | null
           name?: string
           production_date?: string
           quantity?: number

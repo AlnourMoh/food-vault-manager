@@ -54,21 +54,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isRestaurantRoute })
     }
   };
   
-  const placeholderImageUrl = getPlaceholderImage(product.category);
+  // Use actual image URL if available, otherwise use placeholder
+  const imageUrl = product.imageUrl || getPlaceholderImage(product.category);
   
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
       <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
-        {product.imageUrl ? (
+        {imageUrl ? (
           <img 
-            src={product.imageUrl} 
+            src={imageUrl} 
             alt={product.name} 
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <img 
-              src={placeholderImageUrl}
+              src={getPlaceholderImage(product.category)}
               alt="صورة توضيحية للمنتج" 
               className="w-full h-full object-cover opacity-40"
             />
