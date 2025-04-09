@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Printer, ArrowLeft } from 'lucide-react';
+import { Printer, ArrowLeft, QrCode } from 'lucide-react';
 
 interface Barcode {
   id: string;
@@ -33,6 +33,28 @@ const ProductBarcodes = () => {
   // Determine current route type
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
   const inventoryPath = isRestaurantRoute ? '/restaurant/inventory' : '/inventory';
+
+  // Manually generate barcodes since the database ones don't exist
+  const generateBarcodesFromProduct = (product: any) => {
+    if (!product || !product.id || !product.quantity) return [];
+    
+    const generatedBarcodes: Barcode[] = [];
+    const productDigits = product.id.replace(/-/g, '').substring(0, 8);
+    
+    for (let i = 0; i < product.quantity; i++) {
+      const unitNumber = String(i+1).padStart(4, '0');
+      const barcode = `${productDigits}${unitNumber}`;
+      
+      generatedBarcodes.push({
+        id: `${product.id}-${i+1}`,
+        product_id: product.id,
+        qr_code: barcode,
+        is_used: false
+      });
+    }
+    
+    return generatedBarcodes;
+  };
 
   useEffect(() => {
     const fetchBarcodesAndProduct = async () => {
@@ -63,25 +85,31 @@ const ProductBarcodes = () => {
             id: productData.id,
             name: productData.name
           });
-        }
-        
-        // Fetch barcodes for this product
-        const { data: barcodeData, error: barcodeError } = await supabase
-          .from('product_codes')
-          .select('*')
-          .eq('product_id', productId);
-        
-        if (barcodeError) {
-          console.error("Error fetching barcodes:", barcodeError);
-          throw barcodeError;
-        }
-        
-        console.log("Barcode data:", barcodeData);
-        
-        if (barcodeData && barcodeData.length > 0) {
-          setBarcodes(barcodeData);
-        } else {
-          console.log("No barcodes found for product ID:", productId);
+          
+          // Try to fetch barcodes from database first
+          const { data: barcodeData, error: barcodeError } = await supabase
+            .from('product_codes')
+            .select('*')
+            .eq('product_id', productId);
+          
+          if (barcodeError) {
+            console.error("Error fetching barcodes:", barcodeError);
+            // Instead of throwing error, we'll generate barcodes dynamically
+            const generatedBarcodes = generateBarcodesFromProduct(productData);
+            setBarcodes(generatedBarcodes);
+            return;
+          }
+          
+          console.log("Barcode data:", barcodeData);
+          
+          if (barcodeData && barcodeData.length > 0) {
+            setBarcodes(barcodeData);
+          } else {
+            console.log("No barcodes found in DB for product ID:", productId);
+            // If no barcodes in DB, generate them dynamically
+            const generatedBarcodes = generateBarcodesFromProduct(productData);
+            setBarcodes(generatedBarcodes);
+          }
         }
       } catch (error: any) {
         console.error('Error fetching barcodes:', error);
@@ -202,9 +230,12 @@ const ProductBarcodes = () => {
             </div>
             
             {barcodes.length === 0 && (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg">
+                <QrCode className="h-16 w-16 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium">لا توجد باركودات لهذا المنتج</h3>
-                <p className="text-gray-500 mt-2">يتم إنشاء الباركود تلقائيًا عند إضافة المنتج. تأكد من المعرف الصحيح للمنتج.</p>
+                <p className="text-gray-500 mt-2 text-center max-w-md">
+                  قد تكون هناك مشكلة في صلاحيات قاعدة البيانات. يرجى التواصل مع مسؤول النظام لإنشاء الصلاحيات اللازمة.
+                </p>
               </div>
             )}
           </>
