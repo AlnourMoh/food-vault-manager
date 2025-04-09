@@ -15,11 +15,14 @@ import { FormValues } from './form/AddMemberFormSchema';
 interface AddMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddMember: (data: FormValues) => void;
+  onAddMember: (data: FormValues) => Promise<boolean>;
   isLoading: boolean;
   lastAddedMember: FormValues | null;
   onCopyWelcomeMessage: (member: FormValues | null) => void;
   welcomeMessage: string;
+  phoneError: string | null;
+  emailError: string | null;
+  onResetErrors: () => void;
 }
 
 const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
@@ -30,40 +33,54 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
   lastAddedMember,
   onCopyWelcomeMessage,
   welcomeMessage,
+  phoneError,
+  emailError,
+  onResetErrors,
 }) => {
   const [formDirty, setFormDirty] = React.useState(false);
   const { toast } = useToast();
 
-  const handleAddMember = (data: FormValues) => {
-    onAddMember(data);
-    setFormDirty(false);
+  const handleAddMember = async (data: FormValues) => {
+    const success = await onAddMember(data);
+    if (success) {
+      setFormDirty(false);
+    }
   };
 
   const handleCancel = () => {
     onOpenChange(false);
+    onResetErrors();
   };
 
   const handleClose = () => {
     setFormDirty(false);
     onOpenChange(false);
+    onResetErrors();
   };
 
   const handleAddAnother = () => {
     setFormDirty(true);
+    onResetErrors();
   };
 
-  // Reset form dirty state when the dialog is closed
+  // إعادة تعيين حالة النموذج وأخطاء التحقق عند إغلاق نافذة الحوار
   React.useEffect(() => {
     if (!open) {
       setFormDirty(false);
+      onResetErrors();
     }
-  }, [open]);
+  }, [open, onResetErrors]);
 
-  // Show either the form or the success message with copy option
+  // عرض إما النموذج أو رسالة النجاح مع خيار النسخ
   const showSuccessMessage = lastAddedMember && !formDirty;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) {
+        onResetErrors();
+      }
+      onOpenChange(newOpen);
+    }}>
       <DialogContent className="rtl sm:max-w-[500px]">
         {!showSuccessMessage ? (
           <>
@@ -76,7 +93,9 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
             <AddMemberForm 
               onSubmit={handleAddMember} 
               onCancel={handleCancel} 
-              isLoading={isLoading} 
+              isLoading={isLoading}
+              phoneError={phoneError}
+              emailError={emailError}
             />
           </>
         ) : (

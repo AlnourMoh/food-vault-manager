@@ -1,39 +1,44 @@
 
 import React from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { StorageTeamMember } from '@/types';
-import { editMemberFormSchema, EditMemberFormValues } from './EditMemberFormSchema';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { countryCodes } from '@/constants/countryCodes';
+import { Phone, Mail, AlertCircle } from 'lucide-react';
+import { formSchema, FormValues } from './EditMemberFormSchema';
+import { DialogFooter } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface EditMemberFormProps {
-  member: StorageTeamMember | null;
-  onSubmit: (data: EditMemberFormValues) => Promise<void>;
+  onSubmit: (data: FormValues) => Promise<boolean>;
   onCancel: () => void;
-  isSubmitting: boolean;
   isLoading: boolean;
+  defaultValues: FormValues;
+  phoneError: string | null;
+  emailError: string | null;
 }
 
 const EditMemberForm: React.FC<EditMemberFormProps> = ({
-  member,
   onSubmit,
   onCancel,
-  isSubmitting,
-  isLoading
+  isLoading,
+  defaultValues,
+  phoneError,
+  emailError
 }) => {
-  // Initialize the form with default values
-  const form = useForm<EditMemberFormValues>({
-    resolver: zodResolver(editMemberFormSchema),
-    defaultValues: {
-      name: member?.name || "",
-      role: member?.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
-      phoneCountryCode: member?.phone?.substring(1, 4) || "974",
-      phoneNumber: member?.phone?.substring(4) || "",
-      email: member?.email || "",
-    },
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
   });
 
   return (
@@ -44,71 +49,103 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>اسم العضو</FormLabel>
+              <FormLabel>الاسم الكامل</FormLabel>
               <FormControl>
-                <Input placeholder="أدخل اسم العضو" {...field} />
+                <Input placeholder="محمد أحمد" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>الدور</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
+              <FormLabel>المنصب / الدور</FormLabel>
+              <Select
+                onValueChange={field.onChange}
                 defaultValue={field.value}
-                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر دور العضو" />
+                    <SelectValue placeholder="اختر المنصب" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="إدارة النظام">إدارة النظام</SelectItem>
                   <SelectItem value="إدارة المخزن">إدارة المخزن</SelectItem>
+                  <SelectItem value="إدارة النظام">إدارة النظام</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        <div className="flex flex-col space-y-2">
-          <FormLabel>رقم الهاتف</FormLabel>
-          <div className="flex space-x-2 rtl:space-x-reverse">
-            <FormField
-              control={form.control}
-              name="phoneCountryCode"
-              render={({ field }) => (
-                <FormItem className="w-24">
+
+        <div className="flex space-x-3 rtl:space-x-reverse gap-2">
+          <FormField
+            control={form.control}
+            name="phoneCountryCode"
+            render={({ field }) => (
+              <FormItem className="flex-shrink-0 w-1/3">
+                <FormLabel>مفتاح الدولة</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  value={field.value}
+                >
                   <FormControl>
-                    <Input placeholder="974" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="مفتاح الدولة" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormControl>
-                    <Input placeholder="أدخل رقم الهاتف" type="tel" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                  <SelectContent>
+                    {countryCodes.map((code) => (
+                      <SelectItem key={code.value} value={code.value}>
+                        <span className="flex items-center gap-2">
+                          <span>{code.flag}</span>
+                          <span>{code.label}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem className="flex-grow">
+                <FormLabel>رقم الهاتف</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      placeholder="5xxxxxxx" 
+                      type="tel" 
+                      {...field} 
+                      className="pl-8"
+                    />
+                    <Phone className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        
+
+        {phoneError && (
+          <Alert variant="destructive" className="py-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">{phoneError}</AlertDescription>
+          </Alert>
+        )}
+
         <FormField
           control={form.control}
           name="email"
@@ -116,35 +153,40 @@ const EditMemberForm: React.FC<EditMemberFormProps> = ({
             <FormItem>
               <FormLabel>البريد الإلكتروني</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="البريد الإلكتروني" 
-                  type="email" 
-                  dir="ltr"
-                  className="text-left"
-                  {...field} 
-                />
+                <div className="relative">
+                  <Input
+                    placeholder="example@domain.com"
+                    type="email"
+                    {...field}
+                    className="pl-8"
+                  />
+                  <Mail className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        <div className="flex justify-end space-x-2 rtl:space-x-reverse pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
+
+        {emailError && (
+          <Alert variant="destructive" className="py-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">{emailError}</AlertDescription>
+          </Alert>
+        )}
+
+        <DialogFooter className="mt-6 flex justify-between gap-2">
+          <Button
+            variant="outline"
             onClick={onCancel}
+            type="button"
           >
             إلغاء
           </Button>
-          <Button 
-            type="submit" 
-            className="bg-fvm-primary hover:bg-fvm-primary-light"
-            disabled={isSubmitting || isLoading}
-          >
-            {isSubmitting ? "جاري الحفظ..." : "حفظ التغييرات"}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'جاري التحديث...' : 'تحديث البيانات'}
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Form>
   );

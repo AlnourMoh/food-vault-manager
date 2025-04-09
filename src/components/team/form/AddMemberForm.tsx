@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -14,20 +14,25 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { countryCodes } from '@/constants/countryCodes';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail, AlertCircle } from 'lucide-react';
 import { formSchema, FormValues } from './AddMemberFormSchema';
 import { DialogFooter } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AddMemberFormProps {
   onSubmit: (data: FormValues) => void;
   onCancel: () => void;
   isLoading: boolean;
+  phoneError: string | null;
+  emailError: string | null;
 }
 
 const AddMemberForm: React.FC<AddMemberFormProps> = ({
   onSubmit,
   onCancel,
-  isLoading
+  isLoading,
+  phoneError,
+  emailError
 }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -39,6 +44,14 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({
       email: '',
     },
   });
+
+  // إعادة تعيين أخطاء API عند تغيير القيم في النموذج
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      // يمكن إضافة منطق إعادة تعيين أخطاء API هنا إذا لزم الأمر
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   return (
     <Form {...form}>
@@ -138,6 +151,13 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({
           />
         </div>
 
+        {phoneError && (
+          <Alert variant="destructive" className="py-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">{phoneError}</AlertDescription>
+          </Alert>
+        )}
+
         <FormField
           control={form.control}
           name="email"
@@ -159,6 +179,13 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({
             </FormItem>
           )}
         />
+
+        {emailError && (
+          <Alert variant="destructive" className="py-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">{emailError}</AlertDescription>
+          </Alert>
+        )}
 
         <DialogFooter className="mt-6 flex justify-between gap-2">
           <Button

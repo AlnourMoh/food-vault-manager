@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { StorageTeamMember } from '@/types';
 
@@ -25,6 +26,35 @@ export const fetchTeamMembersApi = async (restaurantId: string) => {
   }));
 };
 
+export const checkMemberDuplicatesApi = async (restaurantId: string, phone: string, email: string) => {
+  // التحقق من وجود رقم هاتف مكرر في نفس المطعم
+  const { data: phoneData, error: phoneError } = await supabase
+    .from('company_members')
+    .select('id, phone')
+    .eq('company_id', restaurantId)
+    .eq('phone', phone);
+  
+  if (phoneError) {
+    throw phoneError;
+  }
+  
+  // التحقق من وجود بريد إلكتروني مكرر في نفس المطعم
+  const { data: emailData, error: emailError } = await supabase
+    .from('company_members')
+    .select('id, email')
+    .eq('company_id', restaurantId)
+    .eq('email', email);
+  
+  if (emailError) {
+    throw emailError;
+  }
+  
+  return {
+    isPhoneDuplicate: phoneData && phoneData.length > 0,
+    isEmailDuplicate: emailData && emailData.length > 0
+  };
+};
+
 export const addTeamMemberApi = async (restaurantId: string, memberData: {
   name: string;
   role: string;
@@ -33,6 +63,17 @@ export const addTeamMemberApi = async (restaurantId: string, memberData: {
   email: string;
 }) => {
   const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
+  
+  // تحقق من التكرار قبل محاولة الإضافة
+  const duplicates = await checkMemberDuplicatesApi(restaurantId, formattedPhone, memberData.email);
+  
+  if (duplicates.isPhoneDuplicate) {
+    throw new Error('رقم الهاتف مستخدم بالفعل لعضو آخر في نفس المطعم');
+  }
+  
+  if (duplicates.isEmailDuplicate) {
+    throw new Error('البريد الإلكتروني مستخدم بالفعل لعضو آخر في نفس المطعم');
+  }
   
   // Map frontend role to database role (admin or staff)
   const dbRole = memberData.role === 'إدارة النظام' ? 'admin' : 'staff';
@@ -53,6 +94,14 @@ export const addTeamMemberApi = async (restaurantId: string, memberData: {
     .select();
   
   if (error) {
+    // إذا كان هناك خطأ متعلق بالقيود الفريدة في قاعدة البيانات
+    if (error.code === '23505') {
+      if (error.message.includes('phone')) {
+        throw new Error('رقم الهاتف مستخدم بالفعل لعضو آخر');
+      } else if (error.message.includes('email')) {
+        throw new Error('البريد الإلكتروني مستخدم بالفعل لعضو آخر');
+      }
+    }
     throw error;
   }
   
@@ -72,6 +121,37 @@ export const updateTeamMemberApi = async (
 ) => {
   const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
   
+  // تحقق من عدم وجود تكرار في رقم الهاتف أو البريد الإلكتروني باستثناء العضو الحالي
+  const { data: phoneData, error: phoneError } = await supabase
+    .from('company_members')
+    .select('id, phone')
+    .eq('company_id', restaurantId)
+    .eq('phone', formattedPhone)
+    .neq('id', memberId);
+  
+  if (phoneError) {
+    throw phoneError;
+  }
+  
+  if (phoneData && phoneData.length > 0) {
+    throw new Error('رقم الهاتف مستخدم بالفعل لعضو آخر في نفس المطعم');
+  }
+  
+  const { data: emailData, error: emailError } = await supabase
+    .from('company_members')
+    .select('id, email')
+    .eq('company_id', restaurantId)
+    .eq('email', memberData.email)
+    .neq('id', memberId);
+  
+  if (emailError) {
+    throw emailError;
+  }
+  
+  if (emailData && emailData.length > 0) {
+    throw new Error('البريد الإلكتروني مستخدم بالفعل لعضو آخر في نفس المطعم');
+  }
+  
   // Map frontend role to database role (admin or staff)
   const dbRole = memberData.role === 'إدارة النظام' ? 'admin' : 'staff';
   
@@ -87,6 +167,14 @@ export const updateTeamMemberApi = async (
     .eq('company_id', restaurantId);
   
   if (error) {
+    // إذا كان هناك خطأ متعلق بالقيود الفريدة في قاعدة البيانات
+    if (error.code === '23505') {
+      if (error.message.includes('phone')) {
+        throw new Error('رقم الهاتف مستخدم بالفعل لعضو آخر');
+      } else if (error.message.includes('email')) {
+        throw new Error('البريد الإلكتروني مستخدم بالفعل لعضو آخر');
+      }
+    }
     throw error;
   }
 };

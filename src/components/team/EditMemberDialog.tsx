@@ -1,23 +1,26 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import { StorageTeamMember } from '@/types';
 import EditMemberForm from './form/EditMemberForm';
-import { EditMemberFormValues } from './form/EditMemberFormSchema';
-import { extractPhoneInfo } from './utils/phoneUtils';
+import { extractPhoneDetails } from './utils/phoneUtils';
+import { FormValues } from './form/EditMemberFormSchema';
 
 interface EditMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   member: StorageTeamMember | null;
-  onUpdateMember: (id: string, data: any) => void;
+  onUpdateMember: (id: string, data: FormValues) => Promise<boolean>;
   isLoading: boolean;
+  phoneError: string | null;
+  emailError: string | null;
+  onResetErrors: () => void;
 }
 
 const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
@@ -25,40 +28,64 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
   onOpenChange,
   member,
   onUpdateMember,
-  isLoading
+  isLoading,
+  phoneError,
+  emailError,
+  onResetErrors
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  if (!member) return null;
+
+  const { phoneCountryCode, phoneNumber } = extractPhoneDetails(member.phone || '');
   
-  const handleSubmit = async (data: EditMemberFormValues) => {
-    if (!member) return;
-    
-    setIsSubmitting(true);
-    try {
-      await onUpdateMember(member.id, data);
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Error updating member:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const defaultValues = {
+    name: member.name,
+    role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
+    phoneCountryCode,
+    phoneNumber,
+    email: member.email,
   };
 
+  const handleUpdateMember = async (data: FormValues) => {
+    const success = await onUpdateMember(member.id, data);
+    if (success) {
+      onOpenChange(false);
+    }
+    return success;
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
+    onResetErrors();
+  };
+
+  // إعادة تعيين أخطاء التحقق عند فتح أو إغلاق نافذة الحوار
+  React.useEffect(() => {
+    if (open) {
+      onResetErrors();
+    }
+  }, [open, onResetErrors]);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) {
+        onResetErrors();
+      }
+      onOpenChange(newOpen);
+    }}>
+      <DialogContent className="rtl sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>تعديل بيانات عضو الفريق</DialogTitle>
           <DialogDescription>
-            قم بتعديل بيانات عضو فريق المخزن
+            قم بتحديث بيانات عضو الفريق {member.name}
           </DialogDescription>
         </DialogHeader>
-        
         <EditMemberForm 
-          member={member}
-          onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
-          isSubmitting={isSubmitting}
+          onSubmit={handleUpdateMember}
+          onCancel={handleCancel}
           isLoading={isLoading}
+          defaultValues={defaultValues}
+          phoneError={phoneError}
+          emailError={emailError}
         />
       </DialogContent>
     </Dialog>

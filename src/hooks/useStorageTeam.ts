@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { StorageTeamMember } from '@/types';
@@ -6,7 +7,8 @@ import {
   fetchTeamMembersApi, 
   addTeamMemberApi, 
   updateTeamMemberApi,
-  deleteTeamMemberApi
+  deleteTeamMemberApi,
+  checkMemberDuplicatesApi
 } from '@/api/teamMembersApi';
 import { 
   generateWelcomeMessage,
@@ -17,7 +19,14 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(false);
   const [teamMembers, setTeamMembers] = useState<StorageTeamMember[]>([]);
   const [lastAddedMember, setLastAddedMember] = useState<TeamMemberFormData | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const resetErrors = () => {
+    setPhoneError(null);
+    setEmailError(null);
+  };
 
   const fetchTeamMembers = async () => {
     if (!restaurantId) return;
@@ -39,12 +48,51 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     }
   };
 
+  const checkDuplicates = async (memberData: TeamMemberFormData): Promise<boolean> => {
+    if (!restaurantId) return false;
+    
+    resetErrors();
+    
+    const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
+    
+    try {
+      const { isPhoneDuplicate, isEmailDuplicate } = await checkMemberDuplicatesApi(
+        restaurantId,
+        formattedPhone,
+        memberData.email
+      );
+      
+      if (isPhoneDuplicate) {
+        setPhoneError('رقم الهاتف مستخدم بالفعل لعضو آخر');
+        return true;
+      }
+      
+      if (isEmailDuplicate) {
+        setEmailError('البريد الإلكتروني مستخدم بالفعل لعضو آخر');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+      return false;
+    }
+  };
+
   const addTeamMember = async (memberData: TeamMemberFormData) => {
     if (!restaurantId) return;
     
     setIsLoading(true);
+    resetErrors();
     
     try {
+      // التحقق من التكرار قبل الإضافة
+      const hasDuplicates = await checkDuplicates(memberData);
+      if (hasDuplicates) {
+        setIsLoading(false);
+        return false;
+      }
+      
       await addTeamMemberApi(restaurantId, memberData);
       
       toast({
@@ -55,13 +103,24 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
       setLastAddedMember(memberData);
       
       fetchTeamMembers();
+      return true;
     } catch (error: any) {
       console.error('Error adding team member:', error);
-      toast({
-        variant: 'destructive',
-        title: 'خطأ في إضافة عضو الفريق',
-        description: error.message,
-      });
+      
+      // التعامل مع أخطاء التكرار
+      if (error.message.includes('رقم الهاتف')) {
+        setPhoneError(error.message);
+      } else if (error.message.includes('البريد الإلكتروني')) {
+        setEmailError(error.message);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'خطأ في إضافة عضو الفريق',
+          description: error.message,
+        });
+      }
+      
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +130,7 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     if (!restaurantId) return;
     
     setIsLoading(true);
+    resetErrors();
     
     try {
       await updateTeamMemberApi(restaurantId, memberId, memberData);
@@ -81,13 +141,26 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
       });
       
       fetchTeamMembers();
+      return true;
     } catch (error: any) {
       console.error('Error updating team member:', error);
-      toast({
-        variant: 'destructive',
-        title: 'خطأ في تحديث بيانات عضو الفريق',
-        description: error.message,
-      });
+      
+      // التعامل مع أخطاء التكرار
+      if (error.message.includes('رقم الهاتف')) {
+        setPhoneError(error.message);
+        return false;
+      } else if (error.message.includes('البريد الإلكتروني')) {
+        setEmailError(error.message);
+        return false;
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'خطأ في تحديث بيانات عضو الفريق',
+          description: error.message,
+        });
+      }
+      
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -148,6 +221,9 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     deleteTeamMember,
     lastAddedMember,
     generateWelcomeMessage,
-    copyWelcomeMessage
+    copyWelcomeMessage,
+    phoneError,
+    emailError,
+    resetErrors
   };
 };

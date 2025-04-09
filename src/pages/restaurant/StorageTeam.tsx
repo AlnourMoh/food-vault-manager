@@ -28,15 +28,18 @@ const RestaurantStorageTeam = () => {
     updateTeamMember,
     deleteTeamMember,
     lastAddedMember,
-    copyWelcomeMessage
+    copyWelcomeMessage,
+    phoneError,
+    emailError,
+    resetErrors
   } = useStorageTeam(restaurantId || undefined);
 
   useEffect(() => {
     fetchTeamMembers();
   }, []);
 
-  const handleAddMember = (data: TeamMemberFormData) => {
-    addTeamMember(data);
+  const handleAddMember = async (data: TeamMemberFormData) => {
+    return await addTeamMember(data);
   };
   
   const welcomeMessage = generateWelcomeMessage(lastAddedMember);
@@ -46,8 +49,8 @@ const RestaurantStorageTeam = () => {
     setShowEditDialog(true);
   };
 
-  const handleUpdateMember = (id: string, data: TeamMemberFormData) => {
-    return updateTeamMember(id, data);
+  const handleUpdateMember = async (id: string, data: TeamMemberFormData) => {
+    return await updateTeamMember(id, data);
   };
 
   const handleDeleteMember = (member: StorageTeamMember) => {
@@ -59,13 +62,13 @@ const RestaurantStorageTeam = () => {
     return deleteTeamMember(id);
   };
 
-  // New handler for copying welcome message for an existing member
+  // مُعالج لنسخ رسالة الترحيب لعضو موجود
   const handleCopyWelcomeMessageForMember = (member: StorageTeamMember) => {
-    // Convert StorageTeamMember to the format expected by the copyWelcomeMessage function
+    // تحويل StorageTeamMember إلى الصيغة المتوقعة من قبل وظيفة copyWelcomeMessage
     const memberData: TeamMemberFormData = {
       name: member.name,
       email: member.email,
-      // Map database role to frontend role
+      // ترجمة دور قاعدة البيانات إلى دور واجهة المستخدم
       role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
       phoneCountryCode: member.phone?.substring(1, 3) || '',
       phoneNumber: member.phone?.substring(3) || '',
@@ -74,19 +77,19 @@ const RestaurantStorageTeam = () => {
     copyWelcomeMessage(memberData);
   };
 
-  // Helper function to generate welcome message for any team member
+  // وظيفة مساعدة لإنشاء رسالة ترحيب لأي عضو في الفريق
   const generateWelcomeMessageForMember = (member: StorageTeamMember) => {
     if (!member) return '';
     
-    // Extract phone country code and number from full phone
+    // استخراج رمز الدولة ورقم الهاتف من الهاتف الكامل
     const phoneCountryCode = member.phone?.substring(1, 3) || '';
     const phoneNumber = member.phone?.substring(3) || '';
     
-    // Create member data object
+    // إنشاء كائن بيانات العضو
     const memberData: TeamMemberFormData = {
       name: member.name,
       email: member.email,
-      // Map database role to frontend role
+      // ترجمة دور قاعدة البيانات إلى دور واجهة المستخدم
       role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
       phoneCountryCode,
       phoneNumber,
@@ -117,6 +120,9 @@ const RestaurantStorageTeam = () => {
           lastAddedMember={lastAddedMember}
           onCopyWelcomeMessage={copyWelcomeMessage}
           welcomeMessage={welcomeMessage}
+          phoneError={phoneError}
+          emailError={emailError}
+          onResetErrors={resetErrors}
         />
 
         <EditMemberDialog
@@ -125,6 +131,9 @@ const RestaurantStorageTeam = () => {
           member={selectedMember}
           onUpdateMember={handleUpdateMember}
           isLoading={isLoading}
+          phoneError={phoneError}
+          emailError={emailError}
+          onResetErrors={resetErrors}
         />
 
         <DeleteMemberDialog
