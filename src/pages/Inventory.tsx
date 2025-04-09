@@ -56,7 +56,8 @@ const Inventory = () => {
             entryDate: new Date(item.production_date),
             restaurantId: item.company_id,
             status: item.status as "active" | "expired" | "removed",
-            imageUrl: item.imageUrl || '',  // The error is here - 'imageUrl' doesn't exist in the data from DB
+            // The fix: Use optional chaining to safely access imageUrl or set default empty string
+            imageUrl: item.imageUrl || '', 
             restaurantName: '',
             addedBy: '',
             unit: ''
