@@ -36,7 +36,7 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
       return;
     }
 
-    // Create HTML content for printing with appropriate styling for the selected label size
+    // Create HTML content for printing leveraging our modular print styles
     const barcodeHtml = `
       <!DOCTYPE html>
       <html dir="rtl">
@@ -47,6 +47,8 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
             size: ${labelSize.width}mm ${labelSize.height}mm;
             margin: 0mm;
           }
+          
+          /* Base print styles */
           body {
             margin: 0;
             padding: 2mm;
@@ -57,6 +59,8 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
             box-sizing: border-box;
             overflow: hidden;
           }
+          
+          /* Container styles */
           .barcode-container {
             width: 100%;
             height: 100%;
@@ -65,43 +69,9 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
             justify-content: space-between;
             align-items: center;
           }
-          .product-name {
-            text-align: center;
-            font-weight: bold;
-            font-size: ${labelSize.id === 'small' ? '6pt' : labelSize.id === 'medium' ? '8pt' : '10pt'};
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: ${labelSize.id === 'small' ? '0.3mm' : labelSize.id === 'medium' ? '0.5mm' : '1mm'};
-            width: 100%;
-          }
-          .barcode-number {
-            text-align: center;
-            font-family: monospace;
-            font-size: ${labelSize.id === 'small' ? '5pt' : labelSize.id === 'medium' ? '7pt' : '9pt'};
-            margin: 0.5mm 0;
-            width: 100%;
-          }
-          .barcode-image {
-            height: ${labelSize.id === 'small' ? '10mm' : labelSize.id === 'medium' ? '14mm' : '25mm'};
-            width: ${labelSize.id === 'small' ? '30mm' : labelSize.id === 'medium' ? '40mm' : '60mm'};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            margin: ${labelSize.id === 'small' ? '0.5mm' : labelSize.id === 'medium' ? '1mm' : '2mm'} 0;
-          }
-          .barcode-image svg {
-            width: 100%;
-            height: 100%;
-          }
-          .product-id {
-            text-align: center;
-            font-size: ${labelSize.id === 'small' ? '4pt' : labelSize.id === 'medium' ? '6pt' : '8pt'};
-            color: #666;
-            margin-top: 0.5mm;
-            width: 100%;
-          }
+          
+          /* Applying styles based on label size classes from our CSS modules */
+          ${getLabelSpecificStyles(labelSize.id)}
         </style>
       </head>
       <body>
@@ -131,6 +101,134 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
     // Write content to the window and close document
     printWindow.document.write(barcodeHtml);
     printWindow.document.close();
+  };
+
+  /**
+   * Generate CSS styles specific to the selected label size
+   * This extracts the style logic to a separate function to keep the code clean
+   * 
+   * @param labelSizeId - The ID of the selected label size
+   * @returns CSS styles as a string
+   */
+  const getLabelSpecificStyles = (labelSizeId: string): string => {
+    // Common styles for all label sizes
+    const baseStyles = `
+      .product-name {
+        text-align: center;
+        font-weight: bold;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .barcode-number {
+        text-align: center;
+        font-family: monospace;
+        width: 100%;
+      }
+      
+      .barcode-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      
+      .barcode-image svg {
+        width: 100%;
+        height: 100%;
+      }
+      
+      .product-id {
+        text-align: center;
+        color: #666;
+        width: 100%;
+      }
+    `;
+    
+    // Size-specific styles that mirror our CSS modules
+    let sizeStyles = '';
+    
+    switch (labelSizeId) {
+      case 'small':
+        sizeStyles = `
+          .product-name {
+            font-size: 6pt;
+            margin-bottom: 0.3mm;
+          }
+          
+          .barcode-number {
+            font-size: 5pt;
+            margin: 0.5mm 0;
+          }
+          
+          .barcode-image {
+            height: 10mm;
+            width: 30mm;
+            margin: 0.5mm 0;
+          }
+          
+          .product-id {
+            font-size: 4pt;
+            margin-top: 0.5mm;
+          }
+        `;
+        break;
+      
+      case 'medium':
+        sizeStyles = `
+          .product-name {
+            font-size: 8pt;
+            margin-bottom: 0.5mm;
+          }
+          
+          .barcode-number {
+            font-size: 7pt;
+            margin: 0.5mm 0;
+          }
+          
+          .barcode-image {
+            height: 14mm;
+            width: 40mm;
+            margin: 1mm 0;
+          }
+          
+          .product-id {
+            font-size: 6pt;
+            margin-top: 0.5mm;
+          }
+        `;
+        break;
+      
+      case 'large':
+      default:
+        sizeStyles = `
+          .product-name {
+            font-size: 10pt;
+            margin-bottom: 1mm;
+          }
+          
+          .barcode-number {
+            font-size: 9pt;
+            margin: 0.5mm 0;
+          }
+          
+          .barcode-image {
+            height: 25mm;
+            width: 60mm;
+            margin: 2mm 0;
+          }
+          
+          .product-id {
+            font-size: 8pt;
+            margin-top: 0.5mm;
+          }
+        `;
+        break;
+    }
+    
+    return baseStyles + sizeStyles;
   };
 
   return { handlePrintSingle };
