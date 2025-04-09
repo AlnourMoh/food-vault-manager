@@ -9,6 +9,21 @@ import ProductGrid from '@/components/products/ProductGrid';
 import InventoryHeader from '@/components/inventory/InventoryHeader';
 import EmptyInventory from '@/components/inventory/EmptyInventory';
 
+// Define a type for the raw product data from Supabase
+interface RawProductData {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  expiry_date: string;
+  production_date: string;
+  company_id: string;
+  status: string;
+  image_url?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 const Inventory = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
@@ -51,7 +66,7 @@ const Inventory = () => {
         
         if (data) {
           // Transform the data to match our Product type
-          const transformedProducts: Product[] = data.map(item => {
+          const transformedProducts: Product[] = (data as RawProductData[]).map(item => {
             return {
               id: item.id,
               name: item.name,
