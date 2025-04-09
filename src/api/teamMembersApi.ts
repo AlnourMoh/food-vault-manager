@@ -16,7 +16,7 @@ export const fetchTeamMembersApi = async (restaurantId: string) => {
   return data.map(member => ({
     id: member.id,
     name: member.name,
-    role: member.role === 'admin' ? 'manager' : 'team_member',
+    role: member.role === 'admin' ? 'manager' : 'team_member' as 'manager' | 'team_member',
     phone: member.phone || '',
     email: member.email,
     restaurantId: member.company_id,
