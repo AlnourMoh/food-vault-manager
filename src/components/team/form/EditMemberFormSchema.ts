@@ -1,8 +1,7 @@
-
 import { z } from "zod";
 
 // Define the schema for editing a team member
-export const editMemberFormSchema = z.object({
+export const formSchema = z.object({
   name: z.string().min(2, { message: "الاسم يجب أن يكون على الأقل حرفين" }),
   role: z.string().min(1, { message: "يرجى اختيار الدور" }),
   phoneCountryCode: z.string().min(1, { message: "يرجى اختيار رمز الدولة" }),
@@ -10,4 +9,9 @@ export const editMemberFormSchema = z.object({
   email: z.string().email({ message: "يرجى إدخال بريد إلكتروني صحيح" }),
 });
 
-export type EditMemberFormValues = z.infer<typeof editMemberFormSchema>;
+// Export the type for form values
+export type FormValues = z.infer<typeof formSchema>;
+
+// Keep the original export for backward compatibility
+export const editMemberFormSchema = formSchema;
+export type EditMemberFormValues = FormValues;
