@@ -1,0 +1,17 @@
+
+/**
+ * Page Setup Styles
+ * Contains page sizing and margin settings for print
+ */
+
+@media print {
+  /* 
+   * Page size adjustments
+   * ====================
+   */
+  @page {
+    /* Default page size, will be overridden by JavaScript */
+    size: auto;
+    margin: 0mm;
+  }
+}

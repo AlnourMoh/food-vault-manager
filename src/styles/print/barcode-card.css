@@ -1,0 +1,72 @@
+
+/**
+ * Barcode Card Print Styles
+ * Styles specific to the barcode cards when printing
+ */
+
+@media print {
+  /* 
+   * Barcode Card Base Styles
+   * ========================
+   */
+  .barcode-card {
+    background-color: white !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    overflow: hidden !important;
+    page-break-after: always;
+    padding: 1mm !important;
+    margin: 0 !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+  
+  /* Adjust barcode grid for printing */
+  .barcode-grid {
+    display: grid !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 5mm !important;
+  }
+  
+  /* Ensure barcode visibility */
+  .barcode-image {
+    background-color: white !important;
+    max-height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .barcode-image svg {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+  
+  /* Text adjustments for all labels */
+  .barcode-card .text-center,
+  .barcode-card .text-lg,
+  .barcode-card .font-mono {
+    margin: 0.5mm 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Product name styling */
+  .barcode-card .w-full.text-center.py-2.border-b.mb-2 {
+    font-weight: bold !important;
+    padding: 0.5mm 0 !important;
+    margin-bottom: 0.5mm !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Product ID adjustments */
+  .barcode-card .text-xs.text-gray-500.mt-2 {
+    margin-top: 0.5mm !important;
+  }
+}

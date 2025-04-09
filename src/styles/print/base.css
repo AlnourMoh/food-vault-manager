@@ -1,0 +1,59 @@
+
+/**
+ * Base print styles
+ * Contains general print setup and utility classes
+ */
+
+@media print {
+  /* General print setup */
+  body {
+    background-color: white;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Utility classes for print visibility */
+  .print-hidden {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  /* RTL support for printed content */
+  .rtl {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  /* Generic print item style */
+  .print-item {
+    page-break-inside: avoid;
+    background-color: white;
+    border: 1px solid #ddd;
+    margin: 5mm;
+    padding: 5mm;
+  }
+  
+  /* Hide UI elements during printing */
+  header, 
+  nav,
+  aside,
+  .sidebar,
+  .header,
+  footer,
+  button:not(.print-action) {
+    display: none !important;
+  }
+  
+  /* Critical fix for batch printing - make barcode elements visible */
+  body * {
+    visibility: hidden;
+  }
+  
+  .barcode-card,
+  .barcode-card * {
+    visibility: visible !important;
+  }
+}
