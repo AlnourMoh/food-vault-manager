@@ -76,7 +76,7 @@ const RestaurantStorageTeam = () => {
                       <TableCell>
                         {member.role === 'manager' ? 'مدير المخزن' : 'عضو فريق'}
                       </TableCell>
-                      <TableCell>{member.phone}</TableCell>
+                      <TableCell dir="ltr" className="text-right">{member.phone}</TableCell>
                       <TableCell>{member.email}</TableCell>
                     </TableRow>
                   ))}

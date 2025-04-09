@@ -22,15 +22,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { countryCodes } from '@/constants/countryCodes';
+import { Phone } from 'lucide-react';
 
 // تعريف مخطط التحقق من صحة البيانات
 const formSchema = z.object({
   name: z.string().min(3, { message: 'الاسم يجب أن يكون 3 أحرف على الأقل' }),
   role: z.string().min(2, { message: 'الدور يجب أن يكون محدداً' }),
-  phone: z
+  phoneCountryCode: z.string().min(1, { message: 'يجب تحديد مفتاح الدولة' }),
+  phoneNumber: z
     .string()
-    .min(10, { message: 'رقم الهاتف يجب أن يكون 10 أرقام على الأقل' })
-    .max(15, { message: 'رقم الهاتف يجب أن لا يتجاوز 15 رقماً' }),
+    .min(4, { message: 'رقم الهاتف يجب أن يكون 4 أرقام على الأقل' })
+    .max(15, { message: 'رقم الهاتف يجب أن لا يتجاوز 15 رقماً' })
+    .regex(/^\d+$/, { message: 'يجب أن يحتوي رقم الهاتف على أرقام فقط' }),
   email: z.string().email({ message: 'البريد الإلكتروني غير صالح' }),
 });
 
@@ -54,7 +59,8 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
     defaultValues: {
       name: '',
       role: 'عضو فريق',
-      phone: '',
+      phoneCountryCode: '974', // قطر كقيمة افتراضية
+      phoneNumber: '',
       email: '',
     },
   });
@@ -105,19 +111,61 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>رقم الهاتف</FormLabel>
-                  <FormControl>
-                    <Input placeholder="05xxxxxxxx" type="tel" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex space-x-3 rtl:space-x-reverse gap-2">
+              <FormField
+                control={form.control}
+                name="phoneCountryCode"
+                render={({ field }) => (
+                  <FormItem className="flex-shrink-0 w-1/3">
+                    <FormLabel>مفتاح الدولة</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="مفتاح الدولة" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {countryCodes.map((code) => (
+                          <SelectItem key={code.value} value={code.value}>
+                            <span className="flex items-center gap-2">
+                              <span>{code.flag}</span>
+                              <span>{code.label}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem className="flex-grow">
+                    <FormLabel>رقم الهاتف</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input 
+                          placeholder="5xxxxxxx" 
+                          type="tel" 
+                          {...field} 
+                          className="pl-8"
+                        />
+                        <Phone className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

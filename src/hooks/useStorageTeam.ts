@@ -7,7 +7,8 @@ import { StorageTeamMember } from '@/types';
 interface TeamMemberFormData {
   name: string;
   role: string;
-  phone: string;
+  phoneCountryCode: string;
+  phoneNumber: string;
   email: string;
 }
 
@@ -66,6 +67,9 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
     setIsLoading(true);
     
     try {
+      // تنسيق رقم الهاتف ليشمل مفتاح الدولة
+      const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
+      
       const { data, error } = await supabase
         .from('company_members')
         .insert([
@@ -73,7 +77,7 @@ export const useStorageTeam = (restaurantId: string | undefined) => {
             company_id: restaurantId,
             name: memberData.name,
             role: memberData.role.includes('مدير') ? 'admin' : 'staff',
-            phone: memberData.phone,
+            phone: formattedPhone,
             email: memberData.email,
             is_active: true,
             user_id: crypto.randomUUID() // Placeholder for now
