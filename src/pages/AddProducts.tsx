@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { getMockData } from '@/services/mockData';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -31,9 +30,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus } from 'lucide-react';
+import RestaurantLayout from '@/components/layout/RestaurantLayout';
 
 const AddProducts = () => {
-  const { restaurants } = getMockData();
   const { toast } = useToast();
   
   // State for categories
@@ -73,7 +72,6 @@ const AddProducts = () => {
     unit: '',
     quantity: '',
     expiryDate: '',
-    restaurantId: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +100,6 @@ const AddProducts = () => {
       unit: '',
       quantity: '',
       expiryDate: '',
-      restaurantId: '',
     });
   };
 
@@ -137,8 +134,12 @@ const AddProducts = () => {
     }
   };
 
+  // Check current route and use appropriate layout
+  const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
+  const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
+
   return (
-    <MainLayout>
+    <Layout>
       <div className="rtl space-y-6">
         <h1 className="text-3xl font-bold tracking-tight">إدخال المنتجات</h1>
         
@@ -313,25 +314,6 @@ const AddProducts = () => {
                     required 
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="restaurant">المطعم</Label>
-                  <Select 
-                    value={formData.restaurantId} 
-                    onValueChange={(value) => handleSelectChange('restaurantId', value)}
-                  >
-                    <SelectTrigger id="restaurant">
-                      <SelectValue placeholder="اختر المطعم" />
-                    </SelectTrigger>
-                    <SelectContent position="popper">
-                      {restaurants.map((restaurant) => (
-                        <SelectItem key={restaurant.id} value={restaurant.id}>
-                          {restaurant.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </form>
           </CardContent>
@@ -347,7 +329,7 @@ const AddProducts = () => {
           </CardFooter>
         </Card>
       </div>
-    </MainLayout>
+    </Layout>
   );
 };
 
