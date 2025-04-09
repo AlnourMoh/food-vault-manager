@@ -95,7 +95,7 @@ export const useEditProductForm = (productId: string | undefined, onSuccess: () 
             toast({
               title: "تحذير: لم يتم تحديث الصورة",
               description: "تم تحديث بيانات المنتج ولكن حدث خطأ أثناء رفع الصورة",
-              variant: "warning",
+              variant: "destructive", // Changed from "warning" to "destructive"
             });
           } else {
             console.log('Image uploaded successfully:', uploadData);
