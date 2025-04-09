@@ -17,13 +17,45 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
 
   /**
    * Handles printing all barcodes at once using the browser's print dialog
+   * with optimized settings for small label stickers
    */
   const handlePrint = () => {
+    // Create a custom print stylesheet
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @page {
+        size: 50mm 30mm; /* حجم ملصق صغير قياسي */
+        margin: 0mm;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .barcode-card {
+        width: 48mm;
+        height: 28mm;
+        padding: 1mm;
+        page-break-after: always;
+        box-sizing: border-box;
+      }
+      .barcode-grid {
+        display: block !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // إظهار نافذة الطباعة
     window.print();
+    
+    // إزالة نمط الطباعة المخصص بعد الطباعة
+    setTimeout(() => {
+      document.head.removeChild(style);
+    }, 1000);
   };
 
   /**
    * Handles printing a single barcode in a new window with optimized print settings
+   * specifically designed for small label stickers
    * 
    * @param barcodeId - The ID of the specific barcode to print
    */
@@ -44,66 +76,65 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
       return;
     }
 
-    // Create HTML content for printing with appropriate styling
+    // Create HTML content for printing with appropriate styling for small labels
     const barcodeHtml = `
       <!DOCTYPE html>
       <html dir="rtl">
       <head>
         <title>طباعة الباركود - ${product?.name}</title>
         <style>
+          @page {
+            size: 50mm 30mm; /* حجم ملصق صغير قياسي */
+            margin: 0mm;
+          }
           body {
             margin: 0;
-            padding: 20px;
+            padding: 2mm;
             background-color: white;
             font-family: Arial, sans-serif;
+            width: 46mm;
+            height: 26mm;
+            box-sizing: border-box;
+            overflow: hidden;
           }
           .barcode-container {
             width: 100%;
-            max-width: 300px;
-            margin: 0 auto;
-            padding: 15px;
-            border: 1px solid black;
-            background-color: white;
-            box-sizing: border-box;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
           }
           .product-name {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ccc;
+            font-size: 8pt;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 1mm;
           }
           .barcode-number {
             text-align: center;
             font-family: monospace;
-            font-size: 16px;
-            margin: 10px 0;
+            font-size: 7pt;
+            margin: 0.5mm 0;
           }
           .barcode-image {
-            border: 2px solid black;
-            height: 80px;
+            height: 14mm;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 10px 0;
+            padding: 0;
+          }
+          .barcode-image svg {
+            max-width: 100%;
+            max-height: 100%;
           }
           .product-id {
             text-align: center;
-            font-size: 12px;
+            font-size: 6pt;
             color: #666;
-            margin-top: 10px;
-          }
-          @media print {
-            @page {
-              size: 80mm 50mm;
-              margin: 0;
-            }
-            .barcode-container {
-              border: none;
-              width: 100%;
-              height: 100%;
-              padding: 5mm;
-            }
+            margin-top: 0.5mm;
           }
         </style>
       </head>
@@ -124,7 +155,7 @@ export const useBarcodePrinting = (barcodes: Barcode[], product: Product | null)
               setTimeout(function() {
                 window.close();
               }, 500);
-            }, 500);
+            }, 300);
           };
         </script>
       </body>
