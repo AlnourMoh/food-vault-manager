@@ -184,8 +184,8 @@ const AddProducts = () => {
         category: formData.category,
         unit: formData.unit,
         quantity: Number(formData.quantity),
-        expiryDate: new Date(formData.expiryDate),
-        entryDate: new Date(),
+        expiryDate: new Date(formData.expiryDate).toISOString(),
+        entryDate: new Date().toISOString(),
         restaurantId: restaurantId,
         status: 'active',
         imageUrl: imageUrl || null
@@ -194,7 +194,7 @@ const AddProducts = () => {
       // Insert data into Supabase
       const { error: insertError } = await supabase
         .from('products')
-        .insert([product]);
+        .insert(product);
       
       if (insertError) {
         console.error('Error inserting product:', insertError);

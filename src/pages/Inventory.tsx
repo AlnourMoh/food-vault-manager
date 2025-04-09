@@ -66,7 +66,7 @@ const Inventory = () => {
       }
       
       // Convert data to match our Product type
-      const formattedProducts = data.map((product: any): Product => ({
+      const formattedProducts = data ? data.map((product: any): Product => ({
         id: product.id,
         name: product.name,
         category: product.category,
@@ -79,11 +79,11 @@ const Inventory = () => {
         addedBy: product.addedBy || "",
         status: product.status,
         imageUrl: product.imageUrl || ""
-      }));
+      })) : [];
       
       setActiveProducts(formattedProducts);
       setFilteredProducts(formattedProducts);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in fetchProducts:', error);
       toast({
         title: "خطأ غير متوقع",
