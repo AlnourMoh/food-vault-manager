@@ -83,7 +83,7 @@ const RestaurantCredentials = () => {
     try {
       // Check if restaurant has credentials set up
       const { data: credentialsData, error: credentialsError } = await supabase
-        .from('restaurant_credentials')
+        .from('restaurant_access')
         .select('*')
         .eq('restaurant_id', id)
         .single();
