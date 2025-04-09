@@ -15,8 +15,8 @@ const RestaurantCredentials = () => {
   const [setupLink, setSetupLink] = useState('');
   
   // Use our custom hooks
-  const { restaurantName, email, updateEmail } = useRestaurantData(id);
-  const { handleOpenAccount, isLoading } = useRestaurantAccess(id);
+  const { restaurantName, email, updateEmail, isLoading: isLoadingData } = useRestaurantData(id);
+  const { handleOpenAccount, isLoading: isLoadingAccess } = useRestaurantAccess(id);
 
   const handleGenerateLink = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,13 +42,13 @@ const RestaurantCredentials = () => {
               email={email}
               setEmail={updateEmail}
               onGenerateLink={handleGenerateLink}
-              isLoading={isLoading}
+              isLoading={isLoadingData || isLoadingAccess}
             />
           </CardContent>
           <CardFooter className="flex flex-col gap-2">
             <CredentialActionButtons 
               onOpenAccount={handleOpenAccount}
-              isLoading={isLoading}
+              isLoading={isLoadingData || isLoadingAccess}
             />
           </CardFooter>
         </Card>
