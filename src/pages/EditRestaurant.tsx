@@ -81,15 +81,20 @@ const EditRestaurant = () => {
       // Combine the phone number with country code for API call
       const fullPhoneNumber = `+${values.phoneCountryCode}${values.phoneNumber}`;
       
-      // استخدام خدمة تحديث المطعم من restaurantService
-      const updatedRestaurant = await updateRestaurant(
-        id,
-        values.name,
-        fullPhoneNumber,
-        values.address
-      );
+      // Update the service call to include the manager field
+      const updatedRestaurant = await supabase.rpc('force_update_company_with_manager', {
+        p_company_id: id,
+        p_name: values.name,
+        p_phone: fullPhoneNumber,
+        p_address: values.address,
+        p_manager: values.manager
+      });
 
-      console.log('Updated restaurant:', updatedRestaurant);
+      if (updatedRestaurant.error) {
+        throw updatedRestaurant.error;
+      }
+
+      console.log('Updated restaurant:', updatedRestaurant.data);
 
       toast({
         title: 'تم تحديث المطعم',
