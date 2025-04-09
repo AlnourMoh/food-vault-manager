@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Archive, 
   ArrowDown, 
@@ -14,7 +14,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useRestaurantData } from '@/hooks/useRestaurantData';
 
 interface RestaurantLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,12 @@ interface RestaurantLayoutProps {
 const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // استرجاع معرف المطعم من التخزين المحلي
+  const restaurantId = localStorage.getItem('restaurantId');
+  
+  // استخدام hook لاسترجاع بيانات المطعم
+  const { restaurantName, isLoading } = useRestaurantData(restaurantId);
 
   // Restaurant menu items
   const menuItems = [
@@ -112,8 +119,12 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
           <div className="flex flex-1 items-center justify-between">
             <h3 className="text-xl font-semibold">إدارة المطعم</h3>
             <div className="text-sm">
-              {/* Restaurant name would go here, fetched from database */}
-              مطعم الشيف الذهبي
+              {/* عرض اسم المطعم من قاعدة البيانات */}
+              {isLoading ? (
+                <span className="text-muted-foreground">جاري تحميل بيانات المطعم...</span>
+              ) : (
+                restaurantName || 'المطعم'
+              )}
             </div>
           </div>
         </header>
