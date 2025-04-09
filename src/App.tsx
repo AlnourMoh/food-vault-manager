@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,8 +20,10 @@ import AddRestaurant from "./pages/AddRestaurant";
 import EditRestaurant from "./pages/EditRestaurant";
 import ProductBarcodes from '@/pages/ProductBarcodes';
 import EditProduct from '@/pages/EditProduct';
+import MobileDashboard from '@/pages/mobile/MobileDashboard';
+import MobileAddProduct from '@/pages/mobile/MobileAddProduct';
+import MobileRemoveProduct from '@/pages/mobile/MobileRemoveProduct';
 
-// Restaurant route guard
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
   
@@ -76,39 +77,30 @@ function App() {
                   <RestaurantStorageTeam />
                 </RestaurantRoute>
               } />
-              {/* More restaurant routes would go here */}
-              <Route path="/restaurant/products/add" element={
+              
+              {/* Mobile App Routes */}
+              <Route path="/restaurant/mobile" element={
                 <RestaurantRoute>
-                  <AddProducts />
+                  <MobileDashboard />
                 </RestaurantRoute>
               } />
-              <Route path="/restaurant/products/remove" element={
+              <Route path="/restaurant/mobile/add" element={
                 <RestaurantRoute>
-                  <RemoveProducts />
+                  <MobileAddProduct />
                 </RestaurantRoute>
               } />
-              <Route path="/restaurant/inventory" element={
+              <Route path="/restaurant/mobile/remove" element={
                 <RestaurantRoute>
-                  <Inventory />
+                  <MobileRemoveProduct />
                 </RestaurantRoute>
               } />
-              <Route path="/restaurant/expired" element={
-                <RestaurantRoute>
-                  <Expired />
-                </RestaurantRoute>
-              } />
-              <Route path="/restaurant/products/:productId/edit" element={
-                <RestaurantRoute>
-                  <EditProduct />
-                </RestaurantRoute>
-              } />
+              
+              {/* Barcode routes */}
+              <Route path="/products/:productId/barcodes" element={<ProductBarcodes />} />
+              <Route path="/restaurant/products/:productId/barcodes" element={<ProductBarcodes />} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
-              
-              {/* Add the new barcode routes */}
-              <Route path="/products/:productId/barcodes" element={<ProductBarcodes />} />
-              <Route path="/restaurant/products/:productId/barcodes" element={<ProductBarcodes />} />
             </Routes>
           </BrowserRouter>
         </div>
