@@ -182,7 +182,7 @@ export const useProductForm = () => {
         production_date: new Date().toISOString(),
         company_id: restaurantId,
         status: 'active',
-        imageUrl
+        imageUrl // Include imageUrl in the insertion
       };
       
       // Insert data into Supabase
