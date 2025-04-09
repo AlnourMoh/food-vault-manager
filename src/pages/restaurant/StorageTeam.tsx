@@ -1,12 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { useStorageTeam } from '@/hooks/useStorageTeam';
 import { StorageTeamMember } from '@/types';
+import { TeamMemberFormData } from '@/types/team';
 import { useToast } from '@/hooks/use-toast';
 import TeamHeader from '@/components/team/TeamHeader';
 import TeamContent from '@/components/team/TeamContent';
 import AddMemberDialog from '@/components/team/AddMemberDialog';
 import EditMemberDialog from '@/components/team/EditMemberDialog';
+import { generateWelcomeMessage } from '@/utils/welcomeMessageUtils';
 
 const RestaurantStorageTeam = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -22,7 +25,6 @@ const RestaurantStorageTeam = () => {
     addTeamMember,
     updateTeamMember,
     lastAddedMember,
-    generateWelcomeMessage,
     copyWelcomeMessage
   } = useStorageTeam(restaurantId || undefined);
 
@@ -30,7 +32,7 @@ const RestaurantStorageTeam = () => {
     fetchTeamMembers();
   }, []);
 
-  const handleAddMember = (data: any) => {
+  const handleAddMember = (data: TeamMemberFormData) => {
     addTeamMember(data);
   };
   
@@ -41,7 +43,7 @@ const RestaurantStorageTeam = () => {
     setShowEditDialog(true);
   };
 
-  const handleUpdateMember = (id: string, data: any) => {
+  const handleUpdateMember = (id: string, data: TeamMemberFormData) => {
     return updateTeamMember(id, data);
   };
 
@@ -56,7 +58,7 @@ const RestaurantStorageTeam = () => {
   // New handler for copying welcome message for an existing member
   const handleCopyWelcomeMessageForMember = (member: StorageTeamMember) => {
     // Convert StorageTeamMember to the format expected by the copyWelcomeMessage function
-    const memberData = {
+    const memberData: TeamMemberFormData = {
       name: member.name,
       email: member.email,
       role: member.role,
@@ -75,7 +77,7 @@ const RestaurantStorageTeam = () => {
     const phoneCountryCode = member.phone?.substring(1, 3) || '';
     const phoneNumber = member.phone?.substring(3) || '';
     
-    return `مرحباً ${member.name}，
+    return `مرحباً ${member.name}،
 
 نرحب بك في فريق إدارة المخزن. لتتمكن من الوصول إلى تطبيق إدارة المخزن، يرجى اتباع الخطوات التالية:
 
