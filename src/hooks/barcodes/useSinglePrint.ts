@@ -25,6 +25,11 @@ export const useSinglePrint = (barcodes: Barcode[], product: Product | null) => 
     const barcodeToPrint = barcodes.find(b => b.id === barcodeId);
     if (!barcodeToPrint) {
       console.error('Barcode not found:', barcodeId);
+      toast({
+        title: "خطأ في الطباعة",
+        description: "لم يتم العثور على الباركود المطلوب",
+        variant: "destructive",
+      });
       return;
     }
 

@@ -20,7 +20,8 @@ export const useBarcodes = (productId: string | undefined) => {
     handlePrintSingle, 
     selectedLabelSize, 
     changeLabelSize, 
-    labelSizes 
+    labelSizes,
+    printFrameRef
   } = useBarcodePrinting(barcodes, product);
 
   // Combine and return all barcode functionality
@@ -32,7 +33,8 @@ export const useBarcodes = (productId: string | undefined) => {
     handlePrintSingle,    // Function to print a single barcode
     selectedLabelSize,    // Currently selected label size
     changeLabelSize,      // Function to change the label size
-    labelSizes            // Available label size options
+    labelSizes,           // Available label size options
+    printFrameRef         // Reference to the print frame (if needed)
   };
 };
 

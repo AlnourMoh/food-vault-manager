@@ -17,6 +17,7 @@ export const getBasePrintStyles = (): string => {
       font-family: Arial, sans-serif;
       box-sizing: border-box;
       overflow: hidden;
+      direction: rtl;
     }
     
     /* Container styles */

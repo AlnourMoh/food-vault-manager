@@ -24,6 +24,13 @@ const BarcodeCard: React.FC<BarcodeCardProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Function to handle print button click
+  const handlePrintClick = () => {
+    if (onPrintSingle) {
+      onPrintSingle(barcode.id);
+    }
+  };
+  
   return (
     <Card className="h-full print:border-2 print:shadow-none barcode-card transition-all duration-200 hover:shadow-md">
       <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-between h-full">
@@ -54,7 +61,7 @@ const BarcodeCard: React.FC<BarcodeCardProps> = ({
             size={isMobile ? "sm" : "default"} 
             variant="outline" 
             className="mt-2 w-full print-hidden"
-            onClick={() => onPrintSingle(barcode.id)}
+            onClick={handlePrintClick}
           >
             <Printer className="h-4 w-4 ml-2" /> 
             {isMobile ? "طباعة" : "طباعة هذا الباركود"}

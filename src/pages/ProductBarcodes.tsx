@@ -17,7 +17,8 @@ const ProductBarcodes = () => {
     handlePrintSingle,
     selectedLabelSize,
     changeLabelSize,
-    labelSizes
+    labelSizes,
+    printFrameRef
   } = useBarcodes(productId);
   
   // Determine current route type
