@@ -1,5 +1,4 @@
 
-// تأكد من إضافة استيراد supabase في بداية الملف
 import { supabase } from '@/integrations/supabase/client';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -9,13 +8,14 @@ import RestaurantForm from '@/components/restaurant/RestaurantForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { updateRestaurant } from '@/services/restaurantService';
+import { RestaurantFormValues } from '@/validations/restaurantSchema';
 
 interface RestaurantData {
   name: string;
   email: string;
   phone: string;
   address: string;
-  manager?: string; // إضافة حقل المدير
+  manager?: string;
 }
 
 const EditRestaurant = () => {
@@ -35,7 +35,7 @@ const EditRestaurant = () => {
         // استخدام الاستعلام المباشر للحصول على بيانات المطعم
         const { data: companies, error } = await supabase
           .from('companies')
-          .select('name, email, phone, address')
+          .select('name, email, phone, address, manager')
           .eq('id', id)
           .single();
 
@@ -52,7 +52,7 @@ const EditRestaurant = () => {
             email: companies.email,
             phone: companies.phone,
             address: companies.address,
-            manager: '', // قيمة افتراضية فارغة للمدير
+            manager: companies.manager || '',
           });
         }
       } catch (error: any) {
@@ -71,18 +71,21 @@ const EditRestaurant = () => {
     fetchRestaurant();
   }, [id, navigate, toast]);
 
-  const handleSubmit = async (data: RestaurantData) => {
+  const handleSubmit = async (values: RestaurantFormValues) => {
     if (!id) return;
 
     try {
       setIsLoading(true);
       
+      // Combine the phone number with country code for API call
+      const fullPhoneNumber = `+${values.phoneCountryCode}${values.phoneNumber}`;
+      
       // استخدام خدمة تحديث المطعم من restaurantService
       const updatedRestaurant = await updateRestaurant(
         id,
-        data.name,
-        data.phone,
-        data.address
+        values.name,
+        fullPhoneNumber,
+        values.address
       );
 
       console.log('Updated restaurant:', updatedRestaurant);
