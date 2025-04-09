@@ -49,17 +49,10 @@ export const useProductFormSubmit = (
       // Generate a unique ID for the product
       const productId = uuidv4();
       
-      // Since we're having issues with storage bucket, we'll skip image upload for now
-      let imageUrl = '';
-      
+      // Since we're having issues with storage bucket, we'll log this but not try to save it
       if (formData.image) {
-        // Instead of uploading, we'll just note that there was an image
         console.log('Image upload skipped due to missing storage bucket');
         
-        // We could set a placeholder image URL if needed
-        imageUrl = 'https://via.placeholder.com/150';
-        
-        // Show a warning about the image not being uploaded
         toast({
           title: "تنبيه",
           description: "تم تخطي رفع الصورة - يرجى التواصل مع مسؤول النظام لإنشاء بكت التخزين",
@@ -67,7 +60,7 @@ export const useProductFormSubmit = (
         });
       }
 
-      // Create data object for insertion
+      // Create data object for insertion - removing imageUrl field which doesn't exist in the database
       const product = {
         id: productId,
         name: formData.name,
@@ -77,8 +70,8 @@ export const useProductFormSubmit = (
         expiry_date: new Date(formData.expiryDate).toISOString(),
         production_date: new Date().toISOString(),
         company_id: restaurantId,
-        status: 'active',
-        imageUrl
+        status: 'active'
+        // Removed imageUrl field as it doesn't exist in the database schema
       };
       
       // Insert data into Supabase
