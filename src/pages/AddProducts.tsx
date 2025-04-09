@@ -48,9 +48,23 @@ const AddProducts = () => {
     'مجمدات',
   ]);
   
-  // State for new category
+  // State for units
+  const [units, setUnits] = useState([
+    { value: 'kg', label: 'كيلوغرام' },
+    { value: 'g', label: 'غرام' },
+    { value: 'l', label: 'لتر' },
+    { value: 'ml', label: 'مليلتر' },
+    { value: 'piece', label: 'قطعة' },
+    { value: 'box', label: 'صندوق' },
+    { value: 'pack', label: 'عبوة' },
+  ]);
+  
+  // State for new category and unit
   const [newCategory, setNewCategory] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  const [newUnit, setNewUnit] = useState({ value: '', label: '' });
+  const [unitDialogOpen, setUnitDialogOpen] = useState(false);
   
   // Form data state
   const [formData, setFormData] = useState({
@@ -103,6 +117,22 @@ const AddProducts = () => {
       toast({
         title: "تم إضافة التصنيف بنجاح",
         description: `تم إضافة تصنيف "${newCategory}" إلى قائمة التصنيفات`,
+      });
+    }
+  };
+  
+  // Handle adding a new unit
+  const handleAddUnit = () => {
+    if (newUnit.value.trim() !== '' && newUnit.label.trim() !== '' && 
+        !units.some(unit => unit.value === newUnit.value)) {
+      setUnits([...units, newUnit]);
+      setFormData(prev => ({ ...prev, unit: newUnit.value }));
+      setNewUnit({ value: '', label: '' });
+      setUnitDialogOpen(false);
+      
+      toast({
+        title: "تم إضافة وحدة القياس بنجاح",
+        description: `تم إضافة وحدة "${newUnit.label}" إلى قائمة وحدات القياس`,
       });
     }
   };
@@ -191,23 +221,71 @@ const AddProducts = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="unit">وحدة القياس</Label>
-                  <Select 
-                    value={formData.unit} 
-                    onValueChange={(value) => handleSelectChange('unit', value)}
-                  >
-                    <SelectTrigger id="unit">
-                      <SelectValue placeholder="اختر وحدة القياس" />
-                    </SelectTrigger>
-                    <SelectContent position="popper">
-                      <SelectItem value="kg">كيلوغرام</SelectItem>
-                      <SelectItem value="g">غرام</SelectItem>
-                      <SelectItem value="l">لتر</SelectItem>
-                      <SelectItem value="ml">مليلتر</SelectItem>
-                      <SelectItem value="piece">قطعة</SelectItem>
-                      <SelectItem value="box">صندوق</SelectItem>
-                      <SelectItem value="pack">عبوة</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select 
+                      value={formData.unit} 
+                      onValueChange={(value) => handleSelectChange('unit', value)}
+                    >
+                      <SelectTrigger id="unit" className="flex-1">
+                        <SelectValue placeholder="اختر وحدة القياس" />
+                      </SelectTrigger>
+                      <SelectContent position="popper">
+                        {units.map((unit, index) => (
+                          <SelectItem key={index} value={unit.value}>
+                            {unit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Dialog open={unitDialogOpen} onOpenChange={setUnitDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="icon" title="إضافة وحدة قياس جديدة">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>إضافة وحدة قياس جديدة</DialogTitle>
+                          <DialogDescription>
+                            أدخل اسم وحدة القياس الجديدة ورمزها لإضافتها إلى القائمة
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                          <div>
+                            <Label htmlFor="new-unit-label">اسم وحدة القياس</Label>
+                            <Input 
+                              id="new-unit-label"
+                              value={newUnit.label}
+                              onChange={(e) => setNewUnit(prev => ({ ...prev, label: e.target.value }))}
+                              placeholder="مثال: كرتونة"
+                              className="mt-2"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="new-unit-value">رمز وحدة القياس</Label>
+                            <Input 
+                              id="new-unit-value"
+                              value={newUnit.value}
+                              onChange={(e) => setNewUnit(prev => ({ ...prev, value: e.target.value }))}
+                              placeholder="مثال: crt"
+                              className="mt-2"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setUnitDialogOpen(false)}>إلغاء</Button>
+                          <Button 
+                            onClick={handleAddUnit}
+                            className="bg-fvm-primary hover:bg-fvm-primary-light"
+                            disabled={!newUnit.value.trim() || !newUnit.label.trim()}
+                          >
+                            إضافة
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
