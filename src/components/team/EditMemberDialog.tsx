@@ -64,7 +64,8 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
       
       form.reset({
         name: member.name,
-        role: member.role,
+        // Map database role to frontend role
+        role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
         phoneCountryCode: countryCode,
         phoneNumber: phoneNumber,
         email: member.email,
@@ -129,8 +130,8 @@ const EditMemberDialog: React.FC<EditMemberDialogProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="manager">مدير المخزن</SelectItem>
-                      <SelectItem value="team_member">عضو فريق</SelectItem>
+                      <SelectItem value="إدارة النظام">إدارة النظام</SelectItem>
+                      <SelectItem value="إدارة المخزن">إدارة المخزن</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

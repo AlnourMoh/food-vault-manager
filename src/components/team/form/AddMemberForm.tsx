@@ -33,7 +33,7 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      role: 'عضو فريق',
+      role: 'إدارة المخزن',
       phoneCountryCode: '974', // قطر كقيمة افتراضية
       phoneNumber: '',
       email: '',
@@ -63,9 +63,20 @@ const AddMemberForm: React.FC<AddMemberFormProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>المنصب / الدور</FormLabel>
-              <FormControl>
-                <Input placeholder="مسؤول المخزن" {...field} />
-              </FormControl>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر المنصب" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="إدارة المخزن">إدارة المخزن</SelectItem>
+                  <SelectItem value="إدارة النظام">إدارة النظام</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

@@ -35,13 +35,16 @@ export const addTeamMemberApi = async (restaurantId: string, memberData: {
 }) => {
   const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
   
+  // Map frontend role to database role (admin or staff)
+  const dbRole = memberData.role === 'إدارة النظام' ? 'admin' : 'staff';
+  
   const { data, error } = await supabase
     .from('company_members')
     .insert([
       {
         company_id: restaurantId,
         name: memberData.name,
-        role: memberData.role.includes('مدير') ? 'admin' : 'staff',
+        role: dbRole,
         phone: formattedPhone,
         email: memberData.email,
         is_active: true,
@@ -70,11 +73,14 @@ export const updateTeamMemberApi = async (
 ) => {
   const formattedPhone = `+${memberData.phoneCountryCode}${memberData.phoneNumber}`;
   
+  // Map frontend role to database role (admin or staff)
+  const dbRole = memberData.role === 'إدارة النظام' ? 'admin' : 'staff';
+  
   const { error } = await supabase
     .from('company_members')
     .update({
       name: memberData.name,
-      role: memberData.role === 'manager' ? 'admin' : 'staff',
+      role: dbRole,
       phone: formattedPhone,
       email: memberData.email,
     })

@@ -47,7 +47,7 @@ const TeamMemberTable: React.FC<TeamMemberTableProps> = ({
 
   const copyMemberInfo = (member: StorageTeamMember) => {
     const memberInfo = `الاسم: ${member.name}
-الدور: ${member.role === 'manager' ? 'مدير المخزن' : 'عضو فريق'}
+الدور: ${member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن'}
 رقم الهاتف: ${member.phone}
 البريد الإلكتروني: ${member.email}`;
 
@@ -89,7 +89,7 @@ const TeamMemberTable: React.FC<TeamMemberTableProps> = ({
                 <TableRow className="cursor-default">
                   <TableCell className="font-medium">{member.name}</TableCell>
                   <TableCell>
-                    {member.role === 'manager' ? 'مدير المخزن' : 'عضو فريق'}
+                    {member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن'}
                   </TableCell>
                   <TableCell dir="ltr" className="text-right">{member.phone}</TableCell>
                   <TableCell>{member.email}</TableCell>

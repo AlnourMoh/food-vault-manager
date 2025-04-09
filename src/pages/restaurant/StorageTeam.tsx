@@ -61,7 +61,8 @@ const RestaurantStorageTeam = () => {
     const memberData: TeamMemberFormData = {
       name: member.name,
       email: member.email,
-      role: member.role,
+      // Map database role to frontend role
+      role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
       phoneCountryCode: member.phone?.substring(1, 3) || '',
       phoneNumber: member.phone?.substring(3) || '',
     };
@@ -77,19 +78,17 @@ const RestaurantStorageTeam = () => {
     const phoneCountryCode = member.phone?.substring(1, 3) || '';
     const phoneNumber = member.phone?.substring(3) || '';
     
-    return `مرحباً ${member.name}،
-
-نرحب بك في فريق إدارة المخزن. لتتمكن من الوصول إلى تطبيق إدارة المخزن، يرجى اتباع الخطوات التالية:
-
-1. قم بتحميل تطبيق إدارة المخزن من الرابط: https://storage-app.example.com/download
-2. عند فتح التطبيق، قم بإدخال البريد الإلكتروني أو رقم الهاتف الذي تم تسجيلك به: ${member.email || member.phone}
-3. قم بإنشاء كلمة مرور خاصة بك للدخول إلى النظام
-4. بعد تسجيل الدخول، يمكنك البدء في استخدام النظام وإدارة المخزن
-
-إذا كان لديك أي استفسار، لا تتردد في التواصل مع مدير النظام.
-
-مع تحياتنا،
-فريق إدارة المخزن`;
+    // Create member data object
+    const memberData: TeamMemberFormData = {
+      name: member.name,
+      email: member.email,
+      // Map database role to frontend role
+      role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
+      phoneCountryCode,
+      phoneNumber,
+    };
+    
+    return generateWelcomeMessage(memberData);
   };
 
   return (

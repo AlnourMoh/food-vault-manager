@@ -6,3 +6,5 @@ export interface TeamMemberFormData {
   phoneNumber: string;
   email: string;
 }
+
+export type TeamMemberRole = "إدارة النظام" | "إدارة المخزن";
