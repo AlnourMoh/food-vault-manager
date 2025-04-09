@@ -47,6 +47,7 @@ const EditRestaurant = () => {
         console.log('Fetched restaurant data:', data);
         
         if (data) {
+          // Set the manager field as an empty string since it doesn't exist in the database
           setRestaurantData({
             name: data.name,
             email: data.email,
