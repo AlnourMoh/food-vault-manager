@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
+import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { getMockData } from '@/services/mockData';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Card, 
@@ -19,39 +19,22 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
 import { Product } from '@/types';
 
 const Inventory = () => {
-  const { products, restaurants } = getMockData();
+  const { products } = getMockData();
   const [activeProducts] = useState<Product[]>(products.filter(p => p.status === 'active'));
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(activeProducts);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
-
-  const handleRestaurantChange = (value: string) => {
-    setSelectedRestaurant(value);
-    filterProducts(value, searchTerm);
-  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    filterProducts(selectedRestaurant, value);
+    filterProducts(value);
   };
 
-  const filterProducts = (restaurantId: string, search: string) => {
+  const filterProducts = (search: string) => {
     let filtered = activeProducts;
-    
-    if (restaurantId) {
-      filtered = filtered.filter(p => p.restaurantId === restaurantId);
-    }
     
     if (search) {
       const lowerSearch = search.toLowerCase();
@@ -72,38 +55,22 @@ const Inventory = () => {
     return diffDays;
   };
 
+  // Check current route and use appropriate layout
+  const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
+  const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
+
   return (
-    <MainLayout>
+    <Layout>
       <div className="rtl space-y-6">
         <h1 className="text-3xl font-bold tracking-tight">المخزون</h1>
         
-        <div className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="w-full md:w-1/3">
-            <Select 
-              value={selectedRestaurant} 
-              onValueChange={handleRestaurantChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="جميع المطاعم" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="all">جميع المطاعم</SelectItem>
-                {restaurants.map((restaurant) => (
-                  <SelectItem key={restaurant.id} value={restaurant.id}>
-                    {restaurant.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="w-full md:w-2/3">
-            <Input 
-              placeholder="بحث عن منتج..." 
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
+        <div className="w-full">
+          <Input 
+            placeholder="بحث عن منتج..." 
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full"
+          />
         </div>
         
         <Card>
@@ -117,7 +84,6 @@ const Inventory = () => {
                 <TableRow>
                   <TableHead className="text-right">اسم المنتج</TableHead>
                   <TableHead className="text-right">التصنيف</TableHead>
-                  <TableHead className="text-right">المطعم</TableHead>
                   <TableHead className="text-right">الكمية</TableHead>
                   <TableHead className="text-right">تاريخ الإدخال</TableHead>
                   <TableHead className="text-right">تاريخ انتهاء الصلاحية</TableHead>
@@ -133,7 +99,6 @@ const Inventory = () => {
                       <TableRow key={product.id}>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.category}</TableCell>
-                        <TableCell>{product.restaurantName}</TableCell>
                         <TableCell>{product.quantity} {product.unit}</TableCell>
                         <TableCell>
                           {new Date(product.entryDate).toLocaleDateString('ar-SA')}
@@ -161,7 +126,7 @@ const Inventory = () => {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                       لا توجد منتجات متطابقة مع معايير البحث
                     </TableCell>
                   </TableRow>
@@ -171,7 +136,7 @@ const Inventory = () => {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </Layout>
   );
 };
 
