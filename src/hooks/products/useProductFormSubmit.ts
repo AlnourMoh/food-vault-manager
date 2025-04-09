@@ -110,10 +110,41 @@ export const useProductFormSubmit = (
         return {};
       }
       
+      // Generate unique barcodes for each unit of the product
+      const quantity = Number(formData.quantity);
+      const barcodeInserts = [];
+      
+      for (let i = 0; i < quantity; i++) {
+        // Generate a unique barcode for each product unit
+        const barcode = `${productId.substring(0, 8)}-${i+1}`;
+        barcodeInserts.push({
+          product_id: productId,
+          qr_code: barcode,
+          is_used: false
+        });
+      }
+      
+      // Insert all generated barcodes into product_codes table
+      if (barcodeInserts.length > 0) {
+        const { error: barcodeError } = await supabase
+          .from('product_codes')
+          .insert(barcodeInserts);
+          
+        if (barcodeError) {
+          console.error('Error inserting barcodes:', barcodeError);
+          // Continue despite barcode error, product is already created
+          toast({
+            title: "تحذير",
+            description: "تم إضافة المنتج ولكن فشل في إنشاء الباركود",
+            variant: "default",
+          });
+        }
+      }
+      
       // Show success message
       toast({
         title: "تم إضافة المنتج بنجاح",
-        description: `تم إضافة ${formData.name} إلى المخزون`,
+        description: `تم إضافة ${formData.name} إلى المخزون مع ${quantity} باركود`,
       });
       
       // Reset form

@@ -6,7 +6,7 @@ import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus } from 'lucide-react';
+import { Plus, Barcode } from 'lucide-react';
 import { Product } from '@/types';
 
 const Inventory = () => {
@@ -79,6 +79,13 @@ const Inventory = () => {
     fetchProducts();
   }, [toast]);
 
+  const viewBarcodes = (productId: string) => {
+    const barcodesPath = isRestaurantRoute 
+      ? `/restaurant/products/${productId}/barcodes` 
+      : `/products/${productId}/barcodes`;
+    navigate(barcodesPath);
+  };
+
   // Choose the appropriate layout based on the route
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
 
@@ -123,6 +130,16 @@ const Inventory = () => {
                     <p><span className="font-medium">التصنيف:</span> {product.category}</p>
                     <p><span className="font-medium">الكمية:</span> {product.quantity}</p>
                     <p><span className="font-medium">تاريخ الانتهاء:</span> {product.expiryDate.toLocaleDateString('ar-SA')}</p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => viewBarcodes(product.id)}
+                      className="text-xs"
+                    >
+                      <Barcode className="h-3 w-3 ml-1" /> عرض الباركود
+                    </Button>
                   </div>
                 </div>
               </div>
