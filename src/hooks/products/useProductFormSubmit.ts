@@ -60,17 +60,17 @@ export const useProductFormSubmit = (
         });
       }
 
-      // Create data object for insertion - removing imageUrl field which doesn't exist in the database
+      // Create data object for insertion - removing unit field which doesn't exist in the database
       const product = {
         id: productId,
         name: formData.name,
         category: formData.category,
         quantity: Number(formData.quantity),
-        unit: formData.unit,
         expiry_date: new Date(formData.expiryDate).toISOString(),
         production_date: new Date().toISOString(),
         company_id: restaurantId,
         status: 'active'
+        // Removed unit field as it doesn't exist in the database schema
         // Removed imageUrl field as it doesn't exist in the database schema
       };
       
