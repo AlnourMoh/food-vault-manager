@@ -7,20 +7,53 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ImageUploader from '@/components/products/ImageUploader';
+import { Card, CardContent } from '@/components/ui/card';
 
 const EditProduct = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [productData, setProductData] = useState<any>(null);
+  const [image, setImage] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     category: '',
     quantity: 0,
     expiryDate: '',
-    productionDate: ''
+    productionDate: '',
+    unit: '',
+    imageUrl: ''
   });
+  
+  // Default categories
+  const [categories, setCategories] = useState([
+    'بقالة',
+    'لحوم',
+    'ألبان',
+    'خضروات',
+    'فواكه',
+    'بهارات',
+    'زيوت',
+    'مجمدات',
+    'أخرى'
+  ]);
+  
+  // Default units
+  const [units, setUnits] = useState([
+    { value: 'kg', label: 'كيلوغرام' },
+    { value: 'g', label: 'غرام' },
+    { value: 'l', label: 'لتر' },
+    { value: 'ml', label: 'مليلتر' },
+    { value: 'piece', label: 'قطعة' },
+    { value: 'box', label: 'صندوق' },
+    { value: 'pack', label: 'عبوة' },
+  ]);
   
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
@@ -57,7 +90,9 @@ const EditProduct = () => {
           category: data.category,
           quantity: data.quantity,
           expiryDate: expiryDate.toISOString().split('T')[0],
-          productionDate: productionDate.toISOString().split('T')[0]
+          productionDate: productionDate.toISOString().split('T')[0],
+          unit: data.unit || 'piece', // Default to 'piece' if unit is not available
+          imageUrl: data.image_url || ''
         });
       } catch (error: any) {
         console.error('Error fetching product:', error);
@@ -84,15 +119,59 @@ const EditProduct = () => {
     }));
   };
   
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleImageChange = (file: File | null, url: string) => {
+    setImage(file);
+    setFormData(prev => ({
+      ...prev,
+      imageUrl: url
+    }));
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
       
       // Format dates for database
       const expiryDate = new Date(formData.expiryDate);
       const productionDate = new Date(formData.productionDate);
+      
+      let imageUrl = formData.imageUrl;
+      
+      // Upload image if a new one was selected
+      if (image) {
+        const restaurantId = localStorage.getItem('restaurantId');
+        if (!restaurantId) {
+          throw new Error('معرف المطعم غير موجود');
+        }
+        
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `${restaurantId}/${fileName}`;
+        
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, image);
+          
+        if (uploadError) {
+          throw uploadError;
+        }
+        
+        // Get public URL for the uploaded image
+        const { data: urlData } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+          
+        imageUrl = urlData?.publicUrl || '';
+      }
       
       const { error } = await supabase
         .from('products')
@@ -101,7 +180,9 @@ const EditProduct = () => {
           category: formData.category,
           quantity: formData.quantity,
           expiry_date: expiryDate.toISOString(),
-          production_date: productionDate.toISOString()
+          production_date: productionDate.toISOString(),
+          unit: formData.unit,
+          image_url: imageUrl
         })
         .eq('id', productId);
         
@@ -124,7 +205,7 @@ const EditProduct = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
   
@@ -143,114 +224,130 @@ const EditProduct = () => {
             <span className="mr-2">جاري تحميل بيانات المنتج...</span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  اسم المنتج
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                  التصنيف
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                >
-                  <option value="">اختر التصنيف</option>
-                  <option value="خضروات">خضروات</option>
-                  <option value="لحوم">لحوم</option>
-                  <option value="بهارات">بهارات</option>
-                  <option value="بقالة">بقالة</option>
-                  <option value="أخرى">أخرى</option>
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
-                  الكمية
-                </label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  min="1"
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="productionDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  تاريخ الإنتاج
-                </label>
-                <input
-                  type="date"
-                  id="productionDate"
-                  name="productionDate"
-                  value={formData.productionDate}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  تاريخ الانتهاء
-                </label>
-                <input
-                  type="date"
-                  id="expiryDate"
-                  name="expiryDate"
-                  value={formData.expiryDate}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-4 space-x-reverse pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleCancel}
-                  disabled={isLoading}
-                >
-                  إلغاء
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري الحفظ...
-                    </>
-                  ) : (
-                    "حفظ التعديلات"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </form>
+          <Card className="max-w-2xl mx-auto">
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">اسم المنتج</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="category">التصنيف</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => handleSelectChange('category', value)}
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="اختر التصنيف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category, index) => (
+                          <SelectItem key={index} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">الكمية</Label>
+                    <Input
+                      type="number"
+                      id="quantity"
+                      name="quantity"
+                      value={formData.quantity}
+                      onChange={handleInputChange}
+                      min="1"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="unit">وحدة القياس</Label>
+                    <Select
+                      value={formData.unit}
+                      onValueChange={(value) => handleSelectChange('unit', value)}
+                    >
+                      <SelectTrigger id="unit">
+                        <SelectValue placeholder="اختر وحدة القياس" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {units.map((unit, index) => (
+                          <SelectItem key={index} value={unit.value}>
+                            {unit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="productionDate">تاريخ الإنتاج</Label>
+                    <Input
+                      type="date"
+                      id="productionDate"
+                      name="productionDate"
+                      value={formData.productionDate}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="expiryDate">تاريخ الانتهاء</Label>
+                    <Input
+                      type="date"
+                      id="expiryDate"
+                      name="expiryDate"
+                      value={formData.expiryDate}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="col-span-1 md:col-span-2">
+                    <ImageUploader 
+                      imageUrl={formData.imageUrl}
+                      onImageChange={handleImageChange}
+                      error=""
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-4 space-x-reverse pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleCancel}
+                    disabled={isSubmitting}
+                  >
+                    إلغاء
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري الحفظ...
+                      </>
+                    ) : (
+                      "حفظ التعديلات"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         )}
       </div>
     </Layout>
