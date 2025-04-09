@@ -3,14 +3,21 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormData, FormError } from '@/components/products/types';
+import ImageUploader from '@/components/products/ImageUploader';
 
 interface ProductInfoFieldsProps {
   formData: FormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleImageChange: (file: File | null, url: string) => void;
   errors: FormError;
 }
 
-const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, handleInputChange, errors }) => {
+const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ 
+  formData, 
+  handleInputChange, 
+  handleImageChange,
+  errors 
+}) => {
   return (
     <>
       <div className="space-y-2">
@@ -62,6 +69,14 @@ const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, handleI
         {errors.expiryDate && (
           <p className="text-xs text-destructive">{errors.expiryDate}</p>
         )}
+      </div>
+
+      <div className="col-span-1 md:col-span-2">
+        <ImageUploader 
+          imageUrl={formData.imageUrl}
+          onImageChange={handleImageChange}
+          error={errors.image}
+        />
       </div>
     </>
   );

@@ -1,6 +1,9 @@
 
 import * as z from 'zod';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 export const productFormSchema = z.object({
   name: z.string()
     .min(2, { message: 'اسم المنتج يجب أن يكون أكثر من حرفين' })
@@ -24,6 +27,14 @@ export const productFormSchema = z.object({
       // تاريخ أكبر من اليوم
       return selectedDate >= currentDate;
     }, { message: 'تاريخ الانتهاء يجب أن يكون بعد اليوم الحالي' }),
+  
+  image: z.instanceof(File)
+    .refine(file => file.size <= MAX_FILE_SIZE, { message: 'حجم الصورة يجب أن يكون أقل من 5 ميجابايت' })
+    .refine(file => ACCEPTED_IMAGE_TYPES.includes(file.type), { message: 'يجب أن تكون الصورة بصيغة JPEG أو PNG أو WebP' })
+    .nullable()
+    .optional(),
+  
+  imageUrl: z.string().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

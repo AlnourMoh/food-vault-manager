@@ -18,6 +18,7 @@ interface AddProductFormProps {
   formData: FormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
+  handleImageChange: (file: File | null, url: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
   categories: string[];
   setCategories: React.Dispatch<React.SetStateAction<string[]>>;
@@ -31,6 +32,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
   formData,
   handleInputChange,
   handleSelectChange,
+  handleImageChange,
   handleSubmit,
   categories,
   setCategories,
@@ -51,6 +53,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
             <ProductInfoFields 
               formData={formData} 
               handleInputChange={handleInputChange}
+              handleImageChange={handleImageChange}
               errors={errors} 
             />
             

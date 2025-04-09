@@ -44,6 +44,8 @@ const AddProducts = () => {
     unit: '',
     quantity: '',
     expiryDate: '',
+    image: null,
+    imageUrl: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +70,19 @@ const AddProducts = () => {
       setErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[name as keyof FormError];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleImageChange = (file: File | null, url: string) => {
+    setFormData(prev => ({ ...prev, image: file, imageUrl: url }));
+    
+    // Clear error when image is edited
+    if (errors.image) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.image;
         return newErrors;
       });
     }
@@ -127,6 +142,8 @@ const AddProducts = () => {
         unit: '',
         quantity: '',
         expiryDate: '',
+        image: null,
+        imageUrl: '',
       });
       
       setIsSubmitting(false);
@@ -146,6 +163,7 @@ const AddProducts = () => {
           formData={formData}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
+          handleImageChange={handleImageChange}
           handleSubmit={handleSubmit}
           categories={categories}
           setCategories={setCategories}
