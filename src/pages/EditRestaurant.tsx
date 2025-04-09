@@ -33,9 +33,9 @@ const EditRestaurant = () => {
         console.log('Fetching restaurant with ID:', id);
         
         // استخدام الاستعلام المباشر للحصول على بيانات المطعم
-        const { data: companies, error } = await supabase
+        const { data, error } = await supabase
           .from('companies')
-          .select('name, email, phone, address, manager')
+          .select('name, email, phone, address')
           .eq('id', id)
           .single();
 
@@ -44,15 +44,15 @@ const EditRestaurant = () => {
           throw error;
         }
 
-        console.log('Fetched restaurant data:', companies);
+        console.log('Fetched restaurant data:', data);
         
-        if (companies) {
+        if (data) {
           setRestaurantData({
-            name: companies.name,
-            email: companies.email,
-            phone: companies.phone,
-            address: companies.address,
-            manager: companies.manager || '',
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            address: data.address,
+            manager: '' // Set a default empty value since manager doesn't exist in companies table
           });
         }
       } catch (error: any) {
