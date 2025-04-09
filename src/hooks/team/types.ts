@@ -8,6 +8,11 @@ export interface StorageTeamState {
   lastAddedMember: TeamMemberFormData | null;
   phoneError: string | null;
   emailError: string | null;
+  setIsLoading: (isLoading: boolean) => void;
+  setTeamMembers: (members: StorageTeamMember[]) => void;
+  setLastAddedMember: (member: TeamMemberFormData | null) => void;
+  setPhoneError: (error: string | null) => void;
+  setEmailError: (error: string | null) => void;
 }
 
 export interface StorageTeamActions {
