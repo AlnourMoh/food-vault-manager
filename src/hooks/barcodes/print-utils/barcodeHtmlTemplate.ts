@@ -43,7 +43,6 @@ export const generateBarcodeHtml = ({
     <body>
       <div class="barcode-container">
         <div class="product-name">${productName || 'منتج غير معروف'}</div>
-        <div class="barcode-number">${barcode.qr_code}</div>
         <div class="barcode-image">
           ${barcodeImageHtml}
         </div>

@@ -1,4 +1,3 @@
-
 /**
  * Shared styles for barcode printing
  * This module contains reusable style generators for barcode print functionality
@@ -41,23 +40,19 @@ export const getBasePrintStyles = (): string => {
       text-overflow: ellipsis;
     }
     
-    .barcode-number {
-      text-align: center;
-      font-family: monospace;
-      width: 100%;
-    }
-    
     .barcode-image {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0;
-      border: 1px solid black;
+      width: 100%;
+      flex-grow: 1;
+      padding: 1mm 0;
     }
     
     .barcode-image svg {
       width: 100%;
       height: 100%;
+      object-fit: contain;
     }
     
     .product-id {
@@ -80,23 +75,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
       return `
         .product-name {
           font-size: 6pt;
-          margin-bottom: 0.3mm;
-        }
-        
-        .barcode-number {
-          font-size: 5pt;
-          margin: 0.5mm 0;
+          margin-bottom: 1mm;
         }
         
         .barcode-image {
-          height: 10mm;
-          width: 30mm;
+          height: 15mm;
+          width: 35mm;
           margin: 0.5mm 0;
         }
         
         .product-id {
           font-size: 4pt;
-          margin-top: 0.5mm;
+          margin-top: 1mm;
         }
       `;
     
@@ -104,23 +94,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
       return `
         .product-name {
           font-size: 8pt;
-          margin-bottom: 0.5mm;
-        }
-        
-        .barcode-number {
-          font-size: 7pt;
-          margin: 0.5mm 0;
+          margin-bottom: 1.5mm;
         }
         
         .barcode-image {
-          height: 14mm;
-          width: 40mm;
+          height: 20mm;
+          width: 45mm;
           margin: 1mm 0;
         }
         
         .product-id {
           font-size: 6pt;
-          margin-top: 0.5mm;
+          margin-top: 1.5mm;
         }
       `;
     
@@ -129,23 +114,18 @@ export const getSizeSpecificStyles = (labelSize: LabelSize): string => {
       return `
         .product-name {
           font-size: 10pt;
-          margin-bottom: 1mm;
-        }
-        
-        .barcode-number {
-          font-size: 9pt;
-          margin: 0.5mm 0;
+          margin-bottom: 2mm;
         }
         
         .barcode-image {
-          height: 25mm;
-          width: 60mm;
+          height: 35mm;
+          width: 65mm;
           margin: 2mm 0;
         }
         
         .product-id {
           font-size: 8pt;
-          margin-top: 0.5mm;
+          margin-top: 2mm;
         }
       `;
   }

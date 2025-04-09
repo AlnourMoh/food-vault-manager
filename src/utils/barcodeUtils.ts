@@ -27,37 +27,63 @@ export const generateBarcodesFromProduct = (product: any) => {
 
 // Generate a barcode SVG visual representation
 export const generateBarcodeImage = (code: string) => {
-  // Create a more complex visualization using the barcode string
+  // Create a linear barcode (EAN/UPC style) to match the provided image
   const barcodeDigits = code.replace(/\D/g, ''); // Only use numeric values
-  const barsCount = barcodeDigits.length * 2; // Each digit gets 2 bars
-  const svgWidth = barsCount * 3; // 3 pixels per bar
+  const svgWidth = 240; // Fixed width for the barcode
+  const svgHeight = 80; // Height including the digits below
+  const barcodeHeight = 60; // Height of just the bars
+  const digitHeight = 20; // Height of the digit area
+  
+  // Calculate bar widths
+  const spaceBetweenBars = 1;
+  const thinBarWidth = 2;
+  const thickBarWidth = 4;
+  const marginSide = 10;
   
   let bars = '';
-  let xPosition = 0;
+  let digits = '';
+  let xPosition = marginSide;
   
-  // Create alternating bars with varying widths based on the digits
+  // Create the barcode pattern
   for (let i = 0; i < barcodeDigits.length; i++) {
     const digit = parseInt(barcodeDigits[i]);
+    const digitX = xPosition + (i === 0 ? -2 : 0); // Adjust first digit position
     
-    // Bar width based on digit (1-3 pixels)
-    const width1 = (digit % 3) + 1;
-    const width2 = ((digit + 1) % 3) + 1;
+    // Add digit below the barcode
+    digits += `<text x="${digitX}" y="${barcodeHeight + 15}" font-family="Arial" font-size="12">${digit}</text>`;
+    
+    // Determine if we need thin or thick bar based on digit value
+    // Even digits get thin bars, odd digits get thick bars
+    const barWidth = digit % 2 === 0 ? thinBarWidth : thickBarWidth;
     
     // Add a black bar
-    bars += `<rect x="${xPosition}" y="0" width="${width1}" height="50" fill="black" />`;
-    xPosition += width1 + 1; // Add 1 pixel space
+    bars += `<rect x="${xPosition}" y="0" width="${barWidth}" height="${barcodeHeight}" fill="black" />`;
+    xPosition += barWidth + spaceBetweenBars;
     
-    // Add a white space (represented by not adding a bar)
-    xPosition += 2;
-    
-    // Add another black bar
-    bars += `<rect x="${xPosition}" y="0" width="${width2}" height="50" fill="black" />`;
-    xPosition += width2 + 1;
+    // Add a separator after every 6th digit (similar to the example image)
+    if (i === 6) {
+      xPosition += 6; // Extra space for the separator
+    }
   }
   
-  // Add border and return complete SVG
-  return `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} 50" xmlns="http://www.w3.org/2000/svg">
-    <rect x="0" y="0" width="${svgWidth}" height="50" fill="white" stroke="black" stroke-width="1" />
+  // Add guard bars (the longer bars at start, middle and end)
+  // Start guard bars
+  bars = `<rect x="${marginSide - 8}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />
+          <rect x="${marginSide - 4}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />` + bars;
+  
+  // Middle guard bars (after the 6th digit)
+  const middleX = marginSide + (thinBarWidth + spaceBetweenBars) * 12 + 2;
+  bars += `<rect x="${middleX}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />
+           <rect x="${middleX + 4}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />`;
+  
+  // End guard bars
+  bars += `<rect x="${svgWidth - marginSide - 8}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />
+           <rect x="${svgWidth - marginSide - 4}" y="0" width="${thinBarWidth}" height="${barcodeHeight + 5}" fill="black" />`;
+  
+  // Return the complete SVG
+  return `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="${svgWidth}" height="${svgHeight}" fill="white" />
     ${bars}
+    ${digits}
   </svg>`;
 };

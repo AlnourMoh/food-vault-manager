@@ -31,11 +31,7 @@ const BarcodeCard: React.FC<BarcodeCardProps> = ({
           {productName}
         </div>
         
-        <div className="text-sm sm:text-base font-mono my-1 sm:my-2 text-center overflow-hidden barcode-number">
-          {barcode.qr_code}
-        </div>
-        
-        <div className="border-2 border-black w-full flex-grow flex items-center justify-center my-1 sm:my-2 barcode-image">
+        <div className="border w-full flex-grow flex items-center justify-center my-1 sm:my-2 barcode-image p-2">
           <div 
             dangerouslySetInnerHTML={{ 
               __html: generateBarcodeImage(barcode.qr_code) 
