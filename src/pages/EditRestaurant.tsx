@@ -46,12 +46,21 @@ const EditRestaurant = () => {
         console.log('Fetched restaurant data:', data);
         
         if (data) {
+          // Use a type assertion to tell TypeScript we know the shape of the data
+          const restaurantData = data as {
+            name: string;
+            email: string;
+            phone: string;
+            address: string;
+            manager?: string;
+          };
+          
           setRestaurantData({
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            address: data.address,
-            manager: data.manager || '' // استخدام قيمة المدير من قاعدة البيانات أو إرجاع قيمة فارغة
+            name: restaurantData.name,
+            email: restaurantData.email,
+            phone: restaurantData.phone,
+            address: restaurantData.address,
+            manager: restaurantData.manager || '' // استخدام قيمة المدير من قاعدة البيانات أو إرجاع قيمة فارغة
           });
         }
       } catch (error: any) {
