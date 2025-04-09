@@ -1,7 +1,10 @@
 
-import { BarcodeScanner } from '@capacitor/barcode-scanner';
+import { Plugins } from '@capacitor/core';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+
+// Get the BarcodeScanner plugin
+const BarcodeScanner = Plugins.BarcodeScanner;
 
 export const useBarcodeScanner = () => {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
