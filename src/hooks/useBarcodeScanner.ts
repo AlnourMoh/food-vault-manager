@@ -1,5 +1,5 @@
 
-import { BarcodeScanner as CapacitorBarcodeScanner } from '@capacitor/barcode-scanner';
+import { BarcodeScanner } from '@capacitor/barcode-scanner';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,10 +12,10 @@ export const useBarcodeScanner = () => {
   // Check and request permissions
   const checkPermissions = async (): Promise<boolean> => {
     try {
-      const { granted } = await CapacitorBarcodeScanner.checkPermission({ force: false });
+      const { granted } = await BarcodeScanner.checkPermission({ force: false });
       
       if (!granted) {
-        const { granted } = await CapacitorBarcodeScanner.checkPermission({ force: true });
+        const { granted } = await BarcodeScanner.checkPermission({ force: true });
         
         if (granted) {
           setHasPermission(true);
@@ -55,10 +55,10 @@ export const useBarcodeScanner = () => {
       setIsScanning(true);
       
       // Make the background visible behind the scanner
-      await CapacitorBarcodeScanner.hideBackground();
+      await BarcodeScanner.hideBackground();
       
       // Start the scan process
-      const result = await CapacitorBarcodeScanner.startScan();
+      const result = await BarcodeScanner.startScan();
       
       if (result.hasContent) {
         setScannedCode(result.content);
@@ -84,7 +84,7 @@ export const useBarcodeScanner = () => {
   const stopScan = async () => {
     try {
       setIsScanning(false);
-      await CapacitorBarcodeScanner.stopScan();
+      await BarcodeScanner.stopScan();
     } catch (error) {
       console.error('Error stopping scan:', error);
     }
