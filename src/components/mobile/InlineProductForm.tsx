@@ -11,7 +11,6 @@ import ProductBarcodeInput from './ProductBarcodeInput';
 import ProductInfo from './ProductInfo';
 import ProductSubmitButton from './ProductSubmitButton';
 import EmptyProductState from './EmptyProductState';
-import BarcodeButton from './BarcodeButton';
 import RegisterProductForm from './RegisterProductForm';
 
 interface InlineProductFormProps {
@@ -54,18 +53,8 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
     handleRegisterProduct
   } = useProductRegistration();
 
-  // Handlers for add product form
-  const handleAddBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAddBarcode(e.target.value);
-  };
-
   const handleAddQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddQuantity(e.target.value);
-  };
-
-  // Handlers for remove product form
-  const handleRemoveBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRemoveBarcode(e.target.value);
   };
 
   const handleRemoveQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,8 +70,6 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
   if (!isRegisterForm) {
     const isScanning = isAddForm ? addScanning : removeScanning;
     const setScanning = isAddForm ? setAddScanning : setRemoveScanning;
-    const barcode = isAddForm ? addBarcode : removeBarcode;
-    const handleBarcodeChange = isAddForm ? handleAddBarcodeChange : handleRemoveBarcodeChange;
     const productInfo = isAddForm ? addProductInfo : removeProductInfo;
     const quantity = isAddForm ? addQuantity : removeQuantity;
     const handleQuantityChange = isAddForm ? handleAddQuantityChange : handleRemoveQuantityChange;
@@ -110,14 +97,7 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
             ) : (
               <>
                 <ProductBarcodeInput
-                  barcode={barcode}
-                  onChange={handleBarcodeChange}
                   onScan={() => setScanning(true)}
-                />
-                
-                <BarcodeButton 
-                  onClick={() => setScanning(true)}
-                  buttonText="مسح الباركود"
                 />
                 
                 {productInfo ? (

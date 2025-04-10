@@ -94,7 +94,7 @@ const MobileAddProduct = () => {
                     className="w-full bg-fvm-primary hover:bg-fvm-primary-light text-white py-3 flex items-center justify-center gap-2"
                   >
                     <ScanLine className="h-5 w-5" />
-                    <span>مسح باركود منتج جديد</span>
+                    <span>مسح باركود منتج</span>
                   </Button>
                 </div>
               </>
