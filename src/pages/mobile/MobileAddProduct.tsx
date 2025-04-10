@@ -1,196 +1,231 @@
-
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import BarcodeButton from '@/components/mobile/BarcodeButton';
-import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
+import { useNavigate } from 'react-router-dom';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
+import useDeviceDetection from '@/hooks/useDeviceDetection';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Camera, Check, X } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { BarcodeScanner } from '@/components/barcode/BarcodeScanner';
 
 const MobileAddProduct = () => {
+  const navigate = useNavigate();
+  const { isMobile } = useDeviceDetection();
   const { toast } = useToast();
-  const [productName, setProductName] = useState('');
-  const [category, setCategory] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [unit, setUnit] = useState('');
-  const { startScan, stopScan, isScanning, scannedCode, setScannedCode } = useBarcodeScanner();
-  
   const restaurantId = localStorage.getItem('restaurantId');
 
-  // Categories and units (sample data)
-  const categories = ['خضروات', 'فواكه', 'لحوم', 'بهارات', 'بقالة', 'أخرى'];
-  const units = ['كيلوجرام', 'جرام', 'لتر', 'قطعة', 'علبة', 'كرتون'];
-
-  // إيقاف المسح عند الخروج من الصفحة
-  useEffect(() => {
-    return () => {
-      if (isScanning) {
-        stopScan();
-      }
-    };
-  }, [isScanning, stopScan]);
+  const [scanning, setScanning] = useState(false);
+  const [barcode, setBarcode] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const [productInfo, setProductInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // When a barcode is scanned, we can either:
-    // 1. Populate a form field with the barcode
-    // 2. Fetch product info from the database based on the barcode
-    if (scannedCode) {
-      console.log("تم مسح الباركود:", scannedCode);
-      toast({
-        title: "تم مسح الباركود بنجاح",
-        description: `الرمز المقروء: ${scannedCode}`,
-      });
-      
-      // Here you would typically fetch product data based on the barcode
-      // For now, we'll just set a placeholder name
-      setProductName(`منتج ${scannedCode.substring(0, 6)}`);
+    if (barcode) {
+      fetchProductInfo(barcode);
     }
-  }, [scannedCode, toast]);
+  }, [barcode]);
 
-  const handleScanBarcode = async () => {
-    console.log("بدء مسح الباركود");
-    const code = await startScan();
-    console.log("نتيجة المسح:", code);
-    if (code) {
-      setScannedCode(code);
+  const fetchProductInfo = async (code: string) => {
+    setLoading(true);
+    try {
+      // Check if the product exists in the restaurant's inventory
+      const productRef = doc(db, `restaurants/${restaurantId}/products`, code);
+      const productSnap = await getDoc(productRef);
+      
+      if (productSnap.exists()) {
+        setProductInfo(productSnap.data());
+      } else {
+        toast({
+          title: "المنتج غير موجود",
+          description: "هذا المنتج غير مسجل في قاعدة البيانات",
+          variant: "destructive",
+        });
+        setProductInfo(null);
+      }
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      toast({
+        title: "خطأ في النظام",
+        description: "حدث خطأ أثناء البحث عن المنتج",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!productName || !category || !quantity || !unit) {
+  const handleScanResult = (result: string) => {
+    setBarcode(result);
+    setScanning(false);
+  };
+
+  const handleAddProduct = async () => {
+    if (!barcode || !productInfo) {
       toast({
-        title: "خطأ في البيانات",
-        description: "يرجى ملء جميع الحقول المطلوبة",
-        variant: "destructive"
+        title: "بيانات غير مكتملة",
+        description: "يرجى مسح الباركود أولاً",
+        variant: "destructive",
       });
       return;
     }
-    
-    // Here you would save the product to the database
-    console.log('Form submitted:', {
-      productName,
-      category,
-      quantity,
-      unit,
-      barcode: scannedCode,
-      restaurantId
-    });
-    
-    // Show success message
-    toast({
-      title: "تم إضافة المنتج بنجاح",
-      description: `تمت إضافة ${productName} إلى المخزون`,
-    });
-    
-    // Reset form
-    setProductName('');
-    setCategory('');
-    setQuantity('');
-    setUnit('');
-    setScannedCode(null);
+
+    if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
+      toast({
+        title: "كمية غير صالحة",
+        description: "يرجى إدخال كمية صالحة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Add transaction record
+      await addDoc(collection(db, `restaurants/${restaurantId}/transactions`), {
+        productId: barcode,
+        productName: productInfo.name,
+        quantity: Number(quantity),
+        type: 'add',
+        timestamp: serverTimestamp(),
+        userId: localStorage.getItem('userId') || 'unknown',
+        userName: localStorage.getItem('userName') || 'مستخدم غير معروف'
+      });
+
+      toast({
+        title: "تمت العملية بنجاح",
+        description: `تم إضافة ${quantity} ${productInfo.name} إلى المخزون`,
+        variant: "default",
+      });
+
+      // Reset form
+      setBarcode('');
+      setQuantity('1');
+      setProductInfo(null);
+      
+    } catch (error) {
+      console.error("Error adding product:", error);
+      toast({
+        title: "خطأ في النظام",
+        description: "حدث خطأ أثناء إضافة المنتج",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <RestaurantLayout>
-      <div className="rtl space-y-6 px-4">
-        <h1 className="text-2xl font-bold tracking-tight">إضافة منتج جديد</h1>
+    <RestaurantLayout hideSidebar={isMobile}>
+      <div className="rtl space-y-6">
+        <div className="flex items-center mb-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-1" 
+            onClick={() => navigate('/restaurant/mobile')}
+          >
+            <ArrowRight className="h-4 w-4" />
+            <span>رجوع</span>
+          </Button>
+          <h1 className="text-xl font-bold tracking-tight flex-1 text-center">إدخال منتج</h1>
+          <div className="w-20"></div> {/* للموازنة */}
+        </div>
         
-        <Card className="mx-auto">
-          <CardHeader>
-            <CardTitle className="text-xl">إدخال منتج جديد للمخزون</CardTitle>
-            <CardDescription>قم بمسح الباركود وإدخال بيانات المنتج</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form id="add-product-form" onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <BarcodeButton 
-                  onClick={handleScanBarcode}
-                  buttonText={scannedCode ? "إعادة مسح الباركود" : "مسح باركود المنتج"}
-                  className="w-full"
-                />
-                
-                {scannedCode && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-md text-center">
-                    <span className="text-green-800 text-sm">تم مسح الباركود: {scannedCode}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="productName">اسم المنتج</Label>
-                <Input 
-                  id="productName" 
-                  placeholder="أدخل اسم المنتج" 
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  required 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="category">التصنيف</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="اختر تصنيف المنتج" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">الكمية</Label>
-                  <Input 
-                    id="quantity" 
-                    type="number" 
-                    min="1" 
-                    placeholder="أدخل الكمية" 
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    required 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="unit">الوحدة</Label>
-                  <Select value={unit} onValueChange={setUnit}>
-                    <SelectTrigger id="unit">
-                      <SelectValue placeholder="اختر الوحدة" />
-                    </SelectTrigger>
-                    <SelectContent position="popper">
-                      {units.map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline">إلغاء</Button>
+        {scanning ? (
+          <div className="flex flex-col items-center">
+            <BarcodeScanner onScan={handleScanResult} />
             <Button 
-              type="submit" 
-              form="add-product-form" 
-              className="bg-fvm-primary hover:bg-fvm-primary-light"
+              variant="outline" 
+              className="mt-4" 
+              onClick={() => setScanning(false)}
             >
-              إضافة المنتج
+              <X className="mr-2 h-4 w-4" />
+              إلغاء المسح
             </Button>
-          </CardFooter>
-        </Card>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col space-y-2">
+                    <Label htmlFor="barcode">رمز الباركود</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="barcode"
+                        placeholder="مسح أو إدخال الباركود"
+                        value={barcode}
+                        onChange={(e) => setBarcode(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => setScanning(true)}
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {productInfo && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <h3 className="font-medium">معلومات المنتج:</h3>
+                        <p className="text-sm">الاسم: {productInfo.name}</p>
+                        <p className="text-sm">الوصف: {productInfo.description || 'غير متوفر'}</p>
+                        <p className="text-sm">
+                          تاريخ الانتهاء: {productInfo.expiryDate ? 
+                            format(new Date(productInfo.expiryDate.toDate()), 'PPP', { locale: ar }) : 
+                            'غير محدد'
+                          }
+                        </p>
+                      </div>
+                      <Separator />
+                      <div className="flex flex-col space-y-2">
+                        <Label htmlFor="quantity">الكمية</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          min="1"
+                          value={quantity}
+                          onChange={(e) => setQuantity(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {productInfo && (
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={handleAddProduct}
+                disabled={loading}
+              >
+                <Check className="mr-2 h-4 w-4" />
+                تأكيد إدخال المنتج
+              </Button>
+            )}
+
+            {!barcode && (
+              <div className="text-center p-4">
+                <p className="text-muted-foreground">قم بمسح الباركود لإدخال منتج للمخزون</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </RestaurantLayout>
   );

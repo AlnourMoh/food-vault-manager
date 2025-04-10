@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,6 +35,11 @@ const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// دالة للتحقق مما إذا كان الجهاز هو هاتف محمول
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -46,7 +52,11 @@ function App() {
           <BrowserRouter>
             <Routes>
               {/* Super Admin Routes */}
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={
+                isMobileDevice() && localStorage.getItem('isRestaurantLogin') === 'true'
+                  ? <Navigate to="/restaurant/mobile" replace />
+                  : <Index />
+              } />
               <Route path="/restaurants" element={<Restaurants />} />
               <Route path="/restaurants/add" element={<AddRestaurant />} />
               <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
@@ -69,7 +79,7 @@ function App() {
               {/* Protected Restaurant Routes */}
               <Route path="/restaurant/dashboard" element={
                 <RestaurantRoute>
-                  <RestaurantDashboard />
+                  {isMobileDevice() ? <Navigate to="/restaurant/mobile" replace /> : <RestaurantDashboard />}
                 </RestaurantRoute>
               } />
               <Route path="/restaurant/storage-team" element={

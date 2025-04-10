@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowDown, ArrowUp } from 'lucide-react';
+import useDeviceDetection from '@/hooks/useDeviceDetection';
 
 const MobileDashboard = () => {
   const navigate = useNavigate();
+  const { isMobile } = useDeviceDetection();
   
   const menuItems = [
     {
@@ -24,9 +26,9 @@ const MobileDashboard = () => {
   ];
 
   return (
-    <RestaurantLayout>
-      <div className="rtl space-y-6 px-4">
-        <h1 className="text-2xl font-bold tracking-tight">تطبيق إدارة المخزون</h1>
+    <RestaurantLayout hideSidebar={isMobile}>
+      <div className="rtl space-y-6 px-2">
+        <h1 className="text-2xl font-bold tracking-tight mb-6 text-center">تطبيق إدارة المخزون</h1>
         
         <div className="grid grid-cols-1 gap-4">
           {menuItems.map((item, index) => (

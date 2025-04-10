@@ -1,139 +1,206 @@
-
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import BarcodeButton from '@/components/mobile/BarcodeButton';
-import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
+import useDeviceDetection from '@/hooks/useDeviceDetection';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { db } from '@/firebase/config';
+import { doc, getDoc, updateDoc, increment, Timestamp, collection, addDoc } from 'firebase/firestore';
 
 const MobileRemoveProduct = () => {
+  const navigate = useNavigate();
+  const { isMobile } = useDeviceDetection();
   const { toast } = useToast();
-  const [reason, setReason] = useState('');
-  const { startScan, stopScan, isScanning, scannedCode, setScannedCode } = useBarcodeScanner();
-  const [productDetails, setProductDetails] = useState<any | null>(null);
+  const [barcode, setBarcode] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [product, setProduct] = useState<any>(null);
+  const [isScanning, setIsScanning] = useState(false);
   
-  // إيقاف المسح عند الخروج من الصفحة
-  useEffect(() => {
-    return () => {
-      if (isScanning) {
-        stopScan();
-      }
-    };
-  }, [isScanning, stopScan]);
-  
-  const handleScanBarcode = async () => {
-    console.log("بدء مسح الباركود للإخراج");
-    const code = await startScan();
-    console.log("نتيجة المسح للإخراج:", code);
-    if (code) {
-      setScannedCode(code);
-      
-      // Mock fetching product details - in a real app we would query the database
-      // using the barcode to get product details
-      setProductDetails({
-        id: `prod-${Math.floor(Math.random() * 1000)}`,
-        name: `منتج ${code.substring(0, 6)}`,
-        category: 'خضروات',
-        quantity: 5,
-        unit: 'كيلوجرام',
-        expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30) // 30 days from now
-      });
+  const restaurantId = localStorage.getItem('restaurantId');
+
+  const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBarcode(e.target.value);
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (value > 0) {
+      setQuantity(value);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!scannedCode || !productDetails) {
+  const handleScanBarcode = async () => {
+    if (!barcode) {
       toast({
-        title: "خطأ في البيانات",
-        description: "يجب مسح باركود المنتج أولاً",
-        variant: "destructive"
+        title: "خطأ",
+        description: "الرجاء إدخال الباركود",
+        variant: "destructive",
       });
       return;
     }
+
+    setIsLoading(true);
+    try {
+      // البحث عن المنتج باستخدام الباركود
+      const productsRef = collection(db, 'restaurants', restaurantId!, 'products');
+      const productSnapshot = await getDoc(doc(productsRef, barcode));
+      
+      if (productSnapshot.exists()) {
+        const productData = productSnapshot.data();
+        setProduct(productData);
+      } else {
+        toast({
+          title: "خطأ",
+          description: "لم يتم العثور على المنتج",
+          variant: "destructive",
+        });
+        setProduct(null);
+      }
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء البحث عن المنتج",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveProduct = async () => {
+    if (!product) return;
     
-    // Here you would update the database to remove the product
-    console.log('Removing product:', {
-      productId: productDetails.id,
-      barcode: scannedCode,
-      reason
-    });
-    
-    // Show success message
-    toast({
-      title: "تم إخراج المنتج بنجاح",
-      description: `تم إخراج ${productDetails.name} من المخزون`,
-    });
-    
-    // Reset form
-    setReason('');
-    setScannedCode(null);
-    setProductDetails(null);
+    if (product.quantity < quantity) {
+      toast({
+        title: "خطأ",
+        description: "الكمية المطلوبة أكبر من الكمية المتوفرة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const productRef = doc(db, 'restaurants', restaurantId!, 'products', barcode);
+      
+      // تحديث كمية المنتج
+      await updateDoc(productRef, {
+        quantity: increment(-quantity)
+      });
+      
+      // إضافة سجل للعملية
+      const logsRef = collection(db, 'restaurants', restaurantId!, 'logs');
+      await addDoc(logsRef, {
+        type: 'remove',
+        productId: barcode,
+        productName: product.name,
+        quantity: quantity,
+        timestamp: Timestamp.now(),
+        userId: localStorage.getItem('userId') || 'unknown',
+        userName: localStorage.getItem('userName') || 'unknown'
+      });
+      
+      toast({
+        title: "تم بنجاح",
+        description: `تم إخراج ${quantity} من ${product.name}`,
+      });
+      
+      // إعادة تعيين الحقول
+      setBarcode('');
+      setQuantity(1);
+      setProduct(null);
+    } catch (error) {
+      console.error("Error removing product:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إخراج المنتج",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <RestaurantLayout>
-      <div className="rtl space-y-6 px-4">
-        <h1 className="text-2xl font-bold tracking-tight">إخراج منتج</h1>
+    <RestaurantLayout hideSidebar={isMobile}>
+      <div className="rtl space-y-6">
+        <div className="flex items-center mb-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-1" 
+            onClick={() => navigate('/restaurant/mobile')}
+          >
+            <ArrowRight className="h-4 w-4" />
+            <span>رجوع</span>
+          </Button>
+          <h1 className="text-xl font-bold tracking-tight flex-1 text-center">إخراج منتج</h1>
+          <div className="w-20"></div> {/* للموازنة */}
+        </div>
         
-        <Card className="mx-auto">
-          <CardHeader>
-            <CardTitle className="text-xl">إخراج منتج من المخزون</CardTitle>
-            <CardDescription>قم بمسح الباركود لإخراج المنتج</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form id="remove-product-form" onSubmit={handleSubmit} className="space-y-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <BarcodeButton 
-                  onClick={handleScanBarcode}
-                  buttonText={scannedCode ? "إعادة مسح الباركود" : "مسح باركود المنتج"}
-                  className="w-full"
-                />
-                
-                {scannedCode && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-md text-center">
-                    <span className="text-green-800 text-sm">تم مسح الباركود: {scannedCode}</span>
-                  </div>
-                )}
+                <Label htmlFor="barcode">الباركود</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="barcode"
+                    placeholder="أدخل الباركود"
+                    value={barcode}
+                    onChange={handleBarcodeChange}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleScanBarcode} 
+                    disabled={isLoading || !barcode}
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "بحث"}
+                  </Button>
+                </div>
               </div>
               
-              {productDetails && (
-                <div className="p-4 bg-secondary rounded-md">
-                  <h3 className="font-medium mb-2">تفاصيل المنتج:</h3>
-                  <p>اسم المنتج: {productDetails.name}</p>
-                  <p>التصنيف: {productDetails.category}</p>
-                  <p>الكمية: {productDetails.quantity} {productDetails.unit}</p>
-                  <p>تاريخ انتهاء الصلاحية: {productDetails.expiryDate.toLocaleDateString('ar-SA')}</p>
+              {product && (
+                <div className="space-y-4 pt-4">
+                  <div className="grid gap-2">
+                    <Label>اسم المنتج</Label>
+                    <div className="rounded-md border p-2">{product.name}</div>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label>الكمية المتوفرة</Label>
+                    <div className="rounded-md border p-2">{product.quantity}</div>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="quantity">الكمية المراد إخراجها</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={handleQuantityChange}
+                    />
+                  </div>
+                  
+                  <Button 
+                    className="w-full" 
+                    onClick={handleRemoveProduct}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    إخراج المنتج
+                  </Button>
                 </div>
               )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="reason">سبب الإخراج</Label>
-                <Textarea 
-                  id="reason" 
-                  placeholder="أدخل سبب إخراج المنتج من المخزون" 
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  rows={3} 
-                />
-              </div>
-            </form>
+            </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline">إلغاء</Button>
-            <Button 
-              type="submit" 
-              form="remove-product-form" 
-              className="bg-fvm-primary hover:bg-fvm-primary-light"
-              disabled={!scannedCode || !productDetails}
-            >
-              إخراج المنتج
-            </Button>
-          </CardFooter>
         </Card>
       </div>
     </RestaurantLayout>
