@@ -13,6 +13,8 @@ export const authenticateTeamMember = async (
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
+  console.log("Authenticating with identifier:", identifier, "and password:", password);
+  
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
   // Get the team member ID associated with this identifier
@@ -20,7 +22,7 @@ export const authenticateTeamMember = async (
   
   // If we don't have a team member ID, authentication fails
   if (!teamMemberId) {
-    console.log("No associated team member found for this identifier");
+    console.log("Authentication failed: No associated team member found for this identifier");
     return {
       isFirstLogin: false
     };
@@ -29,25 +31,34 @@ export const authenticateTeamMember = async (
   // Get the stored password for this team member ID
   const storedPassword = localStorage.getItem(`userPassword:${teamMemberId}`);
   
+  // Create mock team member based on identifier
+  const mockTeamMember = createMockTeamMember(normalizedIdentifier);
+  
+  // For first login case, there may not be a password yet
+  if (!storedPassword) {
+    console.log("Authentication failed: No stored password found for this team member");
+    return {
+      isFirstLogin: true,
+      teamMember: mockTeamMember // Return the team member info for convenience
+    };
+  }
+  
   // If we have a stored password, verify it matches exactly
-  if (!storedPassword || storedPassword !== password) {
-    console.log("Password verification failed: Stored password doesn't match provided password");
+  if (storedPassword !== password) {
+    console.log("Authentication failed: Password doesn't match");
     return {
       isFirstLogin: false
     };
   }
   
-  // Create mock team member based on identifier
-  const mockTeamMember = createMockTeamMember(normalizedIdentifier);
-  
   // Only authenticate if we found a team member AND the password matches exactly
-  if (mockTeamMember && storedPassword === password) {
+  if (mockTeamMember) {
+    console.log("Authentication successful:", mockTeamMember.name);
+    
     // Save team member info in localStorage
     localStorage.setItem('teamMemberId', mockTeamMember.id);
     localStorage.setItem('teamMemberName', mockTeamMember.name);
-    
-    // Save the association between this identifier and the team member ID for future reference
-    localStorage.setItem(`teamMemberId:${normalizedIdentifier}`, mockTeamMember.id);
+    localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
     
     return {
       isFirstLogin: false,
@@ -55,6 +66,7 @@ export const authenticateTeamMember = async (
     };
   }
   
+  console.log("Authentication failed: Unknown reason");
   return {
     isFirstLogin: false,
   };

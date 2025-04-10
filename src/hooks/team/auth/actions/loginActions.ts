@@ -20,7 +20,7 @@ export function useLoginActions(
     password
   } = state;
   
-  const { setIsLoading } = setters;
+  const { setIsLoading, setLoginStep, setIsFirstLogin } = setters;
 
   // Get identifier based on the selected type
   const getIdentifier = () => {
@@ -50,6 +50,20 @@ export function useLoginActions(
     
     try {
       const authResult = await authenticateTeamMember(identifier, password);
+      
+      // Check if this is the first login and user hasn't set up password yet
+      if (authResult.isFirstLogin) {
+        toast({
+          title: "مستخدم جديد",
+          description: "يجب إنشاء كلمة مرور للمتابعة"
+        });
+        
+        // Move to setup password step for first-time users
+        setIsFirstLogin(true);
+        setLoginStep('setup');
+        setIsLoading(false);
+        return;
+      }
       
       if (authResult.teamMember) {
         // Successfully authenticated

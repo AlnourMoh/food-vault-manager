@@ -16,32 +16,40 @@ export function useTeamAuthState(): TeamAuthState & TeamAuthSetters {
 
   // Check for stored identifier at initialization
   useEffect(() => {
-    const storedIdentifier = localStorage.getItem('teamMemberIdentifier');
-    const storedPassword = localStorage.getItem('teamMemberPassword');
+    // Check if user is already logged in, if so don't do anything
+    const teamMemberId = localStorage.getItem('teamMemberId');
+    const teamMemberIdentifier = localStorage.getItem('teamMemberIdentifier');
     
-    // If user just completed setup and has a stored identifier and password
-    if (storedIdentifier && storedPassword) {
-      // Determine identifier type
-      if (storedIdentifier.includes('@')) {
-        setIdentifierType('email');
-        setEmail(storedIdentifier);
-      } else {
-        setIdentifierType('phone');
-        // Extract phone number without country code
-        if (storedIdentifier.startsWith('+')) {
-          const phoneWithoutPlus = storedIdentifier.substring(1);
-          const countryCode = phoneWithoutPlus.substring(0, 3);
-          const phoneNum = phoneWithoutPlus.substring(3);
-          setPhoneCountryCode(countryCode);
-          setPhoneNumber(phoneNum);
-        } else {
-          setPhoneNumber(storedIdentifier);
-        }
-      }
-      
-      // Move directly to password step
-      setLoginStep('password');
+    // If there's no stored identifier, stay at the identifier step
+    if (!teamMemberIdentifier) {
+      return;
     }
+    
+    // If user is already logged in, don't proceed
+    if (teamMemberId) {
+      return;
+    }
+    
+    // Determine identifier type and pre-fill the form
+    if (teamMemberIdentifier.includes('@')) {
+      setIdentifierType('email');
+      setEmail(teamMemberIdentifier);
+    } else {
+      setIdentifierType('phone');
+      // Extract phone number without country code
+      if (teamMemberIdentifier.startsWith('+')) {
+        const phoneWithoutPlus = teamMemberIdentifier.substring(1);
+        const countryCode = phoneWithoutPlus.substring(0, 3); // Assumes 3-digit country code
+        const phoneNum = phoneWithoutPlus.substring(3);
+        setPhoneCountryCode(countryCode);
+        setPhoneNumber(phoneNum);
+      } else {
+        setPhoneNumber(teamMemberIdentifier);
+      }
+    }
+    
+    // Move directly to password step
+    setLoginStep('password');
   }, []);
 
   return {

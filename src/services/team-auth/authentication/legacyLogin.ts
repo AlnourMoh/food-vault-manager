@@ -14,6 +14,7 @@ export const loginTeamMember = async (pin: string): Promise<boolean> => {
     // Store team member info in localStorage
     localStorage.setItem('teamMemberId', '123456');
     localStorage.setItem('teamMemberName', 'فريق المخزن');
+    localStorage.setItem('teamMemberIdentifier', 'legacy@example.com');
   }
   
   return success;

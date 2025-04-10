@@ -29,32 +29,47 @@ export const checkTeamMemberExists = async (
   const hasSetupPassword = teamMemberId ? 
     localStorage.getItem(`passwordSetup:${teamMemberId}`) === 'true' : false;
   
+  // If we already have a team member ID and they've set up a password, they're a returning user
+  if (teamMemberId && hasSetupPassword) {
+    console.log("Returning user identified:", teamMemberId);
+    return {
+      exists: true,
+      isFirstLogin: false,
+      hasSetupPassword: true,
+      teamMemberId
+    };
+  }
+  
   if (isEmailIdentifier(normalizedIdentifier)) {
     // Check email patterns
     if (isValidTestEmail(normalizedIdentifier)) {
-      const isFirstLogin = normalizedIdentifier.includes('demo') || 
-                          normalizedIdentifier.includes('test');
+      const isFirstLogin = !hasSetupPassword;
       
+      console.log("Valid email user identified. First login:", isFirstLogin);
       return {
         exists: true,
         isFirstLogin,
-        hasSetupPassword: hasSetupPassword,
+        hasSetupPassword,
         teamMemberId
       };
     }
   } else {
     // Check phone patterns
     if (isValidTestPhone(normalizedIdentifier)) {
+      const isFirstLogin = !hasSetupPassword;
+      
+      console.log("Valid phone user identified. First login:", isFirstLogin);
       return {
         exists: true,
-        isFirstLogin: true,
-        hasSetupPassword: hasSetupPassword,
+        isFirstLogin,
+        hasSetupPassword,
         teamMemberId
       };
     }
   }
   
   // Default response for non-matching identifiers
+  console.log("User not found for identifier:", normalizedIdentifier);
   return {
     exists: false,
     isFirstLogin: false,

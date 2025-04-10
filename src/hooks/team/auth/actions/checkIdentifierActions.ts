@@ -66,11 +66,22 @@ export function useCheckIdentifierActions(
         return;
       }
       
+      // Store the identifier for future use
+      localStorage.setItem('teamMemberIdentifier', identifier);
+      
       // User exists, determine if they need to set up password
       if (result.isFirstLogin && !result.hasSetupPassword) {
+        toast({
+          title: "مستخدم جديد",
+          description: "يجب إنشاء كلمة مرور للمتابعة"
+        });
         setIsFirstLogin(true);
         setLoginStep('setup');
       } else {
+        toast({
+          title: "مستخدم موجود",
+          description: "يرجى إدخال كلمة المرور للمتابعة"
+        });
         setLoginStep('password');
       }
       
