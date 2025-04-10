@@ -1,6 +1,7 @@
 
 import { TeamMember } from '../types';
 import { normalizeIdentifier, isEmailIdentifier } from '../identifierUtils';
+import { mockTeamMembers, mockPhoneUsers } from '../mockData';
 import { getTeamMemberIdFromIdentifier, createMockTeamMember } from './teamMemberUtils';
 
 /**
