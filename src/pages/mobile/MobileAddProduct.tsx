@@ -36,8 +36,8 @@ const MobileAddProduct = () => {
 
   const handleScanRegisteredProduct = (code: string) => {
     console.log("تم اختيار منتج مسجل للمسح:", code);
-    setBarcode(code);
-    handleScanResult(code);
+    setScanning(true);
+    setBarcode(code);  // Set barcode so it's ready after scanning
   };
 
   // إعداد البيانات الافتراضية للعرض التجريبي
@@ -47,35 +47,22 @@ const MobileAddProduct = () => {
     // تعيين معرف المطعم للعرض التجريبي إذا لم يكن موجوداً
     if (!localStorage.getItem('restaurantId')) {
       localStorage.setItem('restaurantId', 'restaurant-demo-123');
-      console.log("تم تعيين معرف مطعم افتراضي للعرض التجريبي");
     }
     
     // تعيين معرف المستخدم للعرض التجريبي إذا لم يكن موجوداً
     if (!localStorage.getItem('teamMemberId')) {
       localStorage.setItem('teamMemberId', 'user-demo-123');
-      console.log("تم تعيين معرف مستخدم افتراضي للعرض التجريبي");
     }
     
     // تعيين اسم عضو الفريق الافتراضي إذا لم يكن موجوداً
     if (!localStorage.getItem('teamMemberName')) {
       localStorage.setItem('teamMemberName', 'سارة الاحمد');
-      console.log("تم تعيين اسم عضو فريق افتراضي للعرض التجريبي");
     }
     
     // تعيين دور عضو الفريق الافتراضي إذا لم يكن موجودًا
     if (!localStorage.getItem('teamMemberRole')) {
       localStorage.setItem('teamMemberRole', 'عضو فريق');
-      console.log("تم تعيين دور عضو فريق افتراضي للعرض التجريبي");
     }
-  }, []);
-
-  // سجل الحالة عند التحميل
-  useEffect(() => {
-    console.log("صفحة إدخال المنتج - معلومات التهيئة:");
-    console.log("معرف المطعم في localStorage:", localStorage.getItem('restaurantId'));
-    console.log("معرف المستخدم في localStorage:", localStorage.getItem('teamMemberId'));
-    console.log("اسم عضو الفريق في localStorage:", localStorage.getItem('teamMemberName'));
-    console.log("دور عضو الفريق في localStorage:", localStorage.getItem('teamMemberRole'));
   }, []);
 
   return (
@@ -93,11 +80,28 @@ const MobileAddProduct = () => {
           />
         ) : (
           <div className="space-y-4">
-            <ProductBarcodeInput
-              barcode={barcode}
-              onChange={handleBarcodeChange}
-              onScan={() => setScanning(true)}
-            />
+            {!productInfo && (
+              <>
+                <Alert className="bg-blue-50 border-blue-200 mt-4">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertTitle className="text-blue-800 text-sm font-bold">منتجات تنتظر الإدخال</AlertTitle>
+                  <AlertDescription className="text-blue-700 text-xs">
+                    يجب مسح باركود المنتج لإضافته للمخزون
+                  </AlertDescription>
+                </Alert>
+
+                {/* Display registered products waiting to be added to inventory */}
+                <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />
+              </>
+            )}
+
+            {barcode && !scanning && (
+              <ProductBarcodeInput
+                barcode={barcode}
+                onChange={handleBarcodeChange}
+                onScan={() => setScanning(true)}
+              />
+            )}
 
             {productInfo ? (
               <>
@@ -116,20 +120,7 @@ const MobileAddProduct = () => {
                 />
               </>
             ) : (
-              <>
-                <EmptyProductState />
-                
-                <Alert className="bg-blue-50 border-blue-200 mt-4">
-                  <Info className="h-4 w-4 text-blue-600" />
-                  <AlertTitle className="text-blue-800 text-sm font-bold">منتجات تنتظر الإدخال</AlertTitle>
-                  <AlertDescription className="text-blue-700 text-xs">
-                    يمكنك مسح أي من المنتجات المسجلة أدناه لإضافتها للمخزون
-                  </AlertDescription>
-                </Alert>
-
-                {/* Display registered products waiting to be added to inventory */}
-                <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />
-              </>
+              barcode && !scanning && <EmptyProductState />
             )}
           </div>
         )}

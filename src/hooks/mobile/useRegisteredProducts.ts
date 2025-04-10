@@ -43,7 +43,7 @@ export const useRegisteredProducts = () => {
           barcode: '67890',
           status: 'active',
           addedBy: 'سارة الاحمد',
-          createdAt: new Date().toLocaleDateString('ar-SA')
+          createdAt: new Date(2025, 3, 25).toLocaleDateString('ar-SA')
         },
         {
           id: '54321',
@@ -54,7 +54,7 @@ export const useRegisteredProducts = () => {
           barcode: '54321',
           status: 'active',
           addedBy: 'سارة الاحمد',
-          createdAt: new Date().toLocaleDateString('ar-SA')
+          createdAt: new Date(2025, 3, 24).toLocaleDateString('ar-SA')
         },
         {
           id: '12345',
@@ -65,77 +65,12 @@ export const useRegisteredProducts = () => {
           barcode: '12345',
           status: 'active',
           addedBy: 'سارة الاحمد',
-          createdAt: new Date().toLocaleDateString('ar-SA')
+          createdAt: new Date(2025, 3, 23).toLocaleDateString('ar-SA')
         }
       ];
       
       console.log("تم تجهيز منتجات العرض التجريبي:", mockRegisteredProducts.length);
       setProducts(mockRegisteredProducts);
-      
-      /* 
-      // الكود الأصلي المعلق لاستخدامه عند توفر Firebase
-      const productsRef = collection(db, `restaurants/${restaurantId}/products`);
-      // Get products with zero quantity (registered but not added to inventory yet)
-      const productsQuery = query(productsRef, where("quantity", "==", 0));
-      const querySnapshot = await getDocs(productsQuery);
-
-      if (querySnapshot.empty) {
-        setProducts([]);
-      } else {
-        const registeredProducts: RegisteredProduct[] = [];
-        querySnapshot.docs.forEach((doc) => {
-          const productData = doc.data();
-          
-          // Handle Firebase Timestamp conversion properly
-          let formattedDate: string | undefined;
-          if (productData.created_at) {
-            // Check if it's a Firebase timestamp (has toDate method)
-            if (typeof productData.created_at.toDate === 'function') {
-              // Convert Firebase timestamp to JS Date
-              const dateObj = productData.created_at.toDate();
-              // Format the JS Date
-              formattedDate = dateObj.toLocaleDateString('ar-SA');
-            } else if (productData.created_at instanceof Date) {
-              // Handle if it's already a Date
-              formattedDate = productData.created_at.toLocaleDateString('ar-SA');
-            } else if (typeof productData.created_at === 'string' || typeof productData.created_at === 'number') {
-              // Handle if it's a string or number
-              formattedDate = new Date(productData.created_at).toLocaleDateString('ar-SA');
-            } else {
-              // Fallback for other cases
-              console.warn('Unexpected date format:', productData.created_at);
-              formattedDate = undefined;
-            }
-          }
-            
-          registeredProducts.push({
-            id: doc.id,
-            name: productData.name,
-            category: productData.category,
-            unit: productData.unit || 'قطعة',
-            quantity: productData.quantity || 0,
-            barcode: doc.id, // Use document ID as barcode
-            status: productData.status || 'active',
-            addedBy: productData.addedBy || 'غير معروف',
-            createdAt: formattedDate
-          });
-        });
-        
-        // Sort by creation date, newest first
-        registeredProducts.sort((a, b) => {
-          if (!a.createdAt || !b.createdAt) return 0;
-          // Safe way to compare the date strings
-          try {
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          } catch (error) {
-            console.warn('Error sorting dates:', error);
-            return 0;
-          }
-        });
-        
-        setProducts(registeredProducts);
-      }
-      */
     } catch (error) {
       console.error("Error fetching registered products:", error);
       toast({

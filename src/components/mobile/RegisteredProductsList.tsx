@@ -13,8 +13,6 @@ interface RegisteredProductsListProps {
 const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanProduct }) => {
   const { products, loading, refreshProducts } = useRegisteredProducts();
 
-  console.log("المنتجات المسجلة في RegisteredProductsList:", products); // سجل لفحص البيانات
-
   // تنفيذ تحديث أول عند تحميل المكون
   useEffect(() => {
     console.log("تحديث المنتجات المسجلة عند تحميل المكون");
@@ -116,7 +114,7 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onScan }) => {
         buttonText={
           <div className="flex items-center gap-1">
             <ScanBarcode className="h-4 w-4" />
-            <span>مسح</span>
+            <span>مسح باركود</span>
           </div>
         } 
         className="px-3 py-1 text-sm"

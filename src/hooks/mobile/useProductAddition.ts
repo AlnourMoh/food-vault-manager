@@ -91,28 +91,6 @@ export const useProductAddition = () => {
         });
         setProductInfo(null);
       }
-      
-      /* 
-      // الكود الأصلي للاستخدام مع Firebase
-      const productRef = doc(db, `restaurants/${restaurantId}/products`, code);
-      const productSnap = await getDoc(productRef);
-      
-      if (productSnap.exists()) {
-        console.log("Product found:", productSnap.data());
-        setProductInfo({
-          ...productSnap.data(),
-          id: code
-        });
-      } else {
-        console.log("Product not found in database");
-        toast({
-          title: "المنتج غير موجود",
-          description: "هذا المنتج غير مسجل في قاعدة البيانات",
-          variant: "destructive"
-        });
-        setProductInfo(null);
-      }
-      */
     } catch (error) {
       console.error("Error fetching product:", error);
       toast({
@@ -166,40 +144,6 @@ export const useProductAddition = () => {
       setBarcode('');
       setQuantity('1');
       setProductInfo(null);
-      
-      /* 
-      // الكود الأصلي للاستخدام مع Firebase
-      // Update product quantity in the database
-      const productRef = doc(db, `restaurants/${restaurantId}/products`, barcode);
-      await updateDoc(productRef, {
-        quantity: increment(Number(quantity)),
-        updated_at: serverTimestamp()
-      });
-      
-      // Add transaction record
-      const transactionsRef = collection(db, `restaurants/${restaurantId}/transactions`);
-      await addDoc(transactionsRef, {
-        productId: barcode,
-        productName: productInfo.name,
-        quantity: Number(quantity),
-        type: 'add',
-        timestamp: serverTimestamp(),
-        userId: localStorage.getItem('teamMemberId') || 'unknown',
-        userName: localStorage.getItem('teamMemberName') || 'مستخدم غير معروف'
-      });
-      
-      toast({
-        title: "تمت العملية بنجاح",
-        description: `تم إضافة ${quantity} ${productInfo.name} إلى المخزون`,
-        variant: "default",
-      });
-
-      // Reset form
-      setBarcode('');
-      setQuantity('1');
-      setProductInfo(null);
-      */
-      
     } catch (error) {
       console.error("Error adding product:", error);
       toast({

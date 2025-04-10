@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { BarcodeScanner as BarcodeScannerComponent } from '@/components/barcode/BarcodeScanner';
 import { Button } from '@/components/ui/button';
 import { X, ArrowRight } from 'lucide-react';
@@ -13,8 +13,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   onScanResult,
   onCancel
 }) => {
-  const [manualCode, setManualCode] = useState('');
-
   const handleScan = (code: string) => {
     if (code && code.trim()) {
       onScanResult(code);
