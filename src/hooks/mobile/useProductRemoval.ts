@@ -13,9 +13,10 @@ interface Product {
 export const useProductRemoval = () => {
   const { toast } = useToast();
   const [barcode, setBarcode] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [product, setProduct] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState('1');
+  const [scanning, setScanning] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [productInfo, setProductInfo] = useState<Product | null>(null);
   const restaurantId = localStorage.getItem('restaurantId');
 
   const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,38 +24,34 @@ export const useProductRemoval = () => {
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (value > 0) {
-      setQuantity(value);
-    }
+    setQuantity(e.target.value);
   };
 
-  const handleScanBarcode = async () => {
-    if (!barcode) {
-      toast({
-        title: "خطأ",
-        description: "الرجاء إدخال الباركود",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleScanResult = (result: string) => {
+    setBarcode(result);
+    setScanning(false);
+    fetchProductInfo(result);
+  };
 
-    setIsLoading(true);
+  const fetchProductInfo = async (code: string) => {
+    if (!code) return;
+    
+    setLoading(true);
     try {
-      // البحث عن المنتج باستخدام الباركود
-      const productsRef = collection(doc(collection(doc("dbs"), 'restaurants'), restaurantId || ''), 'products');
-      const productSnapshot = await getDoc(doc(productsRef, barcode));
+      // Check if the product exists in the restaurant's inventory
+      const productRef = doc(collection(doc(collection(doc("dbs"), 'restaurants'), restaurantId || ''), 'products'), code);
+      const productSnapshot = await getDoc(productRef);
       
       if (productSnapshot.exists()) {
         const productData = productSnapshot.data();
-        setProduct({ id: barcode, ...productData } as Product);
+        setProductInfo({ id: code, ...productData } as Product);
       } else {
         toast({
           title: "خطأ",
           description: "لم يتم العثور على المنتج",
           variant: "destructive",
         });
-        setProduct(null);
+        setProductInfo(null);
       }
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -64,14 +61,24 @@ export const useProductRemoval = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const handleRemoveProduct = async () => {
-    if (!product) return;
+    if (!productInfo) return;
     
-    if (product.quantity < quantity) {
+    const quantityNum = parseInt(quantity);
+    if (isNaN(quantityNum) || quantityNum <= 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال كمية صالحة",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (productInfo.quantity < quantityNum) {
       toast({
         title: "خطأ",
         description: "الكمية المطلوبة أكبر من الكمية المتوفرة",
@@ -80,13 +87,13 @@ export const useProductRemoval = () => {
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const productRef = doc(doc(collection(doc("dbs"), 'restaurants'), restaurantId || ''), 'products', barcode);
+      const productRef = doc(collection(doc(collection(doc("dbs"), 'restaurants'), restaurantId || ''), 'products'), barcode);
       
       // تحديث كمية المنتج
       await updateDoc(productRef, {
-        quantity: increment(-quantity)
+        quantity: increment(-quantityNum)
       });
       
       // إضافة سجل للعملية
@@ -94,8 +101,8 @@ export const useProductRemoval = () => {
       await addDoc(logsRef, {
         type: 'remove',
         productId: barcode,
-        productName: product.name,
-        quantity: quantity,
+        productName: productInfo.name,
+        quantity: quantityNum,
         timestamp: Timestamp.now(),
         userId: localStorage.getItem('userId') || 'unknown',
         userName: localStorage.getItem('userName') || 'unknown'
@@ -103,7 +110,7 @@ export const useProductRemoval = () => {
       
       toast({
         title: "تم بنجاح",
-        description: `تم إخراج ${quantity} من ${product.name}`
+        description: `تم إخراج ${quantityNum} من ${productInfo.name}`
       });
       
       // إعادة تعيين الحقول
@@ -116,25 +123,28 @@ export const useProductRemoval = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const resetForm = () => {
     setBarcode('');
-    setQuantity(1);
-    setProduct(null);
+    setQuantity('1');
+    setProductInfo(null);
   };
 
   return {
     barcode,
     quantity,
-    isLoading,
-    product,
+    loading,
+    scanning,
+    setScanning,
+    productInfo,
     handleBarcodeChange,
     handleQuantityChange,
-    handleScanBarcode,
+    handleScanResult,
     handleRemoveProduct,
-    setBarcode
+    setBarcode,
+    setQuantity
   };
 };

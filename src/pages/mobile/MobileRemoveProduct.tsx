@@ -20,6 +20,8 @@ const MobileRemoveProduct = () => {
     setQuantity,
     productInfo,
     loading,
+    handleBarcodeChange,
+    handleQuantityChange,
     handleScanResult,
     handleRemoveProduct
   } = useProductRemoval();
@@ -38,19 +40,23 @@ const MobileRemoveProduct = () => {
           <>
             <ProductBarcodeInput
               barcode={barcode}
-              setBarcode={setBarcode}
+              onChange={handleBarcodeChange}
+              onScan={() => setScanning(true)}
             />
             
-            <BarcodeButton onClick={() => setScanning(true)} />
+            <BarcodeButton 
+              onClick={() => setScanning(true)} 
+              buttonText="مسح الباركود"
+            />
             
             {productInfo ? (
               <>
                 <ProductInfo 
                   productInfo={productInfo}
                   quantity={quantity}
-                  setQuantity={setQuantity}
+                  onQuantityChange={handleQuantityChange}
                   action="إخراج"
-                  showMaxQuantity
+                  showMaxQuantity={true}
                 />
                 
                 <ProductSubmitButton 

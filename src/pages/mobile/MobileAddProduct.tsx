@@ -24,6 +24,14 @@ const MobileAddProduct = () => {
     handleAddProduct
   } = useProductAddition();
 
+  const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBarcode(e.target.value);
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(e.target.value);
+  };
+
   return (
     <RestaurantLayout hideSidebar={true}>
       <div className="rtl space-y-6 p-2">
@@ -38,17 +46,21 @@ const MobileAddProduct = () => {
           <>
             <ProductBarcodeInput
               barcode={barcode}
-              setBarcode={setBarcode}
+              onChange={handleBarcodeChange}
+              onScan={() => setScanning(true)}
             />
             
-            <BarcodeButton onClick={() => setScanning(true)} />
+            <BarcodeButton 
+              onClick={() => setScanning(true)}
+              buttonText="مسح الباركود"
+            />
             
             {productInfo ? (
               <>
                 <ProductInfo 
                   productInfo={productInfo}
                   quantity={quantity}
-                  setQuantity={setQuantity}
+                  onQuantityChange={handleQuantityChange}
                   action="إضافة"
                 />
                 

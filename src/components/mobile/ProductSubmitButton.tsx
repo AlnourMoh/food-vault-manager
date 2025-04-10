@@ -6,11 +6,13 @@ import { Check } from 'lucide-react';
 interface ProductSubmitButtonProps {
   onClick: () => void;
   disabled: boolean;
+  label?: string;
 }
 
 const ProductSubmitButton: React.FC<ProductSubmitButtonProps> = ({
   onClick,
-  disabled
+  disabled,
+  label = "تأكيد إدخال المنتج"
 }) => {
   return (
     <Button 
@@ -19,7 +21,7 @@ const ProductSubmitButton: React.FC<ProductSubmitButtonProps> = ({
       disabled={disabled}
     >
       <Check className="mr-2 h-4 w-4" />
-      تأكيد إدخال المنتج
+      {label}
     </Button>
   );
 };

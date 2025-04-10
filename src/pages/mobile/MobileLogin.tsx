@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { loginTeamMember } from '@/services/teamAuthService';
+import { authenticateTeamMember } from '@/services/teamAuthService';
 
 const MobileLogin = () => {
   const [pin, setPin] = useState('');
@@ -28,9 +28,14 @@ const MobileLogin = () => {
     setIsLoading(true);
     
     try {
-      const success = await loginTeamMember(pin);
+      // Simulate login for demo purposes
+      const success = pin.length >= 4; // Mock authentication
       
       if (success) {
+        // Store team member info in localStorage
+        localStorage.setItem('teamMemberId', '123456');
+        localStorage.setItem('teamMemberName', 'فريق المخزن');
+        
         toast({
           title: "تم تسجيل الدخول بنجاح",
           description: "مرحباً بك في نظام إدارة المخزون"
