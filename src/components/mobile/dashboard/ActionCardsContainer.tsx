@@ -1,21 +1,39 @@
 
-import React, { useState } from 'react';
-import { ArrowDownToLine, ArrowRightLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowDownToLine, ArrowRightLeft, Plus } from 'lucide-react';
 import ActionCard from './ActionCard';
 import InlineProductForm from '../InlineProductForm';
 
 const ActionCardsContainer: React.FC = () => {
-  const [activeForm, setActiveForm] = useState<'add' | 'remove' | null>(null);
+  const [activeForm, setActiveForm] = useState<'add' | 'remove' | 'register' | null>(null);
+  const [userRole, setUserRole] = useState<string>('');
 
-  const handleCardClick = (formType: 'add' | 'remove') => {
+  useEffect(() => {
+    // Get the user role from localStorage
+    const role = localStorage.getItem('teamMemberRole') || '';
+    setUserRole(role);
+  }, []);
+
+  const handleCardClick = (formType: 'add' | 'remove' | 'register') => {
     setActiveForm(currentForm => currentForm === formType ? null : formType);
   };
+
+  const isSystemAdmin = userRole === 'إدارة النظام';
 
   return (
     <>
       <h2 className="text-lg font-medium mb-3">إدارة المخزون</h2>
       
       <div className="grid grid-cols-2 gap-4">
+        {isSystemAdmin && (
+          <ActionCard 
+            icon={Plus} 
+            title="تسجيل منتج جديد" 
+            iconColor="text-blue-600"
+            onClick={() => handleCardClick('register')}
+          />
+        )}
+        
         <ActionCard 
           icon={ArrowDownToLine} 
           title="إدخال منتج" 

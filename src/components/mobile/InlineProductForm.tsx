@@ -5,15 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useProductAddition } from '@/hooks/mobile/useProductAddition';
 import { useProductRemoval } from '@/hooks/mobile/useProductRemoval';
+import { useProductRegistration } from '@/hooks/mobile/useProductRegistration';
 import BarcodeScanner from './BarcodeScanner';
 import ProductBarcodeInput from './ProductBarcodeInput';
 import ProductInfo from './ProductInfo';
 import ProductSubmitButton from './ProductSubmitButton';
 import EmptyProductState from './EmptyProductState';
 import BarcodeButton from './BarcodeButton';
+import RegisterProductForm from './RegisterProductForm';
 
 interface InlineProductFormProps {
-  formType: 'add' | 'remove';
+  formType: 'add' | 'remove' | 'register';
   onClose: () => void;
 }
 
@@ -46,6 +48,12 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
     handleRemoveProduct
   } = useProductRemoval();
 
+  // For Register Product Form (System Admin)
+  const {
+    loading: registerLoading,
+    handleRegisterProduct
+  } = useProductRegistration();
+
   // Handlers for add product form
   const handleAddBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddBarcode(e.target.value);
@@ -66,69 +74,93 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
 
   // Determine which form to show
   const isAddForm = formType === 'add';
-  const isScanning = isAddForm ? addScanning : removeScanning;
-  const setScanning = isAddForm ? setAddScanning : setRemoveScanning;
-  const barcode = isAddForm ? addBarcode : removeBarcode;
-  const handleBarcodeChange = isAddForm ? handleAddBarcodeChange : handleRemoveBarcodeChange;
-  const productInfo = isAddForm ? addProductInfo : removeProductInfo;
-  const quantity = isAddForm ? addQuantity : removeQuantity;
-  const handleQuantityChange = isAddForm ? handleAddQuantityChange : handleRemoveQuantityChange;
-  const loading = isAddForm ? addLoading : removeLoading;
-  const handleScanResult = isAddForm ? handleAddScanResult : handleRemoveScanResult;
-  const handleSubmit = isAddForm ? handleAddProduct : handleRemoveProduct;
+  const isRemoveForm = formType === 'remove';
+  const isRegisterForm = formType === 'register';
+  
+  // Only for add and remove forms
+  if (!isRegisterForm) {
+    const isScanning = isAddForm ? addScanning : removeScanning;
+    const setScanning = isAddForm ? setAddScanning : setRemoveScanning;
+    const barcode = isAddForm ? addBarcode : removeBarcode;
+    const handleBarcodeChange = isAddForm ? handleAddBarcodeChange : handleRemoveBarcodeChange;
+    const productInfo = isAddForm ? addProductInfo : removeProductInfo;
+    const quantity = isAddForm ? addQuantity : removeQuantity;
+    const handleQuantityChange = isAddForm ? handleAddQuantityChange : handleRemoveQuantityChange;
+    const loading = isAddForm ? addLoading : removeLoading;
+    const handleScanResult = isAddForm ? handleAddScanResult : handleRemoveScanResult;
+    const handleSubmit = isAddForm ? handleAddProduct : handleRemoveProduct;
 
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg">
+            {isAddForm ? 'إدخال منتج' : 'إخراج منتج'}
+          </CardTitle>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {isScanning ? (
+              <BarcodeScanner 
+                onScanResult={handleScanResult}
+                onCancel={() => setScanning(false)}
+              />
+            ) : (
+              <>
+                <ProductBarcodeInput
+                  barcode={barcode}
+                  onChange={handleBarcodeChange}
+                  onScan={() => setScanning(true)}
+                />
+                
+                <BarcodeButton 
+                  onClick={() => setScanning(true)}
+                  buttonText="مسح الباركود"
+                />
+                
+                {productInfo ? (
+                  <>
+                    <ProductInfo 
+                      productInfo={productInfo}
+                      quantity={quantity}
+                      onQuantityChange={handleQuantityChange}
+                      action={isAddForm ? "إضافة" : "إخراج"}
+                      showMaxQuantity={!isAddForm}
+                    />
+                    
+                    <ProductSubmitButton 
+                      onClick={handleSubmit}
+                      disabled={loading || (!isAddForm && (removeProductInfo?.quantity === 0))}
+                      label={isAddForm ? "تأكيد إدخال المنتج" : "تأكيد إخراج المنتج"}
+                    />
+                  </>
+                ) : (
+                  <EmptyProductState />
+                )}
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // For register form
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg">
-          {isAddForm ? 'إدخال منتج' : 'إخراج منتج'}
-        </CardTitle>
+        <CardTitle className="text-lg">تسجيل منتج جديد</CardTitle>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {isScanning ? (
-            <BarcodeScanner 
-              onScanResult={handleScanResult}
-              onCancel={() => setScanning(false)}
-            />
-          ) : (
-            <>
-              <ProductBarcodeInput
-                barcode={barcode}
-                onChange={handleBarcodeChange}
-                onScan={() => setScanning(true)}
-              />
-              
-              <BarcodeButton 
-                onClick={() => setScanning(true)}
-                buttonText="مسح الباركود"
-              />
-              
-              {productInfo ? (
-                <>
-                  <ProductInfo 
-                    productInfo={productInfo}
-                    quantity={quantity}
-                    onQuantityChange={handleQuantityChange}
-                    action={isAddForm ? "إضافة" : "إخراج"}
-                    showMaxQuantity={!isAddForm}
-                  />
-                  
-                  <ProductSubmitButton 
-                    onClick={handleSubmit}
-                    disabled={loading || (!isAddForm && (removeProductInfo?.quantity === 0))}
-                    label={isAddForm ? "تأكيد إدخال المنتج" : "تأكيد إخراج المنتج"}
-                  />
-                </>
-              ) : (
-                <EmptyProductState />
-              )}
-            </>
-          )}
-        </div>
+        <RegisterProductForm 
+          onSubmit={handleRegisterProduct}
+          loading={registerLoading}
+        />
       </CardContent>
     </Card>
   );

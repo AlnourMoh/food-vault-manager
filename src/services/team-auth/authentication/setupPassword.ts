@@ -35,6 +35,12 @@ export const setupTeamMemberPassword = async (
     // Save the current identifier for subsequent login
     localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
     
+    // Store team member info in localStorage for immediate login
+    localStorage.setItem('teamMemberId', teamMember.id);
+    localStorage.setItem('teamMemberName', teamMember.name);
+    localStorage.setItem('restaurantId', teamMember.restaurantId);
+    localStorage.setItem('teamMemberRole', teamMember.role);
+    
     console.log("Password setup complete for team member:", teamMember.name);
     
     return teamMember;
