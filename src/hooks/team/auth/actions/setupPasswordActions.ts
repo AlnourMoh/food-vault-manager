@@ -21,7 +21,12 @@ export function useSetupPasswordActions(
     confirmPassword
   } = state;
   
-  const { setIsLoading } = setters;
+  const { 
+    setIsLoading, 
+    setLoginStep,
+    setPassword,
+    setConfirmPassword
+  } = setters;
 
   // Get identifier based on the selected type
   const getIdentifier = () => {
@@ -65,8 +70,11 @@ export function useSetupPasswordActions(
         description: `مرحباً بك ${teamMember.name}`
       });
       
-      // Direct login after setup - no need to ask for identifier again
-      navigate('/restaurant/mobile');
+      // Reset password fields and return to login screen instead of direct login
+      setPassword('');
+      setConfirmPassword('');
+      setLoginStep('password');
+      
     } catch (error) {
       toast({
         title: "حدث خطأ",

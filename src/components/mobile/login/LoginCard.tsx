@@ -53,7 +53,7 @@ const LoginCard: React.FC<LoginCardProps> = (props) => {
               : "أدخل رقم الهاتف"
             : loginStep === 'setup' 
               ? "أنشئ كلمة مرور للدخول إلى النظام" 
-              : "أدخل كلمة المرور الخاصة بك"}
+              : "أدخل كلمة المرور للمتابعة"}
         </CardDescription>
       </CardHeader>
       <CardContent>

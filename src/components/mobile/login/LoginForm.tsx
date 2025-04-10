@@ -64,10 +64,15 @@ const LoginForm: React.FC<LoginFormProps> = ({
     }
   };
   
-  // Check if we already have an identifier stored from setup
+  // Check if we have a stored identifier from previous setup
   const hasStoredIdentifier = React.useMemo(() => {
     return !!localStorage.getItem('teamMemberIdentifier');
   }, []);
+
+  // Display the identifier that's being used in the password and setup steps
+  const displayIdentifier = identifierType === 'email' 
+    ? email 
+    : `+${phoneCountryCode}${phoneNumber}`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,11 +101,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
       
       {loginStep !== 'identifier' && (
         <>
-          {!hasStoredIdentifier && loginStep === 'password' && (
-            <div className="text-center mb-4 text-sm text-gray-500">
-              {identifierType === 'email' ? email : `+${phoneCountryCode}${phoneNumber}`}
-            </div>
-          )}
+          <div className="text-center mb-4 text-sm text-gray-500">
+            {displayIdentifier}
+          </div>
           <div className="space-y-2">
             <PasswordInput
               password={password}
@@ -139,7 +142,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         }
       </Button>
       
-      {loginStep !== 'identifier' && !hasStoredIdentifier && (
+      {loginStep !== 'identifier' && (
         <Button
           type="button"
           variant="ghost"

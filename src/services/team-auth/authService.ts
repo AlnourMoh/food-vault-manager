@@ -1,4 +1,3 @@
-
 import { CheckIdentifierResult, AuthenticateResult, TeamMember } from './types';
 import { mockTeamMembers, mockPhoneUsers } from './mockData';
 import { normalizeIdentifier, isValidTestEmail, isValidTestPhone, isEmailIdentifier } from './identifierUtils';
@@ -127,11 +126,10 @@ export const setupTeamMemberPassword = async (
     mockTeamMember = { ...mockPhoneUsers[userKey] };
   }
   
-  // Save team member info in localStorage
-  localStorage.setItem('teamMemberId', mockTeamMember.id);
-  localStorage.setItem('teamMemberName', mockTeamMember.name);
+  // Save team member identifier and password for subsequent login
+  // BUT don't save the user ID or name - only save the auth information
   localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
-  localStorage.setItem('teamMemberPassword', password); // Store password for demo purposes
+  localStorage.setItem('teamMemberPassword', password); // Store password for demo purposes only
   
   return mockTeamMember;
 };
