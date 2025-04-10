@@ -7,6 +7,8 @@ export function useMobileDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Get the authenticated team member's name from localStorage
+  // This was set during authentication in authenticateTeamMember function
   const teamMemberName = localStorage.getItem('teamMemberName') || 'فريق المخزن';
 
   const handleLogout = () => {

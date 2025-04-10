@@ -56,7 +56,7 @@ export const authenticateTeamMember = async (
   if (mockTeamMember) {
     console.log("Authentication successful:", mockTeamMember.name);
     
-    // Save team member info in localStorage
+    // Save team member info in localStorage with correct information
     localStorage.setItem('teamMemberId', mockTeamMember.id);
     localStorage.setItem('teamMemberName', mockTeamMember.name);
     localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
