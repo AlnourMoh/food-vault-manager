@@ -45,11 +45,40 @@ export const checkTeamMemberExists = async (
   
   console.log("Checking identifier:", identifier);
   
-  // التعامل مع جميع الأرقام مع أكواد الدول المختلفة
+  // تطبيع المُعرف (تحويل إلى حروف صغيرة وإزالة المسافات)
   const normalizedIdentifier = identifier.replace(/\s+/g, '').toLowerCase();
   
-  // For demo purposes:
-  // طريقة أكثر مرونة للتعامل مع أرقام الهواتف بمفاتيح الدول المختلفة
+  // في الوضع التجريبي، سنجعل التطبيق أكثر مرونة للاختبار
+  
+  // أي بريد إلكتروني يحتوي على "test" أو "demo" أو "admin"
+  if (
+    normalizedIdentifier.includes('test') || 
+    normalizedIdentifier.includes('demo') || 
+    normalizedIdentifier.includes('admin') ||
+    normalizedIdentifier === "jhjh@gmail.com" ||
+    normalizedIdentifier === "zxc@gmail.com"
+  ) {
+    return {
+      exists: true,
+      isFirstLogin: normalizedIdentifier.includes('demo') || normalizedIdentifier.includes('test')
+    };
+  }
+  
+  // أي رقم هاتف يبدأ بـ "+974" أو "974" أو ينتهي بـ "1111111"
+  if (
+    normalizedIdentifier.startsWith('+974') || 
+    normalizedIdentifier.startsWith('974') ||
+    normalizedIdentifier.endsWith('1111111') ||
+    normalizedIdentifier.includes('123') ||
+    normalizedIdentifier.includes('456')
+  ) {
+    return {
+      exists: true,
+      isFirstLogin: true
+    };
+  }
+  
+  // المعرفات الخاصة بالمستخدمين الموجودين بالفعل
   if (
     normalizedIdentifier === "demo@example.com" || 
     normalizedIdentifier.includes("0501234567") ||
@@ -62,7 +91,7 @@ export const checkTeamMemberExists = async (
     };
   }
   
-  // طريقة أكثر مرونة للتعامل مع البريد الإلكتروني
+  // المستخدمين الذين قاموا بتسجيل الدخول من قبل
   if (
     normalizedIdentifier === "admin@example.com" || 
     normalizedIdentifier.includes("0509876543") ||
@@ -72,15 +101,6 @@ export const checkTeamMemberExists = async (
     return {
       exists: true,
       isFirstLogin: false
-    };
-  }
-  
-  // بالنسبة للتطبيق التجريبي، لنجعله أكثر مرونة
-  // أي رقم يحتوي على 123 سيكون موجودًا
-  if (normalizedIdentifier.includes("123")) {
-    return {
-      exists: true,
-      isFirstLogin: true
     };
   }
   
@@ -106,13 +126,10 @@ export const authenticateTeamMember = async (
   
   const normalizedIdentifier = identifier.replace(/\s+/g, '').toLowerCase();
   
-  // بالنسبة للمثال العملي، التحقق الناجح للمستخدمين الموجودين
-  if (
-    normalizedIdentifier === "admin@example.com" || 
-    normalizedIdentifier.includes("509876543") ||
-    normalizedIdentifier.includes("0509876543") ||
-    normalizedIdentifier.endsWith("9876543")
-  ) {
+  // للتطبيق التجريبي، سنقبل أي معرف تم اكتشافه كموجود في الخطوة السابقة
+  const checkResult = await checkTeamMemberExists(identifier);
+  
+  if (checkResult.exists && !checkResult.isFirstLogin) {
     if (password.length < 6) {
       return {
         isFirstLogin: false,
