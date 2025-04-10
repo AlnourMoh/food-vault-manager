@@ -13,13 +13,23 @@ interface RegisteredProductsListProps {
 const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanProduct }) => {
   const { products, loading, refreshProducts } = useRegisteredProducts();
 
-  console.log("المنتجات المسجلة في RegisteredProductsList:", products); // إضافة سجل لفحص البيانات
+  console.log("المنتجات المسجلة في RegisteredProductsList:", products); // سجل لفحص البيانات
 
   // تنفيذ تحديث أول عند تحميل المكون
   useEffect(() => {
     console.log("تحديث المنتجات المسجلة عند تحميل المكون");
     refreshProducts();
-  }, []);
+  }, [refreshProducts]);
+
+  // تنفيذ تحديث دوري كل 15 ثانية
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      console.log("تحديث دوري للمنتجات المسجلة");
+      refreshProducts();
+    }, 15000);
+    
+    return () => clearInterval(intervalId);
+  }, [refreshProducts]);
 
   if (loading) {
     return (

@@ -11,8 +11,6 @@ import EmptyProductState from '@/components/mobile/EmptyProductState';
 import RegisteredProductsList from '@/components/mobile/RegisteredProductsList';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 const MobileAddProduct = () => {
   const {
@@ -27,9 +25,6 @@ const MobileAddProduct = () => {
     handleScanResult,
     handleAddProduct
   } = useProductAddition();
-  
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBarcode(e.target.value);

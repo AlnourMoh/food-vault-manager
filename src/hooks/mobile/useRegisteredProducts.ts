@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db, collection, query, where, getDocs } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,24 +21,18 @@ export const useRegisteredProducts = () => {
   const { toast } = useToast();
   const restaurantId = localStorage.getItem('restaurantId');
 
-  const fetchRegisteredProducts = async () => {
+  const fetchRegisteredProducts = useCallback(async () => {
     // تعيين معرف المطعم الافتراضي إذا لم يكن موجودًا
     if (!restaurantId) {
       console.log("معرف المطعم غير موجود، تعيين معرف افتراضي");
       localStorage.setItem('restaurantId', 'restaurant-demo-123');
-      
-      toast({
-        title: "تم تعيين معرف المطعم",
-        description: "تم تعيين معرف مطعم تلقائيًا للعرض التجريبي",
-        duration: 3000,
-      });
     }
 
     try {
       setLoading(true);
       console.log("بدء جلب المنتجات المسجلة للمطعم:", localStorage.getItem('restaurantId'));
       
-      // Always create demo products for testing
+      // Create mock products for testing
       const mockRegisteredProducts: RegisteredProduct[] = [
         {
           id: '67890',
@@ -152,7 +146,7 @@ export const useRegisteredProducts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [restaurantId, toast]);
 
   useEffect(() => {
     console.log("تشغيل useEffect في useRegisteredProducts");
@@ -170,12 +164,7 @@ export const useRegisteredProducts = () => {
     }
     
     fetchRegisteredProducts();
-    
-    // Refresh every 30 seconds to check for new registered products
-    const intervalId = setInterval(fetchRegisteredProducts, 30000);
-    
-    return () => clearInterval(intervalId);
-  }, []);
+  }, [fetchRegisteredProducts]);
 
   return {
     products,
