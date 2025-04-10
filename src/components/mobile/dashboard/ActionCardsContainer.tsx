@@ -1,11 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowDownToLine, ArrowRightLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import ActionCard from './ActionCard';
+import InlineProductForm from '../InlineProductForm';
 
 const ActionCardsContainer: React.FC = () => {
-  const navigate = useNavigate();
+  const [activeForm, setActiveForm] = useState<'add' | 'remove' | null>(null);
+
+  const handleCardClick = (formType: 'add' | 'remove') => {
+    setActiveForm(currentForm => currentForm === formType ? null : formType);
+  };
 
   return (
     <>
@@ -16,16 +20,25 @@ const ActionCardsContainer: React.FC = () => {
           icon={ArrowDownToLine} 
           title="إدخال منتج" 
           iconColor="text-green-600"
-          onClick={() => navigate('/restaurant/mobile/add')}
+          onClick={() => handleCardClick('add')}
         />
         
         <ActionCard 
           icon={ArrowRightLeft} 
           title="إخراج منتج" 
           iconColor="text-red-600"
-          onClick={() => navigate('/restaurant/mobile/remove')}
+          onClick={() => handleCardClick('remove')}
         />
       </div>
+
+      {activeForm && (
+        <div className="mt-6">
+          <InlineProductForm 
+            formType={activeForm} 
+            onClose={() => setActiveForm(null)} 
+          />
+        </div>
+      )}
     </>
   );
 };
