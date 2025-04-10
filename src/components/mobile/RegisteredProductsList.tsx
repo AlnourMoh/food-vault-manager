@@ -40,7 +40,7 @@ const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanP
     return (
       <Card className="mt-4">
         <CardContent className="p-4">
-          <p className="text-center text-gray-500">لا توجد منتجات مسجلة حاليًا في انتظار الإدخال للمخزون</p>
+          <p className="text-center text-gray-500">لا توجد منتجات مسجلة حالياً في انتظار الإدخال للمخزون</p>
         </CardContent>
       </Card>
     );
