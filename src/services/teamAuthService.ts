@@ -13,6 +13,7 @@ export interface TeamMember {
 
 /**
  * Login a team member using PIN
+ * @deprecated Use authenticateTeamMember instead
  */
 export const loginTeamMember = async (pin: string): Promise<boolean> => {
   // This is a mock implementation
@@ -88,6 +89,10 @@ export const setupTeamMemberPassword = async (
     role: "inventory_manager",
     restaurantId: localStorage.getItem('restaurantId') || "1"
   };
+  
+  // Save team member info in localStorage
+  localStorage.setItem('teamMemberId', mockTeamMember.id);
+  localStorage.setItem('teamMemberName', mockTeamMember.name);
   
   return mockTeamMember;
 };
