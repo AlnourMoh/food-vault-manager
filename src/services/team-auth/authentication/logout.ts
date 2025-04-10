@@ -1,10 +1,14 @@
 
 /**
- * Log out the current team member
+ * Log out a team member by clearing localStorage
  */
 export const logoutTeamMember = (): void => {
+  // Clear all team member specific data
   localStorage.removeItem('teamMemberId');
   localStorage.removeItem('teamMemberName');
+  localStorage.removeItem('teamMemberRole');
+  localStorage.removeItem('teamMemberRestaurantId');
   localStorage.removeItem('teamMemberIdentifier');
-  // Do NOT remove the passwordSetup flag or user password, as we need to remember this between sessions
+  
+  console.log("Team member logged out successfully");
 };

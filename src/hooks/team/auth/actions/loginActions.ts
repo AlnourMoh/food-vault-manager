@@ -66,6 +66,15 @@ export function useLoginActions(
       }
       
       if (authResult.teamMember) {
+        // Store the team member information in localStorage
+        localStorage.setItem('teamMemberId', authResult.teamMember.id);
+        localStorage.setItem('teamMemberName', authResult.teamMember.name);
+        localStorage.setItem('teamMemberRole', authResult.teamMember.role);
+        localStorage.setItem('teamMemberRestaurantId', authResult.teamMember.restaurantId);
+        
+        // Log the stored name for debugging
+        console.log("Login successful, storing team member name:", authResult.teamMember.name);
+        
         // Successfully authenticated
         toast({
           title: "تم تسجيل الدخول بنجاح",
