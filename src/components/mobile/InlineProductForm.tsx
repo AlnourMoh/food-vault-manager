@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useProductAddition } from '@/hooks/mobile/useProductAddition';
 import { useProductRemoval } from '@/hooks/mobile/useProductRemoval';
 import { useProductRegistration } from '@/hooks/mobile/useProductRegistration';
+import { useInventoryProducts } from '@/hooks/mobile/useInventoryProducts';
 import BarcodeScanner from './BarcodeScanner';
 import ProductInfo from './ProductInfo';
 import ProductSubmitButton from './ProductSubmitButton';
@@ -70,12 +71,24 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
     handleRegisterProduct
   } = useProductRegistration();
 
+  // Get inventory products
+  const { products: inventoryProducts, loading: inventoryLoading } = useInventoryProducts();
+
   const handleAddQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddQuantity(e.target.value);
   };
 
   const handleRemoveQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRemoveQuantity(e.target.value);
+  };
+
+  // تابع لاختيار منتج من القائمة
+  const handleSelectProduct = (productBarcode: string) => {
+    if (formType === 'add') {
+      handleAddScanResult(productBarcode);
+    } else if (formType === 'remove') {
+      handleRemoveScanResult(productBarcode);
+    }
   };
 
   // Determine which form to show
@@ -110,6 +123,8 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
     const loading = isAddForm ? addLoading : removeLoading;
     const handleScanResult = isAddForm ? handleAddScanResult : handleRemoveScanResult;
     const handleSubmit = isAddForm ? handleAddProduct : handleRemoveProduct;
+    const products = isAddForm ? [] : inventoryProducts; // فقط عرض المنتجات المخزنة في حالة الإخراج
+    const productsLoading = isAddForm ? false : inventoryLoading;
 
     return (
       <Card>
@@ -154,7 +169,38 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
                     />
                   </>
                 ) : (
-                  <EmptyProductState />
+                  <>
+                    {isRemoveForm && products.length > 0 ? (
+                      <div className="mt-4">
+                        <h3 className="font-medium mb-2">اختر من المنتجات المخزنة:</h3>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                          {productsLoading ? (
+                            <div className="flex justify-center py-4">
+                              <div className="animate-spin w-6 h-6 border-2 border-fvm-primary border-t-transparent rounded-full"></div>
+                            </div>
+                          ) : (
+                            products.map((product) => (
+                              <div 
+                                key={product.id}
+                                className="p-3 border rounded-md cursor-pointer hover:bg-gray-50 flex justify-between items-center"
+                                onClick={() => handleSelectProduct(product.barcode || product.id)}
+                              >
+                                <div>
+                                  <p className="font-medium">{product.name}</p>
+                                  <p className="text-xs text-gray-500">{product.category} • {product.unit}</p>
+                                </div>
+                                <span className="text-sm font-semibold text-green-600">
+                                  {product.quantity} {product.unit}
+                                </span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <EmptyProductState />
+                    )}
+                  </>
                 )}
               </>
             )}
