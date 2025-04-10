@@ -7,25 +7,62 @@ export const db = {
   // Real implementation would connect to Firebase
 };
 
-// Mock Firestore functions
-export const mockFirestore = {
-  collection: (db: any, path: string) => ({
-    path,
-    // Add other collection methods as needed
-  }),
-  doc: (db: any, path: string) => ({
-    path,
+// Mock Firestore functions that mimic Firebase's API
+export const doc = (db: any, ...pathSegments: string[]) => {
+  return {
+    path: pathSegments.join('/'),
     // Add other document methods as needed
-  }),
-  getDoc: async () => ({
+  };
+};
+
+export const getDoc = async (docRef: any) => {
+  // For demo purposes, we'll say product with ID 12345 exists
+  if (docRef.path.includes('12345')) {
+    return {
+      exists: () => true,
+      data: () => ({
+        name: 'منتج تجريبي',
+        description: 'وصف للمنتج التجريبي',
+        quantity: 10,
+        expiryDate: {
+          toDate: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days in the future
+        }
+      }),
+    };
+  }
+  
+  return {
     exists: () => false,
     data: () => ({}),
-  }),
-  updateDoc: async () => {},
-  addDoc: async () => ({ id: 'mock-doc-id' }),
-  increment: (val: number) => val,
-  Timestamp: {
-    now: () => ({ toDate: () => new Date() }),
-  },
-  serverTimestamp: () => new Date(),
+  };
 };
+
+export const collection = (db: any, ...pathSegments: string[]) => {
+  return {
+    path: pathSegments.join('/'),
+    // Add other collection methods as needed
+  };
+};
+
+export const updateDoc = async (docRef: any, data: any) => {
+  console.log(`Mock updating document at ${docRef.path} with data:`, data);
+  return Promise.resolve();
+};
+
+export const addDoc = async (collectionRef: any, data: any) => {
+  console.log(`Mock adding document to ${collectionRef.path} with data:`, data);
+  return { id: 'mock-doc-id' };
+};
+
+export const increment = (val: number) => {
+  console.log(`Mock increment by ${val}`);
+  return val;
+};
+
+export const Timestamp = {
+  now: () => ({
+    toDate: () => new Date(),
+  }),
+};
+
+export const serverTimestamp = () => new Date();

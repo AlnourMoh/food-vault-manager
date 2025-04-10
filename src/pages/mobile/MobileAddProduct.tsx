@@ -12,11 +12,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { db, mockFirestore } from '@/lib/firebase';
+import { db, collection, addDoc, serverTimestamp, doc, getDoc } from '@/lib/firebase';
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner';
-
-// Using destructuring to make the code cleaner
-const { addDoc, collection, doc, getDoc, serverTimestamp } = mockFirestore;
 
 const MobileAddProduct = () => {
   const navigate = useNavigate();
@@ -39,24 +36,16 @@ const MobileAddProduct = () => {
   const fetchProductInfo = async (code: string) => {
     setLoading(true);
     try {
-      // In a real implementation, this would connect to Firebase
-      // This is a mock to simulate getting product data
-      
-      // Simulate product found
-      if (code === '12345') {
-        setProductInfo({
-          name: 'منتج تجريبي',
-          description: 'وصف للمنتج التجريبي',
-          quantity: 10,
-          expiryDate: {
-            toDate: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days in the future
-          }
-        });
+      // Check if the product exists in the restaurant's inventory
+      const productRef = doc(db, `restaurants/${restaurantId}/products`, code);
+      const productSnap = await getDoc(productRef);
+      if (productSnap.exists()) {
+        setProductInfo(productSnap.data());
       } else {
         toast({
           title: "المنتج غير موجود",
           description: "هذا المنتج غير مسجل في قاعدة البيانات",
-          variant: "destructive",
+          variant: "destructive"
         });
         setProductInfo(null);
       }
@@ -65,7 +54,7 @@ const MobileAddProduct = () => {
       toast({
         title: "خطأ في النظام",
         description: "حدث خطأ أثناء البحث عن المنتج",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -82,7 +71,7 @@ const MobileAddProduct = () => {
       toast({
         title: "بيانات غير مكتملة",
         description: "يرجى مسح الباركود أولاً",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -91,7 +80,7 @@ const MobileAddProduct = () => {
       toast({
         title: "كمية غير صالحة",
         description: "يرجى إدخال كمية صالحة",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -99,12 +88,15 @@ const MobileAddProduct = () => {
     try {
       setLoading(true);
       
-      // This is a simulated transaction
-      // In a real implementation, this would update Firebase
-      console.log("Adding product:", {
+      // Add transaction record
+      await addDoc(collection(db, `restaurants/${restaurantId}/transactions`), {
         productId: barcode,
         productName: productInfo.name,
-        quantity: Number(quantity)
+        quantity: Number(quantity),
+        type: 'add',
+        timestamp: serverTimestamp(),
+        userId: localStorage.getItem('userId') || 'unknown',
+        userName: localStorage.getItem('userName') || 'مستخدم غير معروف'
       });
       
       toast({

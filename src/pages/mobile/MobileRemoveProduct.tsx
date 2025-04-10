@@ -9,10 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { db, mockFirestore } from '@/lib/firebase';
-
-// Using destructuring to make the code cleaner
-const { doc, getDoc, updateDoc, increment, Timestamp, collection, addDoc } = mockFirestore;
+import { db, doc, getDoc, updateDoc, increment, Timestamp, collection, addDoc } from '@/lib/firebase';
 
 const MobileRemoveProduct = () => {
   const navigate = useNavigate();
@@ -49,16 +46,12 @@ const MobileRemoveProduct = () => {
 
     setIsLoading(true);
     try {
-      // In a real implementation, this would connect to Firebase
-      // This is a mock to simulate getting product data
-      
-      // Simulate product found
-      if (barcode === '12345') {
-        setProduct({
-          name: 'منتج تجريبي',
-          description: 'وصف للمنتج التجريبي',
-          quantity: 10
-        });
+      // البحث عن المنتج باستخدام الباركود
+      const productsRef = collection(db, 'restaurants', restaurantId || '', 'products');
+      const productSnapshot = await getDoc(doc(db, productsRef.path, barcode));
+      if (productSnapshot.exists()) {
+        const productData = productSnapshot.data();
+        setProduct(productData);
       } else {
         toast({
           title: "خطأ",
@@ -93,17 +86,28 @@ const MobileRemoveProduct = () => {
 
     setIsLoading(true);
     try {
-      // This is a simulated transaction
-      // In a real implementation, this would update Firebase
-      console.log("Removing product:", {
+      const productRef = doc(db, 'restaurants', restaurantId || '', 'products', barcode);
+      
+      // تحديث كمية المنتج
+      await updateDoc(productRef, {
+        quantity: increment(-quantity)
+      });
+      
+      // إضافة سجل للعملية
+      const logsRef = collection(db, 'restaurants', restaurantId || '', 'logs');
+      await addDoc(logsRef, {
+        type: 'remove',
         productId: barcode,
         productName: product.name,
-        quantity: quantity
+        quantity: quantity,
+        timestamp: Timestamp.now(),
+        userId: localStorage.getItem('userId') || 'unknown',
+        userName: localStorage.getItem('userName') || 'unknown'
       });
       
       toast({
         title: "تم بنجاح",
-        description: `تم إخراج ${quantity} من ${product.name}`,
+        description: `تم إخراج ${quantity} من ${product.name}`
       });
       
       // إعادة تعيين الحقول
