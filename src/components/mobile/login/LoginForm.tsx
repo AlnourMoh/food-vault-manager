@@ -5,7 +5,7 @@ import EmailInput from './EmailInput';
 import PhoneInput from './PhoneInput';
 import PasswordInput from './PasswordInput';
 import IdentifierTypeToggle from './IdentifierTypeToggle';
-import { IdentifierType, LoginStep } from '@/hooks/useTeamAuth';
+import { IdentifierType, LoginStep } from '@/hooks/team/auth/types';
 
 interface LoginFormProps {
   identifierType: IdentifierType;
@@ -64,6 +64,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
     }
   };
   
+  // Check if we already have an identifier stored from setup
+  const hasStoredIdentifier = React.useMemo(() => {
+    return !!localStorage.getItem('teamMemberIdentifier');
+  }, []);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {loginStep === 'identifier' && (
@@ -90,14 +95,21 @@ const LoginForm: React.FC<LoginFormProps> = ({
       )}
       
       {loginStep !== 'identifier' && (
-        <div className="space-y-2">
-          <PasswordInput
-            password={password}
-            showPassword={showPassword}
-            onChange={(e) => setPassword(e.target.value)}
-            onToggleVisibility={togglePasswordVisibility}
-          />
-        </div>
+        <>
+          {!hasStoredIdentifier && loginStep === 'password' && (
+            <div className="text-center mb-4 text-sm text-gray-500">
+              {identifierType === 'email' ? email : `+${phoneCountryCode}${phoneNumber}`}
+            </div>
+          )}
+          <div className="space-y-2">
+            <PasswordInput
+              password={password}
+              showPassword={showPassword}
+              onChange={(e) => setPassword(e.target.value)}
+              onToggleVisibility={togglePasswordVisibility}
+            />
+          </div>
+        </>
       )}
       
       {loginStep === 'setup' && (
@@ -127,7 +139,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         }
       </Button>
       
-      {loginStep !== 'identifier' && (
+      {loginStep !== 'identifier' && !hasStoredIdentifier && (
         <Button
           type="button"
           variant="ghost"

@@ -64,6 +64,8 @@ export function useSetupPasswordActions(
         title: "تم إنشاء كلمة المرور بنجاح",
         description: `مرحباً بك ${teamMember.name}`
       });
+      
+      // Direct login after setup - no need to ask for identifier again
       navigate('/restaurant/mobile');
     } catch (error) {
       toast({

@@ -56,38 +56,34 @@ export const authenticateTeamMember = async (
   
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
-  // Check if identifier exists
-  const checkResult = await checkTeamMemberExists(identifier);
+  // Create mock team member based on identifier
+  let mockTeamMember: TeamMember | undefined;
   
-  if (checkResult.exists && !checkResult.isFirstLogin) {
-    if (password.length < 6) {
-      return {
-        isFirstLogin: false,
-      };
-    }
+  if (isEmailIdentifier(normalizedIdentifier)) {
+    // Find a matching email user for demo
+    const userKey = Object.keys(mockTeamMembers).find(key => 
+      normalizedIdentifier.includes(key)
+    );
     
-    // Create mock team member based on identifier
-    let mockTeamMember: TeamMember;
-    
-    if (isEmailIdentifier(normalizedIdentifier)) {
-      // Find a matching email user for demo
-      const userKey = Object.keys(mockTeamMembers).find(key => 
-        normalizedIdentifier.includes(key)
-      ) || "admin";
-      
+    if (userKey) {
       mockTeamMember = { ...mockTeamMembers[userKey] };
-    } else {
-      // Find a matching phone user for demo
-      const userKey = Object.keys(mockPhoneUsers).find(key => 
-        normalizedIdentifier.includes(key)
-      ) || Object.keys(mockPhoneUsers)[0];
-      
+    }
+  } else {
+    // Find a matching phone user for demo
+    const userKey = Object.keys(mockPhoneUsers).find(key => 
+      normalizedIdentifier.includes(key)
+    );
+    
+    if (userKey) {
       mockTeamMember = { ...mockPhoneUsers[userKey] };
     }
-    
+  }
+  
+  if (mockTeamMember && password.length >= 6) {
     // Save team member info in localStorage
     localStorage.setItem('teamMemberId', mockTeamMember.id);
     localStorage.setItem('teamMemberName', mockTeamMember.name);
+    localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
     
     return {
       isFirstLogin: false,
@@ -134,6 +130,8 @@ export const setupTeamMemberPassword = async (
   // Save team member info in localStorage
   localStorage.setItem('teamMemberId', mockTeamMember.id);
   localStorage.setItem('teamMemberName', mockTeamMember.name);
+  localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
+  localStorage.setItem('teamMemberPassword', password); // Store password for demo purposes
   
   return mockTeamMember;
 };
@@ -144,6 +142,8 @@ export const setupTeamMemberPassword = async (
 export const logoutTeamMember = (): void => {
   localStorage.removeItem('teamMemberId');
   localStorage.removeItem('teamMemberName');
+  localStorage.removeItem('teamMemberIdentifier');
+  localStorage.removeItem('teamMemberPassword');
 };
 
 /**

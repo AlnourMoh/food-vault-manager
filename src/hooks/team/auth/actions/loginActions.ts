@@ -24,6 +24,14 @@ export function useLoginActions(
 
   // Get identifier based on the selected type
   const getIdentifier = () => {
+    // Check if we have a stored identifier from setup
+    const storedIdentifier = localStorage.getItem('teamMemberIdentifier');
+    
+    // Use stored identifier if available, otherwise use form values
+    if (storedIdentifier) {
+      return storedIdentifier;
+    }
+    
     return identifierType === 'email' ? email : `+${phoneCountryCode}${phoneNumber}`;
   };
 
@@ -71,6 +79,7 @@ export function useLoginActions(
   };
 
   return {
+    getIdentifier,
     handleLogin
   };
 }

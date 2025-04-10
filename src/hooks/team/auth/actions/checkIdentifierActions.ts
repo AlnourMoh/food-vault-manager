@@ -1,4 +1,5 @@
 
+import { useNavigate } from 'react-router-dom'; 
 import { useToast } from '@/hooks/use-toast';
 import { checkTeamMemberExists } from '@/services/teamAuthService';
 import { TeamAuthState, TeamAuthSetters } from '../types';
@@ -7,6 +8,7 @@ export function useCheckIdentifierActions(
   state: TeamAuthState,
   setters: TeamAuthSetters
 ) {
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   // Extract state and setters for easier use
