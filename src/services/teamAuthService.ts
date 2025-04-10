@@ -35,6 +35,39 @@ export const loginTeamMember = async (pin: string): Promise<boolean> => {
 };
 
 /**
+ * Check if a team member exists by email or phone
+ */
+export const checkTeamMemberExists = async (
+  identifier: string
+): Promise<{ exists: boolean; isFirstLogin: boolean }> => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // For demo purposes:
+  // "demo@example.com" or "0501234567" exists but hasn't set a password
+  if (identifier === "demo@example.com" || identifier === "0501234567") {
+    return {
+      exists: true,
+      isFirstLogin: true
+    };
+  }
+  
+  // "admin@example.com" or "0509876543" exists and has set a password
+  if (identifier === "admin@example.com" || identifier === "0509876543") {
+    return {
+      exists: true,
+      isFirstLogin: false
+    };
+  }
+  
+  // For demo, any other identifier doesn't exist
+  return {
+    exists: false,
+    isFirstLogin: false
+  };
+};
+
+/**
  * Authenticate a team member by email/phone and password
  */
 export const authenticateTeamMember = async (
@@ -47,26 +80,35 @@ export const authenticateTeamMember = async (
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  // Check if this is a first login (demo accounts)
-  if (identifier === "demo@example.com" || identifier === "0501234567") {
+  // For this demo, successful authentication for existing users
+  if (identifier === "admin@example.com" || identifier === "0509876543") {
+    if (password.length < 6) {
+      return {
+        isFirstLogin: false,
+      };
+    }
+    
+    const mockTeamMember: TeamMember = {
+      id: "12345",
+      name: "أحمد محمد",
+      email: identifier.includes('@') ? identifier : undefined,
+      phone: !identifier.includes('@') ? identifier : undefined,
+      role: "inventory_manager",
+      restaurantId: localStorage.getItem('restaurantId') || "1"
+    };
+    
+    // Save team member info in localStorage
+    localStorage.setItem('teamMemberId', mockTeamMember.id);
+    localStorage.setItem('teamMemberName', mockTeamMember.name);
+    
     return {
-      isFirstLogin: true,
+      isFirstLogin: false,
+      teamMember: mockTeamMember
     };
   }
   
-  // For this mock, any other login works
-  const mockTeamMember: TeamMember = {
-    id: "12345",
-    name: "أحمد محمد",
-    email: identifier.includes('@') ? identifier : undefined,
-    phone: !identifier.includes('@') ? identifier : undefined,
-    role: "inventory_manager",
-    restaurantId: localStorage.getItem('restaurantId') || "1"
-  };
-  
   return {
     isFirstLogin: false,
-    teamMember: mockTeamMember
   };
 };
 
