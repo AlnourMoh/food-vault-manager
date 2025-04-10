@@ -51,7 +51,8 @@ export const useRegisteredProducts = () => {
           if (productData.created_at) {
             // Check if it's a Firebase timestamp (has toDate method)
             if (typeof productData.created_at.toDate === 'function') {
-              formattedDate = productData.created_at.toDate().toLocaleDateString('ar-SA');
+              const dateObj = productData.created_at.toDate();
+              formattedDate = dateObj.toLocaleDateString('ar-SA');
             } else {
               // Handle if it's already a Date or string
               formattedDate = new Date(productData.created_at).toLocaleDateString('ar-SA');
