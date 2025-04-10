@@ -39,8 +39,6 @@ const MobileRemoveProduct = () => {
         ) : (
           <>
             <ProductBarcodeInput
-              barcode={barcode}
-              onChange={handleBarcodeChange}
               onScan={() => setScanning(true)}
             />
             
