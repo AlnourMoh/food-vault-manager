@@ -1,7 +1,7 @@
 
 import { AuthenticateResult, TeamMember } from '../types';
 import { normalizeIdentifier, isEmailIdentifier } from '../identifierUtils';
-import { getTeamMemberIdFromIdentifier, createMockTeamMember } from './teamMemberUtils';
+import { fetchTeamMemberByIdentifier } from './fetchTeamMember';
 
 /**
  * Authenticate a team member by email/phone and password
@@ -17,63 +17,60 @@ export const authenticateTeamMember = async (
   
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
-  // Get the team member ID associated with this identifier
-  const teamMemberId = getTeamMemberIdFromIdentifier(normalizedIdentifier);
-  
-  // If we don't have a team member ID, authentication fails
-  if (!teamMemberId) {
-    console.log("Authentication failed: No associated team member found for this identifier");
-    return {
-      isFirstLogin: false
-    };
-  }
-  
-  // Get the stored password for this team member ID
-  const storedPassword = localStorage.getItem(`userPassword:${teamMemberId}`);
-  const hasSetupPassword = localStorage.getItem(`passwordSetup:${teamMemberId}`) === 'true';
-  
-  // Create mock team member based on identifier
-  const mockTeamMember = createMockTeamMember(normalizedIdentifier);
-  
-  // For first login case, there may not be a password yet
-  if (!storedPassword || !hasSetupPassword) {
-    console.log("Authentication failed: No stored password found for this team member");
-    return {
-      isFirstLogin: true,
-      teamMember: mockTeamMember // Return the team member info for convenience
-    };
-  }
-  
-  // If we have a stored password, verify it matches exactly
-  if (storedPassword !== password) {
-    console.log("Authentication failed: Password doesn't match");
-    return {
-      isFirstLogin: false
-    };
-  }
-  
-  // Only authenticate if we found a team member AND the password matches exactly
-  if (mockTeamMember) {
-    console.log("Authentication successful:", mockTeamMember.name);
+  try {
+    // Fetch the team member from the database
+    const teamMember = await fetchTeamMemberByIdentifier(normalizedIdentifier);
+    
+    // If no team member found, authentication fails
+    if (!teamMember) {
+      console.log("Authentication failed: No team member found with this identifier");
+      return {
+        isFirstLogin: false
+      };
+    }
+    
+    // Get the stored password for this team member ID
+    const storedPassword = localStorage.getItem(`userPassword:${teamMember.id}`);
+    const hasSetupPassword = localStorage.getItem(`passwordSetup:${teamMember.id}`) === 'true';
+    
+    // For first login case, there may not be a password yet
+    if (!storedPassword || !hasSetupPassword) {
+      console.log("First login for this team member, need to set up password");
+      return {
+        isFirstLogin: true,
+        teamMember: teamMember
+      };
+    }
+    
+    // If we have a stored password, verify it matches exactly
+    if (storedPassword !== password) {
+      console.log("Authentication failed: Password doesn't match");
+      return {
+        isFirstLogin: false
+      };
+    }
+    
+    // Password matches, authentication successful
+    console.log("Authentication successful:", teamMember.name);
     
     // Save team member info in localStorage with all details
-    localStorage.setItem('teamMemberId', mockTeamMember.id);
-    localStorage.setItem('teamMemberName', mockTeamMember.name);
-    localStorage.setItem('teamMemberRole', mockTeamMember.role);
-    localStorage.setItem('teamMemberRestaurantId', mockTeamMember.restaurantId);
+    localStorage.setItem('teamMemberId', teamMember.id);
+    localStorage.setItem('teamMemberName', teamMember.name);
+    localStorage.setItem('teamMemberRole', teamMember.role);
+    localStorage.setItem('teamMemberRestaurantId', teamMember.restaurantId);
     localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
     
     // Log the name we're storing for debugging
-    console.log("Storing team member name in localStorage:", mockTeamMember.name);
+    console.log("Storing team member name in localStorage:", teamMember.name);
     
     return {
       isFirstLogin: false,
-      teamMember: mockTeamMember
+      teamMember: teamMember
+    };
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return {
+      isFirstLogin: false
     };
   }
-  
-  console.log("Authentication failed: Unknown reason");
-  return {
-    isFirstLogin: false,
-  };
 };
