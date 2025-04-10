@@ -62,6 +62,18 @@ export const authenticateTeamMember = async (
   
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
+  // Get the stored password for this identifier
+  const storedPassword = localStorage.getItem(`userPassword:${normalizedIdentifier}`);
+  
+  // If we have a stored password, verify it matches
+  if (storedPassword && storedPassword !== password) {
+    console.log("Password mismatch: stored password doesn't match provided password");
+    return {
+      isFirstLogin: false,
+      // No team member returned for failed authentication
+    };
+  }
+  
   // Create mock team member based on identifier
   let mockTeamMember: TeamMember | undefined;
   
@@ -85,7 +97,10 @@ export const authenticateTeamMember = async (
     }
   }
   
-  if (mockTeamMember && password.length >= 6) {
+  // Only authenticate if we found a team member AND the password is either:
+  // 1. Matching the stored password, or
+  // 2. There's no stored password yet (for backward compatibility) and password is at least 6 chars
+  if (mockTeamMember && (storedPassword === password || (!storedPassword && password.length >= 6))) {
     // Save team member info in localStorage
     localStorage.setItem('teamMemberId', mockTeamMember.id);
     localStorage.setItem('teamMemberName', mockTeamMember.name);
@@ -136,7 +151,9 @@ export const setupTeamMemberPassword = async (
   // Save team member identifier and password for subsequent login
   // BUT don't save the user ID or name - only save the auth information
   localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
-  localStorage.setItem('teamMemberPassword', password); // Store password for demo purposes only
+  
+  // Store the actual password in a separate key that won't be cleared on logout
+  localStorage.setItem(`userPassword:${normalizedIdentifier}`, password);
   
   // Mark that this user has set up their password
   localStorage.setItem(`passwordSetup:${normalizedIdentifier}`, 'true');
@@ -151,8 +168,7 @@ export const logoutTeamMember = (): void => {
   localStorage.removeItem('teamMemberId');
   localStorage.removeItem('teamMemberName');
   localStorage.removeItem('teamMemberIdentifier');
-  localStorage.removeItem('teamMemberPassword');
-  // Do NOT remove the passwordSetup flag, as we need to remember this between sessions
+  // Do NOT remove the passwordSetup flag or user password, as we need to remember this between sessions
 };
 
 /**
