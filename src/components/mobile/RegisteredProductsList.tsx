@@ -1,16 +1,17 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Package2, BarcodeScan, Clock } from 'lucide-react';
 import BarcodeButton from './BarcodeButton';
 import { useRegisteredProducts, RegisteredProduct } from '@/hooks/mobile/useRegisteredProducts';
+import { Badge } from '@/components/ui/badge';
 
 interface RegisteredProductsListProps {
   onScanProduct: (barcode: string) => void;
 }
 
 const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanProduct }) => {
-  const { products, loading } = useRegisteredProducts();
+  const { products, loading, refreshProducts } = useRegisteredProducts();
 
   if (loading) {
     return (
@@ -33,7 +34,16 @@ const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanP
   return (
     <Card className="mt-4">
       <CardHeader className="pb-2">
-        <CardTitle className="text-md">المنتجات المسجلة بانتظار الإدخال</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-md">المنتجات المسجلة بانتظار الإدخال ({products.length})</CardTitle>
+          <button 
+            onClick={refreshProducts}
+            className="text-xs text-gray-500 flex items-center gap-1"
+          >
+            <Clock className="h-3 w-3" />
+            تحديث
+          </button>
+        </div>
       </CardHeader>
       <CardContent className="px-4 py-2">
         <div className="space-y-3">
@@ -57,16 +67,42 @@ interface ProductItemProps {
 
 const ProductItem: React.FC<ProductItemProps> = ({ product, onScan }) => {
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg">
-      <div className="flex-1">
-        <h3 className="font-semibold text-sm">{product.name}</h3>
-        <div className="text-xs text-gray-500 flex flex-col">
-          <span>الفئة: {product.category}</span>
-          <span>الوحدة: {product.unit}</span>
-          <span>مسجل بواسطة: {product.addedBy}</span>
+    <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
+      <div className="flex items-start gap-3">
+        <div className="bg-gray-100 p-2 rounded-md">
+          <Package2 className="h-6 w-6 text-fvm-primary" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-sm">{product.name}</h3>
+          <div className="text-xs text-gray-500 mt-1 space-y-1">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="text-xs bg-gray-50">
+                {product.category}
+              </Badge>
+              <Badge variant="outline" className="text-xs bg-gray-50">
+                {product.unit}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              <span>سجل بواسطة: </span>
+              <span className="font-semibold">{product.addedBy}</span>
+              {product.createdAt && (
+                <span className="text-gray-400 mr-1">({product.createdAt})</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-      <BarcodeButton onClick={onScan} buttonText="مسح" className="px-3 py-1 text-sm" />
+      <BarcodeButton 
+        onClick={onScan} 
+        buttonText={
+          <div className="flex items-center gap-1">
+            <BarcodeScan className="h-4 w-4" />
+            <span>مسح</span>
+          </div>
+        } 
+        className="px-3 py-1 text-sm"
+      />
     </div>
   );
 };

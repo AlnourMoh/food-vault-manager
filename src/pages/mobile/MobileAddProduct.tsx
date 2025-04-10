@@ -9,6 +9,8 @@ import ProductInfo from '@/components/mobile/ProductInfo';
 import ProductSubmitButton from '@/components/mobile/ProductSubmitButton';
 import EmptyProductState from '@/components/mobile/EmptyProductState';
 import RegisteredProductsList from '@/components/mobile/RegisteredProductsList';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const MobileAddProduct = () => {
   const {
@@ -75,7 +77,17 @@ const MobileAddProduct = () => {
                 />
               </>
             ) : (
-              <EmptyProductState />
+              <>
+                <EmptyProductState />
+                
+                <Alert className="bg-blue-50 border-blue-200">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertTitle className="text-blue-800">منتجات تنتظر الإدخال</AlertTitle>
+                  <AlertDescription className="text-blue-700">
+                    يمكنك مسح أي من المنتجات المسجلة أدناه لإضافتها للمخزون
+                  </AlertDescription>
+                </Alert>
+              </>
             )}
 
             {/* Display registered products waiting to be added to inventory */}

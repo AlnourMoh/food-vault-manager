@@ -12,6 +12,7 @@ export interface RegisteredProduct {
   barcode?: string;
   status: string;
   addedBy: string;
+  createdAt?: string;
 }
 
 export const useRegisteredProducts = () => {
@@ -51,10 +52,18 @@ export const useRegisteredProducts = () => {
             unit: productData.unit || 'قطعة',
             quantity: productData.quantity || 0,
             barcode: doc.id, // Use document ID as barcode
-            status: productData.status,
-            addedBy: productData.addedBy || 'غير معروف'
+            status: productData.status || 'active',
+            addedBy: productData.addedBy || 'غير معروف',
+            createdAt: productData.created_at ? new Date(productData.created_at).toLocaleDateString('ar-SA') : undefined
           });
         });
+        
+        // Sort by creation date, newest first
+        registeredProducts.sort((a, b) => {
+          if (!a.createdAt || !b.createdAt) return 0;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        
         setProducts(registeredProducts);
       }
     } catch (error) {
@@ -71,6 +80,11 @@ export const useRegisteredProducts = () => {
 
   useEffect(() => {
     fetchRegisteredProducts();
+    
+    // Refresh every 30 seconds to check for new registered products
+    const intervalId = setInterval(fetchRegisteredProducts, 30000);
+    
+    return () => clearInterval(intervalId);
   }, [restaurantId]);
 
   return {

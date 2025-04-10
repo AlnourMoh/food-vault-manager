@@ -16,6 +16,8 @@ export interface Movement {
   scan_type: 'in' | 'out' | 'check';
   created_at: string;
   scanned_by: string;
+  quantity?: number;
+  product_category?: string;
 }
 
 export interface PaginationState {
