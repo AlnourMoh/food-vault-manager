@@ -24,12 +24,24 @@ import EditProduct from '@/pages/EditProduct';
 import MobileDashboard from '@/pages/mobile/MobileDashboard';
 import MobileAddProduct from '@/pages/mobile/MobileAddProduct';
 import MobileRemoveProduct from '@/pages/mobile/MobileRemoveProduct';
+import MobileLogin from '@/pages/mobile/MobileLogin';
 
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
   
   if (!isRestaurantLoggedIn) {
     return <Navigate to="/restaurant/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Mobile team member route guard
+const TeamMemberRoute = ({ children }: { children: React.ReactNode }) => {
+  const isTeamMemberLoggedIn = !!localStorage.getItem('teamMemberId');
+  
+  if (!isTeamMemberLoggedIn) {
+    return <Navigate to="/restaurant/mobile/login" replace />;
   }
   
   return <>{children}</>;
@@ -53,7 +65,9 @@ function App() {
             <Routes>
               {/* Super Admin Routes */}
               <Route path="/" element={
-                isMobileDevice() && localStorage.getItem('isRestaurantLogin') === 'true'
+                isMobileDevice() && localStorage.getItem('teamMemberId')
+                  ? <Navigate to="/restaurant/mobile" replace />
+                  : isMobileDevice() && localStorage.getItem('isRestaurantLogin') === 'true'
                   ? <Navigate to="/restaurant/mobile" replace />
                   : <Index />
               } />
@@ -88,21 +102,24 @@ function App() {
                 </RestaurantRoute>
               } />
               
-              {/* Mobile App Routes */}
+              {/* Mobile Login Route */}
+              <Route path="/restaurant/mobile/login" element={<MobileLogin />} />
+              
+              {/* Mobile App Routes (Protected) */}
               <Route path="/restaurant/mobile" element={
-                <RestaurantRoute>
+                <TeamMemberRoute>
                   <MobileDashboard />
-                </RestaurantRoute>
+                </TeamMemberRoute>
               } />
               <Route path="/restaurant/mobile/add" element={
-                <RestaurantRoute>
+                <TeamMemberRoute>
                   <MobileAddProduct />
-                </RestaurantRoute>
+                </TeamMemberRoute>
               } />
               <Route path="/restaurant/mobile/remove" element={
-                <RestaurantRoute>
+                <TeamMemberRoute>
                   <MobileRemoveProduct />
-                </RestaurantRoute>
+                </TeamMemberRoute>
               } />
               
               {/* Barcode routes */}

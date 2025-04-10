@@ -2,52 +2,73 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowDown, ArrowUp } from 'lucide-react';
 import useDeviceDetection from '@/hooks/useDeviceDetection';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowRightLeft, ArrowDownToLine, LogOut } from 'lucide-react';
+import { logoutTeamMember } from '@/services/teamAuthService';
+import { useToast } from '@/components/ui/use-toast';
 
 const MobileDashboard = () => {
-  const navigate = useNavigate();
   const { isMobile } = useDeviceDetection();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const menuItems = [
-    {
-      title: 'إدخال منتج',
-      description: 'إضافة منتج جديد للمخزون بعد مسح الباركود',
-      icon: <ArrowDown className="h-8 w-8 text-green-500" />,
-      path: '/restaurant/mobile/add'
-    },
-    {
-      title: 'إخراج منتج',
-      description: 'إخراج منتج من المخزون بعد مسح الباركود',
-      icon: <ArrowUp className="h-8 w-8 text-red-500" />,
-      path: '/restaurant/mobile/remove'
-    }
-  ];
+  const teamMemberName = localStorage.getItem('teamMemberName') || 'فريق المخزن';
+
+  const handleLogout = () => {
+    logoutTeamMember();
+    toast({
+      title: "تم تسجيل الخروج",
+      description: "تم تسجيل الخروج بنجاح"
+    });
+    navigate('/restaurant/mobile/login');
+  };
 
   return (
     <RestaurantLayout hideSidebar={isMobile}>
-      <div className="rtl space-y-6 px-2">
-        <h1 className="text-2xl font-bold tracking-tight mb-6 text-center">تطبيق إدارة المخزون</h1>
+      <div className="rtl space-y-6 p-2">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-xl font-bold">مرحبًا، {teamMemberName}</h1>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1 text-red-500 border-red-200 hover:bg-red-50"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            <span>تسجيل الخروج</span>
+          </Button>
+        </div>
+        
+        <h2 className="text-lg font-medium mb-3">إدارة المخزون</h2>
         
         <div className="grid grid-cols-1 gap-4">
-          {menuItems.map((item, index) => (
-            <Card 
-              key={index} 
-              className="cursor-pointer hover:bg-secondary/50 transition-colors"
-              onClick={() => navigate(item.path)}
-            >
-              <CardContent className="p-6 flex items-center gap-4">
-                <div className="flex-shrink-0">
-                  {item.icon}
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="p-0">
+              <Button 
+                variant="ghost" 
+                className="w-full h-full flex items-center justify-center gap-2 p-6" 
+                onClick={() => navigate('/restaurant/mobile/add')}
+              >
+                <ArrowDownToLine className="h-6 w-6 text-green-600" />
+                <span className="text-lg">إدخال منتج</span>
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="p-0">
+              <Button 
+                variant="ghost" 
+                className="w-full h-full flex items-center justify-center gap-2 p-6" 
+                onClick={() => navigate('/restaurant/mobile/remove')}
+              >
+                <ArrowRightLeft className="h-6 w-6 text-red-600" />
+                <span className="text-lg">إخراج منتج</span>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </RestaurantLayout>
