@@ -67,7 +67,7 @@ export function useCheckIdentifierActions(
       }
       
       // User exists, determine if they need to set up password
-      if (result.isFirstLogin) {
+      if (result.isFirstLogin && !result.hasSetupPassword) {
         setIsFirstLogin(true);
         setLoginStep('setup');
       } else {

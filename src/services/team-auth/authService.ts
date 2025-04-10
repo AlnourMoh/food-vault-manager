@@ -1,3 +1,4 @@
+
 import { CheckIdentifierResult, AuthenticateResult, TeamMember } from './types';
 import { mockTeamMembers, mockPhoneUsers } from './mockData';
 import { normalizeIdentifier, isValidTestEmail, isValidTestPhone, isEmailIdentifier } from './identifierUtils';
@@ -15,6 +16,9 @@ export const checkTeamMemberExists = async (
   
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
+  // Check if user has previously set up a password
+  const hasSetupPassword = localStorage.getItem(`passwordSetup:${normalizedIdentifier}`) === 'true';
+  
   if (isEmailIdentifier(normalizedIdentifier)) {
     // Check email patterns
     if (isValidTestEmail(normalizedIdentifier)) {
@@ -23,7 +27,8 @@ export const checkTeamMemberExists = async (
       
       return {
         exists: true,
-        isFirstLogin
+        isFirstLogin,
+        hasSetupPassword: hasSetupPassword
       };
     }
   } else {
@@ -31,7 +36,8 @@ export const checkTeamMemberExists = async (
     if (isValidTestPhone(normalizedIdentifier)) {
       return {
         exists: true,
-        isFirstLogin: true
+        isFirstLogin: true,
+        hasSetupPassword: hasSetupPassword
       };
     }
   }
@@ -39,7 +45,8 @@ export const checkTeamMemberExists = async (
   // Default response for non-matching identifiers
   return {
     exists: false,
-    isFirstLogin: false
+    isFirstLogin: false,
+    hasSetupPassword: false
   };
 };
 
@@ -131,6 +138,9 @@ export const setupTeamMemberPassword = async (
   localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
   localStorage.setItem('teamMemberPassword', password); // Store password for demo purposes only
   
+  // Mark that this user has set up their password
+  localStorage.setItem(`passwordSetup:${normalizedIdentifier}`, 'true');
+  
   return mockTeamMember;
 };
 
@@ -142,6 +152,7 @@ export const logoutTeamMember = (): void => {
   localStorage.removeItem('teamMemberName');
   localStorage.removeItem('teamMemberIdentifier');
   localStorage.removeItem('teamMemberPassword');
+  // Do NOT remove the passwordSetup flag, as we need to remember this between sessions
 };
 
 /**

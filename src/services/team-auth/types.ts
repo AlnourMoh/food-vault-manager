@@ -12,6 +12,7 @@ export interface TeamMember {
 export interface CheckIdentifierResult {
   exists: boolean;
   isFirstLogin: boolean;
+  hasSetupPassword?: boolean;
 }
 
 export interface AuthenticateResult {
