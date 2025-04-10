@@ -58,9 +58,13 @@ export const useRegisteredProducts = () => {
             } else if (productData.created_at instanceof Date) {
               // Handle if it's already a Date
               formattedDate = productData.created_at.toLocaleDateString('ar-SA');
-            } else {
+            } else if (typeof productData.created_at === 'string' || typeof productData.created_at === 'number') {
               // Handle if it's a string or number
               formattedDate = new Date(productData.created_at).toLocaleDateString('ar-SA');
+            } else {
+              // Fallback for other cases
+              console.warn('Unexpected date format:', productData.created_at);
+              formattedDate = undefined;
             }
           }
             
@@ -80,7 +84,13 @@ export const useRegisteredProducts = () => {
         // Sort by creation date, newest first
         registeredProducts.sort((a, b) => {
           if (!a.createdAt || !b.createdAt) return 0;
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          // Safe way to compare the date strings
+          try {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          } catch (error) {
+            console.warn('Error sorting dates:', error);
+            return 0;
+          }
         });
         
         setProducts(registeredProducts);
