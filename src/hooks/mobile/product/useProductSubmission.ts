@@ -1,12 +1,11 @@
 
 import { useState } from 'react';
-import type { ToastAPI } from '@/hooks/use-toast.d';
 
 export const useProductSubmission = (
   barcode: string,
   quantity: string,
   productInfo: any,
-  toast: ToastAPI,
+  toast: ReturnType<typeof import('@/hooks/use-toast').useToast>,
   onSuccess: () => void
 ) => {
   const [loading, setLoading] = useState(false);
@@ -14,7 +13,7 @@ export const useProductSubmission = (
 
   const handleAddProduct = async () => {
     if (!barcode || !productInfo) {
-      toast({
+      toast.toast({
         title: "بيانات غير مكتملة",
         description: "يرجى مسح الباركود أولاً",
         variant: "destructive"
@@ -23,7 +22,7 @@ export const useProductSubmission = (
     }
 
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
-      toast({
+      toast.toast({
         title: "كمية غير صالحة",
         description: "يرجى إدخال كمية صالحة",
         variant: "destructive"
@@ -37,7 +36,7 @@ export const useProductSubmission = (
       // Simulate API request delay and success
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast({
+      toast.toast({
         title: "تمت العملية بنجاح",
         description: `تم إضافة ${quantity} ${productInfo.unit} من ${productInfo.name} إلى المخزون`,
         variant: "default",
@@ -47,7 +46,7 @@ export const useProductSubmission = (
       onSuccess();
     } catch (error) {
       console.error("Error adding product:", error);
-      toast({
+      toast.toast({
         title: "خطأ في النظام",
         description: "حدث خطأ أثناء إضافة المنتج",
         variant: "destructive",

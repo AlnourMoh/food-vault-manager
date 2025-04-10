@@ -1,8 +1,9 @@
 
 import { useState, useCallback } from 'react';
-import type { ToastAPI } from '@/hooks/use-toast.d';
+import type { Toast } from '@/hooks/use-toast.d';
 
-export const useFetchProductInfo = (toast: ToastAPI) => {
+// Accept the complete toast object from useToast()
+export const useFetchProductInfo = (toast: ReturnType<typeof import('@/hooks/use-toast').useToast>) => {
   const [productInfo, setProductInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -10,7 +11,7 @@ export const useFetchProductInfo = (toast: ToastAPI) => {
     console.log("Fetching product info for barcode:", code);
     setLoading(true);
     try {
-      // في ال&وضع التجريبي، نبحث عن المنتج في البيانات المحلية
+      // في الوضع التجريبي، نبحث عن المنتج في البيانات المحلية
       const mockProducts = [
         {
           id: '67890',
@@ -57,7 +58,7 @@ export const useFetchProductInfo = (toast: ToastAPI) => {
         setProductInfo(product);
       } else {
         console.log("Product not found in mock data");
-        toast({
+        toast.toast({
           title: "المنتج غير موجود",
           description: "هذا المنتج غير مسجل في قاعدة البيانات",
           variant: "destructive"
@@ -66,7 +67,7 @@ export const useFetchProductInfo = (toast: ToastAPI) => {
       }
     } catch (error) {
       console.error("Error fetching product:", error);
-      toast({
+      toast.toast({
         title: "خطأ في النظام",
         description: "حدث خطأ أثناء البحث عن المنتج",
         variant: "destructive"

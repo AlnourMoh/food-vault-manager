@@ -6,8 +6,8 @@ import { useProductSubmission } from './product/useProductSubmission';
 import { useLocalStorageSetup } from './utils/useLocalStorageSetup';
 
 export const useProductAddition = () => {
-  // استخراج كائن toast الكامل
-  const { toast } = useToast();
+  // Get the complete toast object with all methods
+  const toast = useToast();
   const [scanning, setScanning] = useState(false);
   const [barcode, setBarcode] = useState('');
   const [quantity, setQuantity] = useState('1');
