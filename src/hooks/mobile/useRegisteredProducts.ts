@@ -32,7 +32,7 @@ export const useRegisteredProducts = () => {
       setLoading(true);
       console.log("بدء جلب المنتجات المسجلة للمطعم:", localStorage.getItem('restaurantId'));
       
-      // Create mock products for testing
+      // إنشاء بيانات المنتجات المسجلة الوهمية للعرض التجريبي
       const mockRegisteredProducts: RegisteredProduct[] = [
         {
           id: '67890',
