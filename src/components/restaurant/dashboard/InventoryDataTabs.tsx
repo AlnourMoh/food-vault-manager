@@ -7,6 +7,8 @@ import { LayoutDashboard, List, ArrowDown, ArrowUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
+import { Avatar } from '@/components/ui/avatar';
 
 interface Product {
   id: string;
@@ -15,6 +17,7 @@ interface Product {
   quantity: number;
   unit?: string;
   created_at: string;
+  image_url?: string;
 }
 
 interface Movement {
@@ -129,6 +132,21 @@ const InventoryDataTabs: React.FC = () => {
   const handleTabChange = (tab: string) => {
     setActiveDataTab(tab);
   };
+
+  // Format date to Gregorian format
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd/MM/yyyy');
+  };
+  
+  // Get product initials for avatar fallback
+  const getProductInitials = (productName: string): string => {
+    return productName
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
   return (
     <Card>
@@ -176,6 +194,7 @@ const InventoryDataTabs: React.FC = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">المنتج</TableHead>
+                      <TableHead className="text-right">الصورة</TableHead>
                       <TableHead className="text-right">الفئة</TableHead>
                       <TableHead className="text-right">الكمية</TableHead>
                       <TableHead className="text-right">تاريخ الإضافة</TableHead>
@@ -185,6 +204,21 @@ const InventoryDataTabs: React.FC = () => {
                     {recentProducts.map((product) => (
                       <TableRow key={product.id} className="hover:bg-gray-50">
                         <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>
+                          <Avatar className="h-10 w-10">
+                            {product.image_url ? (
+                              <img 
+                                src={product.image_url} 
+                                alt={product.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-primary text-white flex items-center justify-center">
+                                {getProductInitials(product.name)}
+                              </div>
+                            )}
+                          </Avatar>
+                        </TableCell>
                         <TableCell>{product.category}</TableCell>
                         <TableCell>
                           <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
@@ -192,7 +226,7 @@ const InventoryDataTabs: React.FC = () => {
                             {product.quantity} {product.unit || 'قطعة'}
                           </span>
                         </TableCell>
-                        <TableCell>{new Date(product.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                        <TableCell>{formatDate(product.created_at)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -238,7 +272,7 @@ const InventoryDataTabs: React.FC = () => {
                           )}
                         </span>
                       </TableCell>
-                      <TableCell>{new Date(movement.created_at).toLocaleDateString('ar-SA')}</TableCell>
+                      <TableCell>{formatDate(movement.created_at)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
