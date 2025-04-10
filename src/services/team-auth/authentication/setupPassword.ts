@@ -1,12 +1,7 @@
 
 import { TeamMember } from '../types';
-import { normalizeIdentifier, isEmailIdentifier } from '../identifierUtils';
-import { mockTeamMembers, mockPhoneUsers } from '../mockData';
-import { 
-  getTeamMemberIdFromIdentifier, 
-  createMockTeamMember,
-  syncPasswordsForTeamMember
-} from './teamMemberUtils';
+import { normalizeIdentifier } from '../identifierUtils';
+import { fetchTeamMemberByIdentifier } from './fetchTeamMember';
 
 /**
  * Set up first-time password for a team member
@@ -14,7 +9,7 @@ import {
 export const setupTeamMemberPassword = async (
   identifier: string,
   password: string
-): Promise<TeamMember> => {
+): Promise<TeamMember | null> => {
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
@@ -22,66 +17,29 @@ export const setupTeamMemberPassword = async (
   
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
-  // First check if we already have a team member ID for this identifier
-  let teamMemberId = getTeamMemberIdFromIdentifier(normalizedIdentifier);
-  let mockTeamMember: TeamMember;
-  
-  if (teamMemberId) {
-    // We already have a team member, fetch their info
-    const existingMember = createMockTeamMember(normalizedIdentifier);
-    if (existingMember) {
-      mockTeamMember = existingMember;
-    } else {
-      // Fallback if member not found by ID
-      if (isEmailIdentifier(normalizedIdentifier)) {
-        // Find a matching email user for demo
-        const userKey = Object.keys(mockTeamMembers).find(key => 
-          normalizedIdentifier.includes(key)
-        ) || "test";
-        
-        mockTeamMember = { ...mockTeamMembers[userKey] };
-        teamMemberId = mockTeamMember.id;
-      } else {
-        // Find a matching phone user for demo
-        const userKey = Object.keys(mockPhoneUsers).find(key => 
-          normalizedIdentifier.includes(key)
-        ) || Object.keys(mockPhoneUsers)[0];
-        
-        mockTeamMember = { ...mockPhoneUsers[userKey] };
-        teamMemberId = mockTeamMember.id;
-      }
-    }
-  } else {
-    // Create a new mock team member
-    if (isEmailIdentifier(normalizedIdentifier)) {
-      // Find a matching email user for demo
-      const userKey = Object.keys(mockTeamMembers).find(key => 
-        normalizedIdentifier.includes(key)
-      ) || "test";
-      
-      mockTeamMember = { ...mockTeamMembers[userKey] };
-      teamMemberId = mockTeamMember.id;
-    } else {
-      // Find a matching phone user for demo
-      const userKey = Object.keys(mockPhoneUsers).find(key => 
-        normalizedIdentifier.includes(key)
-      ) || Object.keys(mockPhoneUsers)[0];
-      
-      mockTeamMember = { ...mockPhoneUsers[userKey] };
-      teamMemberId = mockTeamMember.id;
+  try {
+    // Fetch the team member from the database
+    const teamMember = await fetchTeamMemberByIdentifier(normalizedIdentifier);
+    
+    if (!teamMember) {
+      console.error("No team member found with this identifier");
+      return null;
     }
     
-    // Save the association between this identifier and the team member ID
-    localStorage.setItem(`teamMemberId:${normalizedIdentifier}`, teamMemberId);
+    // Save the password for this team member
+    localStorage.setItem(`userPassword:${teamMember.id}`, password);
+    
+    // Mark that this user has set up their password
+    localStorage.setItem(`passwordSetup:${teamMember.id}`, 'true');
+    
+    // Save the current identifier for subsequent login
+    localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
+    
+    console.log("Password setup complete for team member:", teamMember.name);
+    
+    return teamMember;
+  } catch (error) {
+    console.error("Error setting up password:", error);
+    return null;
   }
-  
-  // Save the current identifier for subsequent login
-  localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
-  
-  // Synchronize password between email and phone for the same team member
-  syncPasswordsForTeamMember(teamMemberId, password);
-  
-  console.log("Password setup complete for team member:", mockTeamMember.name);
-  
-  return mockTeamMember;
 };

@@ -65,15 +65,29 @@ export function useSetupPasswordActions(
     try {
       const teamMember = await setupTeamMemberPassword(identifier, password);
       
+      if (!teamMember) {
+        toast({
+          title: "حدث خطأ",
+          description: "لم يتم العثور على معلومات المستخدم",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       toast({
         title: "تم إنشاء كلمة المرور بنجاح",
         description: `مرحباً بك ${teamMember.name}`
       });
       
-      // Reset password fields and return to login screen instead of direct login
-      setPassword('');
-      setConfirmPassword('');
-      setLoginStep('password');
+      // After successful password setup, log the user in automatically
+      localStorage.setItem('teamMemberId', teamMember.id);
+      localStorage.setItem('teamMemberName', teamMember.name);
+      localStorage.setItem('teamMemberRole', teamMember.role);
+      localStorage.setItem('teamMemberRestaurantId', teamMember.restaurantId);
+      
+      // Navigate to the dashboard directly
+      navigate('/restaurant/mobile');
       
     } catch (error) {
       toast({

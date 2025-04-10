@@ -1,6 +1,6 @@
 
 import { AuthenticateResult, TeamMember } from '../types';
-import { normalizeIdentifier, isEmailIdentifier } from '../identifierUtils';
+import { normalizeIdentifier } from '../identifierUtils';
 import { fetchTeamMemberByIdentifier } from './fetchTeamMember';
 
 /**
@@ -31,10 +31,13 @@ export const authenticateTeamMember = async (
     
     // Get the stored password for this team member ID
     const storedPassword = localStorage.getItem(`userPassword:${teamMember.id}`);
-    const hasSetupPassword = localStorage.getItem(`passwordSetup:${teamMember.id}`) === 'true';
+    const hasSetupPassword = localStorage.getItem(`passwordSetup:${teamMember.id}`);
     
-    // For first login case, there may not be a password yet
-    if (!storedPassword || !hasSetupPassword) {
+    console.log("Stored password:", !!storedPassword);
+    console.log("Has setup password:", hasSetupPassword);
+    
+    // Fixed: For first login case, there may not be a password yet
+    if (!storedPassword || hasSetupPassword !== 'true') {
       console.log("First login for this team member, need to set up password");
       return {
         isFirstLogin: true,
