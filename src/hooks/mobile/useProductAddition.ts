@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { db, doc, getDoc, collection, addDoc, serverTimestamp } from '@/lib/firebase';
@@ -73,7 +74,7 @@ export const useProductAddition = () => {
       setLoading(true);
       
       // Add transaction record
-      const transactionsRef = collection(doc(collection(doc(), 'restaurants'), restaurantId || ''), 'transactions');
+      const transactionsRef = collection(db, `restaurants/${restaurantId}/transactions`);
       await addDoc(transactionsRef, {
         productId: barcode,
         productName: productInfo.name,
