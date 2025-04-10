@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFetchProductInfo } from './product/useFetchProductInfo';
 import { useProductSubmission } from './product/useProductSubmission';
 import { useLocalStorageSetup } from './utils/useLocalStorageSetup';
+import type { ToastAPI } from '@/hooks/use-toast.d';
 
 export const useProductAddition = () => {
   const { toast } = useToast();
