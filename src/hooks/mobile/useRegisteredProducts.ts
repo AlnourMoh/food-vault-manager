@@ -45,11 +45,18 @@ export const useRegisteredProducts = () => {
         const registeredProducts: RegisteredProduct[] = [];
         querySnapshot.docs.forEach((doc) => {
           const productData = doc.data();
-          const createdAtDate = productData.created_at 
-            ? typeof productData.created_at.toDate === 'function' 
-              ? productData.created_at.toDate() 
-              : new Date(productData.created_at)
-            : new Date();
+          
+          // Handle Firebase Timestamp conversion properly
+          let formattedDate: string | undefined;
+          if (productData.created_at) {
+            // Check if it's a Firebase timestamp (has toDate method)
+            if (typeof productData.created_at.toDate === 'function') {
+              formattedDate = productData.created_at.toDate().toLocaleDateString('ar-SA');
+            } else {
+              // Handle if it's already a Date or string
+              formattedDate = new Date(productData.created_at).toLocaleDateString('ar-SA');
+            }
+          }
             
           registeredProducts.push({
             id: doc.id,
@@ -60,7 +67,7 @@ export const useRegisteredProducts = () => {
             barcode: doc.id, // Use document ID as barcode
             status: productData.status || 'active',
             addedBy: productData.addedBy || 'غير معروف',
-            createdAt: createdAtDate.toLocaleDateString('ar-SA')
+            createdAt: formattedDate
           });
         });
         
