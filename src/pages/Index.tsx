@@ -2,7 +2,7 @@
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import StatsCard from '@/components/dashboard/StatsCard';
-import { getMockData } from '@/services/mockData';
+import { getMockData } from '@/services/mock';
 import { 
   Archive, 
   Box, 

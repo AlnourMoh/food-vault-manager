@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { getMockData } from '@/services/mockData';
+import { getMockData } from '@/services/mock';
 import { 
   Card, 
   CardContent, 
