@@ -88,7 +88,7 @@ export const useProductAddition = () => {
         quantity: Number(quantity),
         type: 'add',
         timestamp: serverTimestamp(),
-        userId: localStorage.getItem('userId') || 'unknown',
+        userId: localStorage.getItem('teamMemberId') || 'unknown',
         userName: localStorage.getItem('teamMemberName') || 'مستخدم غير معروف'
       });
       
