@@ -80,18 +80,18 @@ const MobileAddProduct = () => {
               <>
                 <EmptyProductState />
                 
-                <Alert className="bg-blue-50 border-blue-200">
+                <Alert className="bg-blue-50 border-blue-200 mt-4">
                   <Info className="h-4 w-4 text-blue-600" />
-                  <AlertTitle className="text-blue-800">منتجات تنتظر الإدخال</AlertTitle>
-                  <AlertDescription className="text-blue-700">
+                  <AlertTitle className="text-blue-800 text-sm font-bold">منتجات تنتظر الإدخال</AlertTitle>
+                  <AlertDescription className="text-blue-700 text-xs">
                     يمكنك مسح أي من المنتجات المسجلة أدناه لإضافتها للمخزون
                   </AlertDescription>
                 </Alert>
+
+                {/* Display registered products waiting to be added to inventory */}
+                <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />
               </>
             )}
-
-            {/* Display registered products waiting to be added to inventory */}
-            {!productInfo && <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />}
           </div>
         )}
       </div>

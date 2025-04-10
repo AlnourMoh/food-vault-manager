@@ -34,6 +34,51 @@ export const useRegisteredProducts = () => {
 
     try {
       setLoading(true);
+      console.log("بدء جلب المنتجات المسجلة للمطعم:", restaurantId);
+      
+      // For demo purposes in our mock setup, let's create some sample products
+      // In a real application, this would fetch from Firebase
+      const mockRegisteredProducts: RegisteredProduct[] = [
+        {
+          id: '67890',
+          name: 'دقيق',
+          category: 'بقالة',
+          unit: 'كيلوغرام',
+          quantity: 0,
+          barcode: '67890',
+          status: 'active',
+          addedBy: 'إدارة النظام',
+          createdAt: new Date().toLocaleDateString('ar-SA')
+        },
+        {
+          id: '54321',
+          name: 'طماطم',
+          category: 'خضروات',
+          unit: 'كيلوغرام',
+          quantity: 0,
+          barcode: '54321',
+          status: 'active',
+          addedBy: 'إدارة النظام',
+          createdAt: new Date().toLocaleDateString('ar-SA')
+        },
+        {
+          id: '12345',
+          name: 'زيت زيتون',
+          category: 'بقالة',
+          unit: 'لتر',
+          quantity: 0,
+          barcode: '12345',
+          status: 'active',
+          addedBy: 'إدارة النظام',
+          createdAt: new Date().toLocaleDateString('ar-SA')
+        }
+      ];
+      
+      console.log("تم تجهيز منتجات عينة:", mockRegisteredProducts.length);
+      setProducts(mockRegisteredProducts);
+      
+      /* 
+      // الكود الأصلي المعلق لاستخدامه عند توفر Firebase
       const productsRef = collection(db, `restaurants/${restaurantId}/products`);
       // Get products with zero quantity (registered but not added to inventory yet)
       const productsQuery = query(productsRef, where("quantity", "==", 0));
@@ -95,6 +140,7 @@ export const useRegisteredProducts = () => {
         
         setProducts(registeredProducts);
       }
+      */
     } catch (error) {
       console.error("Error fetching registered products:", error);
       toast({
