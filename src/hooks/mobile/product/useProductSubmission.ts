@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
-import { ToastAPI } from '@/hooks/use-toast';
+import { toast as toastFunction } from '@/hooks/use-toast';
+import type { ToastAPI } from '@/hooks/use-toast.d';
 
 export const useProductSubmission = (
   barcode: string,
