@@ -51,10 +51,15 @@ export const useRegisteredProducts = () => {
           if (productData.created_at) {
             // Check if it's a Firebase timestamp (has toDate method)
             if (typeof productData.created_at.toDate === 'function') {
+              // First convert Firebase timestamp to JS Date
               const dateObj = productData.created_at.toDate();
+              // Then format the JS Date
               formattedDate = dateObj.toLocaleDateString('ar-SA');
+            } else if (productData.created_at instanceof Date) {
+              // Handle if it's already a Date
+              formattedDate = productData.created_at.toLocaleDateString('ar-SA');
             } else {
-              // Handle if it's already a Date or string
+              // Handle if it's a string or number
               formattedDate = new Date(productData.created_at).toLocaleDateString('ar-SA');
             }
           }
