@@ -13,6 +13,7 @@ export interface CheckIdentifierResult {
   exists: boolean;
   isFirstLogin: boolean;
   hasSetupPassword?: boolean;
+  teamMemberId?: string;
 }
 
 export interface AuthenticateResult {
