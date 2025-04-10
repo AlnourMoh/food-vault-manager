@@ -39,6 +39,14 @@ const MobileAddProduct = () => {
     handleScanResult(code);
   };
 
+  // سجل localStorage للتأكد من وجود restaurantId
+  console.log("معرف المطعم في localStorage:", localStorage.getItem('restaurantId'));
+  // تعيين معرف المطعم للعرض التجريبي إذا لم يكن موجوداً
+  if (!localStorage.getItem('restaurantId')) {
+    localStorage.setItem('restaurantId', 'restaurant-demo-123');
+    console.log("تم تعيين معرف مطعم افتراضي للعرض التجريبي");
+  }
+
   return (
     <RestaurantLayout hideSidebar={true}>
       <div className="rtl space-y-4 p-3">

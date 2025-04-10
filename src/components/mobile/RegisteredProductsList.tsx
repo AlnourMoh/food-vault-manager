@@ -13,6 +13,8 @@ interface RegisteredProductsListProps {
 const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanProduct }) => {
   const { products, loading, refreshProducts } = useRegisteredProducts();
 
+  console.log("المنتجات المسجلة:", products); // إضافة سجل لفحص البيانات
+
   if (loading) {
     return (
       <div className="flex justify-center items-center my-6">
