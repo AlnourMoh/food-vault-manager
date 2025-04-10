@@ -17,6 +17,10 @@ export interface CheckIdentifierResult {
 }
 
 export interface AuthenticateResult {
-  isFirstLogin: boolean;
+  success: boolean;
+  message: string;
+  isFirstLogin?: boolean;
+  needsPasswordSetup?: boolean;
+  teamMemberId?: string;
   teamMember?: TeamMember;
 }

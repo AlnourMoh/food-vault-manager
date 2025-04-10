@@ -51,16 +51,27 @@ export function useLoginActions(
     try {
       const authResult = await authenticateTeamMember(identifier, password);
       
-      // Check if this is the first login and user hasn't set up password yet
-      if (authResult.isFirstLogin) {
-        toast({
-          title: "مستخدم جديد",
-          description: "يجب إنشاء كلمة مرور للمتابعة"
-        });
+      if (!authResult.success) {
+        // Check if this is the first login and user hasn't set up password yet
+        if (authResult.needsPasswordSetup) {
+          toast({
+            title: "مستخدم جديد",
+            description: "يجب إنشاء كلمة مرور للمتابعة"
+          });
+          
+          // Move to setup password step for first-time users
+          setIsFirstLogin(true);
+          setLoginStep('setup');
+          setIsLoading(false);
+          return;
+        }
         
-        // Move to setup password step for first-time users
-        setIsFirstLogin(true);
-        setLoginStep('setup');
+        // Authentication failed for other reasons
+        toast({
+          title: "فشل تسجيل الدخول",
+          description: authResult.message,
+          variant: "destructive"
+        });
         setIsLoading(false);
         return;
       }
@@ -72,13 +83,6 @@ export function useLoginActions(
           description: `مرحباً بك ${authResult.teamMember.name}`
         });
         navigate('/restaurant/mobile');
-      } else {
-        // Authentication failed
-        toast({
-          title: "فشل تسجيل الدخول",
-          description: "كلمة المرور غير صحيحة",
-          variant: "destructive"
-        });
       }
     } catch (error) {
       toast({
