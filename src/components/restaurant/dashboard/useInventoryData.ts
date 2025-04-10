@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Product, Movement } from './types';
@@ -9,21 +9,18 @@ export const useInventoryData = (activeDataTab: string) => {
   const [recentMovements, setRecentMovements] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const restaurantId = localStorage.getItem('restaurantId');
   
-  useEffect(() => {
-    if (restaurantId) {
-      if (activeDataTab === 'products') {
-        fetchRecentProducts();
-      } else {
-        fetchRecentMovements();
-      }
-    }
-  }, [restaurantId, activeDataTab]);
+  // Get restaurantId only once per component instance
+  const restaurantId = useMemo(() => localStorage.getItem('restaurantId'), []);
   
-  const fetchRecentProducts = async () => {
+  // Memoize the fetch functions to prevent recreating them on each render
+  const fetchRecentProducts = useCallback(async () => {
     setLoading(true);
     try {
+      if (!restaurantId) {
+        throw new Error('Restaurant ID not found');
+      }
+      
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -48,11 +45,15 @@ export const useInventoryData = (activeDataTab: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [restaurantId, toast]);
   
-  const fetchRecentMovements = async () => {
+  const fetchRecentMovements = useCallback(async () => {
     setLoading(true);
     try {
+      if (!restaurantId) {
+        throw new Error('Restaurant ID not found');
+      }
+      
       const { data: scans, error: scansError } = await supabase
         .from('product_scans')
         .select(`
@@ -101,7 +102,18 @@ export const useInventoryData = (activeDataTab: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [restaurantId, toast]);
+  
+  // Use useEffect with memoized dependencies to prevent unnecessary data fetching
+  useEffect(() => {
+    if (restaurantId) {
+      if (activeDataTab === 'products') {
+        fetchRecentProducts();
+      } else {
+        fetchRecentMovements();
+      }
+    }
+  }, [restaurantId, activeDataTab, fetchRecentProducts, fetchRecentMovements]);
 
   return {
     recentProducts,

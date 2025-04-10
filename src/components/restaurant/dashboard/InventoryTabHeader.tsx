@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutDashboard, List } from 'lucide-react';
@@ -9,17 +9,26 @@ interface InventoryTabHeaderProps {
   onTabChange: (tab: string) => void;
 }
 
-const InventoryTabHeader: React.FC<InventoryTabHeaderProps> = ({ 
+const InventoryTabHeader: React.FC<InventoryTabHeaderProps> = React.memo(({ 
   activeDataTab, 
   onTabChange 
 }) => {
+  // Memoize tab change handlers to prevent unnecessary re-renders
+  const handleProductsTabClick = useCallback(() => {
+    onTabChange('products');
+  }, [onTabChange]);
+
+  const handleMovementsTabClick = useCallback(() => {
+    onTabChange('movements');
+  }, [onTabChange]);
+
   return (
     <div className="flex flex-row justify-between items-center">
       <CardTitle className="text-lg">بيانات المخزون</CardTitle>
       <TabsList className="h-9">
         <TabsTrigger 
           value="products" 
-          onClick={() => onTabChange('products')}
+          onClick={handleProductsTabClick}
           className={activeDataTab === 'products' ? "bg-background text-foreground" : ""}
         >
           <LayoutDashboard className="h-4 w-4 ml-2" />
@@ -27,7 +36,7 @@ const InventoryTabHeader: React.FC<InventoryTabHeaderProps> = ({
         </TabsTrigger>
         <TabsTrigger 
           value="movements" 
-          onClick={() => onTabChange('movements')}
+          onClick={handleMovementsTabClick}
           className={activeDataTab === 'movements' ? "bg-background text-foreground" : ""}
         >
           <List className="h-4 w-4 ml-2" />
@@ -36,6 +45,8 @@ const InventoryTabHeader: React.FC<InventoryTabHeaderProps> = ({
       </TabsList>
     </div>
   );
-};
+});
+
+InventoryTabHeader.displayName = 'InventoryTabHeader';
 
 export default InventoryTabHeader;
