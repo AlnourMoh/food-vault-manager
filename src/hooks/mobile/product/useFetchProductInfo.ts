@@ -1,6 +1,5 @@
 
 import { useState, useCallback } from 'react';
-import { toast as toastFunction } from '@/hooks/use-toast';
 import type { ToastAPI } from '@/hooks/use-toast.d';
 
 export const useFetchProductInfo = (toast: ToastAPI) => {

@@ -16,11 +16,17 @@ export const useProductAddition = () => {
   
   // Use custom hooks for fetching product info and handling submission
   const { productInfo, loading, fetchProductInfo } = useFetchProductInfo(toast);
-  const { handleAddProduct } = useProductSubmission(barcode, quantity, productInfo, toast, () => {
-    // Reset form after successful submission
-    setBarcode('');
-    setQuantity('1');
-  });
+  const { handleAddProduct, loading: submissionLoading } = useProductSubmission(
+    barcode, 
+    quantity, 
+    productInfo, 
+    toast, 
+    () => {
+      // Reset form after successful submission
+      setBarcode('');
+      setQuantity('1');
+    }
+  );
   
   // Fetch product info when barcode changes
   useEffect(() => {
@@ -43,7 +49,7 @@ export const useProductAddition = () => {
     quantity,
     setQuantity,
     productInfo,
-    loading,
+    loading: loading || submissionLoading,
     handleScanResult,
     handleAddProduct
   };

@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { toast as toastFunction } from '@/hooks/use-toast';
 import type { ToastAPI } from '@/hooks/use-toast.d';
 
 export const useProductSubmission = (
