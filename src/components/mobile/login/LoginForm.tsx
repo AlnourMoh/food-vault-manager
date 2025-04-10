@@ -1,18 +1,26 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import IdentifierInput from './IdentifierInput';
+import EmailInput from './EmailInput';
+import PhoneInput from './PhoneInput';
 import PasswordInput from './PasswordInput';
-import { LoginStep } from '@/hooks/useTeamAuth';
+import IdentifierTypeToggle from './IdentifierTypeToggle';
+import { IdentifierType, LoginStep } from '@/hooks/useTeamAuth';
 
 interface LoginFormProps {
-  identifier: string;
+  identifierType: IdentifierType;
+  setIdentifierType: (type: IdentifierType) => void;
+  email: string;
+  phoneNumber: string;
+  phoneCountryCode: string;
   password: string;
   confirmPassword: string;
   showPassword: boolean;
   isLoading: boolean;
   loginStep: LoginStep;
-  setIdentifier: (value: string) => void;
+  setEmail: (value: string) => void;
+  setPhoneNumber: (value: string) => void;
+  setPhoneCountryCode: (value: string) => void;
   setPassword: (value: string) => void;
   setConfirmPassword: (value: string) => void;
   handleCheckIdentifier: () => void;
@@ -23,13 +31,19 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({
-  identifier,
+  identifierType,
+  setIdentifierType,
+  email,
+  phoneNumber,
+  phoneCountryCode,
   password,
   confirmPassword,
   showPassword,
   isLoading,
   loginStep,
-  setIdentifier,
+  setEmail,
+  setPhoneNumber,
+  setPhoneCountryCode,
   setPassword,
   setConfirmPassword,
   handleCheckIdentifier,
@@ -53,12 +67,26 @@ const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {loginStep === 'identifier' && (
-        <div className="space-y-2">
-          <IdentifierInput
-            identifier={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
+        <>
+          <IdentifierTypeToggle 
+            identifierType={identifierType} 
+            setIdentifierType={setIdentifierType} 
           />
-        </div>
+          
+          {identifierType === 'email' ? (
+            <EmailInput
+              email={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          ) : (
+            <PhoneInput
+              phoneNumber={phoneNumber}
+              phoneCountryCode={phoneCountryCode}
+              onPhoneNumberChange={(e) => setPhoneNumber(e.target.value)}
+              onCountryCodeChange={setPhoneCountryCode}
+            />
+          )}
+        </>
       )}
       
       {loginStep !== 'identifier' && (

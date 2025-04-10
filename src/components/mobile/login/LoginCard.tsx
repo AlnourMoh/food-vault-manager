@@ -8,16 +8,22 @@ import {
   CardDescription
 } from '@/components/ui/card';
 import LoginForm from './LoginForm';
-import { LoginStep } from '@/hooks/useTeamAuth';
+import { IdentifierType, LoginStep } from '@/hooks/useTeamAuth';
 
 interface LoginCardProps {
+  identifierType: IdentifierType;
+  setIdentifierType: (type: IdentifierType) => void;
   loginStep: LoginStep;
-  identifier: string;
+  email: string;
+  phoneNumber: string;
+  phoneCountryCode: string;
   password: string;
   confirmPassword: string;
   showPassword: boolean;
   isLoading: boolean;
-  setIdentifier: (value: string) => void;
+  setEmail: (value: string) => void;
+  setPhoneNumber: (value: string) => void;
+  setPhoneCountryCode: (value: string) => void;
   setPassword: (value: string) => void;
   setConfirmPassword: (value: string) => void;
   handleCheckIdentifier: () => void;
@@ -28,10 +34,10 @@ interface LoginCardProps {
 }
 
 const LoginCard: React.FC<LoginCardProps> = (props) => {
-  const { loginStep } = props;
+  const { loginStep, identifierType } = props;
   
   return (
-    <Card className="w-[320px]">
+    <Card className="w-[350px]">
       <CardHeader>
         <CardTitle className="text-xl text-center">
           {loginStep === 'identifier' 
@@ -42,7 +48,9 @@ const LoginCard: React.FC<LoginCardProps> = (props) => {
         </CardTitle>
         <CardDescription className="text-center">
           {loginStep === 'identifier' 
-            ? "أدخل البريد الإلكتروني أو رقم الهاتف" 
+            ? identifierType === 'email' 
+              ? "أدخل البريد الإلكتروني" 
+              : "أدخل رقم الهاتف"
             : loginStep === 'setup' 
               ? "أنشئ كلمة مرور للدخول إلى النظام" 
               : "أدخل كلمة المرور الخاصة بك"}

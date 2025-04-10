@@ -9,9 +9,13 @@ import {
 } from '@/services/teamAuthService';
 
 export type LoginStep = 'identifier' | 'password' | 'setup';
+export type IdentifierType = 'email' | 'phone';
 
 export function useTeamAuth() {
-  const [identifier, setIdentifier] = useState('');
+  const [identifierType, setIdentifierType] = useState<IdentifierType>('email');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('974'); // قطر كقيمة افتراضية
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,10 +25,25 @@ export function useTeamAuth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // الحصول على المعرف بناءً على النوع المحدد
+  const getIdentifier = () => {
+    return identifierType === 'email' ? email : `+${phoneCountryCode}${phoneNumber}`;
+  };
+
   const handleCheckIdentifier = async () => {
-    if (!identifier.trim()) {
+    const identifier = getIdentifier();
+    
+    if (identifierType === 'email' && !email.trim()) {
       toast({
-        title: "يرجى إدخال البريد الإلكتروني أو رقم الهاتف",
+        title: "يرجى إدخال البريد الإلكتروني",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (identifierType === 'phone' && !phoneNumber.trim()) {
+      toast({
+        title: "يرجى إدخال رقم الهاتف",
         variant: "destructive"
       });
       return;
@@ -66,6 +85,8 @@ export function useTeamAuth() {
   };
 
   const handleLogin = async () => {
+    const identifier = getIdentifier();
+
     if (!password.trim()) {
       toast({
         title: "يرجى إدخال كلمة المرور",
@@ -107,6 +128,8 @@ export function useTeamAuth() {
   };
 
   const handleSetupPassword = async () => {
+    const identifier = getIdentifier();
+
     if (!password.trim()) {
       toast({
         title: "يرجى إدخال كلمة المرور",
@@ -164,8 +187,14 @@ export function useTeamAuth() {
   };
 
   return {
-    identifier,
-    setIdentifier,
+    identifierType,
+    setIdentifierType,
+    email,
+    setEmail,
+    phoneNumber,
+    setPhoneNumber,
+    phoneCountryCode,
+    setPhoneCountryCode,
     password,
     setPassword,
     confirmPassword,
