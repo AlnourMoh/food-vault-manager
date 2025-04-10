@@ -7,7 +7,8 @@ import { useLocalStorageSetup } from './utils/useLocalStorageSetup';
 import type { ToastAPI } from '@/hooks/use-toast.d';
 
 export const useProductAddition = () => {
-  const { toast } = useToast();
+  // Get the full toast object which includes both the toast function and dismiss method
+  const toast = useToast();
   const [scanning, setScanning] = useState(false);
   const [barcode, setBarcode] = useState('');
   const [quantity, setQuantity] = useState('1');
@@ -16,6 +17,7 @@ export const useProductAddition = () => {
   useLocalStorageSetup();
   
   // Use custom hooks for fetching product info and handling submission
+  // Pass the complete toast object that matches ToastAPI interface
   const { productInfo, loading, fetchProductInfo } = useFetchProductInfo(toast);
   const { handleAddProduct, loading: submissionLoading } = useProductSubmission(
     barcode, 
