@@ -37,7 +37,63 @@ export const useProductAddition = () => {
     console.log("Fetching product info for barcode:", code);
     setLoading(true);
     try {
-      // Check if the product exists in the restaurant's inventory
+      // في الوضع التجريبي، نبحث عن المنتج في البيانات المحلية
+      const mockProducts = [
+        {
+          id: '67890',
+          name: 'دقيق',
+          category: 'بقالة',
+          unit: 'كيلوغرام',
+          quantity: 0,
+          barcode: '67890',
+          description: 'دقيق متعدد الاستخدامات للخبز والطبخ',
+          expiryDate: { toDate: () => new Date(2025, 11, 31) },
+          status: 'active',
+          addedBy: 'سارة الاحمد'
+        },
+        {
+          id: '54321',
+          name: 'طماطم',
+          category: 'خضروات',
+          unit: 'كيلوغرام',
+          quantity: 0,
+          barcode: '54321',
+          description: 'طماطم طازجة',
+          expiryDate: { toDate: () => new Date(2025, 4, 30) },
+          status: 'active',
+          addedBy: 'سارة الاحمد'
+        },
+        {
+          id: '12345',
+          name: 'زيت زيتون',
+          category: 'بقالة',
+          unit: 'لتر',
+          quantity: 0,
+          barcode: '12345',
+          description: 'زيت زيتون عالي الجودة',
+          expiryDate: { toDate: () => new Date(2026, 5, 15) },
+          status: 'active',
+          addedBy: 'سارة الاحمد'
+        }
+      ];
+      
+      const product = mockProducts.find(p => p.id === code || p.barcode === code);
+      
+      if (product) {
+        console.log("Product found:", product);
+        setProductInfo(product);
+      } else {
+        console.log("Product not found in mock data");
+        toast({
+          title: "المنتج غير موجود",
+          description: "هذا المنتج غير مسجل في قاعدة البيانات",
+          variant: "destructive"
+        });
+        setProductInfo(null);
+      }
+      
+      /* 
+      // الكود الأصلي للاستخدام مع Firebase
       const productRef = doc(db, `restaurants/${restaurantId}/products`, code);
       const productSnap = await getDoc(productRef);
       
@@ -56,6 +112,7 @@ export const useProductAddition = () => {
         });
         setProductInfo(null);
       }
+      */
     } catch (error) {
       console.error("Error fetching product:", error);
       toast({
@@ -96,6 +153,22 @@ export const useProductAddition = () => {
     try {
       setLoading(true);
       
+      // Simulate API request delay and success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "تمت العملية بنجاح",
+        description: `تم إضافة ${quantity} ${productInfo.unit} من ${productInfo.name} إلى المخزون`,
+        variant: "default",
+      });
+
+      // Reset form
+      setBarcode('');
+      setQuantity('1');
+      setProductInfo(null);
+      
+      /* 
+      // الكود الأصلي للاستخدام مع Firebase
       // Update product quantity in the database
       const productRef = doc(db, `restaurants/${restaurantId}/products`, barcode);
       await updateDoc(productRef, {
@@ -125,6 +198,7 @@ export const useProductAddition = () => {
       setBarcode('');
       setQuantity('1');
       setProductInfo(null);
+      */
       
     } catch (error) {
       console.error("Error adding product:", error);
