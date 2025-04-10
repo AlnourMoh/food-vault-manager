@@ -10,7 +10,7 @@ export const useFetchProductInfo = (toast: ToastAPI) => {
     console.log("Fetching product info for barcode:", code);
     setLoading(true);
     try {
-      // في الوضع التجريبي، نبحث عن المنتج في البيانات المحلية
+      // في ال&وضع التجريبي، نبحث عن المنتج في البيانات المحلية
       const mockProducts = [
         {
           id: '67890',

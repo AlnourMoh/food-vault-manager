@@ -8,7 +8,8 @@ import ProductInfo from '@/components/mobile/ProductInfo';
 import ProductSubmitButton from '@/components/mobile/ProductSubmitButton';
 import RegisteredProductsList from '@/components/mobile/RegisteredProductsList';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Info, ScanLine } from 'lucide-react';
 
 const MobileAddProduct = () => {
   const {
@@ -87,13 +88,14 @@ const MobileAddProduct = () => {
                 <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />
                 
                 {/* زر مسح باركود جديد */}
-                <div className="flex justify-center mt-6">
-                  <button 
+                <div className="mt-6">
+                  <Button 
                     onClick={() => setScanning(true)}
-                    className="bg-fvm-primary hover:bg-fvm-primary-light text-white px-4 py-2 rounded-md flex items-center gap-2"
+                    className="w-full bg-fvm-primary hover:bg-fvm-primary-light text-white py-3 flex items-center justify-center gap-2"
                   >
+                    <ScanLine className="h-5 w-5" />
                     <span>مسح باركود منتج جديد</span>
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
