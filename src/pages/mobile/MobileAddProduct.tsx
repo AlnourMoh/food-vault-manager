@@ -42,7 +42,7 @@ const MobileAddProduct = () => {
       <div className="rtl space-y-4 p-3">
         <PageHeader
           title="إدخال منتج"
-          backUrl="/restaurant/mobile"
+          backPath="/restaurant/mobile"
         />
 
         {scanning ? (
