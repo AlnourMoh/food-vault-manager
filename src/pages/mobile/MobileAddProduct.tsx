@@ -47,7 +47,7 @@ const MobileAddProduct = () => {
 
   // إعداد البيانات الافتراضية للعرض التجريبي
   useEffect(() => {
-    console.log("تهيئة بيانات العرض التجريبي...");
+    console.log("تهيئة بيانات العرض التجريبي في MobileAddProduct...");
     
     // تعيين معرف المطعم للعرض التجريبي إذا لم يكن موجوداً
     if (!localStorage.getItem('restaurantId')) {
@@ -66,6 +66,12 @@ const MobileAddProduct = () => {
       localStorage.setItem('teamMemberName', 'سارة الاحمد');
       console.log("تم تعيين اسم عضو فريق افتراضي للعرض التجريبي");
     }
+    
+    // تعيين دور عضو الفريق الافتراضي إذا لم يكن موجودًا
+    if (!localStorage.getItem('teamMemberRole')) {
+      localStorage.setItem('teamMemberRole', 'عضو فريق');
+      console.log("تم تعيين دور عضو فريق افتراضي للعرض التجريبي");
+    }
   }, []);
 
   // سجل الحالة عند التحميل
@@ -74,6 +80,7 @@ const MobileAddProduct = () => {
     console.log("معرف المطعم في localStorage:", localStorage.getItem('restaurantId'));
     console.log("معرف المستخدم في localStorage:", localStorage.getItem('teamMemberId'));
     console.log("اسم عضو الفريق في localStorage:", localStorage.getItem('teamMemberName'));
+    console.log("دور عضو الفريق في localStorage:", localStorage.getItem('teamMemberRole'));
   }, []);
 
   return (

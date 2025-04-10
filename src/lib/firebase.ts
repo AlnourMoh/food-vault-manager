@@ -16,58 +16,62 @@ export const doc = (db: any, ...pathSegments: string[]) => {
 };
 
 export const getDoc = async (docRef: any) => {
-  // For demo purposes, we'll say product with ID 12345 exists
-  if (docRef.path.includes('12345')) {
+  console.log("Mock getDoc called for path:", docRef.path);
+  
+  // For demo purposes, create a map of product IDs to their mock data
+  const mockProducts: Record<string, any> = {
+    '12345': {
+      name: 'زيت زيتون',
+      description: 'وصف لزيت الزيتون',
+      category: 'بقالة',
+      quantity: 0,
+      status: 'active',
+      unit: 'لتر',
+      created_at: { toDate: () => new Date() },
+      updated_at: { toDate: () => new Date() },
+      addedBy: 'سارة الاحمد'
+    },
+    '54321': {
+      name: 'طماطم',
+      description: 'طماطم طازجة',
+      category: 'خضروات',
+      quantity: 0,
+      status: 'active',
+      unit: 'كيلوغرام',
+      created_at: { toDate: () => new Date() },
+      updated_at: { toDate: () => new Date() },
+      addedBy: 'سارة الاحمد'
+    },
+    '67890': {
+      name: 'دقيق',
+      description: 'دقيق عالي الجودة',
+      category: 'بقالة',
+      quantity: 0,
+      status: 'active',
+      unit: 'كيلوغرام',
+      created_at: { toDate: () => new Date() },
+      updated_at: { toDate: () => new Date() },
+      addedBy: 'سارة الاحمد'
+    }
+  };
+  
+  // Extract the product ID from the path
+  const pathParts = docRef.path.split('/');
+  const productId = pathParts[pathParts.length - 1];
+  
+  console.log("Looking for product with ID:", productId);
+  
+  // Check if we have a mock product with this ID
+  if (mockProducts[productId]) {
+    console.log("Found mock product:", mockProducts[productId].name);
     return {
       exists: () => true,
-      data: () => ({
-        name: 'منتج تجريبي',
-        description: 'وصف للمنتج التجريبي',
-        quantity: 10,
-        expiryDate: {
-          toDate: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days in the future
-        }
-      }),
+      data: () => mockProducts[productId],
+      id: productId
     };
   }
   
-  // For demo purposes, add some registered products that haven't been added to inventory yet
-  if (docRef.path.includes('products') && !docRef.path.includes('12345')) {
-    const registeredProducts = {
-      '67890': {
-        name: 'دقيق',
-        category: 'بقالة',
-        quantity: 0,
-        status: 'active',
-        unit: 'كيلوغرام',
-        created_at: { toDate: () => new Date() },
-        updated_at: { toDate: () => new Date() },
-        addedBy: 'إدارة النظام'
-      },
-      '54321': {
-        name: 'طماطم',
-        category: 'خضروات',
-        quantity: 0,
-        status: 'active',
-        unit: 'كيلوغرام',
-        created_at: { toDate: () => new Date() },
-        updated_at: { toDate: () => new Date() },
-        addedBy: 'إدارة النظام'
-      }
-    };
-    
-    // Extract the product ID from the path
-    const pathParts = docRef.path.split('/');
-    const productId = pathParts[pathParts.length - 1];
-    
-    if (registeredProducts[productId]) {
-      return {
-        exists: () => true,
-        data: () => registeredProducts[productId],
-      };
-    }
-  }
-  
+  console.log("Product not found in mock data");
   return {
     exists: () => false,
     data: () => ({}),
@@ -123,9 +127,11 @@ export const where = (field: string, operator: string, value: any) => {
 };
 
 export const getDocs = async (queryObj: any) => {
-  // Mock implementation for getDocs
-  if (queryObj.collectionRef.path.includes('products')) {
-    // Return mock registered products that haven't been added to inventory
+  console.log("Mock getDocs called with query:", queryObj);
+  
+  // Check if we're querying for products
+  if (queryObj.collectionRef && queryObj.collectionRef.path && queryObj.collectionRef.path.includes('products')) {
+    // Return mock registered products that haven't been added to inventory yet
     const mockProducts = [
       {
         id: '67890',
@@ -136,7 +142,7 @@ export const getDocs = async (queryObj: any) => {
         unit: 'كيلوغرام',
         created_at: { toDate: () => new Date() },
         updated_at: { toDate: () => new Date() },
-        addedBy: 'إدارة النظام'
+        addedBy: 'سارة الاحمد'
       },
       {
         id: '54321',
@@ -147,9 +153,22 @@ export const getDocs = async (queryObj: any) => {
         unit: 'كيلوغرام',
         created_at: { toDate: () => new Date() },
         updated_at: { toDate: () => new Date() },
-        addedBy: 'إدارة النظام'
+        addedBy: 'سارة الاحمد'
+      },
+      {
+        id: '12345',
+        name: 'زيت زيتون',
+        category: 'بقالة',
+        quantity: 0,
+        status: 'active',
+        unit: 'لتر',
+        created_at: { toDate: () => new Date() },
+        updated_at: { toDate: () => new Date() },
+        addedBy: 'سارة الاحمد'
       }
     ];
+    
+    console.log("Returning mock products:", mockProducts.length);
     
     return {
       empty: false,
@@ -161,6 +180,7 @@ export const getDocs = async (queryObj: any) => {
     };
   }
   
+  console.log("No mock data available for this query, returning empty result");
   return {
     empty: true,
     docs: [],

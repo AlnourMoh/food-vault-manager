@@ -10,7 +10,22 @@ export const useProductAddition = () => {
   const [quantity, setQuantity] = useState('1');
   const [productInfo, setProductInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const restaurantId = localStorage.getItem('restaurantId');
+  const restaurantId = localStorage.getItem('restaurantId') || 'restaurant-demo-123';
+
+  // Setting default localStorage values if they don't exist
+  useEffect(() => {
+    if (!localStorage.getItem('restaurantId')) {
+      localStorage.setItem('restaurantId', 'restaurant-demo-123');
+    }
+    
+    if (!localStorage.getItem('teamMemberId')) {
+      localStorage.setItem('teamMemberId', 'user-demo-123');
+    }
+    
+    if (!localStorage.getItem('teamMemberName')) {
+      localStorage.setItem('teamMemberName', 'سارة الاحمد');
+    }
+  }, []);
 
   useEffect(() => {
     if (barcode) {
@@ -19,14 +34,21 @@ export const useProductAddition = () => {
   }, [barcode]);
 
   const fetchProductInfo = async (code: string) => {
+    console.log("Fetching product info for barcode:", code);
     setLoading(true);
     try {
       // Check if the product exists in the restaurant's inventory
       const productRef = doc(db, `restaurants/${restaurantId}/products`, code);
       const productSnap = await getDoc(productRef);
+      
       if (productSnap.exists()) {
-        setProductInfo(productSnap.data());
+        console.log("Product found:", productSnap.data());
+        setProductInfo({
+          ...productSnap.data(),
+          id: code
+        });
       } else {
+        console.log("Product not found in database");
         toast({
           title: "المنتج غير موجود",
           description: "هذا المنتج غير مسجل في قاعدة البيانات",
@@ -47,6 +69,7 @@ export const useProductAddition = () => {
   };
 
   const handleScanResult = (result: string) => {
+    console.log("Scan result:", result);
     setBarcode(result);
     setScanning(false);
   };

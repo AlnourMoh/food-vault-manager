@@ -13,7 +13,7 @@ interface RegisteredProductsListProps {
 const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanProduct }) => {
   const { products, loading, refreshProducts } = useRegisteredProducts();
 
-  console.log("المنتجات المسجلة:", products); // إضافة سجل لفحص البيانات
+  console.log("المنتجات المسجلة في RegisteredProductsList:", products); // إضافة سجل لفحص البيانات
 
   // تنفيذ تحديث أول عند تحميل المكون
   useEffect(() => {
