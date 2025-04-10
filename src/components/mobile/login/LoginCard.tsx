@@ -8,7 +8,7 @@ import {
   CardDescription
 } from '@/components/ui/card';
 import LoginForm from './LoginForm';
-import { IdentifierType, LoginStep } from '@/hooks/useTeamAuth';
+import { IdentifierType, LoginStep } from '@/hooks/team/auth/types';
 
 interface LoginCardProps {
   identifierType: IdentifierType;

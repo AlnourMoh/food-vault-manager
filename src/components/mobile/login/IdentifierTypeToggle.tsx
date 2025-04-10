@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone } from 'lucide-react';
-import { IdentifierType } from '@/hooks/useTeamAuth';
+import { IdentifierType } from '@/hooks/team/auth/types';
 
 interface IdentifierTypeToggleProps {
   identifierType: IdentifierType;

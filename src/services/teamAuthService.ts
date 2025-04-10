@@ -7,5 +7,7 @@ export {
   setupTeamMemberPassword,
   logoutTeamMember,
   loginTeamMember,
-  type TeamMember
+  type TeamMember,
+  type CheckIdentifierResult,
+  type AuthenticateResult
 } from './team-auth';
