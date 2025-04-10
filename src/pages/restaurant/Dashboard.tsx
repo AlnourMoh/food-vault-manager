@@ -11,7 +11,9 @@ import {
   ShoppingBasket, 
   History, 
   Clock, 
-  ArrowDown 
+  ArrowDown,
+  LayoutDashboard,
+  List 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,6 +26,7 @@ const RestaurantDashboard = () => {
   const [showMobileApp, setShowMobileApp] = useState(false);
   const [recentProducts, setRecentProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeDataTab, setActiveDataTab] = useState('products'); // For toggling between products and movements
   const { toast } = useToast();
   const restaurantId = localStorage.getItem('restaurantId');
   
@@ -138,13 +141,33 @@ const RestaurantDashboard = () => {
               />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">آخر المنتجات المضافة للمخزون</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {loading ? (
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex flex-row justify-between items-center">
+                  <CardTitle className="text-lg">بيانات المخزون</CardTitle>
+                  <TabsList className="h-9">
+                    <TabsTrigger 
+                      value="products" 
+                      onClick={() => setActiveDataTab('products')}
+                      className={activeDataTab === 'products' ? "bg-background text-foreground" : ""}
+                    >
+                      <LayoutDashboard className="h-4 w-4 ml-2" />
+                      آخر المنتجات المضافة
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="movements" 
+                      onClick={() => setActiveDataTab('movements')}
+                      className={activeDataTab === 'movements' ? "bg-background text-foreground" : ""}
+                    >
+                      <List className="h-4 w-4 ml-2" />
+                      آخر الحركات
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {activeDataTab === 'products' ? (
+                  loading ? (
                     <div className="flex justify-center items-center p-6">
                       <div className="animate-spin h-6 w-6 border-2 border-gray-500 rounded-full border-t-transparent"></div>
                     </div>
@@ -178,17 +201,14 @@ const RestaurantDashboard = () => {
                     <div className="text-center py-6">
                       <p className="text-gray-500">لا توجد منتجات مضافة حديثًا</p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium">آخر الحركات</h3>
-                  <p className="text-sm text-muted-foreground">قريبًا...</p>
-                </CardContent>
-              </Card>
-            </div>
+                  )
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-gray-500">سيتم عرض آخر حركات المخزون قريبًا...</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             
             <div className="grid grid-cols-1 gap-6">
               <Card>
