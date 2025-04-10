@@ -22,20 +22,22 @@ export const useRegisteredProducts = () => {
 
   const fetchRegisteredProducts = async () => {
     if (!restaurantId) {
+      console.error("معرف المطعم غير موجود");
+      // تعيين معرف المطعم الافتراضي إذا لم يكن موجودًا
+      localStorage.setItem('restaurantId', 'restaurant-demo-123');
+      
       toast({
-        title: "خطأ في النظام",
-        description: "لم يتم العثور على معرف المطعم",
-        variant: "destructive"
+        title: "تم تعيين معرف المطعم",
+        description: "تم تعيين معرف مطعم تلقائيًا للعرض التجريبي",
+        duration: 3000,
       });
-      setLoading(false);
-      return;
     }
 
     try {
       setLoading(true);
-      console.log("بدء جلب المنتجات المسجلة للمطعم:", restaurantId);
+      console.log("بدء جلب المنتجات المسجلة للمطعم:", localStorage.getItem('restaurantId'));
       
-      // For demo purposes, create sample products with useful data
+      // Always create some demo products for testing
       const mockRegisteredProducts: RegisteredProduct[] = [
         {
           id: '67890',
@@ -152,13 +154,14 @@ export const useRegisteredProducts = () => {
   };
 
   useEffect(() => {
+    console.log("تشغيل useEffect في useRegisteredProducts");
     fetchRegisteredProducts();
     
     // Refresh every 30 seconds to check for new registered products
     const intervalId = setInterval(fetchRegisteredProducts, 30000);
     
     return () => clearInterval(intervalId);
-  }, [restaurantId]);
+  }, []);
 
   return {
     products,

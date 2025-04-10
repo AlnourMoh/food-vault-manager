@@ -40,15 +40,25 @@ const MobileAddProduct = () => {
   };
 
   const handleScanRegisteredProduct = (code: string) => {
+    console.log("تم اختيار منتج مسجل للمسح:", code);
     setBarcode(code);
     handleScanResult(code);
   };
 
-  // تعيين معرف المطعم للعرض التجريبي إذا لم يكن موجوداً
+  // إعداد البيانات الافتراضية للعرض التجريبي
   useEffect(() => {
+    console.log("تهيئة بيانات العرض التجريبي...");
+    
+    // تعيين معرف المطعم للعرض التجريبي إذا لم يكن موجوداً
     if (!localStorage.getItem('restaurantId')) {
       localStorage.setItem('restaurantId', 'restaurant-demo-123');
       console.log("تم تعيين معرف مطعم افتراضي للعرض التجريبي");
+    }
+    
+    // تعيين معرف المستخدم للعرض التجريبي إذا لم يكن موجوداً
+    if (!localStorage.getItem('teamMemberId')) {
+      localStorage.setItem('teamMemberId', 'user-demo-123');
+      console.log("تم تعيين معرف مستخدم افتراضي للعرض التجريبي");
     }
     
     // تعيين اسم عضو الفريق الافتراضي إذا لم يكن موجوداً
@@ -60,7 +70,9 @@ const MobileAddProduct = () => {
 
   // سجل الحالة عند التحميل
   useEffect(() => {
+    console.log("صفحة إدخال المنتج - معلومات التهيئة:");
     console.log("معرف المطعم في localStorage:", localStorage.getItem('restaurantId'));
+    console.log("معرف المستخدم في localStorage:", localStorage.getItem('teamMemberId'));
     console.log("اسم عضو الفريق في localStorage:", localStorage.getItem('teamMemberName'));
   }, []);
 

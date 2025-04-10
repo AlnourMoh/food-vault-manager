@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Package2, ScanBarcode, Clock } from 'lucide-react';
 import BarcodeButton from './BarcodeButton';
@@ -14,6 +14,12 @@ const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanP
   const { products, loading, refreshProducts } = useRegisteredProducts();
 
   console.log("المنتجات المسجلة:", products); // إضافة سجل لفحص البيانات
+
+  // تنفيذ تحديث أول عند تحميل المكون
+  useEffect(() => {
+    console.log("تحديث المنتجات المسجلة عند تحميل المكون");
+    refreshProducts();
+  }, []);
 
   if (loading) {
     return (
