@@ -1,3 +1,4 @@
+
 import { CheckIdentifierResult, AuthenticateResult, TeamMember } from './types';
 import { mockTeamMembers, mockPhoneUsers } from './mockData';
 import { normalizeIdentifier, isValidTestEmail, isValidTestPhone, isEmailIdentifier } from './identifierUtils';
@@ -15,11 +16,12 @@ export const checkTeamMemberExists = async (
   
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
-  // Check if user has previously set up a password
-  const hasSetupPassword = localStorage.getItem(`passwordSetup:${normalizedIdentifier}`) === 'true';
-  
-  // Find the team member ID associated with this identifier
+  // Get the team member ID associated with this identifier
   const teamMemberId = getTeamMemberIdFromIdentifier(normalizedIdentifier);
+  
+  // Check if user has previously set up a password (using team member ID for consistency)
+  const hasSetupPassword = teamMemberId ? 
+    localStorage.getItem(`passwordSetup:${teamMemberId}`) === 'true' : false;
   
   if (isEmailIdentifier(normalizedIdentifier)) {
     // Check email patterns
@@ -117,12 +119,12 @@ export const authenticateTeamMember = async (
     };
   }
   
-  // Get the stored password for this team member
+  // Get the stored password for this team member ID
   const storedPassword = localStorage.getItem(`userPassword:${teamMemberId}`);
   
-  // If we have a stored password, verify it matches
-  if (storedPassword && storedPassword !== password) {
-    console.log("Password mismatch: stored password doesn't match provided password");
+  // If we have a stored password, verify it matches exactly
+  if (!storedPassword || storedPassword !== password) {
+    console.log("Password verification failed: Stored password doesn't match provided password");
     return {
       isFirstLogin: false
     };
@@ -139,6 +141,9 @@ export const authenticateTeamMember = async (
     
     if (userKey) {
       mockTeamMember = { ...mockTeamMembers[userKey] };
+      
+      // Store the unique identifier used for this session
+      localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
     }
   } else {
     // Find a matching phone user for demo
@@ -148,19 +153,19 @@ export const authenticateTeamMember = async (
     
     if (userKey) {
       mockTeamMember = { ...mockPhoneUsers[userKey] };
+      
+      // Store the unique identifier used for this session
+      localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
     }
   }
   
-  // Only authenticate if we found a team member AND the password is either:
-  // 1. Matching the stored password, or
-  // 2. There's no stored password yet (for backward compatibility) and password is at least 6 chars
-  if (mockTeamMember && (storedPassword === password || (!storedPassword && password.length >= 6))) {
+  // Only authenticate if we found a team member AND the password matches exactly
+  if (mockTeamMember && storedPassword === password) {
     // Save team member info in localStorage
     localStorage.setItem('teamMemberId', mockTeamMember.id);
     localStorage.setItem('teamMemberName', mockTeamMember.name);
-    localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
     
-    // Save the association between this identifier and the team member ID
+    // Save the association between this identifier and the team member ID for future reference
     localStorage.setItem(`teamMemberId:${normalizedIdentifier}`, mockTeamMember.id);
     
     return {
@@ -186,8 +191,9 @@ export const setupTeamMemberPassword = async (
   
   const normalizedIdentifier = normalizeIdentifier(identifier);
   
-  // Create appropriate mock team member
+  // Get or create appropriate mock team member
   let mockTeamMember: TeamMember;
+  let teamMemberId: string;
   
   if (isEmailIdentifier(normalizedIdentifier)) {
     // Find a matching email user for demo
@@ -196,6 +202,7 @@ export const setupTeamMemberPassword = async (
     ) || "test";
     
     mockTeamMember = { ...mockTeamMembers[userKey] };
+    teamMemberId = mockTeamMember.id;
   } else {
     // Find a matching phone user for demo
     const userKey = Object.keys(mockPhoneUsers).find(key => 
@@ -203,20 +210,21 @@ export const setupTeamMemberPassword = async (
     ) || Object.keys(mockPhoneUsers)[0];
     
     mockTeamMember = { ...mockPhoneUsers[userKey] };
+    teamMemberId = mockTeamMember.id;
   }
   
-  // Save team member identifier and password for subsequent login
+  // Save the current identifier for subsequent login
   localStorage.setItem('teamMemberIdentifier', normalizedIdentifier);
   
   // Save the association between this identifier and the team member ID
-  localStorage.setItem(`teamMemberId:${normalizedIdentifier}`, mockTeamMember.id);
+  localStorage.setItem(`teamMemberId:${normalizedIdentifier}`, teamMemberId);
   
   // Store the password by team member ID (not by identifier)
   // This way the same password works for both email and phone
-  localStorage.setItem(`userPassword:${mockTeamMember.id}`, password);
+  localStorage.setItem(`userPassword:${teamMemberId}`, password);
   
-  // Mark that this user has set up their password
-  localStorage.setItem(`passwordSetup:${normalizedIdentifier}`, 'true');
+  // Mark that this user has set up their password (by team member ID)
+  localStorage.setItem(`passwordSetup:${teamMemberId}`, 'true');
   
   return mockTeamMember;
 };
