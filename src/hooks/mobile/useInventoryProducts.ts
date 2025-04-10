@@ -33,6 +33,7 @@ export const useInventoryProducts = () => {
       console.log("بدء جلب المنتجات المخزنة للمطعم:", localStorage.getItem('restaurantId'));
       
       // إنشاء بيانات المنتجات المخزنة الوهمية للعرض التجريبي
+      const today = new Date();
       const mockInventoryProducts: InventoryProduct[] = [
         {
           id: '67890',
@@ -56,7 +57,7 @@ export const useInventoryProducts = () => {
           status: 'active',
           addedBy: 'سارة الاحمد',
           createdAt: new Date(2025, 3, 24).toLocaleDateString('ar-SA'),
-          expiryDate: new Date(2025, 5, 24)
+          expiryDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5) // تنتهي بعد 5 أيام
         },
         {
           id: '12345',
@@ -68,7 +69,19 @@ export const useInventoryProducts = () => {
           status: 'active',
           addedBy: 'سارة الاحمد',
           createdAt: new Date(2025, 3, 23).toLocaleDateString('ar-SA'),
-          expiryDate: new Date(2025, 7, 23)
+          expiryDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 10) // منتهي الصلاحية
+        },
+        {
+          id: '98765',
+          name: 'جبنة بيضاء',
+          category: 'ألبان',
+          unit: 'كيلوغرام',
+          quantity: 8,
+          barcode: '98765',
+          status: 'active',
+          addedBy: 'سارة الاحمد',
+          createdAt: new Date(2025, 3, 20).toLocaleDateString('ar-SA'),
+          expiryDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2) // تنتهي بعد يومين
         }
       ];
       

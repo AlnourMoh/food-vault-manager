@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { AlertCircle, Clock } from 'lucide-react';
 
 interface ProductInfoProps {
   productInfo: any;
@@ -23,6 +24,35 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 }) => {
   if (!productInfo) return null;
 
+  // التحقق من حالة انتهاء الصلاحية
+  const getExpiryStatus = () => {
+    if (!productInfo.expiryDate) return { status: 'unknown', label: '', color: '' };
+    
+    const today = new Date();
+    const expiry = new Date(productInfo.expiryDate.toDate ? productInfo.expiryDate.toDate() : productInfo.expiryDate);
+    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry <= 0) {
+      return { 
+        status: 'expired', 
+        label: 'منتهي الصلاحية!', 
+        color: 'text-red-600', 
+        icon: <AlertCircle className="h-4 w-4 text-red-600 inline mr-1" />
+      };
+    } else if (daysUntilExpiry <= 30) {
+      return { 
+        status: 'expiring-soon', 
+        label: `ينتهي خلال ${daysUntilExpiry} يوم`, 
+        color: 'text-amber-600',
+        icon: <Clock className="h-4 w-4 text-amber-600 inline mr-1" />
+      };
+    }
+    
+    return { status: 'valid', label: '', color: '', icon: null };
+  };
+
+  const expiryStatus = getExpiryStatus();
+
   return (
     <>
       <Separator />
@@ -30,9 +60,13 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         <h3 className="font-medium">معلومات المنتج:</h3>
         <p className="text-sm">الاسم: {productInfo.name}</p>
         <p className="text-sm">الوصف: {productInfo.description || 'غير متوفر'}</p>
-        <p className="text-sm">
+        <p className={`text-sm ${expiryStatus.color}`}>
           تاريخ الانتهاء: {productInfo.expiryDate ? 
-            format(new Date(productInfo.expiryDate.toDate()), 'PPP', { locale: ar }) : 
+            <>
+              {expiryStatus.icon}
+              {format(new Date(productInfo.expiryDate.toDate ? productInfo.expiryDate.toDate() : productInfo.expiryDate), 'PPP', { locale: ar })}
+              {expiryStatus.status !== 'valid' && ` (${expiryStatus.label})`}
+            </> : 
             'غير محدد'
           }
         </p>
