@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
-import useDeviceDetection from '@/hooks/useDeviceDetection';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRightLeft, ArrowDownToLine, LogOut } from 'lucide-react';
@@ -10,7 +9,6 @@ import { logoutTeamMember } from '@/services/teamAuthService';
 import { useToast } from '@/components/ui/use-toast';
 
 const MobileDashboard = () => {
-  const { isMobile } = useDeviceDetection();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -26,7 +24,7 @@ const MobileDashboard = () => {
   };
 
   return (
-    <RestaurantLayout hideSidebar={isMobile}>
+    <RestaurantLayout hideSidebar={true}>
       <div className="rtl space-y-6 p-2">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-bold">مرحبًا، {teamMemberName}</h1>

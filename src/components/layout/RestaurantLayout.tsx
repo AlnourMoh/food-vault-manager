@@ -87,8 +87,13 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children, hideSideb
     navigate('/restaurant/login');
   };
 
-  // في حالة الهاتف المحمول وصفحة تطبيق إدارة المخزون، نخفي الشريط الجانبي
-  const shouldHideSidebar = hideSidebar || (isMobile && location.pathname.includes('/restaurant/mobile'));
+  // Check if we should hide the sidebar
+  // For mobile app paths (/restaurant/mobile/...), always hide sidebar and header
+  const isMobileAppPath = location.pathname.includes('/restaurant/mobile');
+  // Hide sidebar if explicitly requested OR if we're on a mobile app path OR if viewing on a mobile device
+  const shouldHideSidebar = hideSidebar || isMobileAppPath || (isMobile && isMobileAppPath);
+  // Hide header too for mobile app paths
+  const shouldHideHeader = isMobileAppPath;
 
   return (
     <div className="rtl flex h-screen overflow-hidden">
@@ -129,12 +134,11 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children, hideSideb
         </div>
       )}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {!shouldHideSidebar && (
+        {!shouldHideHeader && !shouldHideSidebar && (
           <header className="rtl sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
             <div className="flex flex-1 items-center justify-between">
               <h3 className="text-xl font-semibold">إدارة المطعم</h3>
               <div className="text-sm">
-                {/* عرض اسم المطعم من قاعدة البيانات */}
                 {isLoading ? (
                   <span className="text-muted-foreground">جاري تحميل بيانات المطعم...</span>
                 ) : (
@@ -144,7 +148,11 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children, hideSideb
             </div>
           </header>
         )}
-        <main className={cn("flex-1 overflow-auto p-6", shouldHideSidebar && "pt-2")}>
+        <main className={cn(
+          "flex-1 overflow-auto", 
+          shouldHideSidebar && "p-2", 
+          !shouldHideSidebar && "p-6"
+        )}>
           {children}
         </main>
       </div>

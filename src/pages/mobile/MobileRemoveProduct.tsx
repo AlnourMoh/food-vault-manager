@@ -1,53 +1,68 @@
 
 import React from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
-import useDeviceDetection from '@/hooks/useDeviceDetection';
-import { Card, CardContent } from '@/components/ui/card';
 import { useProductRemoval } from '@/hooks/mobile/useProductRemoval';
-import BarcodeInputSection from '@/components/mobile/BarcodeInputSection';
-import ProductDetails from '@/components/mobile/ProductDetails';
+import BarcodeScanner from '@/components/mobile/BarcodeScanner';
 import PageHeader from '@/components/mobile/PageHeader';
+import ProductBarcodeInput from '@/components/mobile/ProductBarcodeInput';
+import ProductInfo from '@/components/mobile/ProductInfo';
+import ProductSubmitButton from '@/components/mobile/ProductSubmitButton';
+import EmptyProductState from '@/components/mobile/EmptyProductState';
+import BarcodeButton from '@/components/mobile/BarcodeButton';
 
 const MobileRemoveProduct = () => {
-  const { isMobile } = useDeviceDetection();
   const {
+    scanning,
+    setScanning,
     barcode,
+    setBarcode,
     quantity,
-    isLoading,
-    product,
-    handleBarcodeChange,
-    handleQuantityChange,
-    handleScanBarcode,
+    setQuantity,
+    productInfo,
+    loading,
+    handleScanResult,
     handleRemoveProduct
   } = useProductRemoval();
 
   return (
-    <RestaurantLayout hideSidebar={isMobile}>
-      <div className="rtl space-y-6">
+    <RestaurantLayout hideSidebar={true}>
+      <div className="rtl space-y-6 p-2">
         <PageHeader title="إخراج منتج" backPath="/restaurant/mobile" />
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <BarcodeInputSection 
-                barcode={barcode}
-                isLoading={isLoading}
-                onBarcodeChange={handleBarcodeChange}
-                onScanBarcode={handleScanBarcode}
-              />
-              
-              {product && (
-                <ProductDetails 
-                  product={product}
+        {scanning ? (
+          <BarcodeScanner 
+            onScanResult={handleScanResult}
+            onCancel={() => setScanning(false)}
+          />
+        ) : (
+          <>
+            <ProductBarcodeInput
+              barcode={barcode}
+              setBarcode={setBarcode}
+            />
+            
+            <BarcodeButton onClick={() => setScanning(true)} />
+            
+            {productInfo ? (
+              <>
+                <ProductInfo 
+                  productInfo={productInfo}
                   quantity={quantity}
-                  isLoading={isLoading}
-                  onQuantityChange={handleQuantityChange}
-                  onRemoveProduct={handleRemoveProduct}
+                  setQuantity={setQuantity}
+                  action="إخراج"
+                  showMaxQuantity
                 />
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                
+                <ProductSubmitButton 
+                  onClick={handleRemoveProduct}
+                  disabled={loading || (productInfo?.quantity === 0)}
+                />
+              </>
+            ) : (
+              <EmptyProductState />
+            )}
+          </>
+        )}
       </div>
     </RestaurantLayout>
   );
