@@ -9,7 +9,8 @@ import {
   Check,
   Users,
   Home,
-  LogOut
+  LogOut,
+  Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -67,6 +68,11 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
       name: 'التقارير', 
       path: '/restaurant/reports', 
       icon: <Check className="ml-2 h-5 w-5" /> 
+    },
+    { 
+      name: 'تطبيق إدارة المخزون', 
+      path: '/restaurant/mobile', 
+      icon: <Smartphone className="ml-2 h-5 w-5" /> 
     },
   ];
 
