@@ -1,11 +1,12 @@
 
+// Export authentication functions from new structure
 export {
   checkTeamMemberExists,
   authenticateTeamMember,
   setupTeamMemberPassword,
   logoutTeamMember,
   loginTeamMember
-} from './authService';
+} from './authentication';
 
 export type { TeamMember, CheckIdentifierResult, AuthenticateResult } from './types';
 
