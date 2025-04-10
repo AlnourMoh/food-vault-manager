@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -52,7 +51,9 @@ export function useTeamAuth() {
     setIsLoading(true);
     
     try {
+      console.log(`Checking identifier: ${identifier}, Type: ${identifierType}`);
       const result = await checkTeamMemberExists(identifier);
+      console.log("Check result:", result);
       
       if (!result.exists) {
         toast({
@@ -73,12 +74,12 @@ export function useTeamAuth() {
       }
       
     } catch (error) {
+      console.error("Check identifier error:", error);
       toast({
         title: "حدث خطأ",
         description: "يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
-      console.error("Check identifier error:", error);
     } finally {
       setIsLoading(false);
     }

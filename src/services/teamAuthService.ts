@@ -43,20 +43,44 @@ export const checkTeamMemberExists = async (
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
+  console.log("Checking identifier:", identifier);
+  
+  // التعامل مع جميع الأرقام مع أكواد الدول المختلفة
+  const normalizedIdentifier = identifier.replace(/\s+/g, '').toLowerCase();
+  
   // For demo purposes:
-  // "demo@example.com" or "0501234567" exists but hasn't set a password
-  if (identifier === "demo@example.com" || identifier === "0501234567") {
+  // طريقة أكثر مرونة للتعامل مع أرقام الهواتف بمفاتيح الدول المختلفة
+  if (
+    normalizedIdentifier === "demo@example.com" || 
+    normalizedIdentifier.includes("0501234567") ||
+    normalizedIdentifier.includes("501234567") ||
+    normalizedIdentifier.endsWith("1234567")
+  ) {
     return {
       exists: true,
       isFirstLogin: true
     };
   }
   
-  // "admin@example.com" or "0509876543" exists and has set a password
-  if (identifier === "admin@example.com" || identifier === "0509876543") {
+  // طريقة أكثر مرونة للتعامل مع البريد الإلكتروني
+  if (
+    normalizedIdentifier === "admin@example.com" || 
+    normalizedIdentifier.includes("0509876543") ||
+    normalizedIdentifier.includes("509876543") ||
+    normalizedIdentifier.endsWith("9876543")
+  ) {
     return {
       exists: true,
       isFirstLogin: false
+    };
+  }
+  
+  // بالنسبة للتطبيق التجريبي، لنجعله أكثر مرونة
+  // أي رقم يحتوي على 123 سيكون موجودًا
+  if (normalizedIdentifier.includes("123")) {
+    return {
+      exists: true,
+      isFirstLogin: true
     };
   }
   
@@ -80,8 +104,15 @@ export const authenticateTeamMember = async (
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  // For this demo, successful authentication for existing users
-  if (identifier === "admin@example.com" || identifier === "0509876543") {
+  const normalizedIdentifier = identifier.replace(/\s+/g, '').toLowerCase();
+  
+  // بالنسبة للمثال العملي، التحقق الناجح للمستخدمين الموجودين
+  if (
+    normalizedIdentifier === "admin@example.com" || 
+    normalizedIdentifier.includes("509876543") ||
+    normalizedIdentifier.includes("0509876543") ||
+    normalizedIdentifier.endsWith("9876543")
+  ) {
     if (password.length < 6) {
       return {
         isFirstLogin: false,
@@ -91,13 +122,13 @@ export const authenticateTeamMember = async (
     const mockTeamMember: TeamMember = {
       id: "12345",
       name: "أحمد محمد",
-      email: identifier.includes('@') ? identifier : undefined,
-      phone: !identifier.includes('@') ? identifier : undefined,
+      email: normalizedIdentifier.includes('@') ? normalizedIdentifier : undefined,
+      phone: !normalizedIdentifier.includes('@') ? normalizedIdentifier : undefined,
       role: "inventory_manager",
       restaurantId: localStorage.getItem('restaurantId') || "1"
     };
     
-    // Save team member info in localStorage
+    // حفظ معلومات عضو الفريق في localStorage
     localStorage.setItem('teamMemberId', mockTeamMember.id);
     localStorage.setItem('teamMemberName', mockTeamMember.name);
     
@@ -122,12 +153,14 @@ export const setupTeamMemberPassword = async (
   // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
+  const normalizedIdentifier = identifier.replace(/\s+/g, '').toLowerCase();
+  
   // Return mock team member
   const mockTeamMember: TeamMember = {
     id: "12345",
     name: "أحمد محمد",
-    email: identifier.includes('@') ? identifier : undefined,
-    phone: !identifier.includes('@') ? identifier : undefined,
+    email: normalizedIdentifier.includes('@') ? normalizedIdentifier : undefined,
+    phone: !normalizedIdentifier.includes('@') ? normalizedIdentifier : undefined,
     role: "inventory_manager",
     restaurantId: localStorage.getItem('restaurantId') || "1"
   };
