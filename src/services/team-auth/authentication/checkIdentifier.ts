@@ -40,30 +40,36 @@ export const checkTeamMemberExists = async (
     };
   }
   
+  // If we have a team member ID but they haven't set up a password yet
+  if (teamMemberId) {
+    console.log("User exists but needs to setup password:", teamMemberId);
+    return {
+      exists: true,
+      isFirstLogin: true,
+      hasSetupPassword: false,
+      teamMemberId
+    };
+  }
+  
+  // If no team member ID yet, check if this is a valid test identifier
   if (isEmailIdentifier(normalizedIdentifier)) {
     // Check email patterns
     if (isValidTestEmail(normalizedIdentifier)) {
-      const isFirstLogin = !hasSetupPassword;
-      
-      console.log("Valid email user identified. First login:", isFirstLogin);
+      console.log("Valid email user identified. First login:", true);
       return {
         exists: true,
-        isFirstLogin,
-        hasSetupPassword,
-        teamMemberId
+        isFirstLogin: true,
+        hasSetupPassword: false
       };
     }
   } else {
     // Check phone patterns
     if (isValidTestPhone(normalizedIdentifier)) {
-      const isFirstLogin = !hasSetupPassword;
-      
-      console.log("Valid phone user identified. First login:", isFirstLogin);
+      console.log("Valid phone user identified. First login:", true);
       return {
         exists: true,
-        isFirstLogin,
-        hasSetupPassword,
-        teamMemberId
+        isFirstLogin: true,
+        hasSetupPassword: false
       };
     }
   }

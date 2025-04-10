@@ -30,12 +30,13 @@ export const authenticateTeamMember = async (
   
   // Get the stored password for this team member ID
   const storedPassword = localStorage.getItem(`userPassword:${teamMemberId}`);
+  const hasSetupPassword = localStorage.getItem(`passwordSetup:${teamMemberId}`) === 'true';
   
   // Create mock team member based on identifier
   const mockTeamMember = createMockTeamMember(normalizedIdentifier);
   
   // For first login case, there may not be a password yet
-  if (!storedPassword) {
+  if (!storedPassword || !hasSetupPassword) {
     console.log("Authentication failed: No stored password found for this team member");
     return {
       isFirstLogin: true,
