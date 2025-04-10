@@ -20,13 +20,16 @@ const MobileAddProduct = () => {
     setQuantity,
     productInfo,
     loading,
-    handleBarcodeChange,
-    handleQuantityChange,
     handleScanResult,
     handleAddProduct
   } = useProductAddition();
 
-  // تابع للتعامل مع اختيار منتج من قائمة المنتجات المسجلة
+  // Handle quantity change event
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(e.target.value);
+  };
+
+  // Handle selecting a product from the registered products list
   const handleSelectProduct = (productBarcode: string) => {
     handleScanResult(productBarcode);
   };
@@ -69,7 +72,7 @@ const MobileAddProduct = () => {
                 />
               </>
             ) : (
-              // عرض قائمة المنتجات المسجلة التي تنتظر الإدخال
+              // Display registered products list waiting for input
               <RegisteredProductsList onScanProduct={handleSelectProduct} />
             )}
           </>
