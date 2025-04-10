@@ -17,3 +17,14 @@ export interface Movement {
   created_at: string;
   scanned_by: string;
 }
+
+export interface PaginationState {
+  currentPage: number;
+  itemsPerPage: number;
+  totalItems: number;
+}
+
+export interface SortState {
+  column: string;
+  direction: 'asc' | 'desc';
+}

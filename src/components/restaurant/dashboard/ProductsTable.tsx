@@ -2,15 +2,26 @@
 import React, { useMemo } from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Avatar } from '@/components/ui/avatar';
-import { ArrowDown } from 'lucide-react';
-import { Product } from './types';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { Product, PaginationState, SortState } from './types';
 import { formatDate, getProductInitials } from './utils';
+import TablePagination from './TablePagination';
 
 interface ProductsTableProps {
   products: Product[];
+  pagination: PaginationState;
+  sort: SortState;
+  onPageChange: (page: number) => void;
+  onSortChange: (column: string) => void;
 }
 
-const ProductsTable: React.FC<ProductsTableProps> = React.memo(({ products }) => {
+const ProductsTable: React.FC<ProductsTableProps> = React.memo(({ 
+  products, 
+  pagination, 
+  sort, 
+  onPageChange, 
+  onSortChange 
+}) => {
   const hasProducts = useMemo(() => products.length > 0, [products.length]);
 
   if (!hasProducts) {
@@ -21,23 +32,58 @@ const ProductsTable: React.FC<ProductsTableProps> = React.memo(({ products }) =>
     );
   }
 
+  const renderSortIcon = (column: string) => {
+    if (sort.column !== column) return null;
+    
+    return sort.direction === 'asc' 
+      ? <ChevronUp className="ml-1 h-4 w-4 inline" /> 
+      : <ChevronDown className="ml-1 h-4 w-4 inline" />;
+  };
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="text-right">المنتج</TableHead>
-          <TableHead className="text-right">الصورة</TableHead>
-          <TableHead className="text-right">الفئة</TableHead>
-          <TableHead className="text-right">الكمية</TableHead>
-          <TableHead className="text-right">تاريخ الإضافة</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {products.map((product) => (
-          <ProductRow key={product.id} product={product} />
-        ))}
-      </TableBody>
-    </Table>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead 
+              className="text-right cursor-pointer"
+              onClick={() => onSortChange('name')}
+            >
+              المنتج {renderSortIcon('name')}
+            </TableHead>
+            <TableHead className="text-right">الصورة</TableHead>
+            <TableHead 
+              className="text-right cursor-pointer"
+              onClick={() => onSortChange('category')}
+            >
+              الفئة {renderSortIcon('category')}
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer"
+              onClick={() => onSortChange('quantity')}
+            >
+              الكمية {renderSortIcon('quantity')}
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer"
+              onClick={() => onSortChange('created_at')}
+            >
+              تاريخ الإضافة {renderSortIcon('created_at')}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {products.map((product) => (
+            <ProductRow key={product.id} product={product} />
+          ))}
+        </TableBody>
+      </Table>
+      
+      <TablePagination 
+        pagination={pagination}
+        onPageChange={onPageChange}
+      />
+    </>
   );
 });
 

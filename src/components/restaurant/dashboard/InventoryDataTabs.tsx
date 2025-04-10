@@ -9,7 +9,19 @@ import InventoryTabHeader from './InventoryTabHeader';
 
 const InventoryDataTabs: React.FC = React.memo(() => {
   const [activeDataTab, setActiveDataTab] = useState('products');
-  const { recentProducts, recentMovements, loading } = useInventoryData(activeDataTab);
+  const { 
+    recentProducts, 
+    recentMovements, 
+    productsPagination, 
+    movementsPagination,
+    productsSort,
+    movementsSort,
+    loading,
+    handleProductPageChange,
+    handleMovementPageChange,
+    handleProductsSort,
+    handleMovementsSort
+  } = useInventoryData(activeDataTab);
   
   const handleTabChange = useCallback((tab: string) => {
     setActiveDataTab(tab);
@@ -29,9 +41,21 @@ const InventoryDataTabs: React.FC = React.memo(() => {
         ) : (
           <>
             {activeDataTab === 'products' ? (
-              <ProductsTable products={recentProducts} />
+              <ProductsTable 
+                products={recentProducts} 
+                pagination={productsPagination}
+                sort={productsSort}
+                onPageChange={handleProductPageChange}
+                onSortChange={handleProductsSort}
+              />
             ) : (
-              <MovementsTable movements={recentMovements} />
+              <MovementsTable 
+                movements={recentMovements} 
+                pagination={movementsPagination}
+                sort={movementsSort}
+                onPageChange={handleMovementPageChange}
+                onSortChange={handleMovementsSort}
+              />
             )}
           </>
         )}

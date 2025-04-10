@@ -1,15 +1,26 @@
 
 import React, { useMemo } from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { ArrowDown, ArrowUp } from 'lucide-react';
-import { Movement } from './types';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { Movement, PaginationState, SortState } from './types';
 import { formatDate } from './utils';
+import TablePagination from './TablePagination';
 
 interface MovementsTableProps {
   movements: Movement[];
+  pagination: PaginationState;
+  sort: SortState;
+  onPageChange: (page: number) => void;
+  onSortChange: (column: string) => void;
 }
 
-const MovementsTable: React.FC<MovementsTableProps> = React.memo(({ movements }) => {
+const MovementsTable: React.FC<MovementsTableProps> = React.memo(({ 
+  movements, 
+  pagination, 
+  sort, 
+  onPageChange, 
+  onSortChange 
+}) => {
   const hasMovements = useMemo(() => movements.length > 0, [movements.length]);
   
   if (!hasMovements) {
@@ -20,21 +31,51 @@ const MovementsTable: React.FC<MovementsTableProps> = React.memo(({ movements })
     );
   }
   
+  const renderSortIcon = (column: string) => {
+    if (sort.column !== column) return null;
+    
+    return sort.direction === 'asc' 
+      ? <ChevronUp className="ml-1 h-4 w-4 inline" /> 
+      : <ChevronDown className="ml-1 h-4 w-4 inline" />;
+  };
+  
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="text-right">المنتج</TableHead>
-          <TableHead className="text-right">نوع الحركة</TableHead>
-          <TableHead className="text-right">التاريخ</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {movements.map((movement) => (
-          <MovementRow key={movement.id} movement={movement} />
-        ))}
-      </TableBody>
-    </Table>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead 
+              className="text-right cursor-pointer"
+              onClick={() => onSortChange('product_name')}
+            >
+              المنتج {renderSortIcon('product_name')}
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer"
+              onClick={() => onSortChange('scan_type')}
+            >
+              نوع الحركة {renderSortIcon('scan_type')}
+            </TableHead>
+            <TableHead 
+              className="text-right cursor-pointer"
+              onClick={() => onSortChange('created_at')}
+            >
+              التاريخ {renderSortIcon('created_at')}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {movements.map((movement) => (
+            <MovementRow key={movement.id} movement={movement} />
+          ))}
+        </TableBody>
+      </Table>
+      
+      <TablePagination 
+        pagination={pagination}
+        onPageChange={onPageChange}
+      />
+    </>
   );
 });
 
