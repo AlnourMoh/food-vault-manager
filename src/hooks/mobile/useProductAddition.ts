@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { db, doc, getDoc, collection, addDoc, serverTimestamp } from '@/lib/firebase';
+import { db, doc, getDoc, collection, addDoc, updateDoc, increment, serverTimestamp } from '@/lib/firebase';
 
 export const useProductAddition = () => {
   const { toast } = useToast();
@@ -73,6 +73,13 @@ export const useProductAddition = () => {
     try {
       setLoading(true);
       
+      // Update product quantity in the database
+      const productRef = doc(db, `restaurants/${restaurantId}/products`, barcode);
+      await updateDoc(productRef, {
+        quantity: increment(Number(quantity)),
+        updated_at: serverTimestamp()
+      });
+      
       // Add transaction record
       const transactionsRef = collection(db, `restaurants/${restaurantId}/transactions`);
       await addDoc(transactionsRef, {
@@ -82,7 +89,7 @@ export const useProductAddition = () => {
         type: 'add',
         timestamp: serverTimestamp(),
         userId: localStorage.getItem('userId') || 'unknown',
-        userName: localStorage.getItem('userName') || 'مستخدم غير معروف'
+        userName: localStorage.getItem('teamMemberName') || 'مستخدم غير معروف'
       });
       
       toast({

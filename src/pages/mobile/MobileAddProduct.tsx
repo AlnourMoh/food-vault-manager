@@ -1,14 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
+import PageHeader from '@/components/mobile/PageHeader';
 import { useProductAddition } from '@/hooks/mobile/useProductAddition';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
-import PageHeader from '@/components/mobile/PageHeader';
 import ProductBarcodeInput from '@/components/mobile/ProductBarcodeInput';
 import ProductInfo from '@/components/mobile/ProductInfo';
 import ProductSubmitButton from '@/components/mobile/ProductSubmitButton';
 import EmptyProductState from '@/components/mobile/EmptyProductState';
-import BarcodeButton from '@/components/mobile/BarcodeButton';
+import RegisteredProductsList from '@/components/mobile/RegisteredProductsList';
 
 const MobileAddProduct = () => {
   const {
@@ -32,29 +32,32 @@ const MobileAddProduct = () => {
     setQuantity(e.target.value);
   };
 
+  const handleScanRegisteredProduct = (code: string) => {
+    setBarcode(code);
+    handleScanResult(code);
+  };
+
   return (
     <RestaurantLayout hideSidebar={true}>
-      <div className="rtl space-y-6 p-2">
-        <PageHeader title="إدخال منتج" backPath="/restaurant/mobile" />
-        
+      <div className="rtl space-y-4 p-3">
+        <PageHeader
+          title="إدخال منتج"
+          backUrl="/restaurant/mobile"
+        />
+
         {scanning ? (
           <BarcodeScanner 
             onScanResult={handleScanResult}
             onCancel={() => setScanning(false)}
           />
         ) : (
-          <>
+          <div className="space-y-4">
             <ProductBarcodeInput
               barcode={barcode}
               onChange={handleBarcodeChange}
               onScan={() => setScanning(true)}
             />
-            
-            <BarcodeButton 
-              onClick={() => setScanning(true)}
-              buttonText="مسح الباركود"
-            />
-            
+
             {productInfo ? (
               <>
                 <ProductInfo 
@@ -62,17 +65,22 @@ const MobileAddProduct = () => {
                   quantity={quantity}
                   onQuantityChange={handleQuantityChange}
                   action="إضافة"
+                  showMaxQuantity={false}
                 />
                 
                 <ProductSubmitButton 
                   onClick={handleAddProduct}
                   disabled={loading}
+                  label="تأكيد إدخال المنتج"
                 />
               </>
             ) : (
               <EmptyProductState />
             )}
-          </>
+
+            {/* Display registered products waiting to be added to inventory */}
+            {!productInfo && <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />}
+          </div>
         )}
       </div>
     </RestaurantLayout>

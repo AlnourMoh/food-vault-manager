@@ -31,6 +31,43 @@ export const getDoc = async (docRef: any) => {
     };
   }
   
+  // For demo purposes, add some registered products that haven't been added to inventory yet
+  if (docRef.path.includes('products') && !docRef.path.includes('12345')) {
+    const registeredProducts = {
+      '67890': {
+        name: 'دقيق',
+        category: 'بقالة',
+        quantity: 0,
+        status: 'active',
+        unit: 'كيلوغرام',
+        created_at: { toDate: () => new Date() },
+        updated_at: { toDate: () => new Date() },
+        addedBy: 'إدارة النظام'
+      },
+      '54321': {
+        name: 'طماطم',
+        category: 'خضروات',
+        quantity: 0,
+        status: 'active',
+        unit: 'كيلوغرام',
+        created_at: { toDate: () => new Date() },
+        updated_at: { toDate: () => new Date() },
+        addedBy: 'إدارة النظام'
+      }
+    };
+    
+    // Extract the product ID from the path
+    const pathParts = docRef.path.split('/');
+    const productId = pathParts[pathParts.length - 1];
+    
+    if (registeredProducts[productId]) {
+      return {
+        exists: () => true,
+        data: () => registeredProducts[productId],
+      };
+    }
+  }
+  
   return {
     exists: () => false,
     data: () => ({}),
@@ -72,3 +109,60 @@ export const Timestamp = {
 };
 
 export const serverTimestamp = () => new Date();
+
+// For querying collections
+export const query = (collectionRef: any, ...queryConstraints: any[]) => {
+  return {
+    collectionRef,
+    queryConstraints,
+  };
+};
+
+export const where = (field: string, operator: string, value: any) => {
+  return { field, operator, value, type: 'where' };
+};
+
+export const getDocs = async (queryObj: any) => {
+  // Mock implementation for getDocs
+  if (queryObj.collectionRef.path.includes('products')) {
+    // Return mock registered products that haven't been added to inventory
+    const mockProducts = [
+      {
+        id: '67890',
+        name: 'دقيق',
+        category: 'بقالة',
+        quantity: 0,
+        status: 'active',
+        unit: 'كيلوغرام',
+        created_at: { toDate: () => new Date() },
+        updated_at: { toDate: () => new Date() },
+        addedBy: 'إدارة النظام'
+      },
+      {
+        id: '54321',
+        name: 'طماطم',
+        category: 'خضروات',
+        quantity: 0,
+        status: 'active',
+        unit: 'كيلوغرام',
+        created_at: { toDate: () => new Date() },
+        updated_at: { toDate: () => new Date() },
+        addedBy: 'إدارة النظام'
+      }
+    ];
+    
+    return {
+      empty: false,
+      docs: mockProducts.map(product => ({
+        id: product.id,
+        data: () => product,
+        exists: () => true,
+      })),
+    };
+  }
+  
+  return {
+    empty: true,
+    docs: [],
+  };
+};
