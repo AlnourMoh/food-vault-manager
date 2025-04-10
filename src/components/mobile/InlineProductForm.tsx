@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -7,7 +7,6 @@ import { useProductAddition } from '@/hooks/mobile/useProductAddition';
 import { useProductRemoval } from '@/hooks/mobile/useProductRemoval';
 import { useProductRegistration } from '@/hooks/mobile/useProductRegistration';
 import BarcodeScanner from './BarcodeScanner';
-import ProductBarcodeInput from './ProductBarcodeInput';
 import ProductInfo from './ProductInfo';
 import ProductSubmitButton from './ProductSubmitButton';
 import EmptyProductState from './EmptyProductState';
@@ -19,6 +18,24 @@ interface InlineProductFormProps {
 }
 
 const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose }) => {
+  const [userRole, setUserRole] = useState<string>('');
+  
+  useEffect(() => {
+    // Get the user role from localStorage
+    const role = localStorage.getItem('teamMemberRole') || '';
+    setUserRole(role);
+  }, []);
+
+  // تحقق مما إذا كان المستخدم مسؤول نظام
+  const isSystemAdmin = userRole === 'إدارة النظام';
+  
+  // إذا كان المستخدم يحاول الوصول إلى نموذج تسجيل المنتج وليس مسؤول نظام، أغلق النموذج
+  useEffect(() => {
+    if (formType === 'register' && !isSystemAdmin) {
+      onClose();
+    }
+  }, [formType, isSystemAdmin, onClose]);
+
   // For Add Product Form
   const {
     scanning: addScanning,
@@ -66,6 +83,23 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
   const isRemoveForm = formType === 'remove';
   const isRegisterForm = formType === 'register';
   
+  // فحص إذا كان يجب السماح بالوصول إلى نموذج تسجيل المنتج
+  if (isRegisterForm && !isSystemAdmin) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg text-red-600">غير مصرح</CardTitle>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center">لا تملك صلاحية تسجيل منتجات جديدة. هذه الوظيفة متاحة فقط لفريق إدارة النظام.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   // Only for add and remove forms
   if (!isRegisterForm) {
     const isScanning = isAddForm ? addScanning : removeScanning;
@@ -96,9 +130,12 @@ const InlineProductForm: React.FC<InlineProductFormProps> = ({ formType, onClose
               />
             ) : (
               <>
-                <ProductBarcodeInput
-                  onScan={() => setScanning(true)}
-                />
+                <Button 
+                  className="w-full bg-fvm-primary hover:bg-fvm-primary-light text-white py-3 flex items-center justify-center gap-2"
+                  onClick={() => setScanning(true)}
+                >
+                  <span>مسح باركود منتج</span>
+                </Button>
                 
                 {productInfo ? (
                   <>

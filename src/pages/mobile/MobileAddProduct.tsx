@@ -80,21 +80,21 @@ const MobileAddProduct = () => {
                   <Info className="h-4 w-4 text-blue-600" />
                   <AlertTitle className="text-blue-800 text-sm font-bold">المنتجات المسجلة</AlertTitle>
                   <AlertDescription className="text-blue-700 text-xs">
-                    اضغط على المنتج لإدخاله للمخزون
+                    اضغط على المنتج لإدخاله للمخزون أو استخدم زر مسح الباركود أدناه
                   </AlertDescription>
                 </Alert>
 
                 {/* عرض المنتجات المسجلة التي تنتظر الإضافة للمخزون */}
                 <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />
                 
-                {/* زر مسح باركود جديد */}
+                {/* زر مسح باركود */}
                 <div className="mt-6">
                   <Button 
                     onClick={() => setScanning(true)}
                     className="w-full bg-fvm-primary hover:bg-fvm-primary-light text-white py-3 flex items-center justify-center gap-2"
                   >
                     <ScanLine className="h-5 w-5" />
-                    <span>مسح باركود منتج</span>
+                    <span>مسح باركود منتج مسجل</span>
                   </Button>
                 </div>
               </>
