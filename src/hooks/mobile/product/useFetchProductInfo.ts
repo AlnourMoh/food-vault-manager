@@ -12,13 +12,14 @@ export const useFetchProductInfo = (toast: ReturnType<typeof import('@/hooks/use
     setLoading(true);
     try {
       // في الوضع التجريبي، نبحث عن المنتج في البيانات المحلية
+      const today = new Date();
       const mockProducts = [
         {
           id: '67890',
           name: 'دقيق',
           category: 'بقالة',
           unit: 'كيلوغرام',
-          quantity: 0,
+          quantity: 25,
           barcode: '67890',
           description: 'دقيق متعدد الاستخدامات للخبز والطبخ',
           expiryDate: { toDate: () => new Date(2025, 11, 31) },
@@ -30,10 +31,10 @@ export const useFetchProductInfo = (toast: ReturnType<typeof import('@/hooks/use
           name: 'طماطم',
           category: 'خضروات',
           unit: 'كيلوغرام',
-          quantity: 0,
+          quantity: 10,
           barcode: '54321',
           description: 'طماطم طازجة',
-          expiryDate: { toDate: () => new Date(2025, 4, 30) },
+          expiryDate: { toDate: () => new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5) },
           status: 'active',
           addedBy: 'سارة الاحمد'
         },
@@ -42,10 +43,34 @@ export const useFetchProductInfo = (toast: ReturnType<typeof import('@/hooks/use
           name: 'زيت زيتون',
           category: 'بقالة',
           unit: 'لتر',
-          quantity: 0,
+          quantity: 15,
           barcode: '12345',
           description: 'زيت زيتون عالي الجودة',
-          expiryDate: { toDate: () => new Date(2026, 5, 15) },
+          expiryDate: { toDate: () => new Date(today.getFullYear(), today.getMonth(), today.getDate() - 10) },
+          status: 'active',
+          addedBy: 'سارة الاحمد'
+        },
+        {
+          id: '34567',
+          name: 'سكر',
+          category: 'بقالة',
+          unit: 'كيلوغرام',
+          quantity: 3,
+          barcode: '34567',
+          description: 'سكر أبيض ناعم',
+          expiryDate: { toDate: () => new Date(2025, 10, 15) },
+          status: 'active',
+          addedBy: 'سارة الاحمد'
+        },
+        {
+          id: '45678',
+          name: 'بصل',
+          category: 'خضروات',
+          unit: 'كيلوغرام',
+          quantity: 2,
+          barcode: '45678',
+          description: 'بصل طازج',
+          expiryDate: { toDate: () => new Date(today.getFullYear(), today.getMonth(), today.getDate() + 15) },
           status: 'active',
           addedBy: 'سارة الاحمد'
         }
@@ -55,6 +80,33 @@ export const useFetchProductInfo = (toast: ReturnType<typeof import('@/hooks/use
       
       if (product) {
         console.log("Product found:", product);
+        
+        // Show notification for low stock or expiring products
+        const expiry = new Date(product.expiryDate.toDate());
+        const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (product.quantity < 5) {
+          toast.toast({
+            title: "تنبيه: مخزون منخفض",
+            description: `المنتج ${product.name} مخزونه منخفض (${product.quantity})`,
+            variant: "default"
+          });
+        }
+        
+        if (daysUntilExpiry <= 0) {
+          toast.toast({
+            title: "تنبيه: منتج منتهي الصلاحية",
+            description: `المنتج ${product.name} منتهي الصلاحية!`,
+            variant: "destructive"
+          });
+        } else if (daysUntilExpiry <= 30) {
+          toast.toast({
+            title: "تنبيه: تاريخ الانتهاء قريب",
+            description: `المنتج ${product.name} ينتهي خلال ${daysUntilExpiry} يوم`,
+            variant: "default"
+          });
+        }
+        
         setProductInfo(product);
       } else {
         console.log("Product not found in mock data");

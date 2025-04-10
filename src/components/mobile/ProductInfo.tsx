@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { AlertCircle, Clock } from 'lucide-react';
+import { AlertCircle, Clock, Bell } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductInfoProps {
   productInfo: any;
@@ -51,13 +52,38 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
     return { status: 'valid', label: '', color: '', icon: null };
   };
 
+  // التحقق من حالة المخزون
+  const getStockStatus = () => {
+    if (productInfo.quantity === undefined) return { status: 'unknown', label: '', color: '' };
+    
+    if (productInfo.quantity < 5) {
+      return {
+        status: 'low',
+        label: 'مخزون منخفض!',
+        color: 'text-blue-600',
+        icon: <Bell className="h-4 w-4 text-blue-600 inline mr-1" />
+      };
+    }
+    
+    return { status: 'good', label: '', color: '', icon: null };
+  };
+
   const expiryStatus = getExpiryStatus();
+  const stockStatus = getStockStatus();
+  const hasWarnings = expiryStatus.status !== 'valid' || stockStatus.status === 'low';
 
   return (
     <>
       <Separator />
       <div className="space-y-2">
-        <h3 className="font-medium">معلومات المنتج:</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="font-medium">معلومات المنتج:</h3>
+          {hasWarnings && (
+            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">
+              يحتاج للانتباه
+            </Badge>
+          )}
+        </div>
         <p className="text-sm">الاسم: {productInfo.name}</p>
         <p className="text-sm">الوصف: {productInfo.description || 'غير متوفر'}</p>
         <p className={`text-sm ${expiryStatus.color}`}>
@@ -71,8 +97,10 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           }
         </p>
         {showMaxQuantity && (
-          <p className="text-sm font-medium">
+          <p className={`text-sm font-medium ${stockStatus.color}`}>
+            {stockStatus.icon}
             الكمية المتوفرة: {productInfo.quantity || 0}
+            {stockStatus.status === 'low' && ` (${stockStatus.label})`}
           </p>
         )}
       </div>

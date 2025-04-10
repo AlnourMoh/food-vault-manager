@@ -82,6 +82,30 @@ export const useInventoryProducts = () => {
           addedBy: 'سارة الاحمد',
           createdAt: new Date(2025, 3, 20).toLocaleDateString('ar-SA'),
           expiryDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2) // تنتهي بعد يومين
+        },
+        {
+          id: '34567',
+          name: 'سكر',
+          category: 'بقالة',
+          unit: 'كيلوغرام',
+          quantity: 3, // مخزون منخفض
+          barcode: '34567',
+          status: 'active',
+          addedBy: 'سارة الاحمد',
+          createdAt: new Date(2025, 3, 19).toLocaleDateString('ar-SA'),
+          expiryDate: new Date(2025, 10, 15)
+        },
+        {
+          id: '45678',
+          name: 'بصل',
+          category: 'خضروات',
+          unit: 'كيلوغرام',
+          quantity: 2, // مخزون منخفض جدًا
+          barcode: '45678',
+          status: 'active',
+          addedBy: 'سارة الاحمد',
+          createdAt: new Date(2025, 3, 18).toLocaleDateString('ar-SA'),
+          expiryDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 15)
         }
       ];
       

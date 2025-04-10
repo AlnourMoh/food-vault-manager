@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Package2, Clock, AlertCircle } from 'lucide-react';
+import { Package2, Clock, AlertCircle, Bell } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import EmptyProductState from '@/components/mobile/EmptyProductState';
@@ -9,6 +9,7 @@ interface InventoryProductsListProps {
   products: any[];
   loading: boolean;
   onSelectProduct: (barcode: string) => void;
+  showNotificationBadge?: boolean;
 }
 
 // وظيفة مساعدة للتحقق من حالة انتهاء صلاحية المنتج
@@ -28,10 +29,29 @@ const getExpiryStatus = (expiryDate: Date | undefined) => {
   }
 };
 
+// A function to check if a product needs attention (low stock, about to expire, etc.)
+const needsAttention = (product: any) => {
+  if (!product) return false;
+  
+  // Low stock check
+  if (product.quantity < 5) return true;
+  
+  // Expiry check
+  if (product.expiryDate) {
+    const expiryStatus = getExpiryStatus(product.expiryDate);
+    if (expiryStatus.status === 'expired' || expiryStatus.status === 'expiring-soon') {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
 const InventoryProductsList: React.FC<InventoryProductsListProps> = ({ 
   products, 
   loading, 
-  onSelectProduct 
+  onSelectProduct,
+  showNotificationBadge = false
 }) => {
   if (loading) {
     return (
@@ -48,25 +68,42 @@ const InventoryProductsList: React.FC<InventoryProductsListProps> = ({
   return (
     <Card className="mt-4">
       <CardHeader className="pb-2">
-        <CardTitle className="text-md">المنتجات المتوفرة في المخزون ({products.length})</CardTitle>
+        <CardTitle className="text-md flex items-center justify-between">
+          <span>المنتجات المتوفرة في المخزون ({products.length})</span>
+          {showNotificationBadge && (
+            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 flex items-center gap-1">
+              <Bell className="h-3 w-3" /> المنتجات تحتاج للانتباه
+            </Badge>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="px-4 py-2">
         <div className="space-y-3">
           {products.map((product) => {
             const expiryStatus = getExpiryStatus(product.expiryDate);
+            const attention = needsAttention(product);
             
             return (
               <div 
                 key={product.id} 
-                className={`flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors ${expiryStatus.status === 'expired' ? 'border-red-300' : ''}`}
+                className={`flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors ${
+                  attention ? 'border-amber-300 shadow-sm' : 
+                  expiryStatus.status === 'expired' ? 'border-red-300' : ''
+                }`}
                 onClick={() => onSelectProduct(product.barcode || product.id)}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-md ${expiryStatus.status === 'expired' ? 'bg-red-100' : expiryStatus.status === 'expiring-soon' ? 'bg-amber-100' : 'bg-gray-100'}`}>
+                  <div className={`p-2 rounded-md ${
+                    expiryStatus.status === 'expired' ? 'bg-red-100' : 
+                    expiryStatus.status === 'expiring-soon' ? 'bg-amber-100' : 
+                    product.quantity < 5 ? 'bg-blue-100' : 'bg-gray-100'
+                  }`}>
                     {expiryStatus.status === 'expired' ? (
                       <AlertCircle className="h-6 w-6 text-red-600" />
                     ) : expiryStatus.status === 'expiring-soon' ? (
                       <Clock className="h-6 w-6 text-amber-600" />
+                    ) : product.quantity < 5 ? (
+                      <Bell className="h-6 w-6 text-blue-600" />
                     ) : (
                       <Package2 className="h-6 w-6 text-fvm-primary" />
                     )}
@@ -86,9 +123,16 @@ const InventoryProductsList: React.FC<InventoryProductsListProps> = ({
                             {expiryStatus.label}
                           </Badge>
                         )}
+                        {product.quantity < 5 && (
+                          <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                            مخزون منخفض
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center text-xs mt-1">
-                        <span className="font-medium text-green-600">الكمية المتوفرة: {product.quantity}</span>
+                        <span className={`font-medium ${product.quantity < 5 ? 'text-blue-600' : 'text-green-600'}`}>
+                          الكمية المتوفرة: {product.quantity}
+                        </span>
                       </div>
                     </div>
                   </div>
