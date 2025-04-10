@@ -4,10 +4,8 @@ import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import PageHeader from '@/components/mobile/PageHeader';
 import { useProductAddition } from '@/hooks/mobile/useProductAddition';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
-import ProductBarcodeInput from '@/components/mobile/ProductBarcodeInput';
 import ProductInfo from '@/components/mobile/ProductInfo';
 import ProductSubmitButton from '@/components/mobile/ProductSubmitButton';
-import EmptyProductState from '@/components/mobile/EmptyProductState';
 import RegisteredProductsList from '@/components/mobile/RegisteredProductsList';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
@@ -26,18 +24,13 @@ const MobileAddProduct = () => {
     handleAddProduct
   } = useProductAddition();
 
-  const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBarcode(e.target.value);
-  };
-
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuantity(e.target.value);
   };
 
   const handleScanRegisteredProduct = (code: string) => {
     console.log("تم اختيار منتج مسجل للمسح:", code);
-    setScanning(true);
-    setBarcode(code);  // Set barcode so it's ready after scanning
+    setBarcode(code);
   };
 
   // إعداد البيانات الافتراضية للعرض التجريبي
@@ -84,26 +77,28 @@ const MobileAddProduct = () => {
               <>
                 <Alert className="bg-blue-50 border-blue-200 mt-4">
                   <Info className="h-4 w-4 text-blue-600" />
-                  <AlertTitle className="text-blue-800 text-sm font-bold">منتجات تنتظر الإدخال</AlertTitle>
+                  <AlertTitle className="text-blue-800 text-sm font-bold">المنتجات المسجلة</AlertTitle>
                   <AlertDescription className="text-blue-700 text-xs">
-                    يجب مسح باركود المنتج لإضافته للمخزون
+                    اضغط على المنتج لإدخاله للمخزون
                   </AlertDescription>
                 </Alert>
 
-                {/* Display registered products waiting to be added to inventory */}
+                {/* عرض المنتجات المسجلة التي تنتظر الإضافة للمخزون */}
                 <RegisteredProductsList onScanProduct={handleScanRegisteredProduct} />
+                
+                {/* زر مسح باركود جديد */}
+                <div className="flex justify-center mt-6">
+                  <button 
+                    onClick={() => setScanning(true)}
+                    className="bg-fvm-primary hover:bg-fvm-primary-light text-white px-4 py-2 rounded-md flex items-center gap-2"
+                  >
+                    <span>مسح باركود منتج جديد</span>
+                  </button>
+                </div>
               </>
             )}
 
-            {barcode && !scanning && (
-              <ProductBarcodeInput
-                barcode={barcode}
-                onChange={handleBarcodeChange}
-                onScan={() => setScanning(true)}
-              />
-            )}
-
-            {productInfo ? (
+            {productInfo && (
               <>
                 <ProductInfo 
                   productInfo={productInfo}
@@ -119,8 +114,6 @@ const MobileAddProduct = () => {
                   label="تأكيد إدخال المنتج"
                 />
               </>
-            ) : (
-              barcode && !scanning && <EmptyProductState />
             )}
           </div>
         )}

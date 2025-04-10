@@ -1,8 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Package2, ScanBarcode, Clock } from 'lucide-react';
-import BarcodeButton from './BarcodeButton';
+import { Loader2, Package2, Clock } from 'lucide-react';
 import { useRegisteredProducts, RegisteredProduct } from '@/hooks/mobile/useRegisteredProducts';
 import { Badge } from '@/components/ui/badge';
 
@@ -83,7 +82,10 @@ interface ProductItemProps {
 
 const ProductItem: React.FC<ProductItemProps> = ({ product, onScan }) => {
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
+    <div 
+      className="flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+      onClick={onScan}
+    >
       <div className="flex items-start gap-3">
         <div className="bg-gray-100 p-2 rounded-md">
           <Package2 className="h-6 w-6 text-fvm-primary" />
@@ -109,16 +111,6 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, onScan }) => {
           </div>
         </div>
       </div>
-      <BarcodeButton 
-        onClick={onScan} 
-        buttonText={
-          <div className="flex items-center gap-1">
-            <ScanBarcode className="h-4 w-4" />
-            <span>مسح باركود</span>
-          </div>
-        } 
-        className="px-3 py-1 text-sm"
-      />
     </div>
   );
 };
