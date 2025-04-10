@@ -23,7 +23,7 @@ const RegisteredProductsList: React.FC<RegisteredProductsListProps> = ({ onScanP
     );
   }
 
-  if (products.length === 0) {
+  if (!products || products.length === 0) {
     return (
       <Card className="mt-4">
         <CardContent className="p-4">

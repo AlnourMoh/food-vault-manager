@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { db, collection, query, where, getDocs } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -36,8 +35,7 @@ export const useRegisteredProducts = () => {
       setLoading(true);
       console.log("بدء جلب المنتجات المسجلة للمطعم:", restaurantId);
       
-      // For demo purposes in our mock setup, let's create some sample products
-      // In a real application, this would fetch from Firebase
+      // For demo purposes, create sample products with useful data
       const mockRegisteredProducts: RegisteredProduct[] = [
         {
           id: '67890',
@@ -47,7 +45,7 @@ export const useRegisteredProducts = () => {
           quantity: 0,
           barcode: '67890',
           status: 'active',
-          addedBy: 'إدارة النظام',
+          addedBy: 'سارة الاحمد',
           createdAt: new Date().toLocaleDateString('ar-SA')
         },
         {
@@ -58,7 +56,7 @@ export const useRegisteredProducts = () => {
           quantity: 0,
           barcode: '54321',
           status: 'active',
-          addedBy: 'إدارة النظام',
+          addedBy: 'سارة الاحمد',
           createdAt: new Date().toLocaleDateString('ar-SA')
         },
         {
@@ -69,12 +67,12 @@ export const useRegisteredProducts = () => {
           quantity: 0,
           barcode: '12345',
           status: 'active',
-          addedBy: 'إدارة النظام',
+          addedBy: 'سارة الاحمد',
           createdAt: new Date().toLocaleDateString('ar-SA')
         }
       ];
       
-      console.log("تم تجهيز منتجات عينة:", mockRegisteredProducts.length);
+      console.log("تم تجهيز منتجات العرض التجريبي:", mockRegisteredProducts.length);
       setProducts(mockRegisteredProducts);
       
       /* 

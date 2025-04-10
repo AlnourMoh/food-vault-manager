@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import PageHeader from '@/components/mobile/PageHeader';
 import { useProductAddition } from '@/hooks/mobile/useProductAddition';
@@ -11,6 +11,8 @@ import EmptyProductState from '@/components/mobile/EmptyProductState';
 import RegisteredProductsList from '@/components/mobile/RegisteredProductsList';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const MobileAddProduct = () => {
   const {
@@ -25,6 +27,9 @@ const MobileAddProduct = () => {
     handleScanResult,
     handleAddProduct
   } = useProductAddition();
+  
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBarcode(e.target.value);
@@ -39,13 +44,25 @@ const MobileAddProduct = () => {
     handleScanResult(code);
   };
 
-  // سجل localStorage للتأكد من وجود restaurantId
-  console.log("معرف المطعم في localStorage:", localStorage.getItem('restaurantId'));
   // تعيين معرف المطعم للعرض التجريبي إذا لم يكن موجوداً
-  if (!localStorage.getItem('restaurantId')) {
-    localStorage.setItem('restaurantId', 'restaurant-demo-123');
-    console.log("تم تعيين معرف مطعم افتراضي للعرض التجريبي");
-  }
+  useEffect(() => {
+    if (!localStorage.getItem('restaurantId')) {
+      localStorage.setItem('restaurantId', 'restaurant-demo-123');
+      console.log("تم تعيين معرف مطعم افتراضي للعرض التجريبي");
+    }
+    
+    // تعيين اسم عضو الفريق الافتراضي إذا لم يكن موجوداً
+    if (!localStorage.getItem('teamMemberName')) {
+      localStorage.setItem('teamMemberName', 'سارة الاحمد');
+      console.log("تم تعيين اسم عضو فريق افتراضي للعرض التجريبي");
+    }
+  }, []);
+
+  // سجل الحالة عند التحميل
+  useEffect(() => {
+    console.log("معرف المطعم في localStorage:", localStorage.getItem('restaurantId'));
+    console.log("اسم عضو الفريق في localStorage:", localStorage.getItem('teamMemberName'));
+  }, []);
 
   return (
     <RestaurantLayout hideSidebar={true}>
