@@ -45,6 +45,12 @@ export const useRegisteredProducts = () => {
         const registeredProducts: RegisteredProduct[] = [];
         querySnapshot.docs.forEach((doc) => {
           const productData = doc.data();
+          const createdAtDate = productData.created_at 
+            ? typeof productData.created_at.toDate === 'function' 
+              ? productData.created_at.toDate() 
+              : new Date(productData.created_at)
+            : new Date();
+            
           registeredProducts.push({
             id: doc.id,
             name: productData.name,
@@ -54,7 +60,7 @@ export const useRegisteredProducts = () => {
             barcode: doc.id, // Use document ID as barcode
             status: productData.status || 'active',
             addedBy: productData.addedBy || 'غير معروف',
-            createdAt: productData.created_at ? new Date(productData.created_at).toLocaleDateString('ar-SA') : undefined
+            createdAt: createdAtDate.toLocaleDateString('ar-SA')
           });
         });
         
