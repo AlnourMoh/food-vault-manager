@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Phone } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -26,11 +25,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           value={phoneCountryCode}
           onValueChange={onCountryCodeChange}
         >
-          <FormControl>
-            <SelectTrigger>
-              <SelectValue placeholder="مفتاح الدولة" />
-            </SelectTrigger>
-          </FormControl>
+          <SelectTrigger>
+            <SelectValue placeholder="مفتاح الدولة" />
+          </SelectTrigger>
           <SelectContent>
             {countryCodes.map((code) => (
               <SelectItem key={code.value} value={code.value}>
