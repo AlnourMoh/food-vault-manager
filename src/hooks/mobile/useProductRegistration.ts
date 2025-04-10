@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { db, doc, setDoc, serverTimestamp } from '@/lib/firebase';
+import { db, doc, updateDoc, addDoc, collection, serverTimestamp } from '@/lib/firebase';
 import { ProductRegistrationData } from '@/components/mobile/RegisterProductForm';
 
 export const useProductRegistration = () => {
@@ -22,9 +22,11 @@ export const useProductRegistration = () => {
     setLoading(true);
     try {
       // Create a new product in the system
+      // Since setDoc is not available, we'll use either updateDoc with an existing doc reference
+      // or addDoc to add to a collection
       const productRef = doc(db, `restaurants/${restaurantId}/products`, productData.barcode);
       
-      await setDoc(productRef, {
+      await updateDoc(productRef, {
         name: productData.name,
         category: productData.category,
         unit: productData.unit,
@@ -42,8 +44,8 @@ export const useProductRegistration = () => {
       });
       
       // Add a transaction record for the registration
-      const transactionsRef = doc(db, `restaurants/${restaurantId}/transactions`, `register_${Date.now()}`);
-      await setDoc(transactionsRef, {
+      const transactionsCollection = collection(db, `restaurants/${restaurantId}/transactions`);
+      await addDoc(transactionsCollection, {
         productId: productData.barcode,
         productName: productData.name,
         type: 'register',

@@ -54,6 +54,12 @@ export const addDoc = async (collectionRef: any, data: any) => {
   return { id: 'mock-doc-id' };
 };
 
+// Adding setDoc to match Firebase's API
+export const setDoc = async (docRef: any, data: any) => {
+  console.log(`Mock setting document at ${docRef.path} with data:`, data);
+  return Promise.resolve();
+};
+
 export const increment = (val: number) => {
   console.log(`Mock increment by ${val}`);
   return val;
