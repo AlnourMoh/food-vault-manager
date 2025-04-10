@@ -11,8 +11,11 @@ import InventoryDataTabs from '@/components/restaurant/dashboard/InventoryDataTa
 import MobileAppCard from '@/components/restaurant/dashboard/MobileAppCard';
 import DashboardTabs from '@/components/restaurant/dashboard/DashboardTabs';
 
+// Import for the additional tabs
+import { Skeleton } from '@/components/ui/skeleton';
+
 const RestaurantDashboard = () => {
-  const { activeTab, setActiveTab, showMobileApp } = useDashboardData();
+  const { activeTab, setActiveTab, showMobileApp, stats, loading } = useDashboardData();
   
   return (
     <RestaurantLayout>
@@ -25,7 +28,7 @@ const RestaurantDashboard = () => {
           <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
           
           <TabsContent value="overview" className="space-y-6">
-            <StatsGrid />
+            <StatsGrid stats={stats} loading={loading} />
             <InventoryDataTabs />
             <div className="grid grid-cols-1 gap-6">
               <MobileAppCard />
@@ -33,15 +36,54 @@ const RestaurantDashboard = () => {
           </TabsContent>
           
           <TabsContent value="inventory" className="space-y-4">
-            <p>محتوى المخزون قريبًا...</p>
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">إدارة المخزون</h2>
+                <p className="text-muted-foreground">
+                  يمكنك من هنا عرض كافة المنتجات في المخزون، وإدارة الكميات والتنبيهات.
+                  قريباً سيتم إضافة المزيد من الميزات المتقدمة لإدارة المخزون.
+                </p>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="reports" className="space-y-4">
-            <p>محتوى التقارير قريبًا...</p>
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">تقارير المخزون</h2>
+                <p className="text-muted-foreground">
+                  قريباً سيتم إضافة تقارير تفصيلية عن حركة المخزون، الاستهلاك، والتكاليف.
+                  تابعونا للحصول على تحديثات جديدة.
+                </p>
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-4">
-            <p>محتوى الإعدادات قريبًا...</p>
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">إعدادات المخزون</h2>
+                <p className="text-muted-foreground">
+                  قريباً ستتمكن من تخصيص إعدادات المخزون، تنبيهات المنتجات منخفضة الكمية،
+                  وإعدادات الطباعة والباركود.
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
