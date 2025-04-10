@@ -1,11 +1,7 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Archive, 
-  ArrowDown, 
-  ArrowUp, 
-  TrashIcon, 
   Check,
   Users,
   Home,
@@ -35,7 +31,7 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children, hideSideb
   // استخدام hook لاسترجاع بيانات المطعم
   const { restaurantName, isLoading } = useRestaurantData(restaurantId);
 
-  // Restaurant menu items
+  // Restaurant menu items - removed product entry, exit, and expired items
   const menuItems = [
     { 
       name: 'لوحة التحكم', 
@@ -48,24 +44,9 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children, hideSideb
       icon: <Users className="ml-2 h-5 w-5" /> 
     },
     { 
-      name: 'إدخال المنتجات', 
-      path: '/restaurant/products/add', 
-      icon: <ArrowDown className="ml-2 h-5 w-5" /> 
-    },
-    { 
-      name: 'إخراج المنتجات', 
-      path: '/restaurant/products/remove', 
-      icon: <ArrowUp className="ml-2 h-5 w-5" /> 
-    },
-    { 
       name: 'المخزون', 
       path: '/restaurant/inventory', 
       icon: <Archive className="ml-2 h-5 w-5" /> 
-    },
-    { 
-      name: 'المنتجات المنتهية', 
-      path: '/restaurant/expired', 
-      icon: <TrashIcon className="ml-2 h-5 w-5" /> 
     },
     { 
       name: 'التقارير', 
