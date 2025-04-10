@@ -42,7 +42,7 @@ export const useProductRemoval = () => {
     setIsLoading(true);
     try {
       // البحث عن المنتج باستخدام الباركود
-      const productsRef = collection(doc(collection(doc(), 'restaurants'), restaurantId || ''), 'products');
+      const productsRef = collection(doc(collection(doc("dbs"), 'restaurants'), restaurantId || ''), 'products');
       const productSnapshot = await getDoc(doc(productsRef, barcode));
       
       if (productSnapshot.exists()) {
@@ -82,7 +82,7 @@ export const useProductRemoval = () => {
 
     setIsLoading(true);
     try {
-      const productRef = doc(doc(collection(doc(), 'restaurants'), restaurantId || ''), 'products', barcode);
+      const productRef = doc(doc(collection(doc("dbs"), 'restaurants'), restaurantId || ''), 'products', barcode);
       
       // تحديث كمية المنتج
       await updateDoc(productRef, {
@@ -90,7 +90,7 @@ export const useProductRemoval = () => {
       });
       
       // إضافة سجل للعملية
-      const logsRef = collection(doc(collection(doc(), 'restaurants'), restaurantId || ''), 'logs');
+      const logsRef = collection(doc(collection(doc("dbs"), 'restaurants'), restaurantId || ''), 'logs');
       await addDoc(logsRef, {
         type: 'remove',
         productId: barcode,
