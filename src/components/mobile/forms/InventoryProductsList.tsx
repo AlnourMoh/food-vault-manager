@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Package2, Clock, AlertCircle, Bell } from 'lucide-react';
+import { Package2, Clock, AlertCircle, Bell, ScanBarcode } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import EmptyProductState from '@/components/mobile/EmptyProductState';
 
 interface InventoryProductsListProps {
@@ -86,13 +87,15 @@ const InventoryProductsList: React.FC<InventoryProductsListProps> = ({
             return (
               <div 
                 key={product.id} 
-                className={`flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50 cursor-pointer transition-colors ${
+                className={`flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50 transition-colors ${
                   attention ? 'border-amber-300 shadow-sm' : 
                   expiryStatus.status === 'expired' ? 'border-red-300' : ''
                 }`}
-                onClick={() => onSelectProduct(product.barcode || product.id)}
               >
-                <div className="flex items-start gap-3">
+                <div 
+                  className="flex items-start gap-3 flex-1 cursor-pointer"
+                  onClick={() => onSelectProduct(product.barcode || product.id)}
+                >
                   <div className={`p-2 rounded-md ${
                     expiryStatus.status === 'expired' ? 'bg-red-100' : 
                     expiryStatus.status === 'expiring-soon' ? 'bg-amber-100' : 
@@ -137,6 +140,16 @@ const InventoryProductsList: React.FC<InventoryProductsListProps> = ({
                     </div>
                   </div>
                 </div>
+                
+                {/* زر مسح الباركود */}
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="flex-shrink-0 border-fvm-primary text-fvm-primary hover:bg-fvm-primary-light hover:text-white"
+                  onClick={() => onSelectProduct(product.barcode || product.id)}
+                >
+                  <ScanBarcode className="h-4 w-4" />
+                </Button>
               </div>
             );
           })}

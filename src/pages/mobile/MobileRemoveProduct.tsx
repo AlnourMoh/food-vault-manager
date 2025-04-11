@@ -22,7 +22,7 @@ const MobileRemoveProduct = () => {
 
   const { products, loading: productsLoading } = useInventoryProducts();
 
-  // تابع لاختيار منتج من القائمة
+  // تابع لاختيار منتج من القائمة او مسح الباركود
   const handleSelectProduct = (productBarcode: string) => {
     if (productBarcode) {
       handleScanResult(productBarcode);
