@@ -10,6 +10,7 @@ interface InventoryProductsListProps {
   products: any[];
   loading: boolean;
   onSelectProduct: (barcode: string) => void;
+  onScanButtonClick?: () => void;
   showNotificationBadge?: boolean;
 }
 
@@ -52,6 +53,7 @@ const InventoryProductsList: React.FC<InventoryProductsListProps> = ({
   products, 
   loading, 
   onSelectProduct,
+  onScanButtonClick,
   showNotificationBadge = false
 }) => {
   if (loading) {
@@ -146,7 +148,7 @@ const InventoryProductsList: React.FC<InventoryProductsListProps> = ({
                   variant="outline" 
                   size="icon"
                   className="flex-shrink-0 border-fvm-primary text-fvm-primary hover:bg-fvm-primary-light hover:text-white"
-                  onClick={() => onSelectProduct(product.barcode || product.id)}
+                  onClick={onScanButtonClick || (() => onSelectProduct(product.barcode || product.id))}
                 >
                   <ScanBarcode className="h-4 w-4" />
                 </Button>

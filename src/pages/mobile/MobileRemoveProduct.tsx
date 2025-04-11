@@ -28,6 +28,11 @@ const MobileRemoveProduct = () => {
       handleScanResult(productBarcode);
     }
   };
+  
+  // تابع لفتح الماسح الضوئي مباشرة
+  const handleScanButtonClick = () => {
+    setScanning(true);
+  };
 
   return (
     <RestaurantLayout hideSidebar={true}>
@@ -61,7 +66,8 @@ const MobileRemoveProduct = () => {
               <InventoryProductsList 
                 products={products} 
                 loading={productsLoading} 
-                onSelectProduct={handleSelectProduct} 
+                onSelectProduct={handleSelectProduct}
+                onScanButtonClick={handleScanButtonClick}
               />
             )}
           </>

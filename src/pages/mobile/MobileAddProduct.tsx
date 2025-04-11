@@ -47,6 +47,11 @@ const MobileAddProduct = () => {
   const handleSelectInventoryProduct = (productBarcode: string) => {
     handleScanResult(productBarcode);
   };
+  
+  // تابع لفتح الماسح الضوئي مباشرة
+  const handleScanButtonClick = () => {
+    setScanning(true);
+  };
 
   return (
     <RestaurantLayout hideSidebar={true}>
@@ -101,6 +106,7 @@ const MobileAddProduct = () => {
                       products={productsNeedingAttention}
                       loading={inventoryLoading}
                       onSelectProduct={handleSelectInventoryProduct}
+                      onScanButtonClick={handleScanButtonClick}
                       showNotificationBadge={true}
                     />
                   </div>
