@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">food-vault-manager</string>
+    <string name="title_activity_main">food-vault-manager</string>
+    <string name="package_name">app.lovable.b3b6b969583d416c9d8b788fa375abca</string>
+    <string name="custom_url_scheme">app.lovable.b3b6b969583d416c9d8b788fa375abca</string>
+</resources>
