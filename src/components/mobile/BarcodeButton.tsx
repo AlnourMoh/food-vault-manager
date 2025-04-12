@@ -5,7 +5,7 @@ import { QrCode } from 'lucide-react';
 
 interface BarcodeButtonProps {
   onClick: () => void;
-  buttonText: string;
+  buttonText: React.ReactNode;
   className?: string;
 }
 
@@ -19,8 +19,14 @@ const BarcodeButton: React.FC<BarcodeButtonProps> = ({
       onClick={onClick}
       className={`flex items-center gap-2 bg-fvm-primary hover:bg-fvm-primary-light ${className}`}
     >
-      <QrCode className="h-4 w-4" />
-      <span>{buttonText}</span>
+      {typeof buttonText === 'string' ? (
+        <>
+          <QrCode className="h-4 w-4" />
+          <span>{buttonText}</span>
+        </>
+      ) : (
+        buttonText
+      )}
     </Button>
   );
 };

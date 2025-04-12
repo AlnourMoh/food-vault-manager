@@ -1,184 +1,123 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import BarcodeButton from '@/components/mobile/BarcodeButton';
-import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
+import React from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
+import { useProductAddition } from '@/hooks/mobile/useProductAddition';
+import { useInventoryProducts } from '@/hooks/mobile/useInventoryProducts';
+import BarcodeScanner from '@/components/mobile/BarcodeScanner';
+import PageHeader from '@/components/mobile/PageHeader';
+import ProductInfo from '@/components/mobile/ProductInfo';
+import ProductSubmitButton from '@/components/mobile/ProductSubmitButton';
+import RegisteredProductsList from '@/components/mobile/RegisteredProductsList';
+import InventoryProductsList from '@/components/mobile/forms/InventoryProductsList';
+import { Button } from '@/components/ui/button';
+import { ScanLine, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const MobileAddProduct = () => {
-  const { toast } = useToast();
-  const [productName, setProductName] = useState('');
-  const [category, setCategory] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [unit, setUnit] = useState('');
-  const { startScan, isScanning, scannedCode, setScannedCode } = useBarcodeScanner();
+  const {
+    scanning,
+    setScanning,
+    barcode,
+    setBarcode,
+    quantity,
+    setQuantity,
+    productInfo,
+    loading,
+    handleScanResult,
+    handleAddProduct
+  } = useProductAddition();
+
+  // Fetch inventory products to show low stock items
+  const { products: inventoryProducts, loading: inventoryLoading } = useInventoryProducts();
   
-  const restaurantId = localStorage.getItem('restaurantId');
+  // Filter products that need attention (low stock)
+  const productsNeedingAttention = inventoryProducts.filter(product => product.quantity < 5);
 
-  // Categories and units (sample data)
-  const categories = ['خضروات', 'فواكه', 'لحوم', 'بهارات', 'بقالة', 'أخرى'];
-  const units = ['كيلوجرام', 'جرام', 'لتر', 'قطعة', 'علبة', 'كرتون'];
-
-  useEffect(() => {
-    // When a barcode is scanned, we can either:
-    // 1. Populate a form field with the barcode
-    // 2. Fetch product info from the database based on the barcode
-    if (scannedCode) {
-      toast({
-        title: "تم مسح الباركود بنجاح",
-        description: `الرمز المقروء: ${scannedCode}`,
-      });
-      
-      // Here you would typically fetch product data based on the barcode
-      // For now, we'll just set a placeholder name
-      setProductName(`منتج ${scannedCode.substring(0, 6)}`);
-    }
-  }, [scannedCode, toast]);
-
-  const handleScanBarcode = async () => {
-    const code = await startScan();
-    if (code) {
-      setScannedCode(code);
-    }
+  // Handle quantity change event
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(e.target.value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!productName || !category || !quantity || !unit) {
-      toast({
-        title: "خطأ في البيانات",
-        description: "يرجى ملء جميع الحقول المطلوبة",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Here you would save the product to the database
-    console.log('Form submitted:', {
-      productName,
-      category,
-      quantity,
-      unit,
-      barcode: scannedCode,
-      restaurantId
-    });
-    
-    // Show success message
-    toast({
-      title: "تم إضافة المنتج بنجاح",
-      description: `تمت إضافة ${productName} إلى المخزون`,
-    });
-    
-    // Reset form
-    setProductName('');
-    setCategory('');
-    setQuantity('');
-    setUnit('');
-    setScannedCode(null);
+  // Handle selecting a product from the registered products list
+  const handleSelectProduct = (productBarcode: string) => {
+    handleScanResult(productBarcode);
+  };
+
+  // Handle selecting a product from the inventory list
+  const handleSelectInventoryProduct = (productBarcode: string) => {
+    handleScanResult(productBarcode);
+  };
+  
+  // تابع لفتح الماسح الضوئي مباشرة
+  const handleScanButtonClick = () => {
+    setScanning(true);
   };
 
   return (
-    <RestaurantLayout>
-      <div className="rtl space-y-6 px-4">
-        <h1 className="text-2xl font-bold tracking-tight">إضافة منتج جديد</h1>
+    <RestaurantLayout hideSidebar={true}>
+      <div className="rtl space-y-6 p-2">
+        <PageHeader title="إدخال منتج" backPath="/restaurant/mobile" />
         
-        <Card className="mx-auto">
-          <CardHeader>
-            <CardTitle className="text-xl">إدخال منتج جديد للمخزون</CardTitle>
-            <CardDescription>قم بمسح الباركود وإدخال بيانات المنتج</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form id="add-product-form" onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <BarcodeButton 
-                  onClick={handleScanBarcode}
-                  buttonText={scannedCode ? "إعادة مسح الباركود" : "مسح باركود المنتج"}
-                  className="w-full"
+        {scanning ? (
+          <BarcodeScanner 
+            onScanResult={handleScanResult}
+            onCancel={() => setScanning(false)}
+          />
+        ) : (
+          <>
+            <div className="mt-2 mb-4">
+              <Button 
+                onClick={() => setScanning(true)}
+                className="w-full bg-fvm-primary hover:bg-fvm-primary-light text-white py-3 flex items-center justify-center gap-2"
+              >
+                <ScanLine className="h-5 w-5" />
+                <span>مسح باركود منتج</span>
+              </Button>
+            </div>
+            
+            {productInfo ? (
+              <>
+                <ProductInfo 
+                  productInfo={productInfo}
+                  quantity={quantity}
+                  onQuantityChange={handleQuantityChange}
+                  action="إضافة"
                 />
                 
-                {scannedCode && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-md text-center">
-                    <span className="text-green-800 text-sm">تم مسح الباركود: {scannedCode}</span>
+                <ProductSubmitButton 
+                  onClick={handleAddProduct}
+                  disabled={loading}
+                  label="تأكيد إدخال المنتج"
+                />
+              </>
+            ) : (
+              <>
+                {/* Display products that need attention (low stock) */}
+                {productsNeedingAttention.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
+                      <h2 className="text-lg font-medium">منتجات تحتاج للإدخال</h2>
+                      <Badge className="bg-amber-100 text-amber-800 border-amber-200">
+                        {productsNeedingAttention.length}
+                      </Badge>
+                    </div>
+                    <InventoryProductsList 
+                      products={productsNeedingAttention}
+                      loading={inventoryLoading}
+                      onSelectProduct={handleSelectInventoryProduct}
+                      onScanButtonClick={handleScanButtonClick}
+                      showNotificationBadge={true}
+                    />
                   </div>
                 )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="productName">اسم المنتج</Label>
-                <Input 
-                  id="productName" 
-                  placeholder="أدخل اسم المنتج" 
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  required 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="category">التصنيف</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="اختر تصنيف المنتج" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">الكمية</Label>
-                  <Input 
-                    id="quantity" 
-                    type="number" 
-                    min="1" 
-                    placeholder="أدخل الكمية" 
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    required 
-                  />
-                </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="unit">الوحدة</Label>
-                  <Select value={unit} onValueChange={setUnit}>
-                    <SelectTrigger id="unit">
-                      <SelectValue placeholder="اختر الوحدة" />
-                    </SelectTrigger>
-                    <SelectContent position="popper">
-                      {units.map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline">إلغاء</Button>
-            <Button 
-              type="submit" 
-              form="add-product-form" 
-              className="bg-fvm-primary hover:bg-fvm-primary-light"
-            >
-              إضافة المنتج
-            </Button>
-          </CardFooter>
-        </Card>
+                {/* Display registered products list waiting for input */}
+                <RegisteredProductsList onScanProduct={handleSelectProduct} />
+              </>
+            )}
+          </>
+        )}
       </div>
     </RestaurantLayout>
   );

@@ -23,6 +23,7 @@ import EditProduct from '@/pages/EditProduct';
 import MobileDashboard from '@/pages/mobile/MobileDashboard';
 import MobileAddProduct from '@/pages/mobile/MobileAddProduct';
 import MobileRemoveProduct from '@/pages/mobile/MobileRemoveProduct';
+import MobileLogin from '@/pages/mobile/MobileLogin';
 
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
@@ -32,6 +33,22 @@ const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   return <>{children}</>;
+};
+
+// Mobile team member route guard
+const TeamMemberRoute = ({ children }: { children: React.ReactNode }) => {
+  const isTeamMemberLoggedIn = !!localStorage.getItem('teamMemberId');
+  
+  if (!isTeamMemberLoggedIn) {
+    return <Navigate to="/restaurant/mobile/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// دالة للتحقق مما إذا كان الجهاز هو هاتف محمول
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
 const queryClient = new QueryClient();
@@ -46,7 +63,13 @@ function App() {
           <BrowserRouter>
             <Routes>
               {/* Super Admin Routes */}
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={
+                isMobileDevice() && localStorage.getItem('teamMemberId')
+                  ? <Navigate to="/restaurant/mobile" replace />
+                  : isMobileDevice() && localStorage.getItem('isRestaurantLogin') === 'true'
+                  ? <Navigate to="/restaurant/mobile" replace />
+                  : <Index />
+              } />
               <Route path="/restaurants" element={<Restaurants />} />
               <Route path="/restaurants/add" element={<AddRestaurant />} />
               <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
@@ -69,7 +92,7 @@ function App() {
               {/* Protected Restaurant Routes */}
               <Route path="/restaurant/dashboard" element={
                 <RestaurantRoute>
-                  <RestaurantDashboard />
+                  {isMobileDevice() ? <Navigate to="/restaurant/mobile" replace /> : <RestaurantDashboard />}
                 </RestaurantRoute>
               } />
               <Route path="/restaurant/storage-team" element={
@@ -78,21 +101,24 @@ function App() {
                 </RestaurantRoute>
               } />
               
-              {/* Mobile App Routes */}
+              {/* Mobile Login Route */}
+              <Route path="/restaurant/mobile/login" element={<MobileLogin />} />
+              
+              {/* Mobile App Routes (Protected) */}
               <Route path="/restaurant/mobile" element={
-                <RestaurantRoute>
+                <TeamMemberRoute>
                   <MobileDashboard />
-                </RestaurantRoute>
+                </TeamMemberRoute>
               } />
               <Route path="/restaurant/mobile/add" element={
-                <RestaurantRoute>
+                <TeamMemberRoute>
                   <MobileAddProduct />
-                </RestaurantRoute>
+                </TeamMemberRoute>
               } />
               <Route path="/restaurant/mobile/remove" element={
-                <RestaurantRoute>
+                <TeamMemberRoute>
                   <MobileRemoveProduct />
-                </RestaurantRoute>
+                </TeamMemberRoute>
               } />
               
               {/* Barcode routes */}

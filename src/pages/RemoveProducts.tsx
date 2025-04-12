@@ -1,7 +1,7 @@
 
 import React from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { getMockData } from '@/services/mockData';
+import { getMockData } from '@/services/mock';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RemoveProductForm from '@/components/removeProducts/RemoveProductForm';
 import { useRemoveProducts } from '@/hooks/removeProducts/useRemoveProducts';

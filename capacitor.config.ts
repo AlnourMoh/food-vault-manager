@@ -13,6 +13,9 @@ const config: CapacitorConfig = {
     // Configure any plugin-specific settings here
     CapacitorHttp: {
       enabled: true
+    },
+    BarcodeScanner: {
+      // Barcode scanner specific settings can be added here if needed
     }
   }
 };
