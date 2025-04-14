@@ -10,7 +10,6 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   plugins: {
-    // Configure any plugin-specific settings here
     CapacitorHttp: {
       enabled: true
     },
