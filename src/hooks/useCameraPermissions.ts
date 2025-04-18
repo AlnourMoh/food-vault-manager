@@ -11,21 +11,39 @@ export const useCameraPermissions = () => {
   useEffect(() => {
     const checkPermissions = async () => {
       try {
+        console.log('Checking camera permissions...');
+        setIsLoading(true);
+        
         if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
-          const permission = await Camera.requestPermissions();
+          console.log('Camera plugin is available, requesting permissions...');
           
-          if (permission.camera === 'granted') {
+          // First check current permissions
+          const { camera } = await Camera.checkPermissions();
+          console.log('Current camera permission status:', camera);
+          
+          if (camera === 'granted') {
+            console.log('Camera permission already granted');
             setHasPermission(true);
           } else {
-            setHasPermission(false);
-            toast({
-              title: "لا يوجد إذن للكاميرا",
-              description: "يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي",
-              variant: "destructive"
-            });
+            console.log('Requesting camera permission...');
+            // Request permission explicitly
+            const permission = await Camera.requestPermissions();
+            console.log('Permission request result:', permission);
+            
+            if (permission.camera === 'granted') {
+              setHasPermission(true);
+            } else {
+              setHasPermission(false);
+              toast({
+                title: "لا يوجد إذن للكاميرا",
+                description: "يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي",
+                variant: "destructive"
+              });
+            }
           }
         } else {
           console.log('Running in web environment or plugin not available');
+          // For web testing, assume permission granted
           setHasPermission(true);
         }
       } catch (error) {
@@ -44,5 +62,21 @@ export const useCameraPermissions = () => {
     checkPermissions();
   }, [toast]);
   
-  return { isLoading, hasPermission };
+  return { 
+    isLoading, 
+    hasPermission,
+    requestPermission: async () => {
+      try {
+        if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
+          const permission = await Camera.requestPermissions();
+          setHasPermission(permission.camera === 'granted');
+          return permission.camera === 'granted';
+        }
+        return true;
+      } catch (error) {
+        console.error('Error requesting camera permission:', error);
+        return false;
+      }
+    }
+  };
 };

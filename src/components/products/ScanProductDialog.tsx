@@ -1,10 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ScanBarcode } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ScanProductDialogProps {
   open: boolean;
@@ -14,17 +15,22 @@ interface ScanProductDialogProps {
 
 const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDialogProps) => {
   const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [hasScannerError, setHasScannerError] = useState(false);
 
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (!open) {
       console.log('Scanner dialog closed');
+      setIsProcessing(false);
+      setHasScannerError(false);
     }
   }, [open]);
 
   const handleScanResult = async (code: string) => {
     try {
       console.log('Scanned code:', code);
+      setIsProcessing(true);
       
       // First verify if this code exists and is not used
       const { data: productCode, error: codeError } = await supabase
@@ -88,19 +94,41 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         description: error.message || "حدث خطأ أثناء محاولة إضافة المنتج",
         variant: "destructive"
       });
+      setHasScannerError(true);
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  const handleRetry = () => {
+    setHasScannerError(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogTitle className="text-center">مسح باركود المنتج</DialogTitle>
-        <div className="h-[400px] relative flex items-center justify-center">
+        <div className="h-[450px] relative flex items-center justify-center">
           {open ? (
-            <BarcodeScanner
-              onScan={handleScanResult}
-              onClose={() => onOpenChange(false)}
-            />
+            hasScannerError ? (
+              <div className="flex flex-col items-center justify-center space-y-4 p-4">
+                <div className="p-3 bg-red-100 text-red-600 rounded-full">
+                  <ScanBarcode className="h-8 w-8" />
+                </div>
+                <h3 className="text-lg font-bold">حدث خطأ في الماسح الضوئي</h3>
+                <p className="text-center text-muted-foreground">
+                  لم نتمكن من الوصول إلى الكاميرا أو حدث خطأ أثناء محاولة مسح الباركود
+                </p>
+                <Button onClick={handleRetry} className="mt-4">
+                  إعادة المحاولة
+                </Button>
+              </div>
+            ) : (
+              <BarcodeScanner
+                onScan={handleScanResult}
+                onClose={() => onOpenChange(false)}
+              />
+            )
           ) : (
             <div className="flex flex-col items-center">
               <ScanBarcode className="h-16 w-16 text-muted-foreground mb-4" />

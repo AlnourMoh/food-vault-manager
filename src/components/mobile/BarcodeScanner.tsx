@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useScannerState } from '@/hooks/scanner/useScannerState';
+import { useBarcodeScannerControls } from '@/hooks/scanner/useBarcodeScannerControls';
 import { ScannerLoading } from './scanner/ScannerLoading';
 import { NoPermissionView } from './scanner/NoPermissionView';
 import { ScannerView } from './scanner/ScannerView';
@@ -13,20 +13,21 @@ interface BarcodeScannerProps {
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const { 
-    isLoading, 
-    hasPermission,
-    isScanningActive,
+    isScanningActive, 
     lastScannedCode,
+    hasPermission,
     startScan,
-    stopScan
-  } = useScannerState({ onScan, onClose });
+    stopScan,
+    requestPermission
+  } = useBarcodeScannerControls({ onScan, onClose });
   
   // Automatically start scanning when the component mounts
   useEffect(() => {
     console.log('BarcodeScanner mounted, will auto-start scan');
+    
     // Short delay to ensure everything is initialized properly
     const timer = setTimeout(() => {
-      if (!isLoading && hasPermission && !isScanningActive) {
+      if (hasPermission !== false && !isScanningActive) {
         console.log('Auto-starting scanner');
         startScan();
       }
@@ -36,26 +37,33 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       clearTimeout(timer);
       stopScan();
     };
-  }, [isLoading, hasPermission, isScanningActive, startScan, stopScan]);
+  }, [hasPermission, isScanningActive, startScan, stopScan]);
   
-  if (isLoading) {
+  if (hasPermission === null) {
     return <ScannerLoading />;
-  }
-  
-  if (hasPermission === false) {
-    return <NoPermissionView onClose={onClose} />;
   }
   
   return (
     <div className={`fixed inset-0 z-50 ${isScanningActive ? 'scanning-active' : ''}`}>
       {isScanningActive ? (
-        <ScannerView onStop={stopScan} />
-      ) : (
-        <ScannerReadyView
-          lastScannedCode={lastScannedCode}
-          onStartScan={startScan}
-          onClose={onClose}
+        <ScannerView 
+          onStop={stopScan} 
+          hasPermissionError={hasPermission === false}
+          onRequestPermission={requestPermission}
         />
+      ) : (
+        hasPermission === false ? (
+          <NoPermissionView 
+            onClose={onClose} 
+            onRequestPermission={requestPermission}
+          />
+        ) : (
+          <ScannerReadyView
+            lastScannedCode={lastScannedCode}
+            onStartScan={startScan}
+            onClose={onClose}
+          />
+        )
       )}
     </div>
   );

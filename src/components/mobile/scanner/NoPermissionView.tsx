@@ -2,22 +2,46 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera } from 'lucide-react';
+import { Camera, AlertCircle } from 'lucide-react';
 
 interface NoPermissionViewProps {
   onClose: () => void;
+  onRequestPermission?: () => void;
 }
 
-export const NoPermissionView = ({ onClose }: NoPermissionViewProps) => {
+export const NoPermissionView = ({ onClose, onRequestPermission }: NoPermissionViewProps) => {
   return (
     <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
-      <div className="flex flex-col items-center justify-center h-60">
-        <Camera className="text-destructive h-16 w-16 mb-4" />
-        <h3 className="text-xl font-bold mb-2">لا يوجد إذن للكاميرا</h3>
-        <p className="text-center text-muted-foreground mb-4">
+      <div className="flex flex-col items-center justify-center py-6 space-y-4">
+        <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        
+        <h3 className="text-xl font-bold">لا يوجد إذن للكاميرا</h3>
+        
+        <p className="text-center text-muted-foreground">
           يرجى السماح بالوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي
         </p>
-        <Button variant="outline" onClick={onClose}>إغلاق</Button>
+        
+        <div className="flex flex-col w-full space-y-2 mt-4">
+          {onRequestPermission && (
+            <Button 
+              onClick={onRequestPermission}
+              className="w-full"
+              variant="default"
+            >
+              طلب الإذن مجددًا
+            </Button>
+          )}
+          
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="w-full"
+          >
+            إغلاق
+          </Button>
+        </div>
       </div>
     </Card>
   );
