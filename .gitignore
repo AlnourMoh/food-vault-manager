@@ -7,7 +7,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Build directories
 node_modules
 dist
 dist-ssr
@@ -23,12 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# تجاهل مجلدات النظام مثل AppData و Documents
-AppData/
-Documents/
-Downloads/
-Desktop/
-Pictures/
-Music/
-Videos/

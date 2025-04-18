@@ -1,91 +1,76 @@
 
 import React from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { useDashboardData } from '@/hooks/useDashboardData';
-
-// Import the separated components
-import MobileAppBanner from '@/components/restaurant/dashboard/MobileAppBanner';
-import StatsGrid from '@/components/restaurant/dashboard/StatsGrid';
-import InventoryDataTabs from '@/components/restaurant/dashboard/InventoryDataTabs';
-import MobileAppCard from '@/components/restaurant/dashboard/MobileAppCard';
-import DashboardTabs from '@/components/restaurant/dashboard/DashboardTabs';
-
-// Import for the additional tabs
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Archive, Users, ShoppingCart, AlertTriangle } from 'lucide-react';
 
 const RestaurantDashboard = () => {
-  const { activeTab, setActiveTab, showMobileApp, stats, loading } = useDashboardData();
-  
+  // Mock data - in a real app, this would come from the database
+  const stats = [
+    {
+      title: "إجمالي المنتجات",
+      value: "153",
+      icon: <ShoppingCart className="h-6 w-6 text-blue-500" />,
+      color: "bg-blue-50"
+    },
+    {
+      title: "أعضاء الفريق",
+      value: "12",
+      icon: <Users className="h-6 w-6 text-green-500" />,
+      color: "bg-green-50"
+    },
+    {
+      title: "المخزون الحالي",
+      value: "856 كجم",
+      icon: <Archive className="h-6 w-6 text-purple-500" />,
+      color: "bg-purple-50"
+    },
+    {
+      title: "منتجات قاربت على الانتهاء",
+      value: "8",
+      icon: <AlertTriangle className="h-6 w-6 text-red-500" />,
+      color: "bg-red-50"
+    }
+  ];
+
   return (
     <RestaurantLayout>
-      <div className="rtl space-y-6">
-        <MobileAppBanner showMobileApp={showMobileApp} />
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">مرحباً بك في لوحة تحكم المطعم</h1>
         
-        <h1 className="text-3xl font-bold tracking-tight">لوحة التحكم</h1>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat, index) => (
+            <Card key={index}>
+              <CardHeader className={`flex flex-row items-center justify-between pb-2 ${stat.color} rounded-t-lg`}>
+                <CardTitle className="text-md font-medium">{stat.title}</CardTitle>
+                {stat.icon}
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{stat.value}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
         
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-          <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>آخر المنتجات المضافة</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">لا توجد منتجات مضافة حديثاً</p>
+            </CardContent>
+          </Card>
           
-          <TabsContent value="overview" className="space-y-6">
-            <StatsGrid stats={stats} loading={loading} />
-            <InventoryDataTabs />
-            <div className="grid grid-cols-1 gap-6">
-              <MobileAppCard />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="inventory" className="space-y-4">
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-64 w-full" />
-              </div>
-            ) : (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">إدارة المخزون</h2>
-                <p className="text-muted-foreground">
-                  يمكنك من هنا عرض كافة المنتجات في المخزون، وإدارة الكميات والتنبيهات.
-                  قريباً سيتم إضافة المزيد من الميزات المتقدمة لإدارة المخزون.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="reports" className="space-y-4">
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-64 w-full" />
-              </div>
-            ) : (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">تقارير المخزون</h2>
-                <p className="text-muted-foreground">
-                  قريباً سيتم إضافة تقارير تفصيلية عن حركة المخزون، الاستهلاك، والتكاليف.
-                  تابعونا للحصول على تحديثات جديدة.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="settings" className="space-y-4">
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-64 w-full" />
-              </div>
-            ) : (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">إعدادات المخزون</h2>
-                <p className="text-muted-foreground">
-                  قريباً ستتمكن من تخصيص إعدادات المخزون، تنبيهات المنتجات منخفضة الكمية،
-                  وإعدادات الطباعة والباركود.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          <Card>
+            <CardHeader>
+              <CardTitle>منتجات قاربت على الانتهاء</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">لا توجد منتجات قاربت على الانتهاء</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </RestaurantLayout>
   );

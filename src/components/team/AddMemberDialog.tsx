@@ -2,12 +2,15 @@
 import React from 'react';
 import {
   Dialog,
-  DialogContent
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import AddMemberForm from './form/AddMemberForm';
+import SuccessMessage from './form/SuccessMessage';
 import { FormValues } from './form/AddMemberFormSchema';
-import DialogHeader from './dialog/DialogHeader';
-import DialogContentComponent from './dialog/DialogContent';
-import { useDialogState } from './dialog/useDialogState';
 
 interface AddMemberDialogProps {
   open: boolean;
@@ -34,14 +37,14 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
   emailError,
   onResetErrors,
 }) => {
-  const { formDirty, handleSuccess, handleAddAnother } = useDialogState(open, onResetErrors);
+  const [formDirty, setFormDirty] = React.useState(false);
+  const { toast } = useToast();
 
   const handleAddMember = async (data: FormValues) => {
     const success = await onAddMember(data);
     if (success) {
-      handleSuccess();
+      setFormDirty(false);
     }
-    return success;
   };
 
   const handleCancel = () => {
@@ -50,10 +53,23 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
   };
 
   const handleClose = () => {
-    handleSuccess();
+    setFormDirty(false);
     onOpenChange(false);
     onResetErrors();
   };
+
+  const handleAddAnother = () => {
+    setFormDirty(true);
+    onResetErrors();
+  };
+
+  // إعادة تعيين حالة النموذج وأخطاء التحقق عند إغلاق نافذة الحوار
+  React.useEffect(() => {
+    if (!open) {
+      setFormDirty(false);
+      onResetErrors();
+    }
+  }, [open, onResetErrors]);
 
   // عرض إما النموذج أو رسالة النجاح مع خيار النسخ
   const showSuccessMessage = lastAddedMember && !formDirty;
@@ -66,23 +82,39 @@ const AddMemberDialog: React.FC<AddMemberDialogProps> = ({
       onOpenChange(newOpen);
     }}>
       <DialogContent className="rtl sm:max-w-[500px]">
-        <DialogHeader 
-          showSuccessMessage={showSuccessMessage} 
-          lastAddedMember={lastAddedMember} 
-        />
-        <DialogContentComponent 
-          showSuccessMessage={showSuccessMessage}
-          lastAddedMember={lastAddedMember}
-          welcomeMessage={welcomeMessage}
-          onCopyMessage={onCopyWelcomeMessage}
-          onAddMember={handleAddMember}
-          onCancel={handleCancel}
-          onClose={handleClose}
-          onAddAnother={handleAddAnother}
-          isLoading={isLoading}
-          phoneError={phoneError}
-          emailError={emailError}
-        />
+        {!showSuccessMessage ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>إضافة عضو جديد لفريق المخزن</DialogTitle>
+              <DialogDescription>
+                الرجاء إدخال بيانات عضو الفريق الجديد. سيتم إرسال بريد إلكتروني للعضو لإعداد كلمة المرور.
+              </DialogDescription>
+            </DialogHeader>
+            <AddMemberForm 
+              onSubmit={handleAddMember} 
+              onCancel={handleCancel} 
+              isLoading={isLoading}
+              phoneError={phoneError}
+              emailError={emailError}
+            />
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>تمت إضافة العضو بنجاح</DialogTitle>
+              <DialogDescription>
+                تم إضافة {lastAddedMember.name} كـ {lastAddedMember.role} بنجاح
+              </DialogDescription>
+            </DialogHeader>
+            <SuccessMessage 
+              lastAddedMember={lastAddedMember}
+              welcomeMessage={welcomeMessage}
+              onCopyMessage={onCopyWelcomeMessage}
+              onClose={handleClose}
+              onAddAnother={handleAddAnother}
+            />
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

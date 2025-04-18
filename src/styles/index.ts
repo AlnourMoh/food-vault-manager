@@ -1,5 +1,7 @@
 
-import './base.css';
 import './tailwind.css';
+import './base.css';
+import './print/index.css';
 import './legacy.css';
-import './mobile.css'; // Add the mobile styles
+
+// Export any style-related constants or utilities here if needed

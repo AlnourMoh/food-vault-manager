@@ -14,8 +14,7 @@ import {
   ArrowUp, 
   ArrowDown,
   Users,
-  BuildingIcon,
-  Smartphone
+  BuildingIcon
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -72,11 +71,6 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
       name: 'التقارير', 
       path: '/reports', 
       icon: <Check className="ml-2 h-5 w-5" /> 
-    },
-    { 
-      name: 'تطبيق إدارة المخزون', 
-      path: '/restaurant/mobile', 
-      icon: <Smartphone className="ml-2 h-5 w-5" /> 
     },
   ];
 
