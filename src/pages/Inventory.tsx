@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
@@ -7,7 +8,7 @@ import { Product } from '@/types';
 import ProductGrid from '@/components/products/ProductGrid';
 import InventoryHeader from '@/components/inventory/InventoryHeader';
 import EmptyInventory from '@/components/inventory/EmptyInventory';
-import { PRODUCT_CATEGORIES, ProductCategory, ProductStatus } from '@/constants/inventory';
+import { PRODUCT_CATEGORIES, ProductCategory, ProductStatus, ProductUnit } from '@/constants/inventory';
 
 // Define a type for the raw product data from Supabase
 interface RawProductData {
@@ -76,6 +77,12 @@ const Inventory = () => {
               category = item.category as ProductCategory;
             }
             
+            // Ensure unit is a valid ProductUnit type
+            let unit: ProductUnit = "piece"; // Default unit
+            if (item.unit && isValidProductUnit(item.unit)) {
+              unit = item.unit as ProductUnit;
+            }
+            
             return {
               id: item.id,
               name: item.name,
@@ -88,7 +95,7 @@ const Inventory = () => {
               imageUrl: item.image_url || getPlaceholderImage(category),
               restaurantName: '',
               addedBy: '',
-              unit: item.unit || 'piece'
+              unit: unit
             };
           });
           
@@ -108,6 +115,11 @@ const Inventory = () => {
     
     fetchProducts();
   }, [toast]);
+
+  // Helper function to validate if a string is a valid ProductUnit
+  const isValidProductUnit = (unit: string): unit is ProductUnit => {
+    return ["kg", "g", "l", "ml", "piece", "box", "pack"].includes(unit);
+  };
 
   // Function to get placeholder image based on category
   const getPlaceholderImage = (category: string): string => {

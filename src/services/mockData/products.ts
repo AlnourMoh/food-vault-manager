@@ -1,13 +1,13 @@
 
 import { Product } from '@/types';
-import { ProductStatus } from '@/constants/inventory';
+import { ProductStatus, ProductUnit } from '@/constants/inventory';
 
 export const products: Product[] = [
   {
     id: '1',
     name: 'أرز بسمتي',
     category: 'بقالة',
-    unit: 'kg',
+    unit: 'kg' as ProductUnit,
     quantity: 50,
     expiryDate: new Date('2024-06-30'),
     entryDate: new Date('2023-06-15'),
@@ -20,7 +20,7 @@ export const products: Product[] = [
     id: '2',
     name: 'دجاج مجمد',
     category: 'لحوم',
-    unit: 'kg',
+    unit: 'kg' as ProductUnit,
     quantity: 30,
     expiryDate: new Date('2024-01-30'),
     entryDate: new Date('2023-07-01'),
@@ -33,7 +33,7 @@ export const products: Product[] = [
     id: '3',
     name: 'زيت زيتون',
     category: 'زيوت',
-    unit: 'l',
+    unit: 'l' as ProductUnit,
     quantity: 20,
     expiryDate: new Date('2024-12-25'),
     entryDate: new Date('2023-06-20'),
@@ -46,7 +46,7 @@ export const products: Product[] = [
     id: '4',
     name: 'طماطم',
     category: 'خضروات',
-    unit: 'kg',
+    unit: 'kg' as ProductUnit,
     quantity: 15,
     expiryDate: new Date('2023-07-25'),
     entryDate: new Date('2023-07-10'),
