@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,6 @@ import MobileInventoryEmpty from '@/components/mobile/inventory/MobileInventoryE
 import MobileProductSkeleton from '@/components/mobile/inventory/MobileProductSkeleton';
 import { Product } from '@/types';
 
-// Define a type for the raw product data from Supabase
 interface SupabaseProduct {
   id: string;
   name: string;
@@ -29,7 +27,7 @@ const MobileInventory = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading, refetch } = useQuery({
     queryKey: ['mobile-products'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,7 +38,6 @@ const MobileInventory = () => {
         
       if (error) throw error;
       
-      // Transform the Supabase data to match our Product type
       const transformedProducts: Product[] = (data as SupabaseProduct[]).map(item => ({
         id: item.id,
         name: item.name,
@@ -50,9 +47,9 @@ const MobileInventory = () => {
         expiryDate: new Date(item.expiry_date),
         entryDate: new Date(item.production_date),
         restaurantId: item.company_id,
-        restaurantName: '', // This field is not available in the data
-        addedBy: '', // This field is not available in the data
-        status: 'active', // We're already filtering for active products
+        restaurantName: '',
+        addedBy: '',
+        status: 'active',
         imageUrl: item.image_url || undefined
       }));
       
@@ -60,14 +57,12 @@ const MobileInventory = () => {
     },
   });
 
-  // Get unique categories from products
   const categories = useMemo(() => {
     if (!products) return [];
     const uniqueCategories = [...new Set(products.map(product => product.category))];
     return uniqueCategories.sort();
   }, [products]);
 
-  // Filter products based on search and category
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     
@@ -99,7 +94,10 @@ const MobileInventory = () => {
       ) : !filteredProducts.length ? (
         <MobileInventoryEmpty />
       ) : (
-        <MobileProductGrid products={filteredProducts} />
+        <MobileProductGrid 
+          products={filteredProducts} 
+          onProductUpdate={refetch}
+        />
       )}
     </div>
   );
