@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarcodeScan, ShoppingCart, Menu, User } from 'lucide-react';
+import { Home, BarcodeIcon, ShoppingCart, Menu, User } from 'lucide-react';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -42,7 +41,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             className={`flex flex-col items-center justify-center p-2 ${isActive('/mobile/scan') ? 'text-primary' : 'text-muted-foreground'}`}
             onClick={() => navigate('/mobile/scan')}
           >
-            <BarcodeScan className="h-5 w-5" />
+            <BarcodeIcon className="h-5 w-5" />
             <span className="text-xs mt-1">المسح</span>
           </button>
           

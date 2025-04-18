@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Camera } from '@capacitor/camera';
 
 export const useCameraPermissions = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,9 +11,8 @@ export const useCameraPermissions = () => {
   useEffect(() => {
     const checkPermissions = async () => {
       try {
-        if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-          const { camera } = await import('@capacitor/camera');
-          const permission = await camera.requestPermissions();
+        if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
+          const permission = await Camera.requestPermissions();
           
           if (permission.camera === 'granted') {
             setHasPermission(true);

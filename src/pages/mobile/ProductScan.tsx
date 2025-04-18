@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { QrCode, BarcodeScan, Info, ShoppingCart } from 'lucide-react';
+import { QrCode, BarcodeIcon, Info, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
@@ -113,7 +112,7 @@ const ProductScan = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2">
-              <BarcodeScan className="h-5 w-5" />
+              <BarcodeIcon className="h-5 w-5" />
               <span>مسح باركود المنتج</span>
             </CardTitle>
           </CardHeader>
@@ -134,7 +133,7 @@ const ProductScan = () => {
                 className="gap-2"
                 disabled={isLoading}
               >
-                <BarcodeScan className="h-4 w-4" />
+                <BarcodeIcon className="h-4 w-4" />
                 {isLoading ? 'جاري البحث...' : 'مسح باركود'}
               </Button>
             </div>
@@ -193,7 +192,7 @@ const ProductScan = () => {
               </Button>
               <Button onClick={viewProductDetails} className="gap-2">
                 <Info className="h-4 w-4" />
-                تفاصيل أكثر
+                تفاصيل ��كثر
               </Button>
             </div>
           </CardContent>

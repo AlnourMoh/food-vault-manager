@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
-  BarcodeScan, 
+  BarcodeIcon, 
   ShoppingCart, 
   Calendar, 
   AlertTriangle,
@@ -119,7 +118,7 @@ const MobileHome = () => {
         <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/scan')}>
           <CardContent className="flex flex-col items-center justify-center p-6">
             <div className="p-3 bg-primary/10 rounded-full mb-3">
-              <BarcodeScan className="h-6 w-6 text-primary" />
+              <BarcodeIcon className="h-6 w-6 text-primary" />
             </div>
             <span className="font-medium">مسح باركود</span>
           </CardContent>
