@@ -24,6 +24,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   // Automatically start scanning when the component mounts
   useEffect(() => {
     console.log('BarcodeScanner mounted, will auto-start scan');
+    console.log('Current permission status:', hasPermission);
     
     // Short delay to ensure everything is initialized properly
     const timer = setTimeout(() => {
@@ -39,6 +40,19 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     };
   }, [hasPermission, isScanningActive, startScan, stopScan]);
   
+  const handleRequestPermission = async () => {
+    console.log('BarcodeScanner: request permission triggered');
+    if (requestPermission) {
+      const granted = await requestPermission();
+      console.log('Permission request result:', granted);
+      
+      if (granted && !isScanningActive) {
+        console.log('Permission granted, starting scan');
+        startScan();
+      }
+    }
+  };
+  
   if (hasPermission === null) {
     return <ScannerLoading />;
   }
@@ -49,13 +63,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         <ScannerView 
           onStop={stopScan} 
           hasPermissionError={hasPermission === false}
-          onRequestPermission={requestPermission}
+          onRequestPermission={handleRequestPermission}
         />
       ) : (
         hasPermission === false ? (
           <NoPermissionView 
             onClose={onClose} 
-            onRequestPermission={requestPermission}
+            onRequestPermission={handleRequestPermission}
           />
         ) : (
           <ScannerReadyView

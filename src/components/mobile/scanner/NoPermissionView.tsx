@@ -10,6 +10,13 @@ interface NoPermissionViewProps {
 }
 
 export const NoPermissionView = ({ onClose, onRequestPermission }: NoPermissionViewProps) => {
+  const handleRequestPermission = () => {
+    console.log('Request permission button clicked');
+    if (onRequestPermission) {
+      onRequestPermission();
+    }
+  };
+
   return (
     <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
       <div className="flex flex-col items-center justify-center py-6 space-y-4">
@@ -26,7 +33,7 @@ export const NoPermissionView = ({ onClose, onRequestPermission }: NoPermissionV
         <div className="flex flex-col w-full space-y-2 mt-4">
           {onRequestPermission && (
             <Button 
-              onClick={onRequestPermission}
+              onClick={handleRequestPermission}
               className="w-full"
               variant="default"
             >

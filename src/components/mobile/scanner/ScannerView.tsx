@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Camera, AlertCircle } from 'lucide-react';
@@ -14,6 +13,13 @@ export const ScannerView = ({
   hasPermissionError = false,
   onRequestPermission
 }: ScannerViewProps) => {
+  const handleRequestPermission = () => {
+    console.log('Request permission button clicked in ScannerView');
+    if (onRequestPermission) {
+      onRequestPermission();
+    }
+  };
+
   if (hasPermissionError) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
@@ -28,7 +34,7 @@ export const ScannerView = ({
           <div className="flex flex-col space-y-2">
             {onRequestPermission && (
               <Button 
-                onClick={onRequestPermission}
+                onClick={handleRequestPermission}
                 className="w-full"
                 variant="default"
               >
