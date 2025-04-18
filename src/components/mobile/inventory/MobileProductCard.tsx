@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { Package } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
+import { Package, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Product } from '@/types';
 
 interface MobileProductCardProps {
@@ -14,6 +15,10 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   product,
   onSelect
 }) => {
+  const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
+  const isExpiring = daysUntilExpiry <= 30;
+  const isExpired = daysUntilExpiry < 0;
+
   return (
     <Card 
       className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md"
@@ -31,11 +36,24 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             <Package className="h-12 w-12 text-gray-400" />
           </div>
         )}
+        {isExpiring && (
+          <div className="absolute top-2 right-2">
+            <AlertTriangle className={`h-5 w-5 ${isExpired ? 'text-red-500' : 'text-yellow-500'}`} />
+          </div>
+        )}
       </div>
       <CardContent className="p-3">
         <h3 className="font-bold text-lg text-fvm-primary mb-2 truncate">
           {product.name}
         </h3>
+        {isExpiring && (
+          <Badge 
+            variant={isExpired ? "destructive" : "warning"} 
+            className="mb-2 w-full justify-center"
+          >
+            {isExpired ? 'منتهي الصلاحية' : `ينتهي خلال ${daysUntilExpiry} يوم`}
+          </Badge>
+        )}
         <div className="mt-2 space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="font-medium text-gray-600">الكمية:</span> 
@@ -43,7 +61,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="font-medium text-gray-600">تاريخ الانتهاء:</span>
-            <span className={`${new Date(product.expiryDate) < new Date() ? 'text-red-600' : 'text-gray-800'}`}>
+            <span className={`${isExpired ? 'text-red-600' : 'text-gray-800'}`}>
               {format(new Date(product.expiryDate), 'dd/MM/yyyy')}
             </span>
           </div>
