@@ -11,13 +11,13 @@ const MobileApp = () => {
     const setupCapacitor = async () => {
       if (window.Capacitor) {
         // Listen for the hardware back button (Android)
-        CapApp.addListener('backButton', ({ canGoBack }) => {
+        CapacitorApp.addListener('backButton', ({ canGoBack }) => {
           if (canGoBack) {
             window.history.back();
           } else {
             // If we're at the root, ask if they want to exit the app
             // This could be replaced with a confirm dialog
-            CapApp.exitApp();
+            CapacitorApp.exitApp();
           }
         });
       }
@@ -28,7 +28,7 @@ const MobileApp = () => {
     return () => {
       if (window.Capacitor) {
         // Clean up listeners when component unmounts
-        CapApp.removeAllListeners();
+        CapacitorApp.removeAllListeners();
       }
     };
   }, []);

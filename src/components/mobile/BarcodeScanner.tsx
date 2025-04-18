@@ -1,7 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { useCameraPermissions } from '@/hooks/useCameraPermissions';
-import { useBarcodeScannerControls } from '@/hooks/useBarcodeScannerControls';
+import React from 'react';
+import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { ScannerLoading } from './scanner/ScannerLoading';
 import { NoPermissionView } from './scanner/NoPermissionView';
 import { ScannerView } from './scanner/ScannerView';
@@ -13,17 +12,14 @@ interface BarcodeScannerProps {
 }
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
-  const { isLoading, hasPermission } = useCameraPermissions();
-  const { isScanningActive, lastScannedCode, startScan, stopScan } = useBarcodeScannerControls({
-    onScan,
-    onClose
-  });
-  
-  useEffect(() => {
-    return () => {
-      stopScan();
-    };
-  }, []);
+  const { 
+    isLoading, 
+    hasPermission,
+    isScanningActive,
+    lastScannedCode,
+    startScan,
+    stopScan
+  } = useScannerState({ onScan, onClose });
   
   if (isLoading) {
     return <ScannerLoading />;
