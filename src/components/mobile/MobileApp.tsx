@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
 import MobileHome from '@/pages/mobile/MobileHome';
@@ -18,7 +18,6 @@ const MobileApp = () => {
             window.history.back();
           } else {
             // If we're at the root, ask if they want to exit the app
-            // This could be replaced with a confirm dialog
             CapacitorApp.exitApp();
           }
         });
@@ -38,14 +37,18 @@ const MobileApp = () => {
   }, []);
   
   return (
-    <MobileLayout>
-      <Routes>
-        <Route path="/" element={<MobileHome />} />
-        <Route path="/scan" element={<ProductScan />} />
-        {/* Add more routes for the mobile app here */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </MobileLayout>
+    <BrowserRouter>
+      <MobileLayout>
+        <Routes>
+          <Route path="/" element={<MobileHome />} />
+          <Route path="/mobile" element={<Navigate to="/" replace />} />
+          <Route path="/scan" element={<ProductScan />} />
+          <Route path="/mobile/scan" element={<Navigate to="/scan" replace />} />
+          {/* Add more routes for the mobile app here */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </MobileLayout>
+    </BrowserRouter>
   );
 };
 
