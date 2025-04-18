@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import MobileProductGrid from '@/components/mobile/inventory/MobileProductGrid';
@@ -26,6 +26,8 @@ interface SupabaseProduct {
 
 const MobileInventory = () => {
   const restaurantId = localStorage.getItem('restaurantId');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const { data: products, isLoading } = useQuery({
     queryKey: ['mobile-products'],
@@ -58,9 +60,35 @@ const MobileInventory = () => {
     },
   });
 
+  // Get unique categories from products
+  const categories = useMemo(() => {
+    if (!products) return [];
+    const uniqueCategories = [...new Set(products.map(product => product.category))];
+    return uniqueCategories.sort();
+  }, [products]);
+
+  // Filter products based on search and category
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    
+    return products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          product.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !selectedCategory || product.category === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, selectedCategory]);
+
   return (
     <div className="pb-16">
-      <MobileInventoryHeader />
+      <MobileInventoryHeader 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onCategorySelect={setSelectedCategory}
+      />
       
       {isLoading ? (
         <div className="grid grid-cols-2 gap-4 p-4">
@@ -68,10 +96,10 @@ const MobileInventory = () => {
             <MobileProductSkeleton key={index} />
           ))}
         </div>
-      ) : !products?.length ? (
+      ) : !filteredProducts.length ? (
         <MobileInventoryEmpty />
       ) : (
-        <MobileProductGrid products={products} />
+        <MobileProductGrid products={filteredProducts} />
       )}
     </div>
   );
