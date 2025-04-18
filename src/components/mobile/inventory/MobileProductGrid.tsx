@@ -34,7 +34,7 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         product={selectedProduct}
-        onQuantityUpdate={onProductUpdate}
+        onProductUpdate={onProductUpdate}
       />
     </>
   );
