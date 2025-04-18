@@ -1,14 +1,14 @@
 
-export { restaurants } from './restaurants';
-export { storageTeamMembers } from './storageTeam';
-export { products } from './products';
-export { inventoryTransactions } from './transactions';
-export { dashboardStats } from './dashboardStats';
+import { restaurants } from './restaurants';
+import { storageTeamMembers } from './storageTeam';
+import { products } from './products';
+import { inventoryTransactions } from './transactions';
+import { dashboardStats } from './dashboardStats';
 
-export const getMockData = () => ({
+export {
   restaurants,
   storageTeamMembers,
   products,
   inventoryTransactions,
-  dashboardStats,
-});
+  dashboardStats
+};

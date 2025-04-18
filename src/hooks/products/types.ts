@@ -1,5 +1,5 @@
 
-import { FormData, FormError } from '@/components/products/types';
+import { FormData, FormError, Unit } from '@/components/products/types';
 
 export interface ProductFormHookReturn {
   formData: FormData;
@@ -7,8 +7,8 @@ export interface ProductFormHookReturn {
   isSubmitting: boolean;
   categories: string[];
   setCategories: React.Dispatch<React.SetStateAction<string[]>>;
-  units: { value: string; label: string }[];
-  setUnits: React.Dispatch<React.SetStateAction<{ value: string; label: string }[]>>;
+  units: Unit[];
+  setUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   handleImageChange: (file: File | null, url: string) => void;
