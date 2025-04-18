@@ -30,7 +30,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({ product }) => {
           {product.name}
         </h3>
         <div className="text-xs space-y-1">
-          <p className="text-gray-600">الكمية: {product.quantity}</p>
+          <p className="text-gray-600">الكمية: {product.quantity} {product.unit}</p>
           <p className={`${new Date(product.expiryDate) < new Date() ? 'text-red-600' : 'text-gray-600'}`}>
             تاريخ الانتهاء: {format(new Date(product.expiryDate), 'dd/MM/yyyy')}
           </p>
