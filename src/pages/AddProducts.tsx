@@ -11,7 +11,9 @@ const AddProducts = () => {
 
   return (
     <Layout>
-      <AddProductContainer />
+      <div className="rtl max-w-4xl mx-auto py-6">
+        <AddProductContainer />
+      </div>
     </Layout>
   );
 };

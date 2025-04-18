@@ -5,14 +5,9 @@ export interface FormData {
   unit: string;
   quantity: string;
   expiryDate: string;
-  productionDate?: string; 
+  productionDate: string;
   image: File | null;
   imageUrl: string;
-}
-
-export interface Unit {
-  value: string;
-  label: string;
 }
 
 export interface FormError {
@@ -23,4 +18,9 @@ export interface FormError {
   expiryDate?: string;
   productionDate?: string;
   image?: string;
+}
+
+export interface Unit {
+  value: string;
+  label: string;
 }

@@ -11,40 +11,27 @@ export const useProductFormHandlers = (
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear error when field is edited
+    // Clear error when user starts typing
     if (errors[name as keyof FormError]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name as keyof FormError];
-        return newErrors;
-      });
+      setErrors(prev => ({ ...prev, [name]: undefined }));
     }
   };
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear error when field is edited
+    // Clear error when user makes a selection
     if (errors[name as keyof FormError]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name as keyof FormError];
-        return newErrors;
-      });
+      setErrors(prev => ({ ...prev, [name]: undefined }));
     }
   };
 
   const handleImageChange = (file: File | null, url: string) => {
-    setFormData(prev => ({ ...prev, image: file, imageUrl: url }));
-    
-    // Clear error when image is edited
-    if (errors.image) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.image;
-        return newErrors;
-      });
-    }
+    setFormData(prev => ({
+      ...prev,
+      image: file,
+      imageUrl: url
+    }));
   };
 
   return {
