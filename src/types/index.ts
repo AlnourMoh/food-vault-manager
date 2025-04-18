@@ -1,3 +1,4 @@
+import { ProductStatus, ProductCategory, ProductUnit, TransactionType } from '@/constants/inventory';
 
 // Restaurant types
 export interface Restaurant {
@@ -25,28 +26,28 @@ export interface StorageTeamMember {
   isActive: boolean;
 }
 
-// Product types
+// Update Product interface to use the new types
 export interface Product {
   id: string;
   name: string;
-  category: string;
-  unit: string;
+  category: ProductCategory;
+  unit: ProductUnit;
   quantity: number;
   expiryDate: Date;
   entryDate: Date;
   restaurantId: string;
   restaurantName: string;
   addedBy: string;
-  status: 'active' | 'expired' | 'removed';
+  status: ProductStatus;
   imageUrl?: string;
 }
 
-// Inventory Transaction types
+// Update InventoryTransaction interface to use the new type
 export interface InventoryTransaction {
   id: string;
   productId: string;
   productName: string;
-  type: 'in' | 'out';
+  type: TransactionType;
   quantity: number;
   date: Date;
   reason?: string;
