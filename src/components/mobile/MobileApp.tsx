@@ -10,8 +10,10 @@ const MobileApp = () => {
   useEffect(() => {
     const setupCapacitor = async () => {
       if (window.Capacitor) {
+        console.log('Capacitor is available, setting up listeners');
         // Listen for the hardware back button (Android)
         CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          console.log('Back button pressed, canGoBack:', canGoBack);
           if (canGoBack) {
             window.history.back();
           } else {
@@ -20,6 +22,8 @@ const MobileApp = () => {
             CapacitorApp.exitApp();
           }
         });
+      } else {
+        console.log('Capacitor is not available in this environment');
       }
     };
     
@@ -39,7 +43,7 @@ const MobileApp = () => {
         <Route path="/" element={<MobileHome />} />
         <Route path="/scan" element={<ProductScan />} />
         {/* Add more routes for the mobile app here */}
-        <Route path="*" element={<Navigate to="/mobile" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </MobileLayout>
   );
