@@ -7,6 +7,7 @@ export interface Restaurant {
   phone: string;
   email: string;
   manager: string;
+  created_at: string | Date;
   registrationDate: Date;
   isActive: boolean;
 }
