@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -18,7 +19,6 @@ const MobileApp = () => {
             window.history.back();
           } else {
             // If we're at the root, ask if they want to exit the app
-            // This could be replaced with a confirm dialog
             CapacitorApp.exitApp();
           }
         });

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, BarcodeIcon, ShoppingCart, Menu, User } from 'lucide-react';
@@ -11,7 +12,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   const location = useLocation();
   
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
   
   return (

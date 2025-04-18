@@ -53,7 +53,8 @@ function App() {
           <BrowserRouter>
             {isMobile ? (
               <Routes>
-                <Route path="/*" element={<MobileApp />} />
+                <Route path="/mobile/*" element={<MobileApp />} />
+                <Route path="/*" element={<Navigate to="/mobile" replace />} />
                 <Route path="/restaurant/login" element={<RestaurantLogin />} />
               </Routes>
             ) : (

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,20 +24,34 @@ interface SupabaseProduct {
 }
 
 const MobileInventory = () => {
+  console.log('MobileInventory component rendering');
   const restaurantId = localStorage.getItem('restaurantId');
+  console.log('Restaurant ID from localStorage:', restaurantId);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const { data: products, isLoading, refetch } = useQuery({
     queryKey: ['mobile-products'],
     queryFn: async () => {
+      console.log('Fetching products for restaurant ID:', restaurantId);
+      if (!restaurantId) {
+        console.error('No restaurant ID found in localStorage');
+        return [];
+      }
+      
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('company_id', restaurantId)
         .eq('status', 'active');
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+      }
+      
+      console.log('Products fetched from Supabase:', data);
       
       const transformedProducts: Product[] = (data as SupabaseProduct[]).map(item => ({
         id: item.id,
@@ -53,6 +68,7 @@ const MobileInventory = () => {
         imageUrl: item.image_url || undefined
       }));
       
+      console.log('Transformed products:', transformedProducts);
       return transformedProducts;
     },
   });
@@ -74,6 +90,9 @@ const MobileInventory = () => {
       return matchesSearch && matchesCategory;
     });
   }, [products, searchQuery, selectedCategory]);
+
+  console.log('Filtered products:', filteredProducts);
+  console.log('Is loading:', isLoading);
 
   return (
     <div className="pb-16">

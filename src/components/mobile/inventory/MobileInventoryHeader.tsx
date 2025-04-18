@@ -22,6 +22,7 @@ const MobileInventoryHeader: React.FC<MobileInventoryHeaderProps> = ({
   onCategorySelect,
 }) => {
   const navigate = useNavigate();
+  console.log('MobileInventoryHeader rendering with categories:', categories);
   
   return (
     <div className="sticky top-0 z-10 bg-background border-b">
