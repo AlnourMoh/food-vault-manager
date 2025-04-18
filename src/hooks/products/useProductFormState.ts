@@ -1,19 +1,33 @@
 
 import { useState } from 'react';
 import { FormData, FormError } from '@/components/products/types';
-import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from '@/constants/inventory';
 
 export const useProductFormState = () => {
   const [errors, setErrors] = useState<FormError>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Convert readonly arrays to mutable arrays for state usage
-  const [categories, setCategories] = useState<string[]>([...PRODUCT_CATEGORIES]);
+  // Default categories
+  const [categories, setCategories] = useState([
+    'بقالة',
+    'لحوم',
+    'ألبان',
+    'خضروات',
+    'فواكه',
+    'بهارات',
+    'زيوت',
+    'مجمدات',
+  ]);
   
-  // Convert readonly array of objects to mutable array
-  const [units, setUnits] = useState<{ value: string; label: string }[]>(
-    PRODUCT_UNITS.map(unit => ({ value: unit.value, label: unit.label }))
-  );
+  // Default units
+  const [units, setUnits] = useState([
+    { value: 'kg', label: 'كيلوغرام' },
+    { value: 'g', label: 'غرام' },
+    { value: 'l', label: 'لتر' },
+    { value: 'ml', label: 'مليلتر' },
+    { value: 'piece', label: 'قطعة' },
+    { value: 'box', label: 'صندوق' },
+    { value: 'pack', label: 'عبوة' },
+  ]);
   
   // Form data state
   const [formData, setFormData] = useState<FormData>({

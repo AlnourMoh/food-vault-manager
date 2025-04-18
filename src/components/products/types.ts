@@ -10,7 +10,10 @@ export interface FormData {
   imageUrl: string;
 }
 
-export type Unit = { value: string; label: string };
+export interface Unit {
+  value: string;
+  label: string;
+}
 
 export interface FormError {
   name?: string;

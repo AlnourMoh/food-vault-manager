@@ -8,7 +8,6 @@ import { Product } from '@/types';
 import ProductGrid from '@/components/products/ProductGrid';
 import InventoryHeader from '@/components/inventory/InventoryHeader';
 import EmptyInventory from '@/components/inventory/EmptyInventory';
-import { PRODUCT_CATEGORIES, ProductCategory, ProductStatus, ProductUnit } from '@/constants/inventory';
 
 // Define a type for the raw product data from Supabase
 interface RawProductData {
@@ -23,7 +22,6 @@ interface RawProductData {
   image_url?: string | null;
   created_at: string;
   updated_at: string;
-  unit?: string;
 }
 
 const Inventory = () => {
@@ -69,33 +67,19 @@ const Inventory = () => {
         if (data) {
           // Transform the data to match our Product type
           const transformedProducts: Product[] = (data as RawProductData[]).map(item => {
-            // Ensure category is a valid ProductCategory type
-            let category: ProductCategory = "بقالة"; // Default category
-            
-            // Check if the category from DB is in our allowed categories
-            if (PRODUCT_CATEGORIES.includes(item.category as ProductCategory)) {
-              category = item.category as ProductCategory;
-            }
-            
-            // Ensure unit is a valid ProductUnit type
-            let unit: ProductUnit = "piece"; // Default unit
-            if (item.unit && isValidProductUnit(item.unit)) {
-              unit = item.unit as ProductUnit;
-            }
-            
             return {
               id: item.id,
               name: item.name,
-              category: category,
+              category: item.category,
               quantity: item.quantity,
               expiryDate: new Date(item.expiry_date),
               entryDate: new Date(item.production_date),
               restaurantId: item.company_id,
-              status: item.status as ProductStatus,
-              imageUrl: item.image_url || getPlaceholderImage(category),
+              status: item.status as "active" | "expired" | "removed",
+              imageUrl: item.image_url || getPlaceholderImage(item.category), // Use actual image URL if available, otherwise use placeholder
               restaurantName: '',
               addedBy: '',
-              unit: unit
+              unit: ''
             };
           });
           
@@ -115,11 +99,6 @@ const Inventory = () => {
     
     fetchProducts();
   }, [toast]);
-
-  // Helper function to validate if a string is a valid ProductUnit
-  const isValidProductUnit = (unit: string): unit is ProductUnit => {
-    return ["kg", "g", "l", "ml", "piece", "box", "pack"].includes(unit);
-  };
 
   // Function to get placeholder image based on category
   const getPlaceholderImage = (category: string): string => {

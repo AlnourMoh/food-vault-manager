@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
 import MobileHome from '@/pages/mobile/MobileHome';
@@ -18,6 +18,7 @@ const MobileApp = () => {
             window.history.back();
           } else {
             // If we're at the root, ask if they want to exit the app
+            // This could be replaced with a confirm dialog
             CapacitorApp.exitApp();
           }
         });
@@ -37,27 +38,14 @@ const MobileApp = () => {
   }, []);
   
   return (
-    <BrowserRouter>
-      <MobileLayout>
-        <Routes>
-          {/* Mobile specific routes */}
-          <Route path="/" element={<MobileHome />} />
-          <Route path="/scan" element={<ProductScan />} />
-          
-          {/* Redirects for mobile routes */}
-          <Route path="/mobile" element={<Navigate to="/" replace />} />
-          <Route path="/mobile/scan" element={<Navigate to="/scan" replace />} />
-          <Route path="/mobile/inventory" element={<Navigate to="/inventory" replace />} />
-          <Route path="/mobile/expiry" element={<Navigate to="/expiry" replace />} />
-          <Route path="/mobile/add-product" element={<Navigate to="/products/add" replace />} />
-          <Route path="/mobile/menu" element={<Navigate to="/menu" replace />} />
-          <Route path="/mobile/account" element={<Navigate to="/account" replace />} />
-          
-          {/* Catch-all route for mobile */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </MobileLayout>
-    </BrowserRouter>
+    <MobileLayout>
+      <Routes>
+        <Route path="/" element={<MobileHome />} />
+        <Route path="/scan" element={<ProductScan />} />
+        {/* Add more routes for the mobile app here */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </MobileLayout>
   );
 };
 
