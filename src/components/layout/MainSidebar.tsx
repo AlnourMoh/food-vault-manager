@@ -14,7 +14,8 @@ import {
   ArrowUp, 
   ArrowDown,
   Users,
-  BuildingIcon
+  BuildingIcon,
+  LayoutDashboard
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -31,7 +32,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
     { 
       name: 'لوحة التحكم', 
       path: '/', 
-      icon: <Folder className="ml-2 h-5 w-5" /> 
+      icon: <LayoutDashboard className="ml-2 h-5 w-5" /> 
     },
     { 
       name: 'المطاعم', 
@@ -74,6 +75,13 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
     },
   ];
 
+  // التحقق ما إذا كان المسار الحالي يتطابق مع أي من العناصر في القائمة
+  const isPathActive = (path: string) => {
+    if (path === '/' && location.pathname === '/') return true;
+    if (path !== '/' && location.pathname.startsWith(path)) return true;
+    return false;
+  };
+
   return (
     <div className={cn("rtl flex h-screen w-64 flex-col bg-sidebar", className)}>
       <div className="flex h-14 items-center px-4 border-b border-sidebar-border">
@@ -91,7 +99,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
                 to={item.path}
                 className={cn(
                   "flex items-center gap-1 rounded-md px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
-                  location.pathname === item.path && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  isPathActive(item.path) && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 )}
               >
                 {item.icon}
@@ -110,7 +118,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
                 to={item.path}
                 className={cn(
                   "flex items-center gap-1 rounded-md px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
-                  location.pathname === item.path && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  isPathActive(item.path) && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 )}
               >
                 {item.icon}
