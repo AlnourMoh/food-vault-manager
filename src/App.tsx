@@ -4,6 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// Admin/Desktop routes
 import Index from "./pages/Index";
 import Restaurants from "./pages/Restaurants";
 import StorageTeam from "./pages/StorageTeam";
@@ -22,6 +25,9 @@ import EditRestaurant from "./pages/EditRestaurant";
 import ProductBarcodes from '@/pages/ProductBarcodes';
 import EditProduct from '@/pages/EditProduct';
 
+// Mobile App
+import MobileApp from '@/components/mobile/MobileApp';
+
 // Restaurant route guard
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
@@ -36,6 +42,8 @@ const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
 const queryClient = new QueryClient();
 
 function App() {
+  const isMobile = useIsMobile();
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -43,73 +51,79 @@ function App() {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              {/* Super Admin Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/restaurants" element={<Restaurants />} />
-              <Route path="/restaurants/add" element={<AddRestaurant />} />
-              <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
-              <Route path="/restaurants/:id/edit" element={<EditRestaurant />} />
-              
-              {/* Restaurant Setup Route */}
-              <Route path="/restaurant/setup-password/:id" element={<RestaurantSetupPassword />} />
-              
-              {/* Old Restaurant Routes (To be removed later) */}
-              <Route path="/storage-team" element={<StorageTeam />} />
-              <Route path="/products/add" element={<AddProducts />} />
-              <Route path="/products/remove" element={<RemoveProducts />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/expired" element={<Expired />} />
-              <Route path="/products/:productId/edit" element={<EditProduct />} />
-              
-              {/* Restaurant Authentication */}
-              <Route path="/restaurant/login" element={<RestaurantLogin />} />
-              
-              {/* Protected Restaurant Routes */}
-              <Route path="/restaurant/dashboard" element={
-                <RestaurantRoute>
-                  <RestaurantDashboard />
-                </RestaurantRoute>
-              } />
-              <Route path="/restaurant/storage-team" element={
-                <RestaurantRoute>
-                  <RestaurantStorageTeam />
-                </RestaurantRoute>
-              } />
-              {/* More restaurant routes would go here */}
-              <Route path="/restaurant/products/add" element={
-                <RestaurantRoute>
-                  <AddProducts />
-                </RestaurantRoute>
-              } />
-              <Route path="/restaurant/products/remove" element={
-                <RestaurantRoute>
-                  <RemoveProducts />
-                </RestaurantRoute>
-              } />
-              <Route path="/restaurant/inventory" element={
-                <RestaurantRoute>
-                  <Inventory />
-                </RestaurantRoute>
-              } />
-              <Route path="/restaurant/expired" element={
-                <RestaurantRoute>
-                  <Expired />
-                </RestaurantRoute>
-              } />
-              <Route path="/restaurant/products/:productId/edit" element={
-                <RestaurantRoute>
-                  <EditProduct />
-                </RestaurantRoute>
-              } />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-              
-              {/* Add the new barcode routes */}
-              <Route path="/products/:productId/barcodes" element={<ProductBarcodes />} />
-              <Route path="/restaurant/products/:productId/barcodes" element={<ProductBarcodes />} />
-            </Routes>
+            {isMobile ? (
+              <Routes>
+                <Route path="/*" element={<MobileApp />} />
+                <Route path="/restaurant/login" element={<RestaurantLogin />} />
+              </Routes>
+            ) : (
+              <Routes>
+                {/* Super Admin Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/restaurants" element={<Restaurants />} />
+                <Route path="/restaurants/add" element={<AddRestaurant />} />
+                <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
+                <Route path="/restaurants/:id/edit" element={<EditRestaurant />} />
+                
+                {/* Restaurant Setup Route */}
+                <Route path="/restaurant/setup-password/:id" element={<RestaurantSetupPassword />} />
+                
+                {/* Old Restaurant Routes */}
+                <Route path="/storage-team" element={<StorageTeam />} />
+                <Route path="/products/add" element={<AddProducts />} />
+                <Route path="/products/remove" element={<RemoveProducts />} />
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/expired" element={<Expired />} />
+                <Route path="/products/:productId/edit" element={<EditProduct />} />
+                
+                {/* Restaurant Authentication */}
+                <Route path="/restaurant/login" element={<RestaurantLogin />} />
+                
+                {/* Protected Restaurant Routes */}
+                <Route path="/restaurant/dashboard" element={
+                  <RestaurantRoute>
+                    <RestaurantDashboard />
+                  </RestaurantRoute>
+                } />
+                <Route path="/restaurant/storage-team" element={
+                  <RestaurantRoute>
+                    <RestaurantStorageTeam />
+                  </RestaurantRoute>
+                } />
+                <Route path="/restaurant/products/add" element={
+                  <RestaurantRoute>
+                    <AddProducts />
+                  </RestaurantRoute>
+                } />
+                <Route path="/restaurant/products/remove" element={
+                  <RestaurantRoute>
+                    <RemoveProducts />
+                  </RestaurantRoute>
+                } />
+                <Route path="/restaurant/inventory" element={
+                  <RestaurantRoute>
+                    <Inventory />
+                  </RestaurantRoute>
+                } />
+                <Route path="/restaurant/expired" element={
+                  <RestaurantRoute>
+                    <Expired />
+                  </RestaurantRoute>
+                } />
+                <Route path="/restaurant/products/:productId/edit" element={
+                  <RestaurantRoute>
+                    <EditProduct />
+                  </RestaurantRoute>
+                } />
+                
+                {/* Barcode routes */}
+                <Route path="/products/:productId/barcodes" element={<ProductBarcodes />} />
+                <Route path="/restaurant/products/:productId/barcodes" element={<ProductBarcodes />} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            )}
           </BrowserRouter>
         </div>
       </TooltipProvider>
