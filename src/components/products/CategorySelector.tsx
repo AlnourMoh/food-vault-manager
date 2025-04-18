@@ -42,7 +42,6 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   const [newCategory, setNewCategory] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Handle adding a new category
   const handleAddCategory = () => {
     if (newCategory.trim() !== '' && !categories.includes(newCategory)) {
       setCategories([...categories, newCategory]);

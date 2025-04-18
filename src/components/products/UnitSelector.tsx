@@ -42,7 +42,6 @@ const UnitSelector: React.FC<UnitSelectorProps> = ({
   const [newUnit, setNewUnit] = useState<Unit>({ value: '', label: '' });
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
 
-  // Handle adding a new unit
   const handleAddUnit = () => {
     if (newUnit.value.trim() !== '' && newUnit.label.trim() !== '' && 
         !units.some(unit => unit.value === newUnit.value)) {

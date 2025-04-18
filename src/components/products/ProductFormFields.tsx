@@ -17,7 +17,7 @@ interface ProductFormFieldsProps {
   errors: FormError;
 }
 
-const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
+const ProductFormFields: React.FC<ProductFormFieldsProps> = ({ 
   formData,
   handleInputChange,
   handleSelectChange,
