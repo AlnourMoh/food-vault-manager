@@ -9,10 +9,13 @@ interface ScannerViewProps {
 
 export const ScannerView = ({ onStop }: ScannerViewProps) => {
   return (
-    <div className="absolute inset-0 flex flex-col items-center">
-      <div className="flex-1 w-full relative">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-64 h-64 border-2 border-primary rounded-lg scanner-target-frame"></div>
+    <div className="absolute inset-0 flex flex-col items-center bg-black bg-opacity-50">
+      <div className="flex-1 w-full relative flex items-center justify-center">
+        <div className="w-72 h-72 border-4 border-primary rounded-lg scanner-target-frame flex items-center justify-center">
+          <div className="text-white text-center px-4">
+            <p className="mb-2 font-bold">قم بتوجيه الكاميرا نحو الباركود</p>
+            <p className="text-sm opacity-80">يتم المسح تلقائيًا عند اكتشاف رمز</p>
+          </div>
         </div>
         
         <div className="absolute bottom-8 inset-x-0 flex justify-center">

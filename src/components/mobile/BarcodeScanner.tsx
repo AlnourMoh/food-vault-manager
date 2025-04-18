@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { ScannerLoading } from './scanner/ScannerLoading';
 import { NoPermissionView } from './scanner/NoPermissionView';
@@ -20,6 +20,23 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     startScan,
     stopScan
   } = useScannerState({ onScan, onClose });
+  
+  // Automatically start scanning when the component mounts
+  useEffect(() => {
+    console.log('BarcodeScanner mounted, will auto-start scan');
+    // Short delay to ensure everything is initialized properly
+    const timer = setTimeout(() => {
+      if (!isLoading && hasPermission && !isScanningActive) {
+        console.log('Auto-starting scanner');
+        startScan();
+      }
+    }, 1000);
+    
+    return () => {
+      clearTimeout(timer);
+      stopScan();
+    };
+  }, [isLoading, hasPermission, isScanningActive, startScan, stopScan]);
   
   if (isLoading) {
     return <ScannerLoading />;

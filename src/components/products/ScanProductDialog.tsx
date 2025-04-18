@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { ScanBarcode } from 'lucide-react';
 
 interface ScanProductDialogProps {
   open: boolean;
@@ -14,8 +15,17 @@ interface ScanProductDialogProps {
 const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDialogProps) => {
   const { toast } = useToast();
 
+  // Reset state when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      console.log('Scanner dialog closed');
+    }
+  }, [open]);
+
   const handleScanResult = async (code: string) => {
     try {
+      console.log('Scanned code:', code);
+      
       // First verify if this code exists and is not used
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
@@ -24,6 +34,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         .single();
 
       if (codeError) {
+        console.error('Code error:', codeError);
         toast({
           title: "باركود غير معروف",
           description: "هذا الباركود غير مسجل في النظام",
@@ -58,6 +69,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         .eq('qr_code', code);
 
       if (updateError) {
+        console.error('Update error:', updateError);
         throw updateError;
       }
 
@@ -83,12 +95,17 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogTitle className="text-center">مسح باركود المنتج</DialogTitle>
-        <div className="h-[400px] relative">
-          {open && (
+        <div className="h-[400px] relative flex items-center justify-center">
+          {open ? (
             <BarcodeScanner
               onScan={handleScanResult}
               onClose={() => onOpenChange(false)}
             />
+          ) : (
+            <div className="flex flex-col items-center">
+              <ScanBarcode className="h-16 w-16 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">جاري تحميل الماسح...</p>
+            </div>
           )}
         </div>
       </DialogContent>

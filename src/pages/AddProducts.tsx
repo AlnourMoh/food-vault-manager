@@ -6,16 +6,26 @@ import { Button } from '@/components/ui/button';
 import { BarcodeIcon } from 'lucide-react';
 import ScanProductDialog from '@/components/products/ScanProductDialog';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const AddProducts = () => {
   const [scannerOpen, setScannerOpen] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
 
   const handleProductAdded = () => {
+    console.log('Product added successfully');
+    toast({
+      title: "تم إضافة المنتج",
+      description: "تم إضافة المنتج بنجاح وإضافته إلى المخزون"
+    });
+    
     // Redirect to inventory after successful scan
-    navigate(isRestaurantRoute ? '/restaurant/inventory' : '/inventory');
+    const inventoryPath = isRestaurantRoute ? '/restaurant/inventory' : '/inventory';
+    console.log('Redirecting to:', inventoryPath);
+    navigate(inventoryPath);
   };
 
   return (
@@ -29,7 +39,10 @@ const AddProducts = () => {
           
           <Button 
             size="lg" 
-            onClick={() => setScannerOpen(true)}
+            onClick={() => {
+              console.log('Opening scanner');
+              setScannerOpen(true);
+            }}
             className="w-full gap-2"
           >
             <BarcodeIcon className="w-5 h-5" />

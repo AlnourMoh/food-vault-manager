@@ -15,56 +15,18 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
   const { toast } = useToast();
   const { startDeviceScan, stopDeviceScan } = useScannerDevice();
   
-  const handleSuccessfulScan = async (code: string) => {
+  const handleSuccessfulScan = (code: string) => {
+    console.log('Successful scan detected:', code);
     setLastScannedCode(code);
-    stopScan();
+    setIsScanningActive(false);
     
-    toast({
-      title: "تم المسح بنجاح",
-      description: `تم مسح الباركود: ${code}`,
-    });
-    
-    try {
-      const { data: productCode, error } = await supabase
-        .from('product_codes')
-        .select('product_id, is_used')
-        .eq('qr_code', code)
-        .single();
-      
-      if (error) {
-        if (error.code === 'PGRST116') {
-          toast({
-            title: "باركود غير معروف",
-            description: "هذا الباركود غير مسجل في النظام",
-            variant: "destructive"
-          });
-        } else {
-          console.error('Database query error:', error);
-          toast({
-            title: "خطأ في قاعدة البيانات",
-            description: "حدث خطأ أثناء التحقق من الباركود",
-            variant: "destructive"
-          });
-        }
-        return;
-      }
-      
-      if (productCode.is_used) {
-        toast({
-          title: "باركود مستخدم",
-          description: "تم استخدام هذا الباركود من قبل",
-          variant: "destructive"
-        });
-      } else {
-        onScan(code);
-      }
-    } catch (error) {
-      console.error('Error processing scanned code:', error);
-    }
+    // Process the scanned code
+    onScan(code);
   };
   
   const startScan = async () => {
     try {
+      console.log('Starting barcode scan...');
       setIsScanningActive(true);
       await startDeviceScan(handleSuccessfulScan);
     } catch (error) {
@@ -79,6 +41,7 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
   };
   
   const stopScan = async () => {
+    console.log('Stopping barcode scan...');
     setIsScanningActive(false);
     await stopDeviceScan();
   };
