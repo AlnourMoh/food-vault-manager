@@ -44,6 +44,11 @@ const MobileApp = () => {
           <Route path="/mobile" element={<Navigate to="/" replace />} />
           <Route path="/scan" element={<ProductScan />} />
           <Route path="/mobile/scan" element={<Navigate to="/scan" replace />} />
+          <Route path="/mobile/inventory" element={<Navigate to="/inventory" replace />} />
+          <Route path="/mobile/expiry" element={<Navigate to="/expiry" replace />} />
+          <Route path="/mobile/add-product" element={<Navigate to="/products/add" replace />} />
+          <Route path="/mobile/menu" element={<Navigate to="/menu" replace />} />
+          <Route path="/mobile/account" element={<Navigate to="/account" replace />} />
           {/* Add more routes for the mobile app here */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
