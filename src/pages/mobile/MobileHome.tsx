@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Product } from '@/types';
 
 const MobileHome = () => {
-  const [restaurantName, setRestaurantName] = useState<string>('المطعم');
+  const [restaurantName, setRestaurantName] = useState<string>('');
   const [stats, setStats] = useState({
     totalProducts: 0,
   });
@@ -81,13 +81,10 @@ const MobileHome = () => {
     <div className="max-w-screen-2xl mx-auto">
       <div className="space-y-6">
         <div className="px-4 md:px-6">
-          <div className="flex flex-col space-y-1">
-            <h2 className="text-xl font-medium text-muted-foreground">مرحباً بك في</h2>
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold">{restaurantName}</h1>
-              <div className="text-sm text-muted-foreground">
-                {stats.totalProducts} منتج
-              </div>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold">{restaurantName}</h1>
+            <div className="text-sm text-muted-foreground">
+              {stats.totalProducts} منتج
             </div>
           </div>
         </div>
