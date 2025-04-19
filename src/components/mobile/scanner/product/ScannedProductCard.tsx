@@ -35,10 +35,10 @@ export const ScannedProductCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {product.image_url && (
+        {product.imageUrl && (
           <div className="flex justify-center mb-4">
             <img 
-              src={product.image_url} 
+              src={product.imageUrl} 
               alt={product.name} 
               className="h-40 w-40 object-contain rounded-md border"
             />
@@ -62,12 +62,12 @@ export const ScannedProductCard = ({
           
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">تاريخ الإنتاج</p>
-            <p className="font-medium">{formatDate(product.production_date)}</p>
+            <p className="font-medium">{formatDate(product.entryDate.toString())}</p>
           </div>
           
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">تاريخ انتهاء الصلاحية</p>
-            <p className="font-medium">{formatDate(product.expiry_date)}</p>
+            <p className="font-medium">{formatDate(product.expiryDate.toString())}</p>
           </div>
         </div>
         

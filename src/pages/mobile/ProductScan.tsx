@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +56,23 @@ const ProductScan = () => {
         throw productError;
       }
       
-      setScannedProduct(product as Product);
+      // Convert database product to the Product interface format
+      const formattedProduct: Product = {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        unit: product.unit || '',
+        quantity: product.quantity,
+        expiryDate: new Date(product.expiry_date),
+        entryDate: new Date(product.production_date),
+        restaurantId: product.company_id,
+        restaurantName: '', // This information is not available from the query
+        addedBy: '', // This information is not available from the query
+        status: product.status,
+        imageUrl: product.image_url,
+      };
+      
+      setScannedProduct(formattedProduct);
       
       const restaurantId = localStorage.getItem('restaurantId');
       if (restaurantId) {
