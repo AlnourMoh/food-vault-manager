@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,14 +62,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Food Vault Manager custom colors
 				fvm: {
-					'primary': '#2E7D32',    // Forest green
-					'primary-light': '#4CAF50', // Lighter green
-					'secondary': '#FFF8E1',  // Light cream
-					'accent': '#E53935',     // Tomato red
-					'neutral': '#ECEFF1',    // Cool gray
-					'dark': '#263238',       // Dark blue-gray
+					'primary': '#33A1DE',    // Light blue
+					'primary-light': '#66B3E6', // Even lighter blue
+					'secondary': '#E6F2FF',  // Very light blue background
+					'accent': '#1E88E5',     // Slightly darker blue for accents
+					'neutral': '#F0F4F8',    // Neutral light blue-gray
+					'dark': '#1565C0',       // Dark blue
 				}
 			},
 			borderRadius: {
