@@ -86,7 +86,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   className="flex-1"
                   onClick={() => onSelect(product)}
                 >
-                  التفاصيل
+                  امسح لادخال المنتج
                 </Button>
               </div>
             </div>
