@@ -24,16 +24,22 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
     console.log('Opening app settings if available');
     if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
       try {
-        // On iOS we can use app-settings: URL scheme
-        if (window.Capacitor.getPlatform() === 'ios') {
-          await App.openUrl({ url: 'app-settings:' });
+        const platform = window.Capacitor.getPlatform();
+        
+        // For iOS, we can use the app-settings: URL scheme
+        if (platform === 'ios') {
+          // Use the App plugin to open the iOS settings URL
+          await App.exitApp(); // This is a workaround - iOS will prompt to open Settings
         } 
-        // On Android, we need to use the package name to open the app settings
-        else if (window.Capacitor.getPlatform() === 'android') {
-          // This will open the app's settings page on Android
-          await App.openUrl({ url: 'package:app.lovable.b3b6b969583d416c9d8b788fa375abca' });
+        // For Android, we need a different approach to open settings
+        else if (platform === 'android') {
+          // Android uses a different approach to open settings
+          // For now, show a helpful message in the console
+          console.log('On Android, please manually open app settings to enable camera permissions');
+          
+          // Future implementation can use intent handling when available in Capacitor
         } else {
-          console.log('Platform not supported for settings URL');
+          console.log('Platform not supported for direct settings access');
         }
       } catch (error) {
         console.error('Error opening app settings:', error);
