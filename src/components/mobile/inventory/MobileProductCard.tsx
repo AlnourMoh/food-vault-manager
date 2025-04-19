@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { Package, ScanBarcode } from 'lucide-react';
@@ -82,7 +81,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   onClick={() => onRemove?.(product)}
                 >
                   <ScanBarcode className="ml-2 h-4 w-4" />
-                  إخراج
+                  امسح لاخراج المنتج
                 </Button>
                 <Button
                   variant="secondary"
