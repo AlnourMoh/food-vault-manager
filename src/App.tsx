@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useState, useEffect } from "react";
 
 // Admin/Desktop routes
 import Index from "./pages/Index";
@@ -42,7 +42,24 @@ const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
 const queryClient = new QueryClient();
 
 function App() {
-  const isMobile = useIsMobile();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const MOBILE_BREAKPOINT = 768;
+    
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    
+    // Set initial value
+    checkIfMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
