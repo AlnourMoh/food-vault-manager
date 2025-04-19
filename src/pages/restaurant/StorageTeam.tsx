@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { useStorageTeamManager } from '@/hooks/team/useStorageTeamManager';
 import TeamHeader from '@/components/team/TeamHeader';
@@ -27,8 +27,17 @@ const RestaurantStorageTeam = () => {
     deleteTeamMember,
     phoneError,
     emailError,
-    resetErrors
+    resetErrors,
+    fetchTeamMembers
   } = useStorageTeamManager(restaurantId || undefined);
+
+  // Fetch team members when component mounts
+  useEffect(() => {
+    if (restaurantId) {
+      console.log('Fetching team members on component mount for restaurant:', restaurantId);
+      fetchTeamMembers();
+    }
+  }, [restaurantId, fetchTeamMembers]);
 
   const copyWelcomeMessage = (member: StorageTeamMember) => {
     // Convert StorageTeamMember to TeamMemberFormData format

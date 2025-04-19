@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { TeamMemberFormData } from '@/types/team';
 import { addTeamMemberApi, updateTeamMemberApi, deleteTeamMemberApi } from '@/api/teamMembersApi';
@@ -10,9 +10,17 @@ import { useTeamDuplicateCheck } from './useTeamDuplicateCheck';
 export const useStorageTeamManager = (restaurantId: string | undefined) => {
   const [lastAddedMember, setLastAddedMember] = useState<TeamMemberFormData | null>(null);
   const { toast } = useToast();
-  const { teamMembers, isLoading, fetchTeamMembers } = useTeamMembers(restaurantId);
+  const { teamMembers, isLoading, fetchTeamMembers, setTeamMembers } = useTeamMembers(restaurantId);
   const { phoneError, emailError, resetErrors, setErrors } = useTeamErrors();
   const { checkDuplicates } = useTeamDuplicateCheck(restaurantId);
+
+  // Make fetchTeamMembers available with useCallback to avoid constant recreation
+  const refreshTeamMembers = useCallback(() => {
+    console.log('Manual refresh of team members requested for restaurant:', restaurantId);
+    if (restaurantId) {
+      fetchTeamMembers();
+    }
+  }, [restaurantId, fetchTeamMembers]);
 
   const addTeamMember = async (memberData: TeamMemberFormData) => {
     if (!restaurantId) return false;
@@ -32,7 +40,7 @@ export const useStorageTeamManager = (restaurantId: string | undefined) => {
       });
       
       setLastAddedMember(memberData);
-      fetchTeamMembers();
+      refreshTeamMembers();
       return true;
     } catch (error: any) {
       console.error('Error adding team member:', error);
@@ -53,7 +61,7 @@ export const useStorageTeamManager = (restaurantId: string | undefined) => {
         description: 'تم تحديث بيانات عضو الفريق بنجاح',
       });
       
-      fetchTeamMembers();
+      refreshTeamMembers();
       return true;
     } catch (error: any) {
       console.error('Error updating team member:', error);
@@ -73,7 +81,7 @@ export const useStorageTeamManager = (restaurantId: string | undefined) => {
         description: 'تم حذف عضو الفريق بنجاح',
       });
       
-      fetchTeamMembers();
+      refreshTeamMembers();
     } catch (error: any) {
       console.error('Error deleting team member:', error);
       toast({
@@ -93,6 +101,7 @@ export const useStorageTeamManager = (restaurantId: string | undefined) => {
     lastAddedMember,
     phoneError,
     emailError,
-    resetErrors
+    resetErrors,
+    fetchTeamMembers: refreshTeamMembers
   };
 };

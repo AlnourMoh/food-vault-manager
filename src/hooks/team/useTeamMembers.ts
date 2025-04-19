@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { StorageTeamMember } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { fetchTeamMembersApi } from '@/api/teamMembersApi';
@@ -9,13 +9,18 @@ export const useTeamMembers = (restaurantId: string | undefined) => {
   const [teamMembers, setTeamMembers] = useState<StorageTeamMember[]>([]);
   const { toast } = useToast();
 
-  const fetchTeamMembers = async () => {
-    if (!restaurantId) return;
+  const fetchTeamMembers = useCallback(async () => {
+    if (!restaurantId) {
+      console.warn('Cannot fetch team members - no restaurantId provided');
+      return;
+    }
     
+    console.log('Fetching team members from API for restaurant:', restaurantId);
     setIsLoading(true);
     
     try {
       const formattedMembers = await fetchTeamMembersApi(restaurantId);
+      console.log('Team members fetched successfully:', formattedMembers);
       setTeamMembers(formattedMembers);
     } catch (error: any) {
       console.error('Error fetching team members:', error);
@@ -27,7 +32,7 @@ export const useTeamMembers = (restaurantId: string | undefined) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [restaurantId, toast]);
 
   return {
     teamMembers,
