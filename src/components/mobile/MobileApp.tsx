@@ -1,11 +1,9 @@
-
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
 import MobileHome from '@/pages/mobile/MobileHome';
 import ProductScan from '@/pages/mobile/ProductScan';
-import MobileInventory from '@/pages/mobile/MobileInventory';
 
 const MobileApp = () => {
   useEffect(() => {
@@ -42,7 +40,6 @@ const MobileApp = () => {
       <Routes>
         <Route path="/" element={<MobileHome />} />
         <Route path="/scan" element={<ProductScan />} />
-        <Route path="/inventory" element={<MobileInventory />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </MobileLayout>

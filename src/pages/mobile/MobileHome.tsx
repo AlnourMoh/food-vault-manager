@@ -124,12 +124,12 @@ const MobileHome = () => {
           </CardContent>
         </Card>
         
-        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/inventory')}>
+        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/add-product')}>
           <CardContent className="flex flex-col items-center justify-center p-6">
             <div className="p-3 bg-primary/10 rounded-full mb-3">
-              <ShoppingCart className="h-6 w-6 text-primary" />
+              <Utensils className="h-6 w-6 text-primary" />
             </div>
-            <span className="font-medium">تصفح المخزون</span>
+            <span className="font-medium">إضافة منتج</span>
           </CardContent>
         </Card>
         
@@ -139,15 +139,6 @@ const MobileHome = () => {
               <Calendar className="h-6 w-6 text-destructive" />
             </div>
             <span className="font-medium">المنتجات المنتهية</span>
-          </CardContent>
-        </Card>
-        
-        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/add-product')}>
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <div className="p-3 bg-primary/10 rounded-full mb-3">
-              <Utensils className="h-6 w-6 text-primary" />
-            </div>
-            <span className="font-medium">إضافة منتج</span>
           </CardContent>
         </Card>
       </div>
