@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarcodeIcon, ShoppingCart, Menu, User, ArrowRight } from 'lucide-react';
+import { Home, BarcodeIcon, Menu, User, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface MobileLayoutProps {
@@ -63,14 +63,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
           >
             <BarcodeIcon className="h-5 w-5" />
             <span className="text-xs mt-1">المسح</span>
-          </button>
-          
-          <button 
-            className={`flex flex-col items-center justify-center p-2 ${isActive('/mobile/inventory') ? 'text-primary' : 'text-muted-foreground'}`}
-            onClick={() => navigate('/mobile/inventory')}
-          >
-            <ShoppingCart className="h-5 w-5" />
-            <span className="text-xs mt-1">المخزون</span>
           </button>
           
           <button 
