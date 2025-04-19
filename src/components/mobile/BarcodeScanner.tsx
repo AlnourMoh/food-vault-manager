@@ -34,13 +34,16 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         // Short delay to ensure everything is initialized properly
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        if (hasPermission !== false && !isScanningActive && !isManualEntry) {
-          console.log('Auto-starting scanner');
-          await startScan();
+        if (hasPermission !== null) {
+          setIsInitializing(false);
+          
+          if (hasPermission === true && !isScanningActive && !isManualEntry) {
+            console.log('Auto-starting scanner');
+            await startScan();
+          }
         }
       } catch (error) {
         console.error('Error initializing scanner:', error);
-      } finally {
         setIsInitializing(false);
       }
     };
@@ -56,12 +59,17 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const handleRequestPermission = async () => {
     console.log('BarcodeScanner: request permission triggered');
     if (requestPermission) {
-      const granted = await requestPermission();
-      console.log('Permission request result:', granted);
-      
-      if (granted && !isScanningActive) {
-        console.log('Permission granted, starting scan');
-        await startScan();
+      try {
+        console.log('Calling requestPermission function');
+        const granted = await requestPermission();
+        console.log('Permission request result:', granted);
+        
+        if (granted && !isScanningActive) {
+          console.log('Permission granted, starting scan');
+          await startScan();
+        }
+      } catch (error) {
+        console.error('Error requesting permission:', error);
       }
     }
   };

@@ -3,6 +3,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, AlertCircle, Keyboard } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface NoPermissionViewProps {
   onClose: () => void;
@@ -27,9 +28,11 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
         
         <h3 className="text-xl font-bold">لا يوجد إذن للكاميرا</h3>
         
-        <p className="text-center text-muted-foreground">
-          يرجى السماح بالوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي
-        </p>
+        <Alert variant="destructive" className="border-red-200 bg-red-50">
+          <AlertDescription>
+            يرجى منح تصريح الوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي. قد تحتاج إلى فتح إعدادات التطبيق يدويًا إذا كنت قد رفضت الإذن سابقًا.
+          </AlertDescription>
+        </Alert>
         
         <div className="flex flex-col w-full space-y-2 mt-4">
           <Button 

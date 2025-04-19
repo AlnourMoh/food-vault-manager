@@ -9,52 +9,39 @@ export const useScannerDevice = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log("Using Capacitor BarcodeScanner plugin");
         
-        // Check if camera permission is granted
+        // Check if camera permission is granted for barcode scanner
         const status = await BarcodeScanner.checkPermission({ force: false });
         console.log("BarcodeScanner permission status:", status);
         
-        if (status.granted) {
-          // Make background transparent to show camera preview
-          document.body.classList.add('barcode-scanner-active');
-          
-          // Hide any elements that might be in the way
-          const appRoot = document.querySelector('app-root') || document.body;
-          appRoot.classList.add('scanner-active');
-          
-          // Prepare the scanner
-          await BarcodeScanner.prepare();
-          console.log("Barcode scanner prepared, starting scan...");
-          
-          // Start the scanner with a more visible highlight
-          const result = await BarcodeScanner.startScan({
-            targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128'],
-          });
-          
-          if (result.hasContent) {
-            console.log("Barcode scanned:", result.content);
-            onSuccess(result.content);
-          }
-        } else if (status.denied) {
-          console.log("Camera permission denied for barcode scanner");
-          // Force request permission
+        if (!status.granted) {
+          console.log("Requesting barcode scanner permission directly...");
           const requestResult = await BarcodeScanner.checkPermission({ force: true });
-          console.log("Force permission request result:", requestResult);
+          console.log("BarcodeScanner force permission request result:", requestResult);
           
-          if (requestResult.granted) {
-            return startDeviceScan(onSuccess);
-          } else {
+          if (!requestResult.granted) {
             throw new Error("Permission denied for barcode scanner");
           }
-        } else {
-          console.log("Requesting barcode scanner permission...");
-          const requestResult = await BarcodeScanner.checkPermission({ force: true });
-          
-          if (requestResult.granted) {
-            // If permission granted, try again
-            return startDeviceScan(onSuccess);
-          } else {
-            throw new Error("Failed to get barcode scanner permission");
-          }
+        }
+        
+        // Make background transparent to show camera preview
+        document.body.classList.add('barcode-scanner-active');
+        
+        // Hide any elements that might be in the way
+        const appRoot = document.querySelector('app-root') || document.body;
+        appRoot.classList.add('scanner-active');
+        
+        // Prepare the scanner
+        await BarcodeScanner.prepare();
+        console.log("Barcode scanner prepared, starting scan...");
+        
+        // Start the scanner with a more visible highlight
+        const result = await BarcodeScanner.startScan({
+          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128'],
+        });
+        
+        if (result.hasContent) {
+          console.log("Barcode scanned:", result.content);
+          onSuccess(result.content);
         }
       } else {
         console.log("Running in web environment or plugin not available - using test barcode");

@@ -55,7 +55,15 @@ export const useCameraPermissions = () => {
       
       if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
         console.log('Using Capacitor Camera plugin to request permission');
-        const permission = await Camera.requestPermissions();
+        
+        // Before requesting, check if permission has already been denied in the system settings
+        const { camera } = await Camera.checkPermissions();
+        console.log('Current permission status before request:', camera);
+        
+        // Even if denied, still try to request permission
+        const permission = await Camera.requestPermissions({
+          permissions: ['camera']
+        });
         console.log('Permission request result:', permission);
         
         const granted = permission.camera === 'granted';
@@ -65,7 +73,7 @@ export const useCameraPermissions = () => {
         if (!granted) {
           toast({
             title: "لم يتم منح الإذن",
-            description: "يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي",
+            description: "يرجى السماح بالوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي",
             variant: "destructive"
           });
         }
