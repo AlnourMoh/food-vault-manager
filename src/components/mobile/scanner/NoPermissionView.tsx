@@ -2,14 +2,15 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, AlertCircle } from 'lucide-react';
+import { Camera, AlertCircle, Keyboard } from 'lucide-react';
 
 interface NoPermissionViewProps {
   onClose: () => void;
   onRequestPermission?: () => void;
+  onManualEntry?: () => void;
 }
 
-export const NoPermissionView = ({ onClose, onRequestPermission }: NoPermissionViewProps) => {
+export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }: NoPermissionViewProps) => {
   const handleRequestPermission = () => {
     console.log('Request permission button clicked');
     if (onRequestPermission) {
@@ -37,7 +38,19 @@ export const NoPermissionView = ({ onClose, onRequestPermission }: NoPermissionV
               className="w-full"
               variant="default"
             >
+              <Camera className="h-4 w-4 ml-2" />
               طلب الإذن مجددًا
+            </Button>
+          )}
+          
+          {onManualEntry && (
+            <Button 
+              onClick={onManualEntry}
+              className="w-full"
+              variant="secondary"
+            >
+              <Keyboard className="h-4 w-4 ml-2" />
+              إدخال الكود يدويًا
             </Button>
           )}
           

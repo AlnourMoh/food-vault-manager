@@ -1,17 +1,20 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera, AlertCircle } from 'lucide-react';
+import { X, Camera, AlertCircle, Keyboard } from 'lucide-react';
 
 interface ScannerViewProps {
   onStop: () => void;
   hasPermissionError?: boolean;
   onRequestPermission?: () => void;
+  onManualEntry?: () => void;
 }
 
 export const ScannerView = ({ 
   onStop, 
   hasPermissionError = false,
-  onRequestPermission
+  onRequestPermission,
+  onManualEntry
 }: ScannerViewProps) => {
   const handleRequestPermission = () => {
     console.log('Request permission button clicked in ScannerView');
@@ -38,14 +41,28 @@ export const ScannerView = ({
                 className="w-full"
                 variant="default"
               >
+                <Camera className="h-4 w-4 ml-2" />
                 طلب الإذن مجددًا
               </Button>
             )}
+            
+            {onManualEntry && (
+              <Button 
+                onClick={onManualEntry}
+                className="w-full"
+                variant="secondary"
+              >
+                <Keyboard className="h-4 w-4 ml-2" />
+                إدخال الكود يدويًا
+              </Button>
+            )}
+            
             <Button 
               onClick={onStop}
               className="w-full"
               variant="outline"
             >
+              <X className="h-4 w-4 ml-2" />
               إغلاق
             </Button>
           </div>
@@ -62,6 +79,18 @@ export const ScannerView = ({
             <p className="mb-2 font-bold">قم بتوجيه الكاميرا نحو الباركود</p>
             <p className="text-sm opacity-80">يتم المسح تلقائيًا عند اكتشاف رمز</p>
           </div>
+        </div>
+        
+        <div className="absolute bottom-24 inset-x-0 flex justify-center">
+          <Button 
+            variant="secondary"
+            size="lg" 
+            className="rounded-full px-6"
+            onClick={onManualEntry}
+          >
+            <Keyboard className="h-5 w-5 ml-2" />
+            إدخال الكود يدويًا
+          </Button>
         </div>
         
         <div className="absolute bottom-8 inset-x-0 flex justify-center">

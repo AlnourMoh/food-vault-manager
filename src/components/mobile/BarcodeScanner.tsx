@@ -1,10 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useBarcodeScannerControls } from '@/hooks/scanner/useBarcodeScannerControls';
 import { ScannerLoading } from './scanner/ScannerLoading';
 import { NoPermissionView } from './scanner/NoPermissionView';
 import { ScannerView } from './scanner/ScannerView';
 import { ScannerReadyView } from './scanner/ScannerReadyView';
+import { DigitalCodeInput } from './scanner/DigitalCodeInput';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -12,6 +13,8 @@ interface BarcodeScannerProps {
 }
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
+  const [isManualEntry, setIsManualEntry] = useState(false);
+  
   const { 
     isScanningActive, 
     lastScannedCode,
@@ -28,7 +31,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     
     // Short delay to ensure everything is initialized properly
     const timer = setTimeout(() => {
-      if (hasPermission !== false && !isScanningActive) {
+      if (hasPermission !== false && !isScanningActive && !isManualEntry) {
         console.log('Auto-starting scanner');
         startScan();
       }
@@ -38,7 +41,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       clearTimeout(timer);
       stopScan();
     };
-  }, [hasPermission, isScanningActive, startScan, stopScan]);
+  }, [hasPermission, isScanningActive, startScan, stopScan, isManualEntry]);
   
   const handleRequestPermission = async () => {
     console.log('BarcodeScanner: request permission triggered');
@@ -53,6 +56,30 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     }
   };
   
+  const handleManualEntry = () => {
+    console.log('Switching to manual code entry');
+    setIsManualEntry(true);
+  };
+  
+  const handleManualSubmit = (code: string) => {
+    console.log('Manual code submitted:', code);
+    onScan(code);
+  };
+  
+  const handleManualCancel = () => {
+    console.log('Manual entry canceled');
+    setIsManualEntry(false);
+  };
+  
+  if (isManualEntry) {
+    return (
+      <DigitalCodeInput 
+        onSubmit={handleManualSubmit}
+        onCancel={handleManualCancel}
+      />
+    );
+  }
+  
   if (hasPermission === null) {
     return <ScannerLoading />;
   }
@@ -64,18 +91,21 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
           onStop={stopScan} 
           hasPermissionError={hasPermission === false}
           onRequestPermission={handleRequestPermission}
+          onManualEntry={handleManualEntry}
         />
       ) : (
         hasPermission === false ? (
           <NoPermissionView 
             onClose={onClose} 
             onRequestPermission={handleRequestPermission}
+            onManualEntry={handleManualEntry}
           />
         ) : (
           <ScannerReadyView
             lastScannedCode={lastScannedCode}
             onStartScan={startScan}
             onClose={onClose}
+            onManualEntry={handleManualEntry}
           />
         )
       )}

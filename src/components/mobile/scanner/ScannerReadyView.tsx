@@ -2,15 +2,21 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Check } from 'lucide-react';
+import { Camera, Check, Keyboard } from 'lucide-react';
 
 interface ScannerReadyViewProps {
   lastScannedCode: string | null;
   onStartScan: () => void;
   onClose: () => void;
+  onManualEntry?: () => void;
 }
 
-export const ScannerReadyView = ({ lastScannedCode, onStartScan, onClose }: ScannerReadyViewProps) => {
+export const ScannerReadyView = ({ 
+  lastScannedCode, 
+  onStartScan, 
+  onClose,
+  onManualEntry 
+}: ScannerReadyViewProps) => {
   return (
     <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
       <div className="flex flex-col items-center justify-center h-60">
@@ -37,9 +43,26 @@ export const ScannerReadyView = ({ lastScannedCode, onStartScan, onClose }: Scan
             <p className="text-center text-muted-foreground mb-4">
               قم بتوجيه الكاميرا إلى باركود المنتج لمسحه
             </p>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={onClose}>إلغاء</Button>
-              <Button variant="default" onClick={onStartScan}>بدء المسح</Button>
+            <div className="flex flex-col w-full space-y-2">
+              <Button variant="default" onClick={onStartScan} className="w-full">
+                <Camera className="h-4 w-4 ml-2" />
+                بدء المسح
+              </Button>
+              
+              {onManualEntry && (
+                <Button 
+                  variant="secondary" 
+                  onClick={onManualEntry}
+                  className="w-full"
+                >
+                  <Keyboard className="h-4 w-4 ml-2" />
+                  إدخال الكود يدويًا
+                </Button>
+              )}
+              
+              <Button variant="outline" onClick={onClose} className="w-full">
+                إلغاء
+              </Button>
             </div>
           </>
         )}
