@@ -2,7 +2,7 @@
 import React from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive, Users, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { Archive, Users, ShoppingCart } from 'lucide-react';
 
 const RestaurantDashboard = () => {
   // Mock data - in a real app, this would come from the database
@@ -24,12 +24,6 @@ const RestaurantDashboard = () => {
       value: "856 كجم",
       icon: <Archive className="h-6 w-6 text-purple-500" />,
       color: "bg-purple-50"
-    },
-    {
-      title: "منتجات منتهية",
-      value: "8",
-      icon: <AlertTriangle className="h-6 w-6 text-red-500" />,
-      color: "bg-red-50"
     }
   ];
 
@@ -38,7 +32,7 @@ const RestaurantDashboard = () => {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">مرحباً بك في لوحة تحكم المطعم</h1>
         
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {stats.map((stat, index) => (
             <Card key={index}>
               <CardHeader className={`flex flex-row items-center justify-between pb-2 ${stat.color} rounded-t-lg`}>
@@ -52,7 +46,7 @@ const RestaurantDashboard = () => {
           ))}
         </div>
         
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-1">
           <Card>
             <CardHeader>
               <CardTitle>آخر المنتجات المضافة</CardTitle>
@@ -68,3 +62,4 @@ const RestaurantDashboard = () => {
 };
 
 export default RestaurantDashboard;
+
