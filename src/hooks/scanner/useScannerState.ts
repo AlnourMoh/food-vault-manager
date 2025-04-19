@@ -15,7 +15,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   const { startDeviceScan, stopDeviceScan } = useScannerDevice();
   
   const handleSuccessfulScan = (code: string) => {
-    console.log('Scan successful with code:', code);
+    console.log('[useScannerState] نجحت عملية المسح برمز:', code);
     setLastScannedCode(code);
     stopScan();
     onScan(code);
@@ -23,33 +23,37 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   
   const startScan = async () => {
     try {
-      console.log('Attempting to start scan, permission status:', hasPermission);
+      console.log('[useScannerState] محاولة بدء المسح، حالة الإذن:', hasPermission);
       
-      // Always request permission with force=true to ensure proper dialog display
+      // دائمًا طلب الإذن عند بدء المسح لضمان أن التطبيق مسجل في قائمة الأذونات
       if (hasPermission === false || hasPermission === null) {
-        console.log('No camera permission or unknown status, requesting with force=true...');
+        console.log('[useScannerState] لا يوجد إذن للكاميرا أو الحالة غير معروفة، طلب الإذن مع force=true...');
         const granted = await requestPermission(true);
-        console.log('Permission request result:', granted);
+        console.log('[useScannerState] نتيجة طلب الإذن:', granted);
         
         if (!granted) {
-          console.log('Permission denied after request');
+          console.log('[useScannerState] تم رفض الإذن بعد الطلب');
           return false;
         }
+      } else {
+        // حتى لو كان لدينا إذن، نطلبه مرة أخرى للتأكد من تسجيل التطبيق
+        console.log('[useScannerState] لدينا إذن بالفعل، لكن نطلبه مرة أخرى لتحديث التسجيل...');
+        await requestPermission(true);
       }
       
-      console.log('Permission OK, starting device scan');
+      console.log('[useScannerState] الإذن موافق عليه، بدء مسح الجهاز');
       setIsScanningActive(true);
       await startDeviceScan(handleSuccessfulScan);
       return true;
     } catch (error) {
-      console.error('Error starting scan:', error);
+      console.error('[useScannerState] خطأ في بدء المسح:', error);
       setIsScanningActive(false);
       return false;
     }
   };
   
   const stopScan = async () => {
-    console.log('Stopping scan');
+    console.log('[useScannerState] إيقاف المسح');
     setIsScanningActive(false);
     await stopDeviceScan();
   };

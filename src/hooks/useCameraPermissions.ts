@@ -12,33 +12,39 @@ export const useCameraPermissions = () => {
   useEffect(() => {
     const checkPermissions = async () => {
       try {
-        console.log('Checking camera permissions...');
+        console.log('[useCameraPermissions] فحص أذونات الكاميرا...');
         setIsLoading(true);
 
-        // First try to check with BarcodeScanner plugin
+        // أولاً نحاول الفحص مع BarcodeScanner
         const barcodeStatus = await checkBarcodePermission();
         if (barcodeStatus) {
-          console.log('Barcode permission status:', barcodeStatus);
+          console.log('[useCameraPermissions] حالة إذن الباركود:', barcodeStatus);
           setHasPermission(barcodeStatus.granted);
           setIsLoading(false);
+          
+          // إذا لم يتم منح الإذن، نحاول طلبه مرة واحدة لتسجيل التطبيق
+          if (!barcodeStatus.granted && barcodeStatus.neverAsked) {
+            console.log('[useCameraPermissions] لم يتم طلب الإذن من قبل، محاولة طلبه تلقائياً...');
+            requestPermission(true);
+          }
           return;
         }
 
-        // If BarcodeScanner not available, try with Camera plugin
+        // إذا BarcodeScanner غير متوفر، نحاول مع ملحق الكاميرا
         const cameraStatus = await checkCameraPermission();
         if (cameraStatus) {
-          console.log('Camera permission status:', cameraStatus);
+          console.log('[useCameraPermissions] حالة إذن الكاميرا:', cameraStatus);
           setHasPermission(cameraStatus.granted);
           setIsLoading(false);
           return;
         }
 
-        // For web testing, assume permission granted
-        console.log('No native camera plugins available, assuming web environment');
+        // لاختبار الويب، نفترض أن الإذن ممنوح
+        console.log('[useCameraPermissions] ملحقات الكاميرا الأصلية غير متوفرة، افتراض بيئة الويب');
         setHasPermission(true);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error checking camera permissions:', error);
+        console.error('[useCameraPermissions] خطأ في فحص أذونات الكاميرا:', error);
         setHasPermission(false);
         setIsLoading(false);
       }
@@ -47,16 +53,16 @@ export const useCameraPermissions = () => {
     checkPermissions();
   }, []);
 
-  // Method to request permission and update state accordingly
+  // طريقة لطلب الإذن وتحديث الحالة وفقًا لذلك
   const requestCameraPermission = async (force = true) => {
     try {
-      console.log(`Explicitly requesting camera permission with force=${force}...`);
+      console.log(`[useCameraPermissions] طلب إذن الكاميرا صراحةً مع force=${force}...`);
       const result = await requestPermission(force);
-      console.log('Permission request result:', result);
+      console.log('[useCameraPermissions] نتيجة طلب الإذن:', result);
       setHasPermission(result);
       return result;
     } catch (error) {
-      console.error('Error requesting permission:', error);
+      console.error('[useCameraPermissions] خطأ في طلب الإذن:', error);
       return false;
     }
   };
