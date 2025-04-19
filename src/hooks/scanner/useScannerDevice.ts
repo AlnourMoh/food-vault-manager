@@ -13,17 +13,15 @@ export const useScannerDevice = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log("[useScannerDevice] استخدام ملحق BarcodeScanner من Capacitor");
         
-        // الحصول على حالة الإذن الحالية وإظهار رسالة طلب الإذن
+        // إعادة التحقق من الأذونات بشكل صريح
         const status = await BarcodeScanner.checkPermission({ force: true });
         console.log("[useScannerDevice] حالة إذن الباركود سكانر:", status);
         
-        // إذا لم يتم منح الإذن، نحاول مرة أخرى بإظهار رسالة
         if (!status.granted) {
-          console.log("[useScannerDevice] لم يتم منح الإذن، طلب إظهار مربع حوار الإذن");
-          
-          // محاولة صريحة لطلب الإذن مع force = true
+          // محاولة طلب الإذن بشكل مباشر
+          console.log("[useScannerDevice] لم يتم منح الإذن، محاولة طلب الإذن بشكل مباشر");
+          // استخدام force: true لإجبار ظهور مربع حوار طلب الإذن
           const retryStatus = await BarcodeScanner.checkPermission({ force: true });
-          console.log("[useScannerDevice] نتيجة محاولة طلب الإذن مرة ثانية:", retryStatus);
           
           if (!retryStatus.granted) {
             console.error("[useScannerDevice] تم رفض الإذن للماسح الضوئي");
@@ -37,6 +35,7 @@ export const useScannerDevice = () => {
         }
         
         // تجهيز الماسح
+        console.log("[useScannerDevice] تجهيز الماسح الضوئي...");
         await BarcodeScanner.prepare();
         console.log("[useScannerDevice] تم تجهيز الماسح الضوئي بنجاح");
         
@@ -46,12 +45,12 @@ export const useScannerDevice = () => {
         document.body.style.visibility = 'hidden';
         document.body.classList.add('barcode-scanner-active');
         
-        // إظهار منطقة الماسح
+        // إخفاء الخلفية لإظهار الكاميرا
         await BarcodeScanner.hideBackground();
         console.log("[useScannerDevice] تم إخفاء الخلفية للماسح");
         
-        // بدء المسح مع الإعدادات المحسنة
-        console.log("[useScannerDevice] بدء المسح بإعدادات محسنة...");
+        // بدء المسح بإعدادات محسنة
+        console.log("[useScannerDevice] بدء المسح...");
         const result = await BarcodeScanner.startScan({
           targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 
                            'PDF_417', 'AZTEC', 'DATA_MATRIX', 'ITF', 'CODABAR'],
@@ -79,7 +78,7 @@ export const useScannerDevice = () => {
           await BarcodeScanner.showBackground();
         }
       } else {
-        console.log("[useScannerDevice] تشغيل في بيئة الويب أو عدم توفر الملحق - استخدام باركود اختباري");
+        console.log("[useScannerDevice] ملحق BarcodeScanner غير متوفر - استخدام محاكاة للماسح");
         // للتطوير/الويب: محاكاة المسح
         toast({
           title: "نسخة الويب",

@@ -14,49 +14,52 @@ export const usePermissionRequest = () => {
       const platform = window.Capacitor?.getPlatform();
       console.log('[usePermissionRequest] المنصة الحالية:', platform);
 
-      // البدء دائمًا بطلب الإذن مباشرة من ملحق BarcodeScanner لضمان أن اسم التطبيق مسجل بشكل صحيح
+      // طلب الإذن من BarcodeScanner مباشرة إذا كان متاحًا
       if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-        console.log(`[usePermissionRequest] طلب إذن BarcodeScanner مع force=${force}...`);
+        console.log(`[usePermissionRequest] طلب إذن BarcodeScanner مباشرة مع force=${force}...`);
         
-        // طلب الإذن دائمًا بـ force=true للتأكد من تسجيل التطبيق
+        // استخدم force=true دائمًا لإظهار شاشة طلب الإذن
         const result = await BarcodeScanner.checkPermission({ force: true });
-        console.log('[usePermissionRequest] نتيجة طلب إذن BarcodeScanner:', result);
+        console.log('[usePermissionRequest] نتيجة طلب إذن BarcodeScanner الأولي:', result);
         
-        // محاولة ثانية لطلب الإذن إذا لم يتم منحه
-        if (!result.granted) {
-          console.log('[usePermissionRequest] لم يتم منح الإذن، محاولة طلب الإذن مرة أخرى');
+        if (result.granted) {
+          console.log('[usePermissionRequest] تم منح الإذن!');
+          return true;
+        }
+        
+        if (platform === 'android' && result.denied) {
+          // على Android، إذا تم رفض الإذن ولكن يمكن طلبه مرة أخرى
+          console.log('[usePermissionRequest] الإذن مرفوض على Android، محاولة طلبه مرة أخرى...');
           const retryResult = await BarcodeScanner.checkPermission({ force: true });
-          console.log('[usePermissionRequest] نتيجة طلب الإذن الثاني:', retryResult);
-          const granted = retryResult.granted;
-
-          if (!granted) {
-            console.log('[usePermissionRequest] لم يتم منح الإذن، التعامل بناءً على المنصة');
-            if (platform === 'ios') {
-              return handleIosPermissions();
-            } else if (platform === 'android') {
-              return handleAndroidPermissions();
-            }
+          console.log('[usePermissionRequest] نتيجة المحاولة الثانية:', retryResult);
+          
+          if (retryResult.granted) {
+            return true;
           }
-
-          console.log('[usePermissionRequest] نتيجة طلب الإذن:', granted);
-          return granted;
         }
 
-        console.log('[usePermissionRequest] تم منح الإذن:', result.granted);
-        return result.granted;
+        console.log('[usePermissionRequest] لم يتم منح الإذن بعد المحاولات المباشرة، التوجيه إلى إعدادات التطبيق');
         
-      } else if (window.Capacitor?.isPluginAvailable('Camera')) {
-        console.log('[usePermissionRequest] BarcodeScanner غير متوفر، محاولة استخدام ملحق الكاميرا...');
-        // استخدام ملحق الكاميرا إذا لم يتوفر BarcodeScanner
+        // توجيه المستخدم إلى إعدادات التطبيق بناءً على المنصة
+        if (platform === 'ios') {
+          return await handleIosPermissions();
+        } else if (platform === 'android') {
+          return await handleAndroidPermissions();
+        }
+        
+        return false;
+      } 
+      else if (window.Capacitor?.isPluginAvailable('Camera')) {
+        console.log('[usePermissionRequest] BarcodeScanner غير متوفر، استخدام ملحق الكاميرا...');
         const result = await Camera.requestPermissions({
           permissions: ['camera']
         });
         console.log('[usePermissionRequest] نتيجة طلب إذن الكاميرا:', result);
         return result.camera === 'granted';
-      } else {
-        console.log('[usePermissionRequest] كل من BarcodeScanner والكاميرا غير متوفرين، استخدام الحل البديل للويب');
-        // حالة الويب
-        return handleWebPermissions();
+      } 
+      else {
+        console.log('[usePermissionRequest] في بيئة الويب، استخدام API الويب');
+        return await handleWebPermissions();
       }
     } catch (error) {
       console.error('[usePermissionRequest] خطأ في طلب الإذن:', error);

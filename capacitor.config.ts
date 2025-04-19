@@ -2,8 +2,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.foodvault.manager', // تغيير معرف التطبيق ليكون أكثر تحديداً
-  appName: 'مخزن الطعام', // الاسم العربي المناسب للتطبيق
+  appId: 'app.lovable.foodvault.manager',
+  appName: 'مخزن الطعام',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
@@ -38,12 +38,10 @@ const config: CapacitorConfig = {
         message: "يحتاج التطبيق إلى إذن الكاميرا لمسح الباركود"
       }
     },
-    // إضافة بيانات أكثر تحديداً للتطبيق لمساعدة نظام التشغيل على التعرف عليه
     CapacitorHttp: {
       enabled: true
     }
   },
-  // إضافة بيانات الأندرويد التفصيلية
   android: {
     flavor: "appflavor",
     buildOptions: {
@@ -59,7 +57,6 @@ const config: CapacitorConfig = {
       "android.permission.CAMERA"
     ]
   },
-  // إضافة بيانات iOS التفصيلية
   ios: {
     path: "ios",
     scheme: "foodvaultmanager",

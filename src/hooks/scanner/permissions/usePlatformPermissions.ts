@@ -1,31 +1,30 @@
 
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
-/**
- * Hook للتعامل مع طلبات الإذن الخاصة بالمنصات المختلفة
- * يوفر معالجة متخصصة لبيئات iOS و Android والويب
- */
 export const usePlatformPermissions = () => {
-  /**
-   * يتعامل مع طلبات الإذن الخاصة بـ iOS
-   * على iOS، نحتاج إلى توجيه المستخدم لفتح الإعدادات يدويًا
-   */
   const handleIosPermissions = async () => {
-    console.log('[usePlatformPermissions] طلب أذونات iOS للكاميرا');
+    console.log('[usePlatformPermissions] معالجة أذونات iOS');
     try {
-      // بالنسبة لـ iOS، نحتاج إلى توجيه المستخدم إلى الإعدادات
-      const confirm = window.confirm("يجب تفعيل إذن الكاميرا من إعدادات الجهاز.\n\nتأكد من البحث عن تطبيق 'مخزن الطعام' في قائمة التطبيقات في الإعدادات.\n\nهل تريد فتح إعدادات التطبيق لتمكين إذن الكاميرا؟");
+      // تنبيه المستخدم بالحاجة إلى تمكين الإذن من إعدادات النظام
+      const confirm = window.confirm(
+        "يجب تفعيل إذن الكاميرا من إعدادات الجهاز.\n\n" +
+        "1. انتقل إلى إعدادات جهازك\n" +
+        "2. اختر 'الخصوصية والأمان'\n" +
+        "3. اختر 'الكاميرا'\n" +
+        "4. ابحث عن تطبيق 'مخزن الطعام' وقم بتفعيله\n\n" +
+        "هل تريد الانتقال إلى الإعدادات الآن؟"
+      );
+      
       if (confirm) {
-        console.log('[usePlatformPermissions] المستخدم وافق، جاري فتح إعدادات التطبيق');
-        try {
-          // على iOS، هذا سيقترح فتح الإعدادات عند إعادة فتح التطبيق
+        console.log('[usePlatformPermissions] المستخدم وافق على الانتقال إلى الإعدادات');
+        // على iOS، استخدام App.openUrl لفتح إعدادات التطبيق مباشرة
+        if (Capacitor.isPluginAvailable('App')) {
+          await App.openUrl({ url: 'app-settings:' });
+        } else {
+          // احتياطي - الخروج من التطبيق للذهاب إلى الإعدادات
           await App.exitApp();
-        } catch (error) {
-          console.error('[usePlatformPermissions] خطأ في الخروج من التطبيق لفتح الإعدادات:', error);
-          alert("يرجى فتح إعدادات جهازك يدويًا وتمكين إذن الكاميرا لتطبيق 'مخزن الطعام'");
         }
-      } else {
-        console.log('[usePlatformPermissions] رفض المستخدم فتح الإعدادات');
       }
     } catch (error) {
       console.error('[usePlatformPermissions] خطأ في معالجة أذونات iOS:', error);
@@ -33,32 +32,33 @@ export const usePlatformPermissions = () => {
     return false;
   };
 
-  /**
-   * يتعامل مع طلبات الإذن الخاصة بـ Android
-   * على Android، نحتاج إلى عرض تعليمات تفصيلية لتمكين الأذونات يدويًا
-   */
-  const handleAndroidPermissions = () => {
-    console.log('[usePlatformPermissions] طلب أذونات Android للكاميرا');
+  const handleAndroidPermissions = async () => {
+    console.log('[usePlatformPermissions] معالجة أذونات Android');
     try {
-      // بالنسبة لـ Android، نعرض تعليمات مفصلة
-      alert("لتمكين إذن الكاميرا، يرجى اتباع الخطوات التالية:\n\n" + 
-            "1. افتح إعدادات جهازك\n" + 
-            "2. اختر 'التطبيقات' أو 'إدارة التطبيقات'\n" + 
-            "3. ابحث عن تطبيق 'مخزن الطعام'\n" + 
-            "   (إذا لم تجده، انتقل إلى 'عرض كل التطبيقات' أو 'جميع التطبيقات')\n" + 
-            "4. اختر 'الأذونات'\n" + 
-            "5. قم بتفعيل إذن 'الكاميرا'\n\n" +
-            "ملاحظة: بعض أجهزة Android قد تخفي بعض التطبيقات. تأكد من البحث في قائمة 'جميع التطبيقات'.");
+      // على Android، نقدم خيار الذهاب إلى إعدادات التطبيق مباشرة
+      const confirm = window.confirm(
+        "يجب تفعيل إذن الكاميرا من إعدادات التطبيق.\n\n" +
+        "1. انتقل إلى إعدادات جهازك\n" +
+        "2. اختر 'التطبيقات' أو 'مدير التطبيقات'\n" +
+        "3. ابحث عن تطبيق 'مخزن الطعام'\n" +
+        "4. اختر 'الأذونات'\n" +
+        "5. قم بتفعيل إذن 'الكاميرا'\n\n" +
+        "هل تريد الانتقال إلى إعدادات التطبيق الآن؟"
+      );
+      
+      if (confirm) {
+        console.log('[usePlatformPermissions] المستخدم وافق على الانتقال إلى إعدادات التطبيق');
+        // فتح إعدادات التطبيق مباشرة على Android
+        if (Capacitor.isPluginAvailable('App')) {
+          await App.openUrl({ url: 'package:app.lovable.foodvault.manager' });
+        }
+      }
     } catch (error) {
       console.error('[usePlatformPermissions] خطأ في معالجة أذونات Android:', error);
     }
     return false;
   };
 
-  /**
-   * يتعامل مع طلبات الإذن الخاصة بالويب
-   * على الويب، نحاول طلب الوصول إلى الكاميرا عبر واجهة برمجة التطبيقات في المتصفح
-   */
   const handleWebPermissions = async () => {
     console.log('[usePlatformPermissions] طلب أذونات الويب للكاميرا');
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
