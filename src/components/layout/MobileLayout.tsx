@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, BarcodeIcon, User, ArrowRight } from 'lucide-react';
@@ -46,7 +47,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
       
       {/* Bottom navigation */}
       <nav className="fixed bottom-0 inset-x-0 z-10 bg-background border-t">
-        <div className="flex justify-around items-center h-16">
+        <div className="flex justify-around items-center h-16 relative">
           <button 
             className={`flex flex-col items-center justify-center p-2 ${isActive('/mobile') ? 'text-primary' : 'text-muted-foreground'}`}
             onClick={() => navigate('/mobile')}
@@ -55,12 +56,15 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             <span className="text-xs mt-1">الرئيسية</span>
           </button>
           
+          {/* Prominent Scan Button */}
           <button 
-            className={`flex flex-col items-center justify-center p-2 ${isActive('/mobile/scan') ? 'text-primary' : 'text-muted-foreground'}`}
+            className={`flex flex-col items-center justify-center p-3 rounded-full -mt-8 bg-primary hover:bg-primary/90 shadow-lg transition-all ${
+              isActive('/mobile/scan') ? 'bg-primary/90 scale-95' : ''
+            }`}
             onClick={() => navigate('/mobile/scan')}
           >
-            <BarcodeIcon className="h-5 w-5" />
-            <span className="text-xs mt-1">المسح</span>
+            <BarcodeIcon className="h-6 w-6 text-primary-foreground" />
+            <span className="text-xs mt-1 text-primary-foreground font-medium">المسح</span>
           </button>
           
           <button 
