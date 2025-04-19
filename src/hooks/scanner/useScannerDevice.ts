@@ -37,9 +37,10 @@ export const useScannerDevice = () => {
         await BarcodeScanner.prepare();
         console.log("Barcode scanner prepared, starting scan...");
         
-        // Start the scanner with a more visible highlight
+        // Start the scanner with a more visible highlight and include QR code format
         const result = await BarcodeScanner.startScan({
-          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128'],
+          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 'PDF_417', 'AZTEC', 'DATA_MATRIX'],
+          cameraDirection: 'back'
         });
         
         if (result.hasContent) {
