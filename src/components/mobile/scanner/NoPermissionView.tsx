@@ -20,14 +20,21 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
     }
   };
 
-  const openAppSettings = () => {
+  const openAppSettings = async () => {
     console.log('Opening app settings if available');
     if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
       try {
-        // Attempt to open app settings using the App plugin
-        App.openUrl({ url: 'app-settings:' }).catch(err => {
-          console.error('Error opening settings:', err);
-        });
+        // On iOS we can use app-settings: URL scheme
+        if (window.Capacitor.getPlatform() === 'ios') {
+          await App.openUrl({ url: 'app-settings:' });
+        } 
+        // On Android, we need to use the package name to open the app settings
+        else if (window.Capacitor.getPlatform() === 'android') {
+          // This will open the app's settings page on Android
+          await App.openUrl({ url: 'package:app.lovable.b3b6b969583d416c9d8b788fa375abca' });
+        } else {
+          console.log('Platform not supported for settings URL');
+        }
       } catch (error) {
         console.error('Error opening app settings:', error);
       }
