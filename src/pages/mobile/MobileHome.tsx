@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Package } from 'lucide-react';
 
 const MobileHome = () => {
   const [restaurantName, setRestaurantName] = useState<string>('المطعم');
@@ -73,6 +73,19 @@ const MobileHome = () => {
             <ShoppingCart className="h-8 w-8 text-primary mb-1" />
             <span className="text-2xl font-bold">{stats.totalProducts}</span>
             <span className="text-xs text-muted-foreground">إجمالي المنتجات</span>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <h2 className="text-xl font-bold">العمليات السريعة</h2>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/product-management')}>
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <div className="p-3 bg-amber-100 rounded-full mb-3">
+              <Package className="h-6 w-6 text-amber-600" />
+            </div>
+            <span className="font-medium">تتبع وإدارة المنتجات</span>
           </CardContent>
         </Card>
       </div>
