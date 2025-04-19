@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, Keyboard, Settings } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { App } from '@capacitor/app';
 
 interface NoPermissionViewProps {
   onClose: () => void;
@@ -24,7 +25,6 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
     if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
       try {
         // Attempt to open app settings using the App plugin
-        const { App } = window.Capacitor.Plugins;
         App.openUrl({ url: 'app-settings:' }).catch(err => {
           console.error('Error opening settings:', err);
         });
