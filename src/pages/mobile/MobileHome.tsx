@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,36 +80,38 @@ const MobileHome = () => {
   });
   
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h2 className="text-xl font-medium">مرحباً بك في</h2>
-        <h1 className="text-3xl font-bold">{restaurantName}</h1>
+    <div className="max-w-7xl mx-auto py-6">
+      <div className="px-4 md:px-6 space-y-6">
+        <div className="flex flex-col space-y-2">
+          <h2 className="text-xl font-medium">مرحباً بك في</h2>
+          <h1 className="text-3xl font-bold">{restaurantName}</h1>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card className="bg-primary/10">
+            <CardContent className="flex flex-col items-center justify-center p-4">
+              <ShoppingCart className="h-8 w-8 text-primary mb-1" />
+              <span className="text-2xl font-bold">{stats.totalProducts}</span>
+              <span className="text-xs text-muted-foreground">إجمالي المنتجات</span>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <h2 className="text-xl font-bold">المنتجات</h2>
+        
+        {products && products.length > 0 ? (
+          <MobileProductGrid 
+            products={products} 
+            onProductUpdate={refetch}
+          />
+        ) : (
+          <Card className="p-6">
+            <div className="text-center text-muted-foreground">
+              لا توجد منتجات لعرضها
+            </div>
+          </Card>
+        )}
       </div>
-      
-      <div className="grid grid-cols-1 gap-4">
-        <Card className="bg-primary/10">
-          <CardContent className="flex flex-col items-center justify-center p-4">
-            <ShoppingCart className="h-8 w-8 text-primary mb-1" />
-            <span className="text-2xl font-bold">{stats.totalProducts}</span>
-            <span className="text-xs text-muted-foreground">إجمالي المنتجات</span>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <h2 className="text-xl font-bold">المنتجات</h2>
-      
-      {products && products.length > 0 ? (
-        <MobileProductGrid 
-          products={products} 
-          onProductUpdate={refetch}
-        />
-      ) : (
-        <Card className="p-6">
-          <div className="text-center text-muted-foreground">
-            لا توجد منتجات لعرضها
-          </div>
-        </Card>
-      )}
     </div>
   );
 };
