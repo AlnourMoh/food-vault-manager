@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { Package, ScanBarcode } from 'lucide-react';
@@ -25,6 +26,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
     <Card className="w-full shadow-sm mx-0 rounded-md">
       <CardContent className="p-4 px-5">
         <div className="flex items-start gap-4 w-full">
+          {/* Image Section */}
           <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             {product.imageUrl ? (
               <img 
@@ -39,6 +41,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             )}
           </div>
 
+          {/* Content Section */}
           <div className="flex-1 w-full min-w-0">
             <div className="flex flex-col w-full">
               <h3 className="text-lg font-bold text-primary mb-1 leading-tight text-right">
@@ -79,14 +82,14 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   onClick={() => onRemove?.(product)}
                 >
                   <ScanBarcode className="ml-2 h-4 w-4" />
-                  امسح لاخراج المنتج
+                  إخراج
                 </Button>
                 <Button
                   variant="secondary"
                   className="flex-1"
                   onClick={() => onSelect(product)}
                 >
-                  امسح لادخال المنتج
+                  التفاصيل
                 </Button>
               </div>
             </div>
