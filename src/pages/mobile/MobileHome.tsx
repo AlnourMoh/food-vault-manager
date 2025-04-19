@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import MobileProductGrid from '@/components/mobile/inventory/MobileProductGrid';
@@ -82,7 +83,7 @@ const MobileHome = () => {
       <div className="space-y-6">
         <div className="px-4 md:px-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">{restaurantName}</h1>
+            <h1 className="text-xl font-semibold">{restaurantName}</h1>
             <div className="text-sm text-muted-foreground">
               {stats.totalProducts} منتج
             </div>
@@ -111,3 +112,4 @@ const MobileHome = () => {
 };
 
 export default MobileHome;
+
