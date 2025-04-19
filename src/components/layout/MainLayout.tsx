@@ -9,7 +9,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden bg-fvm-secondary/30">
       <MainSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
