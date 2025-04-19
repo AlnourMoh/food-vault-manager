@@ -23,9 +23,9 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   const isExpired = daysUntilExpiry < 0;
 
   return (
-    <Card className="w-full shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3 w-full">
+    <Card className="w-full shadow-sm mx-0 rounded-md">
+      <CardContent className="p-4 px-5">
+        <div className="flex items-start gap-4 w-full">
           {/* Image Section */}
           <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             {product.imageUrl ? (
