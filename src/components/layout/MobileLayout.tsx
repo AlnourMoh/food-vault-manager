@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarcodeIcon, User, ArrowRight } from 'lucide-react';
+import { Home, BarcodeIcon, User, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface MobileLayoutProps {
@@ -53,13 +54,20 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
           </button>
           
           <button 
-            className={`flex flex-col items-center justify-center p-3 rounded-full -mt-8 bg-primary hover:bg-primary/90 shadow-lg transition-all w-24 ${
-              isActive('/mobile/scan') ? 'bg-primary/90 scale-95' : ''
-            }`}
+            className={`flex flex-col items-center justify-center p-3 rounded-2xl -mt-8 
+              bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70
+              shadow-lg transition-all duration-300 w-28 group relative overflow-hidden
+              ${isActive('/mobile/scan') ? 'scale-95 from-primary/90 to-primary/70' : ''}`}
             onClick={() => navigate('/mobile/scan')}
           >
-            <BarcodeIcon className="h-6 w-6 text-primary-foreground" />
-            <span className="text-xs mt-1 text-primary-foreground font-medium">امسح لادخال المنتج</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex flex-col items-center">
+              <div className="flex items-center gap-1">
+                <BarcodeIcon className="h-6 w-6 text-primary-foreground" />
+                <Sparkles className="h-4 w-4 text-primary-foreground animate-pulse" />
+              </div>
+              <span className="text-xs mt-1 text-primary-foreground font-medium whitespace-nowrap">امسح لادخال المنتج</span>
+            </div>
           </button>
           
           <button 
