@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { usePermissionCheck } from './scanner/permissions/usePermissionCheck';
 import { usePermissionRequest } from './scanner/permissions/usePermissionRequest';
 import { useToast } from './use-toast';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 
 export const useCameraPermissions = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -21,25 +22,27 @@ export const useCameraPermissions = () => {
         if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
           console.log('[useCameraPermissions] ملحق BarcodeScanner متوفر، التحقق من الإذن...');
           
-          // التحقق من الإذن باستخدام ملحق BarcodeScanner مباشرة
-          const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
-          const status = await BarcodeScanner.checkPermission({ force: false });
-          
-          console.log('[useCameraPermissions] حالة إذن BarcodeScanner:', status);
-          setHasPermission(status.granted);
-          
-          // إذا لم يكن لدينا إذن ولم يتم طلبه من قبل، نطلبه تلقائيًا
-          if (!status.granted && status.neverAsked) {
-            console.log('[useCameraPermissions] لم يتم طلب الإذن من قبل، طلب الإذن تلقائيًا...');
-            const granted = await requestPermission(true);
-            setHasPermission(granted);
+          // طلب الإذن وتفعيل الصلاحية بشكل مباشر
+          try {
+            const status = await BarcodeScanner.checkPermission({ force: true });
+            console.log('[useCameraPermissions] حالة إذن BarcodeScanner بعد طلب مباشر:', status);
+            
+            // تحديث حالة الإذن بناءً على النتيجة المباشرة
+            setHasPermission(status.granted);
+            setIsLoading(false);
+            
+            if (!status.granted) {
+              console.log('[useCameraPermissions] لم يتم منح الإذن، سيتم طلبه مرة أخرى عند بدء المسح');
+            }
+            
+            return;
+          } catch (error) {
+            console.error('[useCameraPermissions] خطأ في التحقق المباشر من إذن BarcodeScanner:', error);
           }
-          
-          setIsLoading(false);
-          return;
         }
 
-        // إذا BarcodeScanner غير متوفر، نحاول مع ملحق الكاميرا
+        // إذا BarcodeScanner غير متوفر أو فشل، نحاول مع ملحق الكاميرا
+        console.log('[useCameraPermissions] محاولة التحقق من خلال ملحق الكاميرا');
         const cameraStatus = await checkCameraPermission();
         if (cameraStatus) {
           console.log('[useCameraPermissions] حالة إذن الكاميرا:', cameraStatus);
@@ -67,14 +70,35 @@ export const useCameraPermissions = () => {
     checkPermissions();
   }, []);
 
-  // طريقة لطلب الإذن وتحديث الحالة وفقًا لذلك
+  // طريقة مخصصة لطلب الإذن
   const requestCameraPermission = async (force = true) => {
     try {
       console.log(`[useCameraPermissions] طلب إذن الكاميرا صراحةً مع force=${force}...`);
       setIsLoading(true);
       
+      // محاولة مباشرة أولاً
+      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+        try {
+          console.log('[useCameraPermissions] محاولة مباشرة للحصول على إذن BarcodeScanner...');
+          const status = await BarcodeScanner.checkPermission({ force: true });
+          console.log('[useCameraPermissions] نتيجة المحاولة المباشرة:', status);
+          
+          if (status.granted) {
+            console.log('[useCameraPermissions] تم منح الإذن مباشرة!');
+            setHasPermission(true);
+            setIsLoading(false);
+            return true;
+          }
+        } catch (error) {
+          console.error('[useCameraPermissions] خطأ في المحاولة المباشرة:', error);
+        }
+      }
+      
+      // استخدام نظام طلب الإذن العام
+      console.log('[useCameraPermissions] المحاولة المباشرة لم تنجح، استخدام requestPermission...');
       const result = await requestPermission(force);
-      console.log('[useCameraPermissions] نتيجة طلب الإذن:', result);
+      console.log('[useCameraPermissions] نتيجة طلب الإذن العام:', result);
+      
       setHasPermission(result);
       setIsLoading(false);
       return result;

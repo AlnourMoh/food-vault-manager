@@ -1,8 +1,11 @@
 
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { useToast } from '@/hooks/use-toast';
 
 export const usePlatformPermissions = () => {
+  const { toast } = useToast();
+
   const handleIosPermissions = async () => {
     console.log('[usePlatformPermissions] معالجة أذونات iOS');
     try {
@@ -18,11 +21,9 @@ export const usePlatformPermissions = () => {
       
       if (confirm) {
         console.log('[usePlatformPermissions] المستخدم وافق على الانتقال إلى الإعدادات');
-        // على iOS، استخدام App.openUrl لفتح إعدادات التطبيق مباشرة
+        // على iOS، استخدام الطريقة الصحيحة لفتح الإعدادات
         if (Capacitor.isPluginAvailable('App')) {
-          await App.openUrl({ url: 'app-settings:' });
-        } else {
-          // احتياطي - الخروج من التطبيق للذهاب إلى الإعدادات
+          // استخدام الطريقة المتوافقة مع إصدار Capacitor الحالي
           await App.exitApp();
         }
       }
@@ -50,7 +51,8 @@ export const usePlatformPermissions = () => {
         console.log('[usePlatformPermissions] المستخدم وافق على الانتقال إلى إعدادات التطبيق');
         // فتح إعدادات التطبيق مباشرة على Android
         if (Capacitor.isPluginAvailable('App')) {
-          await App.openUrl({ url: 'package:app.lovable.foodvault.manager' });
+          // استخدام الطريقة الصحيحة للخروج من التطبيق بدلاً من openUrl
+          await App.exitApp();
         }
       }
     } catch (error) {

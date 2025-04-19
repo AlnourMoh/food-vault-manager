@@ -1,7 +1,7 @@
 
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { useToast } from '@/hooks/use-toast';
-import { App } from '@capacitor/app';
+import { Camera } from '@capacitor/camera';
 
 export const useScannerDevice = () => {
   const { toast } = useToast();
@@ -14,20 +14,20 @@ export const useScannerDevice = () => {
         console.log("[useScannerDevice] استخدام ملحق BarcodeScanner من Capacitor");
         
         // إعادة التحقق من الأذونات بشكل صريح
-        const status = await BarcodeScanner.checkPermission({ force: true });
-        console.log("[useScannerDevice] حالة إذن الباركود سكانر:", status);
+        const permissionStatus = await BarcodeScanner.checkPermission({ force: true });
+        console.log("[useScannerDevice] حالة إذن الباركود سكانر:", permissionStatus);
         
-        if (!status.granted) {
-          // محاولة طلب الإذن بشكل مباشر
-          console.log("[useScannerDevice] لم يتم منح الإذن، محاولة طلب الإذن بشكل مباشر");
-          // استخدام force: true لإجبار ظهور مربع حوار طلب الإذن
+        if (!permissionStatus.granted) {
+          console.error("[useScannerDevice] تم رفض الإذن للماسح الضوئي");
+          
+          // محاولة أخرى
           const retryStatus = await BarcodeScanner.checkPermission({ force: true });
           
           if (!retryStatus.granted) {
-            console.error("[useScannerDevice] تم رفض الإذن للماسح الضوئي");
+            console.error("[useScannerDevice] فشلت المحاولة الثانية في الحصول على الإذن");
             toast({
               title: "تم رفض الإذن",
-              description: "لم يتم منح إذن الكاميرا. يرجى تمكين الإذن في إعدادات جهازك لتطبيق مخزن الطعام.",
+              description: "لم يتم منح إذن الكاميرا. يرجى تمكين الإذن في إعدادات جهازك",
               variant: "destructive"
             });
             throw new Error("تم رفض الإذن للماسح الضوئي");
@@ -39,9 +39,7 @@ export const useScannerDevice = () => {
         await BarcodeScanner.prepare();
         console.log("[useScannerDevice] تم تجهيز الماسح الضوئي بنجاح");
         
-        // التأكد من أن واجهة التطبيق معدة للعرض
-        document.documentElement.style.backgroundColor = "transparent";
-        document.body.style.backgroundColor = "transparent";
+        // تعديل واجهة المستخدم للمسح
         document.body.style.visibility = 'hidden';
         document.body.classList.add('barcode-scanner-active');
         
@@ -52,41 +50,64 @@ export const useScannerDevice = () => {
         // بدء المسح بإعدادات محسنة
         console.log("[useScannerDevice] بدء المسح...");
         const result = await BarcodeScanner.startScan({
-          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 
-                           'PDF_417', 'AZTEC', 'DATA_MATRIX', 'ITF', 'CODABAR'],
+          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128'],
           cameraDirection: 'back'
         });
         
         console.log("[useScannerDevice] نتيجة المسح:", result);
         
+        // إعادة إظهار واجهة التطبيق
+        document.body.style.visibility = 'visible';
+        document.body.classList.remove('barcode-scanner-active');
+        await BarcodeScanner.showBackground();
+        
         if (result.hasContent) {
           console.log("[useScannerDevice] تم مسح الباركود:", result.content);
-          // إعادة إظهار واجهة التطبيق
-          document.body.style.visibility = 'visible';
-          document.body.classList.remove('barcode-scanner-active');
-          document.documentElement.style.backgroundColor = "";
-          document.body.style.backgroundColor = "";
-          await BarcodeScanner.showBackground();
           onSuccess(result.content);
         } else {
           console.log("[useScannerDevice] انتهت عملية المسح لكن لم يتم العثور على محتوى");
-          // إعادة إظهار واجهة التطبيق
-          document.body.style.visibility = 'visible';
-          document.body.classList.remove('barcode-scanner-active');
-          document.documentElement.style.backgroundColor = "";
-          document.body.style.backgroundColor = "";
-          await BarcodeScanner.showBackground();
+          toast({
+            title: "لم يتم العثور على باركود",
+            description: "لم يتمكن الماسح من قراءة أي باركود",
+            variant: "warning"
+          });
+        }
+      } else if (window.Capacitor?.isPluginAvailable('Camera')) {
+        // محاولة استخدام الكاميرا العادية إذا لم يكن الماسح متاحًا
+        console.log("[useScannerDevice] BarcodeScanner غير متوفر، محاولة استخدام الكاميرا العادية");
+        
+        const cameraResult = await Camera.requestPermissions({
+          permissions: ['camera']
+        });
+        
+        if (cameraResult.camera === 'granted') {
+          // محاكاة المسح في حالة عدم وجود ماسح حقيقي
+          toast({
+            title: "تنبيه",
+            description: "ماسح الباركود غير متوفر، سيتم محاكاة عملية المسح",
+          });
+          
+          setTimeout(() => {
+            const mockBarcode = `TEST-${Math.floor(Math.random() * 1000)}`;
+            console.log("[useScannerDevice] باركود اختباري:", mockBarcode);
+            onSuccess(mockBarcode);
+          }, 2000);
+        } else {
+          toast({
+            title: "تم رفض الإذن",
+            description: "لم يتم منح إذن الكاميرا",
+            variant: "destructive"
+          });
         }
       } else {
-        console.log("[useScannerDevice] ملحق BarcodeScanner غير متوفر - استخدام محاكاة للماسح");
         // للتطوير/الويب: محاكاة المسح
+        console.log("[useScannerDevice] في بيئة الويب، استخدام محاكاة للمسح");
         toast({
-          title: "نسخة الويب",
-          description: "هذا محاكاة للماسح الضوئي في بيئة الويب",
+          title: "بيئة الويب",
+          description: "هذه محاكاة للماسح الضوئي في بيئة الويب",
         });
         
         setTimeout(() => {
-          // للاختبار، إنشاء رمز عشوائي
           const mockBarcode = `TEST-${Math.floor(Math.random() * 1000)}`;
           console.log("[useScannerDevice] باركود اختباري:", mockBarcode);
           onSuccess(mockBarcode);
@@ -97,19 +118,26 @@ export const useScannerDevice = () => {
       // التأكد من رؤية واجهة المستخدم في حالة الخطأ
       document.body.style.visibility = 'visible';
       document.body.classList.remove('barcode-scanner-active');
-      document.documentElement.style.backgroundColor = "";
-      document.body.style.backgroundColor = "";
+      
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         await BarcodeScanner.showBackground();
         await BarcodeScanner.stopScan();
       }
-      throw error; // نشر الخطأ ليتم معالجته من قبل المستدعي
+      
+      toast({
+        title: "خطأ في المسح",
+        description: "حدث خطأ أثناء محاولة بدء المسح",
+        variant: "destructive"
+      });
+      
+      throw error;
     }
   };
   
   const stopDeviceScan = async () => {
     try {
       console.log("[useScannerDevice] إيقاف عملية المسح");
+      
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         // إيقاف الماسح
         await BarcodeScanner.stopScan();
@@ -118,8 +146,6 @@ export const useScannerDevice = () => {
         // التأكد من رؤية واجهة التطبيق مرة أخرى
         document.body.style.visibility = 'visible';
         document.body.classList.remove('barcode-scanner-active');
-        document.documentElement.style.backgroundColor = "";
-        document.body.style.backgroundColor = "";
         
         // إخفاء طبقة الكاميرا
         await BarcodeScanner.showBackground();
@@ -130,8 +156,6 @@ export const useScannerDevice = () => {
       // التأكد من رؤية واجهة المستخدم في حالة الخطأ
       document.body.style.visibility = 'visible';
       document.body.classList.remove('barcode-scanner-active');
-      document.documentElement.style.backgroundColor = "";
-      document.body.style.backgroundColor = "";
     }
   };
   

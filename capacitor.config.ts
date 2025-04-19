@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
     },
     BarcodeScanner: {
       promptLabelHeader: "الوصول إلى الكاميرا",
-      promptLabelText: "يحتاج التطبيق إلى إذن الكاميرا لمسح الباركود",
+      promptLabelText: "تطبيق مخزن الطعام يحتاج إلى إذن الكاميرا لمسح الباركود",
       promptLabelCancel: "إلغاء",
       promptLabelConfirm: "السماح",
       detectionSpeed: "normal",
@@ -35,7 +35,7 @@ const config: CapacitorConfig = {
     },
     Permissions: {
       camera: {
-        message: "يحتاج التطبيق إلى إذن الكاميرا لمسح الباركود"
+        message: "تطبيق مخزن الطعام يحتاج إلى إذن الكاميرا لمسح الباركود"
       }
     },
     CapacitorHttp: {
@@ -67,7 +67,7 @@ const config: CapacitorConfig = {
     permissions: [
       {
         name: "Camera",
-        usageDescription: "يحتاج التطبيق إلى الوصول إلى الكاميرا لمسح الباركود"
+        usageDescription: "تطبيق مخزن الطعام يحتاج إلى الوصول إلى الكاميرا لمسح الباركود وقراءة رموز المنتجات"
       }
     ]
   }
