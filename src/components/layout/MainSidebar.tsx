@@ -2,9 +2,15 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
-import { BuildingIcon, Check, LogOut } from 'lucide-react';
+import { BuildingIcon, Check, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface MainSidebarProps {
   className?: string;
@@ -28,71 +34,70 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
 
   return (
     <div className={cn(
-      "rtl flex h-screen flex-col bg-sidebar text-sidebar-foreground", 
+      "flex h-16 w-full flex-row items-center justify-between bg-sidebar px-4 text-sidebar-foreground border-b border-sidebar-border",
       className
     )}>
-      {/* Project Title - Elegant header */}
-      <div className="flex h-20 items-center justify-center px-6 border-b border-sidebar-border bg-sidebar-accent/5">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-sidebar-foreground tracking-tight">
-            هايجين تيك
-          </h2>
-          <span className="block text-sm text-sidebar-foreground/70 font-medium mt-1">
-            لإدارة مخازن الأغذية
-          </span>
-        </div>
+      {/* Project Title */}
+      <div className="flex items-center">
+        <h2 className="text-xl font-bold text-sidebar-foreground tracking-tight">
+          هايجين تيك
+        </h2>
+        <span className="text-sm text-sidebar-foreground/70 font-medium mr-2">
+          لإدارة مخازن الأغذية
+        </span>
       </div>
 
-      {/* Main Navigation */}
-      <div className="flex-1 py-6">
-        <nav className="space-y-1 px-3">
-          {adminMenuItems.map((item, index) => (
-            <Link 
-              key={index}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-all duration-200",
-                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                location.pathname === item.path ? 
-                  "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" : 
-                  "text-sidebar-foreground"
-              )}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </Link>
-          ))}
-        </nav>
-
-        {/* Stats Section */}
-        <div className="mt-8 px-4">
-          <div className="rounded-lg bg-sidebar-accent/5 p-4 space-y-4">
-            <h3 className="text-sm font-medium text-sidebar-foreground">إحصائيات سريعة</h3>
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-sidebar-foreground/70">عدد المطاعم النشطة</span>
-                <span className="text-sm font-medium text-sidebar-foreground">12</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-sidebar-foreground/70">المنتجات المسجلة</span>
-                <span className="text-sm font-medium text-sidebar-foreground">156</span>
+      {/* Main Navigation - Now Horizontal with Dropdown */}
+      <div className="flex items-center gap-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-2">
+              <span>القائمة</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {adminMenuItems.map((item, index) => (
+              <DropdownMenuItem key={index} asChild>
+                <Link 
+                  to={item.path}
+                  className={cn(
+                    "flex w-full items-center gap-3 px-2 py-2",
+                    location.pathname === item.path && "bg-sidebar-accent/50"
+                  )}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              </DropdownMenuItem>
+            ))}
+            <Separator className="my-2" />
+            {/* Quick Stats in Dropdown */}
+            <div className="px-2 py-2">
+              <h3 className="text-sm font-medium mb-2">إحصائيات سريعة</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">المطاعم النشطة</span>
+                  <span className="text-sm font-medium">12</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">المنتجات</span>
+                  <span className="text-sm font-medium">156</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      {/* Footer Section */}
-      <div className="mt-auto p-4">
-        <Separator className="mb-4 bg-sidebar-border" />
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-sm text-sidebar-foreground/70">الإصدار</span>
-            <span className="text-sm font-medium text-sidebar-foreground">1.0.0</span>
-          </div>
+        {/* Version and Logout */}
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-sidebar-foreground/70">
+            الإصدار 1.0.0
+          </span>
           <Button 
             variant="destructive" 
-            className="w-full flex items-center gap-2 justify-center"
+            size="sm"
+            className="flex items-center gap-2"
           >
             <LogOut className="h-4 w-4" />
             <span>تسجيل الخروج</span>
