@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarcodeIcon, Menu, User, ArrowRight } from 'lucide-react';
+import { Home, BarcodeIcon, User, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface MobileLayoutProps {
@@ -20,7 +19,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
     navigate(-1);
   };
   
-  // تحقق مما إذا كنا في الصفحة الرئيسية للتطبيق المحمول أم لا
   const isMobileHomePage = location.pathname === '/mobile';
   
   return (
@@ -63,14 +61,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
           >
             <BarcodeIcon className="h-5 w-5" />
             <span className="text-xs mt-1">المسح</span>
-          </button>
-          
-          <button 
-            className={`flex flex-col items-center justify-center p-2 ${isActive('/mobile/menu') ? 'text-primary' : 'text-muted-foreground'}`}
-            onClick={() => navigate('/mobile/menu')}
-          >
-            <Menu className="h-5 w-5" />
-            <span className="text-xs mt-1">القائمة</span>
           </button>
           
           <button 
