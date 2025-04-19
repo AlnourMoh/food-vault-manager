@@ -36,7 +36,15 @@ export const useScannerDevice = () => {
           }
         } else if (status.denied) {
           console.log("Camera permission denied for barcode scanner");
-          // Not handling permission here as we already do in useCameraPermissions
+          // Force request permission
+          const requestResult = await BarcodeScanner.checkPermission({ force: true });
+          console.log("Force permission request result:", requestResult);
+          
+          if (requestResult.granted) {
+            return startDeviceScan(onSuccess);
+          } else {
+            throw new Error("Permission denied for barcode scanner");
+          }
         } else {
           console.log("Requesting barcode scanner permission...");
           const requestResult = await BarcodeScanner.checkPermission({ force: true });
@@ -44,6 +52,8 @@ export const useScannerDevice = () => {
           if (requestResult.granted) {
             // If permission granted, try again
             return startDeviceScan(onSuccess);
+          } else {
+            throw new Error("Failed to get barcode scanner permission");
           }
         }
       } else {

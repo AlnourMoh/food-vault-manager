@@ -35,16 +35,14 @@ export const ScannerView = ({
             يرجى السماح بالوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي
           </p>
           <div className="flex flex-col space-y-2">
-            {onRequestPermission && (
-              <Button 
-                onClick={handleRequestPermission}
-                className="w-full"
-                variant="default"
-              >
-                <Camera className="h-4 w-4 ml-2" />
-                طلب الإذن مجددًا
-              </Button>
-            )}
+            <Button 
+              onClick={handleRequestPermission}
+              className="w-full"
+              variant="default"
+            >
+              <Camera className="h-4 w-4 ml-2" />
+              طلب الإذن مجددًا
+            </Button>
             
             {onManualEntry && (
               <Button 

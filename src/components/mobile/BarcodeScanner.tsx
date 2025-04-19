@@ -6,7 +6,6 @@ import { NoPermissionView } from './scanner/NoPermissionView';
 import { ScannerView } from './scanner/ScannerView';
 import { ScannerReadyView } from './scanner/ScannerReadyView';
 import { DigitalCodeInput } from './scanner/DigitalCodeInput';
-import { useCameraPermissions } from '@/hooks/useCameraPermissions';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -17,23 +16,21 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   
-  const { hasPermission, requestPermission } = useCameraPermissions();
-  
   const { 
     isScanningActive, 
     lastScannedCode,
+    hasPermission,
     startScan,
-    stopScan
+    stopScan,
+    requestPermission
   } = useBarcodeScannerControls({ onScan, onClose });
   
   // Automatically start scanning when the component mounts
   useEffect(() => {
-    console.log('BarcodeScanner mounted');
+    console.log('BarcodeScanner mounted, hasPermission:', hasPermission);
     
     const initializeScanner = async () => {
       try {
-        console.log('Initializing scanner, permission status:', hasPermission);
-        
         // Short delay to ensure everything is initialized properly
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -94,7 +91,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     );
   }
   
-  if (isInitializing || hasPermission === null) {
+  if (isInitializing) {
     return <ScannerLoading />;
   }
   

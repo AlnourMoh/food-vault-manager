@@ -39,10 +39,14 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
     try {
       console.log('Starting barcode scan, permission status:', hasPermission);
       
-      // If we don't have permission yet, request it again
+      // If we don't have permission yet, request it
       if (hasPermission === false) {
+        console.log('No permission, requesting...');
         const granted = await requestPermission();
+        console.log('Permission request result:', granted);
+        
         if (!granted) {
+          console.log('Permission denied, cannot start scan');
           toast({
             title: "لا يمكن بدء المسح",
             description: "لم يتم منح إذن الكاميرا المطلوب للمسح",
@@ -52,6 +56,7 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
         }
       }
       
+      console.log('Permission OK, activating scanner...');
       setIsScanningActive(true);
       await startDeviceScan(handleSuccessfulScan);
     } catch (error) {

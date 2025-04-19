@@ -15,7 +15,7 @@ export const useCameraPermissions = () => {
         setIsLoading(true);
         
         if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
-          console.log('Camera plugin is available, requesting permissions...');
+          console.log('Camera plugin is available, checking permissions...');
           
           // First check current permissions
           const { camera } = await Camera.checkPermissions();
@@ -25,21 +25,8 @@ export const useCameraPermissions = () => {
             console.log('Camera permission already granted');
             setHasPermission(true);
           } else {
-            console.log('Requesting camera permission...');
-            // Request permission explicitly
-            const permission = await Camera.requestPermissions();
-            console.log('Permission request result:', permission);
-            
-            if (permission.camera === 'granted') {
-              setHasPermission(true);
-            } else {
-              setHasPermission(false);
-              toast({
-                title: "لا يوجد إذن للكاميرا",
-                description: "يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي",
-                variant: "destructive"
-              });
-            }
+            console.log('Camera permission not granted yet');
+            setHasPermission(false);
           }
         } else {
           console.log('Running in web environment or plugin not available');
@@ -47,11 +34,11 @@ export const useCameraPermissions = () => {
           setHasPermission(true);
         }
       } catch (error) {
-        console.error('Error requesting camera permissions:', error);
+        console.error('Error checking camera permissions:', error);
         setHasPermission(false);
         toast({
           title: "خطأ",
-          description: "حدث خطأ أثناء طلب إذن الكاميرا",
+          description: "حدث خطأ أثناء التحقق من إذن الكاميرا",
           variant: "destructive"
         });
       } finally {
@@ -62,24 +49,49 @@ export const useCameraPermissions = () => {
     checkPermissions();
   }, [toast]);
   
+  const requestPermission = async () => {
+    try {
+      console.log('Explicitly requesting camera permission...');
+      
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
+        console.log('Using Capacitor Camera plugin to request permission');
+        const permission = await Camera.requestPermissions();
+        console.log('Permission request result:', permission);
+        
+        const granted = permission.camera === 'granted';
+        console.log('Permission granted:', granted);
+        setHasPermission(granted);
+        
+        if (!granted) {
+          toast({
+            title: "لم يتم منح الإذن",
+            description: "يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي",
+            variant: "destructive"
+          });
+        }
+        
+        return granted;
+      } else {
+        console.log('No Capacitor Camera plugin available, assuming web environment');
+        // For web testing
+        setHasPermission(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error requesting camera permission:', error);
+      setHasPermission(false);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء طلب إذن الكاميرا",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+  
   return { 
     isLoading, 
     hasPermission,
-    requestPermission: async () => {
-      try {
-        if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
-          const permission = await Camera.requestPermissions();
-          const granted = permission.camera === 'granted';
-          setHasPermission(granted);
-          return granted;
-        }
-        setHasPermission(true);
-        return true;
-      } catch (error) {
-        console.error('Error requesting camera permission:', error);
-        setHasPermission(false);
-        return false;
-      }
-    }
+    requestPermission
   };
 };

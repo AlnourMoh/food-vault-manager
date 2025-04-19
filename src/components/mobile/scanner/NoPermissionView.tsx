@@ -12,7 +12,7 @@ interface NoPermissionViewProps {
 
 export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }: NoPermissionViewProps) => {
   const handleRequestPermission = () => {
-    console.log('Request permission button clicked');
+    console.log('Request permission button clicked in NoPermissionView');
     if (onRequestPermission) {
       onRequestPermission();
     }
@@ -32,16 +32,14 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
         </p>
         
         <div className="flex flex-col w-full space-y-2 mt-4">
-          {onRequestPermission && (
-            <Button 
-              onClick={handleRequestPermission}
-              className="w-full"
-              variant="default"
-            >
-              <Camera className="h-4 w-4 ml-2" />
-              طلب الإذن مجددًا
-            </Button>
-          )}
+          <Button 
+            onClick={handleRequestPermission}
+            className="w-full"
+            variant="default"
+          >
+            <Camera className="h-4 w-4 ml-2" />
+            طلب الإذن مجددًا
+          </Button>
           
           {onManualEntry && (
             <Button 
