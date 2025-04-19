@@ -18,7 +18,6 @@ const ProductManagement = () => {
     setActiveTab,
     getExpiryStatus,
     getExpiredCount,
-    getExpiringCount,
   } = useProductManagement();
 
   return (
@@ -41,7 +40,6 @@ const ProductManagement = () => {
         onTabChange={setActiveTab}
         getExpiryStatus={getExpiryStatus}
         getExpiredCount={getExpiredCount}
-        getExpiringCount={getExpiringCount}
         filteredProducts={filteredProducts}
       />
     </div>
