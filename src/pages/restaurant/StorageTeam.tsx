@@ -1,25 +1,26 @@
 
 import React, { useState } from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
-import { useTeamManagement } from '@/hooks/useTeamManagement';
+import { useStorageTeamManager } from '@/hooks/team/useStorageTeamManager';
 import TeamHeader from '@/components/team/TeamHeader';
 import TeamContent from '@/components/team/TeamContent';
 import AddMemberDialog from '@/components/team/AddMemberDialog';
 import EditMemberDialog from '@/components/team/EditMemberDialog';
 import DeleteMemberDialog from '@/components/team/DeleteMemberDialog';
 import { generateWelcomeMessage } from '@/utils/welcomeMessageUtils';
+import { StorageTeamMember } from '@/types';
+import { TeamMemberFormData } from '@/types/team';
 
 const RestaurantStorageTeam = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<StorageTeamMember | null>(null);
   const restaurantId = localStorage.getItem('restaurantId');
 
   const {
     teamMembers,
     isLoading,
-    selectedMember,
-    setSelectedMember,
     lastAddedMember,
     addTeamMember,
     updateTeamMember,
@@ -27,21 +28,40 @@ const RestaurantStorageTeam = () => {
     phoneError,
     emailError,
     resetErrors
-  } = useTeamManagement(restaurantId || undefined);
+  } = useStorageTeamManager(restaurantId || undefined);
 
-  const copyWelcomeMessage = (member: any) => {
-    const message = generateWelcomeMessage(member);
+  const copyWelcomeMessage = (member: StorageTeamMember) => {
+    // Convert StorageTeamMember to TeamMemberFormData format
+    const memberData: TeamMemberFormData = {
+      name: member.name,
+      role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
+      phoneCountryCode: member.phone.substring(1, 4),
+      phoneNumber: member.phone.substring(4),
+      email: member.email
+    };
+    const message = generateWelcomeMessage(memberData);
     navigator.clipboard.writeText(message);
   };
 
-  const handleEditMember = (member: any) => {
+  const handleEditMember = (member: StorageTeamMember) => {
     setSelectedMember(member);
     setShowEditDialog(true);
   };
 
-  const handleDeleteMember = (member: any) => {
+  const handleDeleteMember = (member: StorageTeamMember) => {
     setSelectedMember(member);
     setShowDeleteDialog(true);
+  };
+
+  const generateWelcomeMessageForTeamMember = (member: StorageTeamMember) => {
+    const memberData: TeamMemberFormData = {
+      name: member.name,
+      role: member.role === 'manager' ? 'إدارة النظام' : 'إدارة المخزن',
+      phoneCountryCode: member.phone.substring(1, 4),
+      phoneNumber: member.phone.substring(4),
+      email: member.email
+    };
+    return generateWelcomeMessage(memberData);
   };
 
   return (
@@ -55,7 +75,7 @@ const RestaurantStorageTeam = () => {
           onEditMember={handleEditMember}
           onDeleteMember={handleDeleteMember}
           onCopyWelcomeMessage={copyWelcomeMessage}
-          generateWelcomeMessage={generateWelcomeMessage}
+          generateWelcomeMessage={generateWelcomeMessageForTeamMember}
         />
 
         <AddMemberDialog
