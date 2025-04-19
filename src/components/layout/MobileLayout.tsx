@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, BarcodeIcon, User, ArrowRight } from 'lucide-react';
@@ -24,7 +23,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-10 border-b bg-background p-4 flex items-center justify-between">
         <h1 className="text-lg font-bold">مخزن الطعام</h1>
         {!isMobileHomePage && (
@@ -40,12 +38,10 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
         )}
       </header>
       
-      {/* Main content */}
       <main className="flex-1 pb-16">
         {children}
       </main>
       
-      {/* Bottom navigation */}
       <nav className="fixed bottom-0 inset-x-0 z-10 bg-background border-t">
         <div className="flex justify-around items-center h-16 relative">
           <button 
@@ -56,7 +52,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             <span className="text-xs mt-1">الرئيسية</span>
           </button>
           
-          {/* Updated Scan Button with wider size */}
           <button 
             className={`flex flex-col items-center justify-center p-3 rounded-full -mt-8 bg-primary hover:bg-primary/90 shadow-lg transition-all w-24 ${
               isActive('/mobile/scan') ? 'bg-primary/90 scale-95' : ''
@@ -64,7 +59,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             onClick={() => navigate('/mobile/scan')}
           >
             <BarcodeIcon className="h-6 w-6 text-primary-foreground" />
-            <span className="text-xs mt-1 text-primary-foreground font-medium">امسح لاخراج المنتج</span>
+            <span className="text-xs mt-1 text-primary-foreground font-medium">امسح لادخال المنتج</span>
           </button>
           
           <button 
