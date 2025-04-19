@@ -9,7 +9,8 @@ import {
   Check,
   Users,
   Home,
-  LogOut
+  LogOut,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -77,6 +78,13 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
     // Redirect to login page
     navigate('/restaurant/login');
   };
+  
+  const handleBack = () => {
+    navigate(-1);
+  };
+  
+  // تحقق مما إذا كنا في الصفحة الرئيسية للمطعم أم لا
+  const isRestaurantDashboard = location.pathname === '/restaurant/dashboard';
 
   return (
     <div className="rtl flex h-screen overflow-hidden">
@@ -117,7 +125,20 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="rtl sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
           <div className="flex flex-1 items-center justify-between">
-            <h3 className="text-xl font-semibold">إدارة المطعم</h3>
+            <div className="flex items-center gap-2">
+              {!isRestaurantDashboard && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleBack}
+                  className="flex items-center gap-1"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  <span>رجوع</span>
+                </Button>
+              )}
+              <h3 className="text-xl font-semibold">إدارة المطعم</h3>
+            </div>
             <div className="text-sm">
               {/* عرض اسم المطعم من قاعدة البيانات */}
               {isLoading ? (

@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BarcodeIcon, ShoppingCart, Menu, User } from 'lucide-react';
+import { Home, BarcodeIcon, ShoppingCart, Menu, User, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -15,11 +16,29 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
   
+  const handleBack = () => {
+    navigate(-1);
+  };
+  
+  // تحقق مما إذا كنا في الصفحة الرئيسية للتطبيق المحمول أم لا
+  const isMobileHomePage = location.pathname === '/mobile';
+  
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b bg-background p-4 flex items-center justify-between">
         <h1 className="text-lg font-bold">مخزن الطعام</h1>
+        {!isMobileHomePage && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleBack}
+            className="flex items-center gap-1 rtl:flex-row-reverse"
+          >
+            <ArrowRight className="h-4 w-4" />
+            <span>رجوع</span>
+          </Button>
+        )}
       </header>
       
       {/* Main content */}
