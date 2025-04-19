@@ -9,13 +9,18 @@ interface UseScannerStateProps {
 }
 
 export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
-  const { isLoading, hasPermission } = useCameraPermissions();
+  const { isLoading, hasPermission, requestPermission } = useCameraPermissions();
   const { 
     isScanningActive, 
     lastScannedCode, 
     startScan, 
     stopScan 
-  } = useBarcodeScannerControls({ onScan, onClose });
+  } = useBarcodeScannerControls({ 
+    onScan, 
+    onClose, 
+    hasPermission, 
+    requestPermission 
+  });
   
   useEffect(() => {
     return () => {
