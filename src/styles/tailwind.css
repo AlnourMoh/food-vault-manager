@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,11 +13,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 200 15% 15%;
 
-    --primary: 122 48% 34%;
+    --primary: 217 91% 60%;
     --primary-foreground: 40 33% 98%;
 
-    --secondary: 40 100% 94%;
-    --secondary-foreground: 122 48% 34%;
+    --secondary: 217 91% 94%;
+    --secondary-foreground: 217 91% 60%;
 
     --muted: 200 6% 90%;
     --muted-foreground: 200 6% 40%;
@@ -31,34 +30,28 @@
 
     --border: 200 15% 86%;
     --input: 200 15% 86%;
-    --ring: 122 48% 34%;
+    --ring: 217 91% 60%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 122 48% 20%;
+    --sidebar-background: 217 91% 20%;
     --sidebar-foreground: 40 33% 98%;
-    --sidebar-primary: 122 48% 34%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 40 33% 98%;
-    --sidebar-accent: 122 48% 10%;
+    --sidebar-accent: 217 91% 10%;
     --sidebar-accent-foreground: 40 33% 98%;
-    --sidebar-border: 122 48% 25%;
-    --sidebar-ring: 122 48% 34%;
+    --sidebar-border: 217 91% 25%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   .dark {
     --background: 200 15% 12%;
     --foreground: 40 33% 98%;
 
-    --card: 200 15% 16%;
-    --card-foreground: 40 33% 98%;
-
-    --popover: 200 15% 16%;
-    --popover-foreground: 40 33% 98%;
-
-    --primary: 122 48% 34%;
+    --primary: 217 91% 50%;
     --primary-foreground: 40 33% 98%;
 
-    --secondary: 40 30% 20%;
+    --secondary: 217 30% 20%;
     --secondary-foreground: 40 33% 98%;
 
     --muted: 200 15% 20%;
@@ -72,16 +65,16 @@
 
     --border: 200 15% 25%;
     --input: 200 15% 25%;
-    --ring: 122 48% 40%;
+    --ring: 217 91% 40%;
     
-    --sidebar-background: 122 48% 15%;
+    --sidebar-background: 217 91% 15%;
     --sidebar-foreground: 40 33% 98%;
-    --sidebar-primary: 122 48% 34%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 40 33% 98%;
-    --sidebar-accent: 122 48% 8%;
+    --sidebar-accent: 217 91% 8%;
     --sidebar-accent-foreground: 40 33% 98%;
-    --sidebar-border: 122 48% 20%;
-    --sidebar-ring: 122 48% 34%;
+    --sidebar-border: 217 91% 20%;
+    --sidebar-ring: 217 91% 60%;
   }
 }
 
