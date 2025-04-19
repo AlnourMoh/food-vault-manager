@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { ShoppingCart } from 'lucide-react';
 import MobileProductGrid from '@/components/mobile/inventory/MobileProductGrid';
 import { useQuery } from '@tanstack/react-query';
 import { Product } from '@/types';
@@ -82,19 +80,16 @@ const MobileHome = () => {
   return (
     <div className="max-w-screen-2xl mx-auto">
       <div className="space-y-6">
-        <div className="px-4 md:px-6 space-y-2">
-          <h2 className="text-xl font-medium">مرحباً بك في</h2>
-          <h1 className="text-3xl font-bold">{restaurantName}</h1>
-        </div>
-        
         <div className="px-4 md:px-6">
-          <Card className="bg-primary/10">
-            <CardContent className="flex flex-col items-center justify-center p-4">
-              <ShoppingCart className="h-8 w-8 text-primary mb-1" />
-              <span className="text-2xl font-bold">{stats.totalProducts}</span>
-              <span className="text-xs text-muted-foreground">إجمالي المنتجات</span>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col space-y-1">
+            <h2 className="text-xl font-medium text-muted-foreground">مرحباً بك في</h2>
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold">{restaurantName}</h1>
+              <div className="text-sm text-muted-foreground">
+                {stats.totalProducts} منتج
+              </div>
+            </div>
+          </div>
         </div>
         
         <div className="px-4 md:px-6">
@@ -106,11 +101,11 @@ const MobileHome = () => {
               onProductUpdate={refetch}
             />
           ) : (
-            <Card className="p-6">
-              <div className="text-center text-muted-foreground">
+            <div className="text-center p-6 bg-background border rounded-lg">
+              <div className="text-muted-foreground">
                 لا توجد منتجات لعرضها
               </div>
-            </Card>
+            </div>
           )}
         </div>
       </div>
