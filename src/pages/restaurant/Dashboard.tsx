@@ -26,7 +26,7 @@ const RestaurantDashboard = () => {
       color: "bg-purple-50"
     },
     {
-      title: "منتجات قاربت على الانتهاء",
+      title: "منتجات منتهية",
       value: "8",
       icon: <AlertTriangle className="h-6 w-6 text-red-500" />,
       color: "bg-red-50"
@@ -59,15 +59,6 @@ const RestaurantDashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">لا توجد منتجات مضافة حديثاً</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>منتجات قاربت على الانتهاء</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">لا توجد منتجات قاربت على الانتهاء</p>
             </CardContent>
           </Card>
         </div>
