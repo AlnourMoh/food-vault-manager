@@ -56,15 +56,15 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             <span className="text-xs mt-1">الرئيسية</span>
           </button>
           
-          {/* Prominent Scan Button */}
+          {/* Updated Scan Button with wider size */}
           <button 
-            className={`flex flex-col items-center justify-center p-3 rounded-full -mt-8 bg-primary hover:bg-primary/90 shadow-lg transition-all ${
+            className={`flex flex-col items-center justify-center p-3 rounded-full -mt-8 bg-primary hover:bg-primary/90 shadow-lg transition-all w-24 ${
               isActive('/mobile/scan') ? 'bg-primary/90 scale-95' : ''
             }`}
             onClick={() => navigate('/mobile/scan')}
           >
             <BarcodeIcon className="h-6 w-6 text-primary-foreground" />
-            <span className="text-xs mt-1 text-primary-foreground font-medium">المسح</span>
+            <span className="text-xs mt-1 text-primary-foreground font-medium">امسح لاخراج المنتج</span>
           </button>
           
           <button 
