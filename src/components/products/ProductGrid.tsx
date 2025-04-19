@@ -13,9 +13,11 @@ interface ProductGridProps {
 const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading, isRestaurantRoute }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="flex flex-nowrap gap-6 overflow-x-auto pb-4">
         {[...Array(6)].map((_, index) => (
-          <ProductSkeleton key={index} />
+          <div key={index} className="w-[300px] flex-none">
+            <ProductSkeleton />
+          </div>
         ))}
       </div>
     );
@@ -31,13 +33,14 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading, isRestau
   }
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="flex flex-nowrap gap-6 overflow-x-auto pb-4">
       {products.map((product) => (
-        <ProductCard 
-          key={product.id} 
-          product={product} 
-          isRestaurantRoute={isRestaurantRoute} 
-        />
+        <div key={product.id} className="w-[300px] flex-none">
+          <ProductCard 
+            product={product} 
+            isRestaurantRoute={isRestaurantRoute} 
+          />
+        </div>
       ))}
     </div>
   );
