@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { Package, ScanBarcode } from 'lucide-react';
@@ -22,10 +23,11 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   const isExpired = daysUntilExpiry < 0;
 
   return (
-    <Card className="w-full shadow-sm mx-0 rounded-md">
-      <CardContent className="p-4 px-5">
-        <div className="flex items-start gap-4 w-full">
-          <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+    <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden border-t-4 border-t-primary">
+      <CardContent className="p-0">
+        <div className="flex flex-col">
+          {/* Image Header */}
+          <div className="relative w-full h-32 bg-gradient-to-r from-gray-50 to-gray-100">
             {product.imageUrl ? (
               <img 
                 src={product.imageUrl} 
@@ -34,61 +36,61 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Package className="h-8 w-8 text-gray-400" />
+                <Package className="h-12 w-12 text-gray-400" />
               </div>
             )}
+            <div className="absolute top-2 right-2 flex gap-2">
+              {isExpiring && (
+                <Badge 
+                  variant={isExpired ? "destructive" : "warning"} 
+                  className="text-xs shadow-lg"
+                >
+                  {isExpired ? 'منتهي الصلاحية' : `ينتهي خلال ${daysUntilExpiry} يوم`}
+                </Badge>
+              )}
+            </div>
           </div>
 
-          <div className="flex-1 w-full min-w-0">
-            <div className="flex flex-col w-full">
-              <h3 className="text-lg font-bold text-primary mb-1 leading-tight text-right">
+          {/* Content */}
+          <div className="p-4 space-y-3">
+            <div className="flex justify-between items-start">
+              <Badge variant="outline" className="text-xs">
+                {product.category || "غير مصنف"}
+              </Badge>
+              <h3 className="text-lg font-bold text-primary leading-tight text-right">
                 {product.name}
               </h3>
-              
-              <div className="flex flex-wrap gap-2 justify-end mb-2">
-                <Badge variant="outline" className="text-xs">
-                  {product.category || "غير مصنف"}
-                </Badge>
-                {isExpiring && (
-                  <Badge 
-                    variant={isExpired ? "destructive" : "warning"} 
-                    className="text-xs"
-                  >
-                    {isExpired ? 'منتهي الصلاحية' : `ينتهي خلال ${daysUntilExpiry} يوم`}
-                  </Badge>
-                )}
-              </div>
+            </div>
 
-              <div className="text-sm text-muted-foreground space-y-1 mb-2">
-                <div className="flex justify-between">
-                  <span>{product.quantity} {product.unit}</span>
-                  <span>الكمية:</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={isExpired ? 'text-destructive' : ''}>
-                    {format(new Date(product.expiryDate), 'dd/MM/yyyy')}
-                  </span>
-                  <span>تاريخ الانتهاء:</span>
-                </div>
+            <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground bg-gray-50 rounded-lg p-3">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">الكمية:</span>
+                <span className="text-foreground">{product.quantity} {product.unit}</span>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="font-medium">تاريخ الانتهاء:</span>
+                <span className={isExpired ? 'text-destructive font-medium' : 'text-foreground'}>
+                  {format(new Date(product.expiryDate), 'dd/MM/yyyy')}
+                </span>
+              </div>
+            </div>
 
-              <div className="flex gap-2 mt-auto">
-                <Button
-                  variant="outline"
-                  className="flex-1 bg-background hover:bg-secondary"
-                  onClick={() => onRemove?.(product)}
-                >
-                  <ScanBarcode className="ml-2 h-4 w-4" />
-                  امسح
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={() => onSelect(product)}
-                >
-                  التفاصيل
-                </Button>
-              </div>
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 bg-background hover:bg-secondary transition-colors duration-300"
+                onClick={() => onRemove?.(product)}
+              >
+                <ScanBarcode className="ml-2 h-4 w-4" />
+                امسح
+              </Button>
+              <Button
+                variant="secondary"
+                className="flex-1 hover:bg-primary hover:text-white transition-colors duration-300"
+                onClick={() => onSelect(product)}
+              >
+                التفاصيل
+              </Button>
             </div>
           </div>
         </div>
