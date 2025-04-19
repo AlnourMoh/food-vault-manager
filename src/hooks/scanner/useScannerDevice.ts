@@ -69,7 +69,7 @@ export const useScannerDevice = () => {
           toast({
             title: "لم يتم العثور على باركود",
             description: "لم يتمكن الماسح من قراءة أي باركود",
-            variant: "warning"
+            variant: "default" // Changed from "warning" to "default"
           });
         }
       } else if (window.Capacitor?.isPluginAvailable('Camera')) {
@@ -85,6 +85,7 @@ export const useScannerDevice = () => {
           toast({
             title: "تنبيه",
             description: "ماسح الباركود غير متوفر، سيتم محاكاة عملية المسح",
+            variant: "default" // Changed from "warning" to "default"
           });
           
           setTimeout(() => {
@@ -105,6 +106,7 @@ export const useScannerDevice = () => {
         toast({
           title: "بيئة الويب",
           description: "هذه محاكاة للماسح الضوئي في بيئة الويب",
+          variant: "default" // Changed from "warning" to "default"
         });
         
         setTimeout(() => {
