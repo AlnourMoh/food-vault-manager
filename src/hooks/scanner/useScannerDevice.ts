@@ -14,11 +14,12 @@ export const useScannerDevice = () => {
         console.log("BarcodeScanner permission status:", status);
         
         if (!status.granted) {
-          console.log("Requesting barcode scanner permission directly...");
+          console.log("Requesting barcode scanner permission...");
           const requestResult = await BarcodeScanner.checkPermission({ force: true });
           console.log("BarcodeScanner force permission request result:", requestResult);
           
           if (!requestResult.granted) {
+            console.error("Permission denied for barcode scanner");
             throw new Error("Permission denied for barcode scanner");
           }
         }
@@ -46,6 +47,11 @@ export const useScannerDevice = () => {
       } else {
         console.log("Running in web environment or plugin not available - using test barcode");
         // For development/web: simulate scanning
+        toast({
+          title: "نسخة الويب",
+          description: "هذا محاكاة للماسح الضوئي في بيئة الويب",
+        });
+        
         setTimeout(() => {
           // For testing, generate a random code that would likely exist in the database
           const mockBarcode = `TEST-${Math.floor(Math.random() * 1000)}`;
@@ -82,3 +88,6 @@ export const useScannerDevice = () => {
     stopDeviceScan
   };
 };
+
+// Add missing toast import
+import { toast } from '@/hooks/use-toast';

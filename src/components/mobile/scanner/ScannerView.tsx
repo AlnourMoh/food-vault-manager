@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera, AlertCircle, Keyboard } from 'lucide-react';
+import { X, Camera, Eye, Keyboard } from 'lucide-react';
 
 interface ScannerViewProps {
   onStop: () => void;
@@ -28,7 +28,7 @@ export const ScannerView = ({
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
         <div className="text-center p-6 max-w-md space-y-4">
           <div className="mx-auto bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-2">
-            <AlertCircle className="h-8 w-8" />
+            <Camera className="h-8 w-8" />
           </div>
           <h2 className="text-xl font-bold">لا يوجد إذن للكاميرا</h2>
           <p className="text-muted-foreground mb-4">

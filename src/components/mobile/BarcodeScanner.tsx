@@ -1,11 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
+import { useCameraPermissions } from '@/hooks/useCameraPermissions';
 import { useBarcodeScannerControls } from '@/hooks/scanner/useBarcodeScannerControls';
 import { ScannerLoading } from './scanner/ScannerLoading';
 import { NoPermissionView } from './scanner/NoPermissionView';
 import { ScannerView } from './scanner/ScannerView';
 import { ScannerReadyView } from './scanner/ScannerReadyView';
 import { DigitalCodeInput } from './scanner/DigitalCodeInput';
+import { useToast } from '@/hooks/use-toast';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -15,36 +17,46 @@ interface BarcodeScannerProps {
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const { toast } = useToast();
+  
+  const { isLoading, hasPermission, requestPermission } = useCameraPermissions();
+  
+  const scannerControls = useBarcodeScannerControls({ 
+    onScan, 
+    onClose,
+    hasPermission,
+    requestPermission
+  });
   
   const { 
     isScanningActive, 
     lastScannedCode,
-    hasPermission,
     startScan,
-    stopScan,
-    requestPermission
-  } = useBarcodeScannerControls({ onScan, onClose });
+    stopScan
+  } = scannerControls;
   
-  // Automatically start scanning when the component mounts
+  // Automatically start scanning when the component mounts if we have permission
   useEffect(() => {
-    console.log('BarcodeScanner mounted, hasPermission:', hasPermission);
+    console.log('BarcodeScanner mounted, hasPermission:', hasPermission, 'isLoading:', isLoading);
     
     const initializeScanner = async () => {
       try {
-        // Short delay to ensure everything is initialized properly
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (hasPermission !== null) {
+        if (!isLoading) {
           setIsInitializing(false);
           
           if (hasPermission === true && !isScanningActive && !isManualEntry) {
-            console.log('Auto-starting scanner');
+            console.log('Auto-starting scanner because we have permission');
             await startScan();
           }
         }
       } catch (error) {
         console.error('Error initializing scanner:', error);
         setIsInitializing(false);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء تهيئة الماسح الضوئي",
+          variant: "destructive"
+        });
       }
     };
     
@@ -54,23 +66,25 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       console.log('BarcodeScanner unmounting, stopping scan');
       stopScan();
     };
-  }, [hasPermission, isScanningActive, startScan, stopScan, isManualEntry]);
+  }, [hasPermission, isLoading, isScanningActive, startScan, stopScan, isManualEntry, toast]);
   
   const handleRequestPermission = async () => {
-    console.log('BarcodeScanner: request permission triggered');
-    if (requestPermission) {
-      try {
-        console.log('Calling requestPermission function');
-        const granted = await requestPermission();
-        console.log('Permission request result:', granted);
-        
-        if (granted && !isScanningActive) {
-          console.log('Permission granted, starting scan');
-          await startScan();
-        }
-      } catch (error) {
-        console.error('Error requesting permission:', error);
+    console.log('BarcodeScanner: Requesting permission...');
+    try {
+      const granted = await requestPermission();
+      console.log('Permission request result:', granted);
+      
+      if (granted && !isScanningActive) {
+        console.log('Permission granted, starting scan');
+        await startScan();
       }
+    } catch (error) {
+      console.error('Error requesting permission from BarcodeScanner:', error);
+      toast({
+        title: "خطأ في الإذن",
+        description: "حدث خطأ أثناء طلب إذن الكاميرا",
+        variant: "destructive"
+      });
     }
   };
   
@@ -99,7 +113,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     );
   }
   
-  if (isInitializing) {
+  if (isInitializing || isLoading) {
     return <ScannerLoading />;
   }
   

@@ -56,21 +56,22 @@ export const useCameraPermissions = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
         console.log('Using Capacitor Camera plugin to request permission');
         
-        // Before requesting, check if permission has already been denied in the system settings
-        const { camera } = await Camera.checkPermissions();
-        console.log('Current permission status before request:', camera);
-        
-        // Even if denied, still try to request permission
-        const permission = await Camera.requestPermissions({
+        // Request permission directly from Camera API
+        const result = await Camera.requestPermissions({
           permissions: ['camera']
         });
-        console.log('Permission request result:', permission);
+        console.log('Camera permission request result:', result);
         
-        const granted = permission.camera === 'granted';
-        console.log('Permission granted:', granted);
+        const granted = result.camera === 'granted';
+        console.log('Camera permission granted:', granted);
         setHasPermission(granted);
         
-        if (!granted) {
+        if (granted) {
+          toast({
+            title: "تم منح الإذن",
+            description: "تم منح إذن الكاميرا بنجاح",
+          });
+        } else {
           toast({
             title: "لم يتم منح الإذن",
             description: "يرجى السماح بالوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي",
@@ -81,7 +82,34 @@ export const useCameraPermissions = () => {
         return granted;
       } else {
         console.log('No Capacitor Camera plugin available, assuming web environment');
-        // For web testing
+        // For web testing, try to request permission using the browser API
+        try {
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // If we reach this point, permission was granted
+            if (stream) {
+              // Stop all tracks to release the camera
+              stream.getTracks().forEach(track => track.stop());
+            }
+            setHasPermission(true);
+            toast({
+              title: "تم منح الإذن",
+              description: "تم منح إذن الكاميرا بنجاح",
+            });
+            return true;
+          }
+        } catch (error) {
+          console.error('Browser camera permission error:', error);
+          setHasPermission(false);
+          toast({
+            title: "لم يتم منح الإذن",
+            description: "يرجى السماح بالوصول إلى الكاميرا في إعدادات المتصفح",
+            variant: "destructive"
+          });
+          return false;
+        }
+        
+        // Fallback for testing
         setHasPermission(true);
         return true;
       }

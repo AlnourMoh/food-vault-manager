@@ -2,19 +2,24 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useScannerDevice } from './useScannerDevice';
-import { useCameraPermissions } from '../useCameraPermissions';
 
 interface UseBarcodeScannerControlsProps {
   onScan: (code: string) => void;
   onClose: () => void;
+  hasPermission: boolean | null;
+  requestPermission: () => Promise<boolean>;
 }
 
-export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScannerControlsProps) => {
+export const useBarcodeScannerControls = ({ 
+  onScan, 
+  onClose, 
+  hasPermission, 
+  requestPermission 
+}: UseBarcodeScannerControlsProps) => {
   const [isScanningActive, setIsScanningActive] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const { toast } = useToast();
   const { startDeviceScan, stopDeviceScan } = useScannerDevice();
-  const { hasPermission, requestPermission } = useCameraPermissions();
   
   const handleSuccessfulScan = async (code: string) => {
     console.log('Successful scan detected:', code);
@@ -43,7 +48,7 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
       if (hasPermission === false) {
         console.log('No permission, requesting...');
         const granted = await requestPermission();
-        console.log('Permission request result:', granted);
+        console.log('Permission request result from startScan:', granted);
         
         if (!granted) {
           console.log('Permission denied, cannot start scan');
@@ -79,9 +84,7 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
   return {
     isScanningActive,
     lastScannedCode,
-    hasPermission,
     startScan,
     stopScan,
-    requestPermission
   };
 };
