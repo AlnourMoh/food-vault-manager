@@ -1,30 +1,27 @@
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState<boolean>(false)
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
     
     // Set the initial value
-    checkIfMobile()
+    checkIfMobile();
     
-    // Add event listener
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    
-    // Modern approach using addEventListener
-    mql.addEventListener("change", checkIfMobile)
+    // Add event listener for responsive changes
+    window.addEventListener('resize', checkIfMobile);
     
     // Return a cleanup function
     return () => {
-      mql.removeEventListener("change", checkIfMobile)
-    }
-  }, []) // Empty dependency array means this effect runs once on mount
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
-  return isMobile
+  return isMobile;
 }

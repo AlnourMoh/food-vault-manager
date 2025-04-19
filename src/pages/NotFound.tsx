@@ -1,32 +1,19 @@
 
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import NetworkErrorView from "@/components/mobile/NetworkErrorView";
 
 const NotFound = () => {
   const location = useLocation();
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
-    const MOBILE_BREAKPOINT = 768;
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
-    
-    // Set initial value
-    checkIfMobile();
-    
-    // Add event listener
-    window.addEventListener('resize', checkIfMobile);
-    
     // Log the 404 error
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-    
-    // Clean up
-    return () => window.removeEventListener('resize', checkIfMobile);
   }, [location.pathname]);
 
   const handleRetry = () => {
