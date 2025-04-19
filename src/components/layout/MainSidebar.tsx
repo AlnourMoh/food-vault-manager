@@ -23,47 +23,50 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
     { 
       name: 'المطاعم', 
       path: '/restaurants', 
-      icon: <BuildingIcon className="ml-2 h-5 w-5" /> 
+      icon: <BuildingIcon className="ml-2 h-5 w-5 text-fvm-primary" /> 
     },
     { 
       name: 'التقارير', 
       path: '/reports', 
-      icon: <Check className="ml-2 h-5 w-5" /> 
+      icon: <Check className="ml-2 h-5 w-5 text-fvm-primary" /> 
     },
   ];
 
   return (
     <div className={cn(
-      "flex h-16 w-full flex-row items-center justify-between bg-sidebar px-4 text-sidebar-foreground border-b border-sidebar-border",
+      "flex h-16 w-full flex-row items-center justify-between bg-white border-b border-fvm-secondary px-4 shadow-sm",
       className
     )}>
       {/* Project Title */}
       <div className="flex items-center">
-        <h2 className="text-xl font-bold text-sidebar-foreground tracking-tight">
+        <h2 className="text-xl font-bold text-fvm-dark tracking-tight">
           هايجين تيك
         </h2>
-        <span className="text-sm text-sidebar-foreground/70 font-medium mr-2">
+        <span className="text-sm text-fvm-primary font-medium mr-2">
           لإدارة مخازن الأغذية
         </span>
       </div>
 
-      {/* Main Navigation - Now Horizontal with Dropdown */}
+      {/* Main Navigation */}
       <div className="flex items-center gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-2 text-fvm-dark hover:text-fvm-primary hover:bg-fvm-secondary"
+            >
               <span>القائمة</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 bg-white">
             {adminMenuItems.map((item, index) => (
               <DropdownMenuItem key={index} asChild>
                 <Link 
                   to={item.path}
                   className={cn(
-                    "flex w-full items-center gap-3 px-2 py-2",
-                    location.pathname === item.path && "bg-sidebar-accent/50"
+                    "flex w-full items-center gap-3 px-2 py-2 text-fvm-dark hover:text-fvm-primary hover:bg-fvm-secondary",
+                    location.pathname === item.path && "bg-fvm-secondary text-fvm-primary"
                   )}
                 >
                   {item.icon}
@@ -72,17 +75,17 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
               </DropdownMenuItem>
             ))}
             <Separator className="my-2" />
-            {/* Quick Stats in Dropdown */}
-            <div className="px-2 py-2">
-              <h3 className="text-sm font-medium mb-2">إحصائيات سريعة</h3>
+            {/* Quick Stats */}
+            <div className="px-2 py-2 bg-fvm-neutral/30">
+              <h3 className="text-sm font-medium mb-2 text-fvm-dark">إحصائيات سريعة</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">المطاعم النشطة</span>
-                  <span className="text-sm font-medium">12</span>
+                  <span className="text-sm text-fvm-dark/70">المطاعم النشطة</span>
+                  <span className="text-sm font-medium text-fvm-primary">12</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">المنتجات</span>
-                  <span className="text-sm font-medium">156</span>
+                  <span className="text-sm text-fvm-dark/70">المنتجات</span>
+                  <span className="text-sm font-medium text-fvm-primary">156</span>
                 </div>
               </div>
             </div>
@@ -91,13 +94,13 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
 
         {/* Version and Logout */}
         <div className="flex items-center gap-4">
-          <span className="text-sm text-sidebar-foreground/70">
+          <span className="text-sm text-fvm-dark/70">
             الإصدار 1.0.0
           </span>
           <Button 
             variant="destructive" 
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600"
           >
             <LogOut className="h-4 w-4" />
             <span>تسجيل الخروج</span>
@@ -109,3 +112,4 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
 };
 
 export default MainSidebar;
+
