@@ -1,15 +1,17 @@
+
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { ShoppingCart, Package } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
+import MobileProductGrid from '@/components/mobile/inventory/MobileProductGrid';
+import { useQuery } from '@tanstack/react-query';
+import { Product } from '@/types';
 
 const MobileHome = () => {
   const [restaurantName, setRestaurantName] = useState<string>('المطعم');
   const [stats, setStats] = useState({
     totalProducts: 0,
   });
-  const navigate = useNavigate();
   
   useEffect(() => {
     const fetchRestaurantInfo = async () => {
@@ -34,31 +36,49 @@ const MobileHome = () => {
       }
     };
     
-    const fetchStats = async () => {
+    fetchRestaurantInfo();
+  }, []);
+  
+  const { data: products, isLoading, refetch } = useQuery({
+    queryKey: ['mobile-products'],
+    queryFn: async () => {
       const restaurantId = localStorage.getItem('restaurantId');
       
-      if (restaurantId) {
-        try {
-          // Get total products
-          const { data: products, error: productsError } = await supabase
-            .from('products')
-            .select('id')
-            .eq('company_id', restaurantId);
-            
-          if (productsError) throw productsError;
-          
-          setStats({
-            totalProducts: products?.length || 0,
-          });
-        } catch (error) {
-          console.error('Error fetching stats:', error);
-        }
+      if (!restaurantId) {
+        return [];
       }
-    };
-    
-    fetchRestaurantInfo();
-    fetchStats();
-  }, []);
+      
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('company_id', restaurantId)
+        .eq('status', 'active');
+        
+      if (error) throw error;
+      
+      if (data) {
+        const transformedProducts: Product[] = data.map(item => ({
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          unit: item.unit || '',
+          quantity: item.quantity,
+          expiryDate: new Date(item.expiry_date),
+          entryDate: new Date(item.created_at),
+          restaurantId: item.company_id,
+          restaurantName: '',
+          addedBy: '',
+          status: 'active',
+          imageUrl: item.image_url
+        }));
+        
+        setStats({ totalProducts: transformedProducts.length });
+        return transformedProducts;
+      }
+      
+      return [];
+    },
+  });
   
   return (
     <div className="container py-6 space-y-6">
@@ -77,18 +97,20 @@ const MobileHome = () => {
         </Card>
       </div>
       
-      <h2 className="text-xl font-bold">العمليات السريعة</h2>
+      <h2 className="text-xl font-bold">المنتجات</h2>
       
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/product-management')}>
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <div className="p-3 bg-amber-100 rounded-full mb-3">
-              <Package className="h-6 w-6 text-amber-600" />
-            </div>
-            <span className="font-medium">تتبع وإدارة المنتجات</span>
-          </CardContent>
+      {products && products.length > 0 ? (
+        <MobileProductGrid 
+          products={products} 
+          onProductUpdate={refetch}
+        />
+      ) : (
+        <Card className="p-6">
+          <div className="text-center text-muted-foreground">
+            لا توجد منتجات لعرضها
+          </div>
         </Card>
-      </div>
+      )}
     </div>
   );
 };
