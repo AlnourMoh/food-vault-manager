@@ -22,12 +22,22 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   const isExpiring = daysUntilExpiry <= 30;
   const isExpired = daysUntilExpiry < 0;
 
+  const getCardClasses = () => {
+    if (isExpired) {
+      return "bg-red-50/80 border-red-200 hover:bg-red-100/80";
+    }
+    if (isExpiring) {
+      return "bg-yellow-50/80 border-yellow-200 hover:bg-yellow-100/80";
+    }
+    return "bg-background hover:bg-secondary/5";
+  };
+
   return (
-    <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg overflow-hidden border-t-4 border-t-primary">
+    <Card className={`w-full shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg overflow-hidden border-t-4 border-t-primary ${getCardClasses()}`}>
       <CardContent className="p-0">
         <div className="flex flex-col">
           {/* Image Header */}
-          <div className="relative w-full h-32 bg-gradient-to-r from-gray-50 to-gray-100">
+          <div className={`relative w-full h-32 ${!product.imageUrl ? 'bg-gradient-to-r from-gray-50 to-gray-100' : ''}`}>
             {product.imageUrl ? (
               <img 
                 src={product.imageUrl} 
@@ -43,7 +53,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
               {isExpiring && (
                 <Badge 
                   variant={isExpired ? "destructive" : "warning"} 
-                  className="text-xs shadow-lg"
+                  className={`text-xs shadow-lg ${isExpired ? 'animate-pulse' : ''}`}
                 >
                   {isExpired ? 'منتهي الصلاحية' : `ينتهي خلال ${daysUntilExpiry} يوم`}
                 </Badge>
