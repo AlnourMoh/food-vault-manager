@@ -14,7 +14,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   category 
 }) => {
   return (
-    <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
+    <div className="w-24 h-24 bg-gray-100 flex-shrink-0 rounded-lg overflow-hidden">
       {imageUrl ? (
         <img 
           src={imageUrl} 

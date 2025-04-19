@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,7 +35,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isRestaurantRoute })
         description: `تم حذف المنتج ${product.name} بنجاح`,
       });
       
-      // Refresh the page to reflect the changes
       setTimeout(() => {
         window.location.reload();
       }, 1000);
@@ -55,28 +53,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, isRestaurantRoute })
   
   return (
     <>
-      <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
-        <ProductImage 
-          imageUrl={product.imageUrl} 
-          productName={product.name} 
-          category={product.category} 
-        />
-        <CardContent className="p-0">
-          <ProductDetails 
-            name={product.name}
+      <Card className="overflow-hidden transition-all duration-200 hover:shadow-md">
+        <div className="flex p-4 gap-4">
+          <ProductImage 
+            imageUrl={product.imageUrl} 
+            productName={product.name}
             category={product.category}
-            quantity={product.quantity}
-            expiryDate={product.expiryDate}
-            id={product.id}
           />
-          <div className="px-4 pb-4">
-            <ProductActions 
-              productId={product.id}
-              isRestaurantRoute={isRestaurantRoute}
-              onDeleteClick={() => setIsDeleteDialogOpen(true)}
+          <div className="flex-1 min-w-0">
+            <ProductDetails 
+              name={product.name}
+              category={product.category}
+              quantity={product.quantity}
+              expiryDate={product.expiryDate}
+              id={product.id}
             />
+            <div className="mt-4">
+              <ProductActions 
+                productId={product.id}
+                isRestaurantRoute={isRestaurantRoute}
+                onDeleteClick={() => setIsDeleteDialogOpen(true)}
+              />
+            </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       <DeleteProductDialog 
