@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { format, differenceInDays } from 'date-fns';
-import { Package, AlertTriangle, ScanBarcode } from 'lucide-react';
+import { Package, ScanBarcode } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
-import { Separator } from '@/components/ui/separator';
 
 interface MobileProductCardProps {
   product: Product;
@@ -26,9 +25,9 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   return (
     <Card className="overflow-hidden h-full">
       <CardContent className="p-4">
-        <div className="flex flex-row-reverse gap-4">
-          {/* Right side - Image */}
-          <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+        <div className="flex items-start gap-4">
+          {/* Image Section */}
+          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             {product.imageUrl ? (
               <img 
                 src={product.imageUrl} 
@@ -42,13 +41,14 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
             )}
           </div>
 
-          {/* Left side - Product Details */}
-          <div className="flex-1 flex flex-col justify-between text-right">
-            <div>
-              <h3 className="text-lg font-bold text-primary mb-1 leading-tight">
+          {/* Content Section */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col">
+              <h3 className="text-lg font-bold text-primary mb-1 leading-tight text-right">
                 {product.name}
               </h3>
-              <div className="flex flex-row-reverse flex-wrap gap-2 mb-2">
+              
+              <div className="flex flex-wrap gap-2 justify-end mb-2">
                 <Badge variant="outline" className="text-xs">
                   {product.category || "غير مصنف"}
                 </Badge>
@@ -61,7 +61,8 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   </Badge>
                 )}
               </div>
-              <div className="text-sm text-muted-foreground space-y-1">
+
+              <div className="text-sm text-muted-foreground space-y-1 mb-3">
                 <div className="flex justify-between">
                   <span>{product.quantity} {product.unit}</span>
                   <span>الكمية:</span>
@@ -73,24 +74,24 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                   <span>تاريخ الانتهاء:</span>
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-2 mt-3">
-              <Button
-                variant="outline"
-                className="flex-1 bg-background hover:bg-secondary"
-                onClick={() => onRemove?.(product)}
-              >
-                <ScanBarcode className="ml-2 h-4 w-4" />
-                إخراج
-              </Button>
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={() => onSelect(product)}
-              >
-                التفاصيل
-              </Button>
+              <div className="flex gap-2 mt-auto">
+                <Button
+                  variant="outline"
+                  className="flex-1 bg-background hover:bg-secondary"
+                  onClick={() => onRemove?.(product)}
+                >
+                  <ScanBarcode className="ml-2 h-4 w-4" />
+                  إخراج
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => onSelect(product)}
+                >
+                  التفاصيل
+                </Button>
+              </div>
             </div>
           </div>
         </div>
