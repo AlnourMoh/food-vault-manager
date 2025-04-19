@@ -1,5 +1,5 @@
 
-import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { useToast } from '@/hooks/use-toast';
 import { Camera } from '@capacitor/camera';
 
@@ -15,14 +15,14 @@ export const useScannerDevice = () => {
         console.log("[useScannerDevice] استخدام مكتبة ML Kit للمسح");
         
         // طلب الإذن والتحقق بشكل صريح
-        const { granted } = await BarcodeScanning.requestPermissions();
+        const { granted } = await BarcodeScanner.requestPermissions();
         console.log("[useScannerDevice] حالة إذن الماسح ML Kit:", granted);
         
         if (!granted) {
           console.error("[useScannerDevice] تم رفض الإذن للماسح الضوئي");
           
           // محاولة أخرى
-          const retryPermission = await BarcodeScanning.requestPermissions();
+          const retryPermission = await BarcodeScanner.requestPermissions();
           
           if (!retryPermission.granted) {
             console.error("[useScannerDevice] فشلت المحاولة الثانية في الحصول على الإذن");
@@ -36,7 +36,7 @@ export const useScannerDevice = () => {
         }
         
         // التحقق من دعم الماسح
-        const isSupported = await BarcodeScanning.isSupported();
+        const isSupported = await BarcodeScanner.isSupported();
         
         if (!isSupported) {
           console.warn("[useScannerDevice] ماسح ML Kit غير مدعوم على هذا الجهاز، استخدام محاكاة");
@@ -62,7 +62,7 @@ export const useScannerDevice = () => {
         
         // بدء المسح باستخدام المكتبة الجديدة
         console.log("[useScannerDevice] بدء عملية المسح ML Kit...");
-        const { barcodes } = await BarcodeScanning.scan({
+        const { barcodes } = await BarcodeScanner.scan({
           formats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 'PDF_417', 'AZTEC', 'DATA_MATRIX'],
         });
         

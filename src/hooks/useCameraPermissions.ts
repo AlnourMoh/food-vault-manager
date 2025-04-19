@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { usePermissionCheck } from './scanner/permissions/usePermissionCheck';
 import { usePermissionRequest } from './scanner/permissions/usePermissionRequest';
 import { useToast } from './use-toast';
-import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useCameraPermissions = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -23,10 +23,10 @@ export const useCameraPermissions = () => {
           console.log('[useCameraPermissions] مكتبة ML Kit متوفرة، التحقق من الإذن...');
           
           try {
-            const available = await BarcodeScanning.isSupported();
+            const available = await BarcodeScanner.isSupported();
             
             if (available) {
-              const status = await BarcodeScanning.checkPermissions();
+              const status = await BarcodeScanner.checkPermissions();
               console.log('[useCameraPermissions] حالة إذن ML Kit:', status);
               setHasPermission(status.granted);
               setIsLoading(false);
@@ -78,7 +78,7 @@ export const useCameraPermissions = () => {
       if (window.Capacitor) {
         try {
           console.log('[useCameraPermissions] محاولة طلب إذن ML Kit...');
-          const permission = await BarcodeScanning.requestPermissions();
+          const permission = await BarcodeScanner.requestPermissions();
           console.log('[useCameraPermissions] نتيجة طلب إذن ML Kit:', permission);
           
           if (permission.granted) {

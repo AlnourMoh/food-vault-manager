@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useCameraPermissions } from '../useCameraPermissions';
 import { useScannerDevice } from './useScannerDevice';
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -34,7 +34,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       // استخدام المكتبة الجديدة للحصول على الإذن
       if (window.Capacitor) {
         console.log('[useScannerState] استخدام ML Kit للحصول على الإذن مباشرة');
-        const status = await BarcodeScanning.requestPermissions();
+        const status = await BarcodeScanner.requestPermissions();
         
         if (status.granted) {
           console.log('[useScannerState] تم منح الإذن من ML Kit مباشرة');

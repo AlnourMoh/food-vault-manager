@@ -1,12 +1,12 @@
 
-import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 
 export const usePermissionCheck = () => {
   const checkBarcodePermission = async () => {
     if (window.Capacitor) {
       try {
-        const status = await BarcodeScanning.checkPermissions();
+        const status = await BarcodeScanner.checkPermissions();
         return {
           granted: status.granted,
           neverAsked: false

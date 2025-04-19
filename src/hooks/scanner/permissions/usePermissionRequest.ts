@@ -1,6 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 import { usePlatformPermissions } from './usePlatformPermissions';
 
@@ -14,12 +14,12 @@ export const usePermissionRequest = () => {
       const platform = window.Capacitor?.getPlatform();
       console.log('[usePermissionRequest] المنصة الحالية:', platform);
 
-      // طريقة 1: استخدام BarcodeScanning الجديد
+      // طريقة 1: استخدام BarcodeScanner الجديد
       if (window.Capacitor) {
-        console.log(`[usePermissionRequest] محاولة #1: طلب إذن BarcodeScanning...`);
+        console.log(`[usePermissionRequest] محاولة #1: طلب إذن BarcodeScanner...`);
         
         // استخدام المكتبة الجديدة
-        const result = await BarcodeScanning.requestPermissions();
+        const result = await BarcodeScanner.requestPermissions();
         console.log('[usePermissionRequest] نتيجة طلب إذن ML Kit:', result);
         
         if (result.granted) {
@@ -46,7 +46,7 @@ export const usePermissionRequest = () => {
           return await handleAndroidPermissions();
         }
         
-        console.log('[usePermissionRequest] فشلت جميع محاولات طلب إذن BarcodeScanning');
+        console.log('[usePermissionRequest] فشلت جميع محاولات طلب إذن BarcodeScanner');
         return false;
       } 
       
