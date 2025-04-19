@@ -13,7 +13,6 @@ interface ProductTabsProps {
     variant: "default" | "destructive" | "warning";
     icon: { type: string; className: string };
   };
-  getExpiredCount: () => number;
   filteredProducts: Product[];
 }
 
@@ -22,23 +21,15 @@ const ProductTabs = ({
   activeTab,
   onTabChange,
   getExpiryStatus,
-  getExpiredCount,
   filteredProducts
 }: ProductTabsProps) => {
   return (
     <Tabs defaultValue="all" value={activeTab} onValueChange={onTabChange}>
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-1">
         <TabsTrigger value="all">الكل ({products.length})</TabsTrigger>
-        <TabsTrigger value="expired">
-          منتهية ({getExpiredCount()})
-        </TabsTrigger>
       </TabsList>
       
       <TabsContent value="all" className="mt-4 space-y-4">
-        <ProductList products={filteredProducts} getExpiryStatus={getExpiryStatus} />
-      </TabsContent>
-      
-      <TabsContent value="expired" className="mt-4 space-y-4">
         <ProductList products={filteredProducts} getExpiryStatus={getExpiryStatus} />
       </TabsContent>
     </Tabs>

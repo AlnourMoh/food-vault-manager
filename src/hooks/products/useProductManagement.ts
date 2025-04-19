@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
@@ -67,13 +68,6 @@ export const useProductManagement = () => {
   const filterProducts = () => {
     let filtered = [...products];
     
-    if (activeTab === 'expired') {
-      filtered = filtered.filter(product => {
-        const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
-        return daysUntilExpiry < 0;
-      });
-    }
-    
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(product => 
@@ -104,13 +98,6 @@ export const useProductManagement = () => {
     }
   };
 
-  const getExpiredCount = () => {
-    return products.filter(product => {
-      const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
-      return daysUntilExpiry < 0;
-    }).length;
-  };
-
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -128,6 +115,5 @@ export const useProductManagement = () => {
     activeTab,
     setActiveTab,
     getExpiryStatus,
-    getExpiredCount,
   };
 };
