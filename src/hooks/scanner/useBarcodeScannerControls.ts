@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useScannerDevice } from './useScannerDevice';
 import { useCameraPermissions } from '../useCameraPermissions';
 

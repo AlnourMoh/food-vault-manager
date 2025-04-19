@@ -69,12 +69,15 @@ export const useCameraPermissions = () => {
       try {
         if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
           const permission = await Camera.requestPermissions();
-          setHasPermission(permission.camera === 'granted');
-          return permission.camera === 'granted';
+          const granted = permission.camera === 'granted';
+          setHasPermission(granted);
+          return granted;
         }
+        setHasPermission(true);
         return true;
       } catch (error) {
         console.error('Error requesting camera permission:', error);
+        setHasPermission(false);
         return false;
       }
     }

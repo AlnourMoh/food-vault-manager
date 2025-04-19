@@ -16,17 +16,21 @@ const ProductScan = () => {
   const navigate = useNavigate();
 
   const handleOpenScanner = () => {
+    console.log('Opening scanner');
     setIsScannerOpen(true);
   };
 
   const handleCloseScanner = () => {
+    console.log('Closing scanner');
     setIsScannerOpen(false);
   };
 
   const handleScanResult = async (code: string) => {
+    console.log('Scan result received:', code);
     setIsLoading(true);
     
     try {
+      console.log('Fetching product data for code:', code);
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
         .select('product_id')
@@ -34,18 +38,22 @@ const ProductScan = () => {
         .single();
       
       if (codeError) {
+        console.error('Error fetching product code:', codeError);
         throw codeError;
       }
       
       if (!productCode?.product_id) {
+        console.error('No product ID found for code:', code);
         toast({
           title: "خطأ في الباركود",
           description: "لم يتم العثور على معلومات المنتج لهذا الباركود",
           variant: "destructive"
         });
+        setIsLoading(false);
         return;
       }
       
+      console.log('Found product ID:', productCode.product_id);
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('*')
@@ -53,8 +61,11 @@ const ProductScan = () => {
         .single();
       
       if (productError) {
+        console.error('Error fetching product details:', productError);
         throw productError;
       }
+      
+      console.log('Retrieved product data:', product);
       
       // Convert database product to the Product interface format
       // Make sure we validate the status value to match the expected union type
@@ -89,9 +100,11 @@ const ProductScan = () => {
       };
       
       setScannedProduct(formattedProduct);
+      console.log('Formatted product data:', formattedProduct);
       
       const restaurantId = localStorage.getItem('restaurantId');
       if (restaurantId) {
+        console.log('Recording scan for restaurant:', restaurantId);
         await supabase
           .from('product_scans')
           .insert({

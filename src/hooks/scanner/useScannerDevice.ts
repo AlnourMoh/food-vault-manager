@@ -16,9 +16,8 @@ export const useScannerDevice = () => {
         if (status.granted) {
           // Make background transparent to show camera preview
           document.body.classList.add('barcode-scanner-active');
-          document.querySelector('ion-app')?.classList.add('scanner-active');
           
-          // Hide any other elements that might be in the way
+          // Hide any elements that might be in the way
           const appRoot = document.querySelector('app-root') || document.body;
           appRoot.classList.add('scanner-active');
           
@@ -72,7 +71,6 @@ export const useScannerDevice = () => {
         
         // Restore the UI
         document.body.classList.remove('barcode-scanner-active');
-        document.querySelector('ion-app')?.classList.remove('scanner-active');
         
         const appRoot = document.querySelector('app-root') || document.body;
         appRoot.classList.remove('scanner-active');

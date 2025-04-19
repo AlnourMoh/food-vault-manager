@@ -17,8 +17,7 @@ export const ScannedProductCard = ({
   onScanAnother,
   onViewDetails
 }: ScannedProductCardProps) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('ar-SA', {
       year: 'numeric',
       month: 'long',
@@ -62,12 +61,12 @@ export const ScannedProductCard = ({
           
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">تاريخ الإنتاج</p>
-            <p className="font-medium">{formatDate(product.entryDate.toString())}</p>
+            <p className="font-medium">{formatDate(product.entryDate)}</p>
           </div>
           
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">تاريخ انتهاء الصلاحية</p>
-            <p className="font-medium">{formatDate(product.expiryDate.toString())}</p>
+            <p className="font-medium">{formatDate(product.expiryDate)}</p>
           </div>
         </div>
         

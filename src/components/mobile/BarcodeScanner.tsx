@@ -6,6 +6,7 @@ import { NoPermissionView } from './scanner/NoPermissionView';
 import { ScannerView } from './scanner/ScannerView';
 import { ScannerReadyView } from './scanner/ScannerReadyView';
 import { DigitalCodeInput } from './scanner/DigitalCodeInput';
+import { useCameraPermissions } from '@/hooks/useCameraPermissions';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -14,31 +15,43 @@ interface BarcodeScannerProps {
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const [isManualEntry, setIsManualEntry] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+  
+  const { hasPermission, requestPermission } = useCameraPermissions();
   
   const { 
     isScanningActive, 
     lastScannedCode,
-    hasPermission,
     startScan,
-    stopScan,
-    requestPermission
+    stopScan
   } = useBarcodeScannerControls({ onScan, onClose });
   
   // Automatically start scanning when the component mounts
   useEffect(() => {
-    console.log('BarcodeScanner mounted, will auto-start scan');
-    console.log('Current permission status:', hasPermission);
+    console.log('BarcodeScanner mounted');
     
-    // Short delay to ensure everything is initialized properly
-    const timer = setTimeout(() => {
-      if (hasPermission !== false && !isScanningActive && !isManualEntry) {
-        console.log('Auto-starting scanner');
-        startScan();
+    const initializeScanner = async () => {
+      try {
+        console.log('Initializing scanner, permission status:', hasPermission);
+        
+        // Short delay to ensure everything is initialized properly
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        if (hasPermission !== false && !isScanningActive && !isManualEntry) {
+          console.log('Auto-starting scanner');
+          await startScan();
+        }
+      } catch (error) {
+        console.error('Error initializing scanner:', error);
+      } finally {
+        setIsInitializing(false);
       }
-    }, 1000);
+    };
+    
+    initializeScanner();
     
     return () => {
-      clearTimeout(timer);
+      console.log('BarcodeScanner unmounting, stopping scan');
       stopScan();
     };
   }, [hasPermission, isScanningActive, startScan, stopScan, isManualEntry]);
@@ -51,13 +64,14 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       
       if (granted && !isScanningActive) {
         console.log('Permission granted, starting scan');
-        startScan();
+        await startScan();
       }
     }
   };
   
   const handleManualEntry = () => {
     console.log('Switching to manual code entry');
+    stopScan(); // Make sure to stop any active scanning
     setIsManualEntry(true);
   };
   
@@ -80,7 +94,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     );
   }
   
-  if (hasPermission === null) {
+  if (isInitializing || hasPermission === null) {
     return <ScannerLoading />;
   }
   
