@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Camera, Keyboard } from 'lucide-react';
 
@@ -16,15 +16,20 @@ export const ScannerView = ({
   onRequestPermission,
   onManualEntry
 }: ScannerViewProps) => {
+  const scannerActive = useRef(false);
+
   // Make sure the scanning UI is properly displayed
   useEffect(() => {
+    console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
     const setupScannerUI = () => {
       if (!hasPermissionError) {
         try {
+          console.log("Setting up scanner UI");
+          // Set scanner as active
+          scannerActive.current = true;
+          
           // Make scanning visible when this component mounts
-          if (document.body.style.visibility === 'hidden') {
-            document.body.style.visibility = 'visible';
-          }
+          document.body.style.visibility = 'visible';
           document.body.classList.add('barcode-scanner-active');
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
@@ -36,6 +41,8 @@ export const ScannerView = ({
     
     return () => {
       try {
+        console.log("ScannerView unmounting - cleaning up UI");
+        scannerActive.current = false;
         // Ensure the UI is restored when component unmounts
         document.body.style.visibility = 'visible';
         document.body.classList.remove('barcode-scanner-active');

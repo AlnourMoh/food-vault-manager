@@ -27,7 +27,11 @@ const config: CapacitorConfig = {
       promptLabelHeader: "الوصول إلى الكاميرا",
       promptLabelText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
       promptLabelCancel: "إلغاء",
-      promptLabelConfirm: "السماح"
+      promptLabelConfirm: "السماح",
+      detectionSpeed: "normal", // normal or fast (fast may drain battery quicker)
+      targetedFormats: ["QR_CODE", "EAN_13", "EAN_8", "CODE_39", "CODE_128", 
+                        "UPC_A", "UPC_E", "PDF_417", "AZTEC", "DATA_MATRIX",
+                        "ITF", "CODABAR"]
     },
     Permissions: {
       camera: {

@@ -27,20 +27,23 @@ export const useScannerDevice = () => {
           throw new Error("Permission denied for barcode scanner");
         }
         
+        // Prepare the scanner
+        await BarcodeScanner.prepare();
+        console.log("Barcode scanner prepared successfully");
+        
         // Hide the entire app interface to show the camera preview
         document.body.style.visibility = 'hidden';
         document.body.classList.add('barcode-scanner-active');
         
-        // Prepare the scanner
-        await BarcodeScanner.prepare();
-        console.log("Barcode scanner prepared, starting scan...");
-        
         // Make the scanner area visible
         await BarcodeScanner.hideBackground();
+        console.log("Background hidden for scanner");
         
-        // Start the scanner with improved settings
+        // Start the scanner with improved settings and all formats
+        console.log("Starting scanner...");
         const result = await BarcodeScanner.startScan({
-          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 'PDF_417', 'AZTEC', 'DATA_MATRIX'],
+          targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 
+                           'PDF_417', 'AZTEC', 'DATA_MATRIX', 'ITF', 'CODABAR'],
           cameraDirection: 'back'
         });
         
@@ -82,6 +85,7 @@ export const useScannerDevice = () => {
       document.body.classList.remove('barcode-scanner-active');
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         await BarcodeScanner.showBackground();
+        await BarcodeScanner.stopScan();
       }
       throw error; // Propagate error to be handled by caller
     }
@@ -93,6 +97,7 @@ export const useScannerDevice = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         // Stop the scanner
         await BarcodeScanner.stopScan();
+        console.log("Scanner stopped");
         
         // Make sure app UI is visible again
         document.body.style.visibility = 'visible';
@@ -100,6 +105,7 @@ export const useScannerDevice = () => {
         
         // Hide camera layer
         await BarcodeScanner.showBackground();
+        console.log("Background restored");
       }
     } catch (error) {
       console.error("Error stopping device scan:", error);
