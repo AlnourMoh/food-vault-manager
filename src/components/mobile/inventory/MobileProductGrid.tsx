@@ -20,9 +20,9 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
 
   return (
     <>
-      <div className="flex flex-nowrap gap-4 overflow-x-auto px-4 pb-4">
+      <div className="flex flex-col gap-4 px-4 pb-4">
         {products.map((product) => (
-          <div key={product.id} className="w-[160px] flex-none">
+          <div key={product.id} className="w-full">
             <MobileProductCard 
               product={product}
               onSelect={handleProductSelect}
