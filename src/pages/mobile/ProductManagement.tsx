@@ -54,8 +54,7 @@ const ProductManagement = () => {
       if (error) throw error;
       
       if (data) {
-        const formattedProducts = data.map(product => ({
-          ...product,
+        const formattedProducts: Product[] = data.map(product => ({
           id: product.id,
           name: product.name,
           category: product.category || '',
@@ -65,8 +64,8 @@ const ProductManagement = () => {
           entryDate: new Date(product.created_at),
           restaurantId: product.company_id,
           restaurantName: '', // Will be filled if needed
-          addedBy: product.added_by || '',
-          status: product.status || 'active',
+          addedBy: '', // Default empty string since added_by doesn't exist
+          status: (product.status as "active" | "expired" | "removed") || "active",
           imageUrl: product.image_url
         }));
         setProducts(formattedProducts);
