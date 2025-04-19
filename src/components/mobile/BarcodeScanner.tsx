@@ -63,11 +63,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const handleRequestPermission = async () => {
     console.log('BarcodeScanner: Requesting permission...');
     try {
-      const scanner = useScannerState({ onScan, onClose });
-      const granted = await scanner.startScan();
-      console.log('Permission request and scan started:', granted);
+      console.log('Starting permission request and scan workflow');
+      const result = await startScan();
+      console.log('Permission request and scan result:', result);
     } catch (error) {
-      console.error('Error requesting permission from BarcodeScanner:', error);
+      console.error('Error requesting permission:', error);
       toast({
         title: "خطأ في الإذن",
         description: "حدث خطأ أثناء طلب إذن الكاميرا",

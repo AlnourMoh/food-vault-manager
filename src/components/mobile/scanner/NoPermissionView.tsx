@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Eye, Keyboard } from 'lucide-react';
+import { Camera, Keyboard } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface NoPermissionViewProps {

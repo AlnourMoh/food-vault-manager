@@ -31,7 +31,7 @@ export const useScannerDevice = () => {
         document.body.classList.add('barcode-scanner-active');
         
         // Hide any elements that might be in the way
-        const appRoot = document.querySelector('app-root') || document.body;
+        const appRoot = document.querySelector('#root') || document.body;
         appRoot.classList.add('scanner-active');
         
         // Prepare the scanner
@@ -46,6 +46,8 @@ export const useScannerDevice = () => {
         if (result.hasContent) {
           console.log("Barcode scanned:", result.content);
           onSuccess(result.content);
+        } else {
+          console.log("Scan completed but no content found");
         }
       } else {
         console.log("Running in web environment or plugin not available - using test barcode");
@@ -78,7 +80,7 @@ export const useScannerDevice = () => {
         // Restore the UI
         document.body.classList.remove('barcode-scanner-active');
         
-        const appRoot = document.querySelector('app-root') || document.body;
+        const appRoot = document.querySelector('#root') || document.body;
         appRoot.classList.remove('scanner-active');
       }
     } catch (error) {

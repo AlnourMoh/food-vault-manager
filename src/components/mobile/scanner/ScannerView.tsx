@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera, Eye, Keyboard } from 'lucide-react';
+import { X, Camera, Keyboard } from 'lucide-react';
 
 interface ScannerViewProps {
   onStop: () => void;
