@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -26,13 +25,10 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // استرجاع معرف المطعم من التخزين المحلي
   const restaurantId = localStorage.getItem('restaurantId');
   
-  // استخدام hook لاسترجاع بيانات المطعم
   const { restaurantName, isLoading } = useRestaurantData(restaurantId);
 
-  // Restaurant menu items
   const menuItems = [
     { 
       name: 'لوحة التحكم', 
@@ -43,16 +39,6 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
       name: 'فريق المخزن', 
       path: '/restaurant/storage-team', 
       icon: <Users className="ml-2 h-5 w-5" /> 
-    },
-    { 
-      name: 'إدخال المنتجات', 
-      path: '/restaurant/products/add', 
-      icon: <ArrowDown className="ml-2 h-5 w-5" /> 
-    },
-    { 
-      name: 'إخراج المنتجات', 
-      path: '/restaurant/products/remove', 
-      icon: <ArrowUp className="ml-2 h-5 w-5" /> 
     },
     { 
       name: 'المخزون', 
@@ -72,10 +58,8 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   ];
 
   const handleLogout = () => {
-    // Clear localStorage
     localStorage.removeItem('restaurantId');
     localStorage.removeItem('isRestaurantLogin');
-    // Redirect to login page
     navigate('/restaurant/login');
   };
   
@@ -83,7 +67,6 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
     navigate(-1);
   };
   
-  // تحقق مما إذا كنا في الصفحة الرئيسية للمطعم أم لا
   const isRestaurantDashboard = location.pathname === '/restaurant/dashboard';
 
   return (
@@ -140,7 +123,6 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
               <h3 className="text-xl font-semibold">إدارة المطعم</h3>
             </div>
             <div className="text-sm">
-              {/* عرض اسم المطعم من قاعدة البيانات */}
               {isLoading ? (
                 <span className="text-muted-foreground">جاري تحميل بيانات المطعم...</span>
               ) : (
