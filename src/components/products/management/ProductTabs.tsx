@@ -11,7 +11,7 @@ interface ProductTabsProps {
   getExpiryStatus: (expiryDate: Date) => {
     label: string;
     variant: "default" | "destructive" | "warning";
-    icon: JSX.Element;
+    icon: { type: string; className: string };
   };
   getExpiredCount: () => number;
   getExpiringCount: () => number;

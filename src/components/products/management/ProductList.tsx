@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Product } from '@/types';
-import { Archive } from 'lucide-react';
+import { Archive, AlertTriangle, PackageCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format, differenceInDays } from 'date-fns';
 
@@ -11,7 +11,7 @@ interface ProductListProps {
   getExpiryStatus: (expiryDate: Date) => {
     label: string;
     variant: "default" | "destructive" | "warning";
-    icon: JSX.Element;
+    icon: { type: string; className: string };
   };
 }
 
@@ -26,6 +26,17 @@ const ProductList = ({ products, getExpiryStatus }: ProductListProps) => {
       </Card>
     );
   }
+
+  const renderIcon = (iconInfo: { type: string; className: string }) => {
+    switch (iconInfo.type) {
+      case 'AlertTriangle':
+        return <AlertTriangle className={iconInfo.className} />;
+      case 'PackageCheck':
+        return <PackageCheck className={iconInfo.className} />;
+      default:
+        return null;
+    }
+  };
 
   return products.map(product => {
     const expiryStatus = getExpiryStatus(new Date(product.expiryDate));
@@ -52,7 +63,7 @@ const ProductList = ({ products, getExpiryStatus }: ProductListProps) => {
               <div className="flex justify-between items-start">
                 <h3 className="font-bold text-base truncate">{product.name}</h3>
                 <Badge variant={expiryStatus.variant} className="flex items-center mr-1">
-                  {expiryStatus.icon}
+                  {renderIcon(expiryStatus.icon)}
                   <span>{expiryStatus.label}</span>
                 </Badge>
               </div>

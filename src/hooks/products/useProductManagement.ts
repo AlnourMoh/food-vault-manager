@@ -1,5 +1,4 @@
 
-import { AlertTriangle, PackageCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
@@ -100,25 +99,25 @@ export const useProductManagement = () => {
       return {
         label: `منتهي منذ ${Math.abs(daysUntilExpiry)} يوم`,
         variant: "destructive" as const,
-        icon: <AlertTriangle className="h-3 w-3 ml-1" />
+        icon: { type: 'AlertTriangle', className: "h-3 w-3 ml-1" }
       };
     } else if (daysUntilExpiry <= 7) {
       return {
         label: `ينتهي خلال ${daysUntilExpiry} أيام`,
         variant: "destructive" as const,
-        icon: <AlertTriangle className="h-3 w-3 ml-1" />
+        icon: { type: 'AlertTriangle', className: "h-3 w-3 ml-1" }
       };
     } else if (daysUntilExpiry <= 30) {
       return {
         label: `ينتهي خلال ${daysUntilExpiry} يوم`,
         variant: "warning" as const,
-        icon: <AlertTriangle className="h-3 w-3 ml-1" />
+        icon: { type: 'AlertTriangle', className: "h-3 w-3 ml-1" }
       };
     } else {
       return {
         label: `صالح لمدة ${daysUntilExpiry} يوم`,
         variant: "default" as const,
-        icon: <PackageCheck className="h-3 w-3 ml-1" />
+        icon: { type: 'PackageCheck', className: "h-3 w-3 ml-1" }
       };
     }
   };
