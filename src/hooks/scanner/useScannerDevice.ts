@@ -13,7 +13,7 @@ export const useScannerDevice = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log("Using Capacitor BarcodeScanner plugin");
         
-        // Force permission request - this will show the OS permission dialog
+        // Check if permission is already granted
         const status = await BarcodeScanner.checkPermission({ force: true });
         console.log("BarcodeScanner permission status:", status);
         
@@ -39,7 +39,7 @@ export const useScannerDevice = () => {
         await BarcodeScanner.hideBackground();
         console.log("Background hidden for scanner");
         
-        // Start the scanner with improved settings and all formats
+        // Start the scanner with improved settings
         console.log("Starting scanner...");
         const result = await BarcodeScanner.startScan({
           targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 

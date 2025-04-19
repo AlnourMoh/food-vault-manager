@@ -10,27 +10,39 @@ export const usePermissionRequest = () => {
 
   const requestPermission = async () => {
     try {
+      console.log('requestPermission called, checking platform...');
+      const platform = window.Capacitor?.getPlatform();
+      console.log('Current platform:', platform);
+
       if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-        console.log('Requesting BarcodeScanner permission...');
+        console.log('Requesting BarcodeScanner permission with force=true...');
+        // Force showing the permission dialog by setting force=true
         const result = await BarcodeScanner.checkPermission({ force: true });
+        console.log('BarcodeScanner permission result:', result);
         const granted = result.granted;
 
         if (!granted) {
-          if (window.Capacitor.getPlatform() === 'ios') {
+          console.log('Permission not granted, handling based on platform');
+          if (platform === 'ios') {
             return handleIosPermissions();
-          } else if (window.Capacitor.getPlatform() === 'android') {
+          } else if (platform === 'android') {
             return handleAndroidPermissions();
           }
         }
 
+        console.log('Permission granted or not platform-specific:', granted);
         return granted;
       } else if (window.Capacitor?.isPluginAvailable('Camera')) {
-        console.log('Requesting Camera permission...');
+        console.log('BarcodeScanner not available, trying Camera plugin...');
+        // Try the Camera plugin if BarcodeScanner is not available
         const result = await Camera.requestPermissions({
           permissions: ['camera']
         });
+        console.log('Camera permission result:', result);
         return result.camera === 'granted';
       } else {
+        console.log('Neither BarcodeScanner nor Camera available, using web fallback');
+        // Web fallback
         return handleWebPermissions();
       }
     } catch (error) {

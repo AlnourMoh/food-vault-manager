@@ -25,9 +25,9 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
     try {
       console.log('Attempting to start scan, permission status:', hasPermission);
       
-      // If we don't have permission, request it
+      // If we don't have permission, request it with force=true
       if (hasPermission === false) {
-        console.log('No camera permission, requesting...');
+        console.log('No camera permission, requesting with force=true...');
         const granted = await requestPermission();
         console.log('Permission request result:', granted);
         
