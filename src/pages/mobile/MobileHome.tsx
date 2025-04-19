@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,8 @@ import {
   ShoppingCart, 
   Calendar, 
   AlertTriangle,
-  ArrowUpRight
+  ArrowUpRight,
+  Package
 } from 'lucide-react';
 
 const MobileHome = () => {
@@ -123,12 +125,12 @@ const MobileHome = () => {
           </CardContent>
         </Card>
         
-        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/expiry')}>
+        <Card className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate('/mobile/product-management')}>
           <CardContent className="flex flex-col items-center justify-center p-6">
-            <div className="p-3 bg-destructive/10 rounded-full mb-3">
-              <Calendar className="h-6 w-6 text-destructive" />
+            <div className="p-3 bg-amber-100 rounded-full mb-3">
+              <Package className="h-6 w-6 text-amber-600" />
             </div>
-            <span className="font-medium">المنتجات المنتهية</span>
+            <span className="font-medium">تتبع وإدارة المنتجات</span>
           </CardContent>
         </Card>
       </div>
@@ -154,7 +156,7 @@ const MobileHome = () => {
           <Button 
             variant="link" 
             className="p-0 h-auto mt-2" 
-            onClick={() => navigate('/mobile/expiry')}
+            onClick={() => navigate('/mobile/product-management')}
           >
             عرض المنتجات
           </Button>
