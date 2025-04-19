@@ -22,33 +22,33 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
 
   const openAppSettings = async () => {
     console.log('Opening app settings if available');
-    if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
-      try {
+    try {
+      if (window.Capacitor) {
         const platform = window.Capacitor.getPlatform();
         
-        // For iOS, we can use the app-settings: URL scheme
+        // For iOS, exiting the app will prompt to open settings on restart
         if (platform === 'ios') {
-          // This is a known workaround for iOS - it will prompt to open settings
-          console.log('iOS detected - using exit app approach to prompt settings');
-          await App.exitApp();
+          console.log('iOS detected - exiting app to prompt settings');
+          const confirmed = window.confirm('هل تريد فتح إعدادات التطبيق لتمكين الكاميرا؟ سيتم إغلاق التطبيق وعند إعادة فتحه ستظهر رسالة لفتح الإعدادات.');
+          if (confirmed) {
+            await App.exitApp();
+          }
         } 
-        // For Android, we can try to use the package name to open settings
+        // For Android, show detailed instructions
         else if (platform === 'android') {
-          console.log('Android detected - showing instructions for manual settings access');
-          // Just logging instructions since direct settings access is limited
-          console.log('On Android, please manually open app settings to enable camera permissions');
-          
-          // Alert the user that they need to manually open settings
-          alert('يرجى فتح إعدادات التطبيق يدويًا على جهاز Android لمنح الإذن للكاميرا');
+          console.log('Android detected - showing instructions');
+          alert('لتمكين إذن الكاميرا، يرجى اتباع الخطوات التالية:\n\n1. افتح إعدادات جهازك\n2. انتقل إلى "التطبيقات" أو "مدير التطبيقات"\n3. ابحث عن تطبيق "مخزن الطعام"\n4. اضغط على "الأذونات"\n5. اضغط على "الكاميرا"\n6. اختر "السماح"');
         } else {
           console.log('Platform not supported for direct settings access');
+          alert('يرجى فتح إعدادات جهازك يدويًا وتمكين إذن الكاميرا للتطبيق');
         }
-      } catch (error) {
-        console.error('Error opening app settings:', error);
+      } else {
+        console.log('Capacitor not available');
+        alert('يرجى فتح إعدادات متصفحك لتمكين إذن الكاميرا');
       }
-    } else {
-      console.log('Capacitor App plugin not available');
-      alert('غير قادر على فتح الإعدادات. يرجى فتح إعدادات التطبيق يدويًا');
+    } catch (error) {
+      console.error('Error while trying to open settings:', error);
+      alert('حدث خطأ أثناء محاولة فتح الإعدادات. يرجى فتح إعدادات جهازك يدويًا وتمكين إذن الكاميرا للتطبيق');
     }
   };
 

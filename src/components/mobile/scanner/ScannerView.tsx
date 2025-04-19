@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Camera, Keyboard } from 'lucide-react';
 
@@ -16,6 +16,35 @@ export const ScannerView = ({
   onRequestPermission,
   onManualEntry
 }: ScannerViewProps) => {
+  // Make sure the scanning UI is properly displayed
+  useEffect(() => {
+    const setupScannerUI = () => {
+      if (!hasPermissionError) {
+        try {
+          // Make scanning visible when this component mounts
+          if (document.body.style.visibility === 'hidden') {
+            document.body.style.visibility = 'visible';
+          }
+          document.body.classList.add('barcode-scanner-active');
+        } catch (e) {
+          console.error('Error setting up scanner UI:', e);
+        }
+      }
+    };
+    
+    setupScannerUI();
+    
+    return () => {
+      try {
+        // Ensure the UI is restored when component unmounts
+        document.body.style.visibility = 'visible';
+        document.body.classList.remove('barcode-scanner-active');
+      } catch (e) {
+        console.error('Error restoring UI on unmount:', e);
+      }
+    };
+  }, [hasPermissionError]);
+
   const handleRequestPermission = () => {
     console.log('Request permission button clicked in ScannerView');
     if (onRequestPermission) {

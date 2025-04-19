@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Camera } from '@capacitor/camera';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { App } from '@capacitor/app';
 
 export const useCameraPermissions = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +78,13 @@ export const useCameraPermissions = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log('Using BarcodeScanner plugin to request permission');
         
+        // Reset the previous denied setting by stopping any active scan first
+        try {
+          await BarcodeScanner.stopScan();
+        } catch (e) {
+          console.log('No active scan to stop');
+        }
+        
         // Force showing the permission dialog
         const result = await BarcodeScanner.checkPermission({ force: true });
         console.log('BarcodeScanner permission request result:', result);
@@ -96,6 +104,18 @@ export const useCameraPermissions = () => {
             description: "يرجى السماح بالوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي",
             variant: "destructive"
           });
+          
+          // Provide guidance based on platform
+          if (window.Capacitor.getPlatform() === 'ios') {
+            // On iOS, prompt to go to settings
+            const confirm = window.confirm("هل تريد فتح إعدادات التطبيق لتمكين إذن الكاميرا؟");
+            if (confirm) {
+              await App.exitApp(); // This will prompt iOS to show settings when reopening
+            }
+          } else if (window.Capacitor.getPlatform() === 'android') {
+            // On Android, provide instructions
+            alert("لتمكين إذن الكاميرا، يرجى الذهاب إلى:\n إعدادات > التطبيقات > مخزن الطعام > الأذونات > الكاميرا");
+          }
         }
         
         return granted;

@@ -1,6 +1,7 @@
 
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { useToast } from '@/hooks/use-toast';
+import { App } from '@capacitor/app';
 
 export const useScannerDevice = () => {
   const { toast } = useToast();
@@ -26,28 +27,38 @@ export const useScannerDevice = () => {
           throw new Error("Permission denied for barcode scanner");
         }
         
-        // Make background transparent to show camera preview
+        // Hide the entire app interface to show the camera preview
+        document.body.style.visibility = 'hidden';
         document.body.classList.add('barcode-scanner-active');
-        
-        // Hide any elements that might be in the way
-        const appRoot = document.querySelector('#root') || document.body;
-        appRoot.classList.add('scanner-active');
         
         // Prepare the scanner
         await BarcodeScanner.prepare();
         console.log("Barcode scanner prepared, starting scan...");
         
-        // Start the scanner with a more visible highlight and include QR code format
+        // Make the scanner area visible
+        await BarcodeScanner.hideBackground();
+        
+        // Start the scanner with improved settings
         const result = await BarcodeScanner.startScan({
           targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 'PDF_417', 'AZTEC', 'DATA_MATRIX'],
           cameraDirection: 'back'
         });
         
+        console.log("Scan result:", result);
+        
         if (result.hasContent) {
           console.log("Barcode scanned:", result.content);
+          // Show app UI again
+          document.body.style.visibility = 'visible';
+          document.body.classList.remove('barcode-scanner-active');
+          await BarcodeScanner.showBackground();
           onSuccess(result.content);
         } else {
           console.log("Scan completed but no content found");
+          // Show app UI again if no content
+          document.body.style.visibility = 'visible';
+          document.body.classList.remove('barcode-scanner-active');
+          await BarcodeScanner.showBackground();
         }
       } else {
         console.log("Running in web environment or plugin not available - using test barcode");
@@ -66,6 +77,12 @@ export const useScannerDevice = () => {
       }
     } catch (error) {
       console.error("Error starting device scan:", error);
+      // Ensure UI is visible in case of error
+      document.body.style.visibility = 'visible';
+      document.body.classList.remove('barcode-scanner-active');
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+        await BarcodeScanner.showBackground();
+      }
       throw error; // Propagate error to be handled by caller
     }
   };
@@ -77,18 +94,18 @@ export const useScannerDevice = () => {
         // Stop the scanner
         await BarcodeScanner.stopScan();
         
-        // Restore the UI
+        // Make sure app UI is visible again
+        document.body.style.visibility = 'visible';
         document.body.classList.remove('barcode-scanner-active');
         
-        const appRoot = document.querySelector('#root') || document.body;
-        appRoot.classList.remove('scanner-active');
-        
-        // Hide camera layer to ensure it doesn't stay visible
+        // Hide camera layer
         await BarcodeScanner.showBackground();
-        await BarcodeScanner.hideBackground();
       }
     } catch (error) {
       console.error("Error stopping device scan:", error);
+      // Ensure UI is visible in case of error
+      document.body.style.visibility = 'visible';
+      document.body.classList.remove('barcode-scanner-active');
     }
   };
   

@@ -19,19 +19,19 @@ const config: CapacitorConfig = {
     },
     Camera: {
       promptLabelHeader: "الوصول إلى الكاميرا",
-      promptLabelText: "يحتاج التطبيق إلى إذن للوصول إلى الكاميرا لمسح الباركود",
+      promptLabelText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
       promptLabelCancel: "إلغاء",
       promptLabelConfirm: "السماح"
     },
     BarcodeScanner: {
       promptLabelHeader: "الوصول إلى الكاميرا",
-      promptLabelText: "يحتاج التطبيق إلى إذن للوصول إلى الكاميرا لمسح الباركود",
+      promptLabelText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
       promptLabelCancel: "إلغاء",
       promptLabelConfirm: "السماح"
     },
     Permissions: {
       camera: {
-        message: "يحتاج التطبيق إلى إذن للوصول إلى الكاميرا لمسح الباركود"
+        message: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود"
       }
     }
   }
