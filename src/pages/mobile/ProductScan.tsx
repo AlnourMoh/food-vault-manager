@@ -57,6 +57,22 @@ const ProductScan = () => {
       }
       
       // Convert database product to the Product interface format
+      // Make sure we validate the status value to match the expected union type
+      const normalizedStatus = ((): 'active' | 'expired' | 'removed' => {
+        switch(product.status) {
+          case 'active':
+            return 'active';
+          case 'expired':
+            return 'expired';
+          case 'removed':
+            return 'removed';
+          default:
+            // Default to 'active' if status doesn't match any expected values
+            console.warn(`Unexpected product status: ${product.status}, defaulting to 'active'`);
+            return 'active';
+        }
+      })();
+      
       const formattedProduct: Product = {
         id: product.id,
         name: product.name,
@@ -68,7 +84,7 @@ const ProductScan = () => {
         restaurantId: product.company_id,
         restaurantName: '', // This information is not available from the query
         addedBy: '', // This information is not available from the query
-        status: product.status,
+        status: normalizedStatus,
         imageUrl: product.image_url,
       };
       
