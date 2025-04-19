@@ -1,7 +1,10 @@
 
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { useToast } from '@/hooks/use-toast';
 
 export const useScannerDevice = () => {
+  const { toast } = useToast();
+  
   const startDeviceScan = async (onSuccess: (code: string) => void) => {
     try {
       console.log("Starting device scan");
@@ -88,6 +91,3 @@ export const useScannerDevice = () => {
     stopDeviceScan
   };
 };
-
-// Add missing toast import
-import { toast } from '@/hooks/use-toast';

@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useCameraPermissions } from '@/hooks/useCameraPermissions';
-import { useBarcodeScannerControls } from '@/hooks/scanner/useBarcodeScannerControls';
+import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { ScannerLoading } from './scanner/ScannerLoading';
 import { NoPermissionView } from './scanner/NoPermissionView';
 import { ScannerView } from './scanner/ScannerView';
@@ -19,21 +18,14 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const [isInitializing, setIsInitializing] = useState(true);
   const { toast } = useToast();
   
-  const { isLoading, hasPermission, requestPermission } = useCameraPermissions();
-  
-  const scannerControls = useBarcodeScannerControls({ 
-    onScan, 
-    onClose,
+  const {
+    isLoading,
     hasPermission,
-    requestPermission
-  });
-  
-  const { 
-    isScanningActive, 
+    isScanningActive,
     lastScannedCode,
     startScan,
     stopScan
-  } = scannerControls;
+  } = useScannerState({ onScan, onClose });
   
   // Automatically start scanning when the component mounts if we have permission
   useEffect(() => {
@@ -71,13 +63,9 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const handleRequestPermission = async () => {
     console.log('BarcodeScanner: Requesting permission...');
     try {
-      const granted = await requestPermission();
-      console.log('Permission request result:', granted);
-      
-      if (granted && !isScanningActive) {
-        console.log('Permission granted, starting scan');
-        await startScan();
-      }
+      const scanner = useScannerState({ onScan, onClose });
+      const granted = await scanner.startScan();
+      console.log('Permission request and scan started:', granted);
     } catch (error) {
       console.error('Error requesting permission from BarcodeScanner:', error);
       toast({
