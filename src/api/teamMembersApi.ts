@@ -95,7 +95,7 @@ export const addTeamMemberApi = async (restaurantId: string, memberData: {
   const memberToInsert = {
     company_id: restaurantId,
     name: memberData.name,
-    role: dbRole,
+    role: dbRole as 'admin' | 'staff',  // Fix: Type assertion to match the expected enum type
     phone: formattedPhone,
     email: memberData.email,
     is_active: true,
@@ -148,11 +148,11 @@ export const storeUserProfileApi = async (restaurantId: string, email: string) =
     if (!existingAccess) {
       const { error: insertError } = await supabase
         .from('restaurant_access')
-        .insert([{
+        .insert({
           restaurant_id: restaurantId,
           email: email,
           password_hash: 'temporary_password' // سيتم تحديثه عندما يعين المستخدم كلمة المرور
-        }]);
+        });
         
       if (insertError) {
         console.error('Error storing user profile in restaurant_access:', insertError);
@@ -217,7 +217,7 @@ export const updateTeamMemberApi = async (
   
   const memberToUpdate = {
     name: memberData.name,
-    role: dbRole,
+    role: dbRole as 'admin' | 'staff',  // Fix: Type assertion to match the expected enum type
     phone: formattedPhone,
     email: memberData.email,
   };
