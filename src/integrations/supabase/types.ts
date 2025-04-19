@@ -586,6 +586,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      request_password_reset: {
+        Args: { p_email: string }
+        Returns: undefined
+      }
     }
     Enums: {
       company_member_role: "admin" | "staff"

@@ -98,7 +98,7 @@ const RestaurantLogin = () => {
       toast({
         variant: "destructive",
         title: "خطأ في إرسال الطلب",
-        description: "حدث خطأ أثناء محاولة إرسال طلب استعادة كلمة المرور",
+        description: error.message || "حدث خطأ أثناء محاولة إرسال طلب استعادة كلمة المرور",
       });
     } finally {
       setIsLoading(false);
