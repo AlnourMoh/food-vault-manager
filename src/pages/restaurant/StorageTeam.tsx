@@ -55,6 +55,7 @@ const RestaurantStorageTeam = () => {
           onEditMember={handleEditMember}
           onDeleteMember={handleDeleteMember}
           onCopyWelcomeMessage={copyWelcomeMessage}
+          generateWelcomeMessage={generateWelcomeMessage}
         />
 
         <AddMemberDialog
@@ -66,6 +67,8 @@ const RestaurantStorageTeam = () => {
           phoneError={phoneError}
           emailError={emailError}
           onResetErrors={resetErrors}
+          onCopyWelcomeMessage={copyWelcomeMessage}
+          welcomeMessage={lastAddedMember ? generateWelcomeMessage(lastAddedMember) : ''}
         />
 
         <EditMemberDialog
@@ -92,4 +95,3 @@ const RestaurantStorageTeam = () => {
 };
 
 export default RestaurantStorageTeam;
-
