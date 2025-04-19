@@ -9,9 +9,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   BarcodeIcon, 
   ShoppingCart, 
-  Calendar, 
-  AlertTriangle,
-  ArrowUpRight,
   Package
 } from 'lucide-react';
 
@@ -19,7 +16,6 @@ const MobileHome = () => {
   const [restaurantName, setRestaurantName] = useState<string>('المطعم');
   const [stats, setStats] = useState({
     totalProducts: 0,
-    expiringProducts: 0
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -61,22 +57,8 @@ const MobileHome = () => {
             
           if (productsError) throw productsError;
           
-          // Get expiring products (within 7 days)
-          const sevenDaysFromNow = new Date();
-          sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-          
-          const { data: expiringProducts, error: expiringError } = await supabase
-            .from('products')
-            .select('id')
-            .eq('company_id', restaurantId)
-            .lt('expiry_date', sevenDaysFromNow.toISOString())
-            .gt('expiry_date', new Date().toISOString());
-            
-          if (expiringError) throw expiringError;
-          
           setStats({
             totalProducts: products?.length || 0,
-            expiringProducts: expiringProducts?.length || 0
           });
         } catch (error) {
           console.error('Error fetching stats:', error);
@@ -95,20 +77,12 @@ const MobileHome = () => {
         <h1 className="text-3xl font-bold">{restaurantName}</h1>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <Card className="bg-primary/10">
           <CardContent className="flex flex-col items-center justify-center p-4">
             <ShoppingCart className="h-8 w-8 text-primary mb-1" />
             <span className="text-2xl font-bold">{stats.totalProducts}</span>
             <span className="text-xs text-muted-foreground">إجمالي المنتجات</span>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-destructive/10">
-          <CardContent className="flex flex-col items-center justify-center p-4">
-            <AlertTriangle className="h-8 w-8 text-destructive mb-1" />
-            <span className="text-2xl font-bold">{stats.expiringProducts}</span>
-            <span className="text-xs text-muted-foreground">منتجات قاربت على الانتهاء</span>
           </CardContent>
         </Card>
       </div>
@@ -134,34 +108,6 @@ const MobileHome = () => {
           </CardContent>
         </Card>
       </div>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex justify-between items-center">
-            <span>المنتجات قاربت على الانتهاء</span>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats.expiringProducts > 0 ? (
-            <p className="text-sm text-muted-foreground">
-              لديك {stats.expiringProducts} منتجات ستنتهي خلال 7 أيام. تحقق منها الآن لتجنب الهدر.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              ليس لديك منتجات على وشك الانتهاء خلال 7 أيام القادمة.
-            </p>
-          )}
-          
-          <Button 
-            variant="link" 
-            className="p-0 h-auto mt-2" 
-            onClick={() => navigate('/mobile/product-management')}
-          >
-            عرض المنتجات
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 };
