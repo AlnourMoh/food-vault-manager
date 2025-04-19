@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Keyboard } from 'lucide-react';
+import { Camera, Keyboard, Settings } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface NoPermissionViewProps {
@@ -16,6 +16,21 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
     console.log('Request permission button clicked in NoPermissionView - triggering permission request');
     if (onRequestPermission) {
       onRequestPermission();
+    }
+  };
+
+  const openAppSettings = () => {
+    console.log('Opening app settings if available');
+    if (window.Capacitor && window.Capacitor.isPluginAvailable('App')) {
+      try {
+        // Attempt to open app settings using the App plugin
+        const { App } = window.Capacitor.Plugins;
+        App.openUrl({ url: 'app-settings:' }).catch(err => {
+          console.error('Error opening settings:', err);
+        });
+      } catch (error) {
+        console.error('Error opening app settings:', error);
+      }
     }
   };
 
@@ -42,6 +57,15 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
           >
             <Camera className="h-4 w-4 ml-2" />
             طلب الإذن مجددًا
+          </Button>
+          
+          <Button 
+            onClick={openAppSettings}
+            className="w-full"
+            variant="secondary"
+          >
+            <Settings className="h-4 w-4 ml-2" />
+            فتح إعدادات التطبيق
           </Button>
           
           {onManualEntry && (

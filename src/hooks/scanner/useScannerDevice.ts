@@ -12,19 +12,18 @@ export const useScannerDevice = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log("Using Capacitor BarcodeScanner plugin");
         
-        // Check if camera permission is granted for barcode scanner
-        const status = await BarcodeScanner.checkPermission({ force: false });
+        // Force permission request - this will show the OS permission dialog
+        const status = await BarcodeScanner.checkPermission({ force: true });
         console.log("BarcodeScanner permission status:", status);
         
         if (!status.granted) {
-          console.log("Requesting barcode scanner permission...");
-          const requestResult = await BarcodeScanner.checkPermission({ force: true });
-          console.log("BarcodeScanner force permission request result:", requestResult);
-          
-          if (!requestResult.granted) {
-            console.error("Permission denied for barcode scanner");
-            throw new Error("Permission denied for barcode scanner");
-          }
+          console.error("Permission denied for barcode scanner");
+          toast({
+            title: "تم رفض الإذن",
+            description: "لم يتم منح إذن الكاميرا. يرجى تمكين الإذن في إعدادات جهازك.",
+            variant: "destructive"
+          });
+          throw new Error("Permission denied for barcode scanner");
         }
         
         // Make background transparent to show camera preview
@@ -82,6 +81,10 @@ export const useScannerDevice = () => {
         
         const appRoot = document.querySelector('#root') || document.body;
         appRoot.classList.remove('scanner-active');
+        
+        // Hide camera layer to ensure it doesn't stay visible
+        await BarcodeScanner.showBackground();
+        await BarcodeScanner.hideBackground();
       }
     } catch (error) {
       console.error("Error stopping device scan:", error);

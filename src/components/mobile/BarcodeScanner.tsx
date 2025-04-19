@@ -7,6 +7,7 @@ import { ScannerView } from './scanner/ScannerView';
 import { ScannerReadyView } from './scanner/ScannerReadyView';
 import { DigitalCodeInput } from './scanner/DigitalCodeInput';
 import { useToast } from '@/hooks/use-toast';
+import { BarcodeScanner as CapacitorBarcodeScanner } from '@capacitor-community/barcode-scanner';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -17,6 +18,20 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const { toast } = useToast();
+  
+  // Handle scanner initialization
+  useEffect(() => {
+    if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+      // Check if scanner UI is already active (might happen if the app crashed previously)
+      CapacitorBarcodeScanner.showBackground().catch(e => console.error('Error showing background', e));
+    }
+    
+    return () => {
+      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+        CapacitorBarcodeScanner.showBackground().catch(e => console.error('Error showing background on unmount', e));
+      }
+    };
+  }, []);
   
   const {
     isLoading,

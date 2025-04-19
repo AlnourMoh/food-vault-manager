@@ -25,8 +25,14 @@ export const useCameraPermissions = () => {
           if (status.granted) {
             console.log('BarcodeScanner permission already granted');
             setHasPermission(true);
+          } else if (status.denied && status.neverAsked) {
+            console.log('BarcodeScanner permission never asked');
+            setHasPermission(false);
+          } else if (status.denied && !status.neverAsked) {
+            console.log('BarcodeScanner permission previously denied');
+            setHasPermission(false);
           } else {
-            console.log('BarcodeScanner permission not granted yet');
+            console.log('BarcodeScanner permission not determined yet');
             setHasPermission(false);
           }
         } else if (window.Capacitor && window.Capacitor.isPluginAvailable('Camera')) {
@@ -71,7 +77,7 @@ export const useCameraPermissions = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log('Using BarcodeScanner plugin to request permission');
         
-        // Request permission directly from BarcodeScanner
+        // Force showing the permission dialog
         const result = await BarcodeScanner.checkPermission({ force: true });
         console.log('BarcodeScanner permission request result:', result);
         
@@ -125,6 +131,7 @@ export const useCameraPermissions = () => {
         // For web testing, try to request permission using the browser API
         try {
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            console.log('Requesting browser camera permission');
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             // If we reach this point, permission was granted
             if (stream) {
