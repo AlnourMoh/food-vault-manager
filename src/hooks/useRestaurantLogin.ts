@@ -16,12 +16,16 @@ export const useRestaurantLogin = () => {
 
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true);
+    console.log('Attempting login with:', { email });
 
     try {
+      // التحقق من بيانات الاعتماد باستخدام وظيفة authenticate_restaurant
       const { data, error } = await supabase.rpc('authenticate_restaurant', {
         p_email: email,
         p_password: password
       });
+
+      console.log('Authentication response:', data, error);
 
       if (error) {
         throw error;
@@ -32,6 +36,8 @@ export const useRestaurantLogin = () => {
       if (authData && authData.authenticated) {
         localStorage.setItem('restaurantId', authData.restaurant_id);
         localStorage.setItem('isRestaurantLogin', 'true');
+        // تخزين البريد الإلكتروني للمستخدم للاستخدام اللاحق في التطبيق المحمول
+        localStorage.setItem('userEmail', email);
         
         toast({
           title: "تم تسجيل الدخول بنجاح",
@@ -40,19 +46,45 @@ export const useRestaurantLogin = () => {
         
         navigate('/restaurant/dashboard');
       } else {
-        toast({
-          variant: "destructive",
-          title: "خطأ في تسجيل الدخول",
-          description: "بيانات الاعتماد غير صحيحة",
-        });
+        // محاولة تسجيل الدخول باستخدام طريقة احتياطية (التحقق المباشر من الجدول)
+        const { data: accessData, error: accessError } = await supabase
+          .from('restaurant_access')
+          .select('restaurant_id, password_hash')
+          .eq('email', email)
+          .single();
+
+        console.log('Direct database check:', accessData, accessError);
+
+        if (accessError) {
+          throw new Error("بيانات الاعتماد غير صحيحة");
+        }
+
+        if (accessData && accessData.password_hash === password) {
+          localStorage.setItem('restaurantId', accessData.restaurant_id);
+          localStorage.setItem('isRestaurantLogin', 'true');
+          localStorage.setItem('userEmail', email);
+          
+          toast({
+            title: "تم تسجيل الدخول بنجاح",
+            description: "مرحباً بك في نظام إدارة المطعم",
+          });
+          
+          navigate('/restaurant/dashboard');
+        } else {
+          toast({
+            variant: "destructive",
+            title: "خطأ في تسجيل الدخول",
+            description: "بيانات الاعتماد غير صحيحة",
+          });
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error logging in:", error);
       toast({
         variant: "destructive",
         title: "خطأ في تسجيل الدخول",
-        description: "حدث خطأ أثناء محاولة تسجيل الدخول",
+        description: error.message || "حدث خطأ أثناء محاولة تسجيل الدخول",
       });
-      console.error("Error logging in:", error);
     } finally {
       setIsLoading(false);
     }

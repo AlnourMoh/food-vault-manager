@@ -42,21 +42,47 @@ export const RestaurantSignup = () => {
   });
 
   const verifyEmail = async (email: string) => {
+    console.log('Verifying email:', email);
     setVerifyingEmail(true);
     try {
-      const { data: member, error } = await supabase
+      // أولاً نتحقق من جدول company_members
+      const { data: member, error: memberError } = await supabase
         .from('company_members')
         .select('email')
         .eq('email', email)
         .single();
 
-      if (error) throw error;
+      if (memberError && memberError.code !== 'PGRST116') {
+        console.error('Error checking company_members:', memberError);
+        throw memberError;
+      }
 
-      if (member) {
+      // ثانياً نتحقق من جدول restaurant_access
+      const { data: accessData, error: accessError } = await supabase
+        .from('restaurant_access')
+        .select('email, password_hash')
+        .eq('email', email)
+        .single();
+
+      console.log('Access data from restaurant_access:', accessData);
+
+      if (accessError && accessError.code !== 'PGRST116') {
+        console.error('Error checking restaurant_access:', accessError);
+        throw accessError;
+      }
+
+      // إذا وجدنا البريد في أحد الجدولين، نسمح بالتسجيل
+      if (member || (accessData && accessData.password_hash === 'temporary_password')) {
         setEmailVerified(true);
         toast({
           title: "تم التحقق من البريد الإلكتروني",
           description: "يمكنك الآن إنشاء كلمة المرور الخاصة بك",
+        });
+      } else if (accessData && accessData.password_hash !== 'temporary_password') {
+        toast({
+          variant: "destructive",
+          title: "البريد الإلكتروني مسجل بالفعل",
+          description: "هذا البريد الإلكتروني لديه حساب بالفعل، يرجى تسجيل الدخول",
         });
       } else {
         toast({
@@ -78,23 +104,32 @@ export const RestaurantSignup = () => {
   };
 
   const onSubmit = async (data: SignupFormData) => {
+    console.log('Form submitted:', data);
     if (!emailVerified) {
       await verifyEmail(data.email);
       return;
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password
-      });
+      // تحديث كلمة المرور في جدول restaurant_access
+      const { error: updateError } = await supabase
+        .from('restaurant_access')
+        .update({ password_hash: data.password })
+        .eq('email', data.email);
 
-      if (error) throw error;
+      if (updateError) {
+        console.error('Error updating password:', updateError);
+        throw updateError;
+      }
 
       toast({
         title: "تم التسجيل بنجاح",
-        description: "تم إرسال رابط تأكيد البريد الإلكتروني",
+        description: "يمكنك الآن تسجيل الدخول باستخدام بريدك الإلكتروني وكلمة المرور",
       });
+
+      // إعادة تعيين النموذج
+      form.reset();
+      setEmailVerified(false);
     } catch (error: any) {
       console.error('Error signing up:', error);
       toast({

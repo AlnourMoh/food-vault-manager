@@ -1,50 +1,76 @@
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useRestaurantLogin } from '@/hooks/useRestaurantLogin';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useRestaurantLogin } from "@/hooks/useRestaurantLogin";
 
-export const LoginForm = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const formSchema = z.object({
+  email: z.string().email({
+    message: "يرجى إدخال بريد إلكتروني صالح.",
+  }),
+  password: z.string().min(1, {
+    message: "يرجى إدخال كلمة المرور.",
+  }),
+});
+
+export function LoginForm() {
   const { handleLogin, isLoading } = useRestaurantLogin();
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleLogin(email, password);
-  };
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await handleLogin(values.email, values.password);
+  }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</label>
-        <Input 
-          id="email" 
-          type="email" 
-          placeholder="البريد الإلكتروني" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
-          required 
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>البريد الإلكتروني</FormLabel>
+              <FormControl>
+                <Input placeholder="your@email.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium">كلمة المرور</label>
-        <Input 
-          id="password" 
-          type="password" 
-          placeholder="كلمة المرور" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-          required 
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>كلمة المرور</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <Button 
-        type="submit" 
-        className="w-full bg-fvm-primary hover:bg-fvm-primary-light text-white"
-        disabled={isLoading}
-      >
-        {isLoading ? "جاري التحميل..." : "تسجيل الدخول"}
-      </Button>
-    </form>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+        </Button>
+      </form>
+    </Form>
   );
-};
+}
