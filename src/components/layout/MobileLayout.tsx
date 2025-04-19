@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, BarcodeIcon, User, ArrowRight, Sparkles } from 'lucide-react';
@@ -25,7 +24,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b bg-background p-4 flex items-center justify-between">
-        <h1 className="text-lg font-bold">المطعم</h1>
         {!isMobileHomePage && (
           <Button 
             variant="ghost" 
@@ -84,4 +82,3 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
 };
 
 export default MobileLayout;
-
