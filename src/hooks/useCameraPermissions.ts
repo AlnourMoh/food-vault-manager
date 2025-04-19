@@ -48,10 +48,10 @@ export const useCameraPermissions = () => {
   }, []);
 
   // Method to request permission and update state accordingly
-  const requestCameraPermission = async () => {
+  const requestCameraPermission = async (force = true) => {
     try {
-      console.log('Explicitly requesting camera permission...');
-      const result = await requestPermission();
+      console.log(`Explicitly requesting camera permission with force=${force}...`);
+      const result = await requestPermission(force);
       console.log('Permission request result:', result);
       setHasPermission(result);
       return result;

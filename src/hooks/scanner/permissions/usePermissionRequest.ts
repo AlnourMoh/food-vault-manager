@@ -8,16 +8,16 @@ export const usePermissionRequest = () => {
   const { toast } = useToast();
   const { handleIosPermissions, handleAndroidPermissions, handleWebPermissions } = usePlatformPermissions();
 
-  const requestPermission = async () => {
+  const requestPermission = async (force = true) => {
     try {
-      console.log('requestPermission called, checking platform...');
+      console.log(`requestPermission called with force=${force}, checking platform...`);
       const platform = window.Capacitor?.getPlatform();
       console.log('Current platform:', platform);
 
       if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-        console.log('Requesting BarcodeScanner permission with force=true...');
-        // Force showing the permission dialog by setting force=true
-        const result = await BarcodeScanner.checkPermission({ force: true });
+        console.log(`Requesting BarcodeScanner permission with force=${force}...`);
+        // Force showing the permission dialog by setting force parameter
+        const result = await BarcodeScanner.checkPermission({ force });
         console.log('BarcodeScanner permission result:', result);
         const granted = result.granted;
 

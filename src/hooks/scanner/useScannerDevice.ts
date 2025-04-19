@@ -13,7 +13,7 @@ export const useScannerDevice = () => {
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log("Using Capacitor BarcodeScanner plugin");
         
-        // Check if permission is already granted
+        // يجب طلب الإذن دائمًا قبل البدء
         const status = await BarcodeScanner.checkPermission({ force: true });
         console.log("BarcodeScanner permission status:", status);
         
@@ -27,20 +27,21 @@ export const useScannerDevice = () => {
           throw new Error("Permission denied for barcode scanner");
         }
         
-        // Prepare the scanner
+        // تجهيز الماسح
         await BarcodeScanner.prepare();
         console.log("Barcode scanner prepared successfully");
         
-        // Hide the entire app interface to show the camera preview
+        // إخفاء واجهة التطبيق بالكامل لإظهار معاينة الكاميرا
         document.body.style.visibility = 'hidden';
         document.body.classList.add('barcode-scanner-active');
         
-        // Make the scanner area visible
+        // إظهار منطقة الماسح
         await BarcodeScanner.hideBackground();
         console.log("Background hidden for scanner");
         
-        // Start the scanner with improved settings
-        console.log("Starting scanner...");
+        // تخصيصات الكاميرا لتحسين تجربة المستخدم
+        // يستخدم الإعدادات من ملف capacitor.config.ts
+        console.log("Starting scanner with improved settings...");
         const result = await BarcodeScanner.startScan({
           targetedFormats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 
                            'PDF_417', 'AZTEC', 'DATA_MATRIX', 'ITF', 'CODABAR'],
@@ -51,28 +52,28 @@ export const useScannerDevice = () => {
         
         if (result.hasContent) {
           console.log("Barcode scanned:", result.content);
-          // Show app UI again
+          // إعادة إظهار واجهة التطبيق مرة أخرى
           document.body.style.visibility = 'visible';
           document.body.classList.remove('barcode-scanner-active');
           await BarcodeScanner.showBackground();
           onSuccess(result.content);
         } else {
           console.log("Scan completed but no content found");
-          // Show app UI again if no content
+          // إعادة إظهار واجهة التطبيق إذا لم يتم العثور على محتوى
           document.body.style.visibility = 'visible';
           document.body.classList.remove('barcode-scanner-active');
           await BarcodeScanner.showBackground();
         }
       } else {
         console.log("Running in web environment or plugin not available - using test barcode");
-        // For development/web: simulate scanning
+        // للتطوير/الويب: محاكاة المسح
         toast({
           title: "نسخة الويب",
           description: "هذا محاكاة للماسح الضوئي في بيئة الويب",
         });
         
         setTimeout(() => {
-          // For testing, generate a random code that would likely exist in the database
+          // للاختبار، إنشاء رمز عشوائي قد يكون موجودًا في قاعدة البيانات
           const mockBarcode = `TEST-${Math.floor(Math.random() * 1000)}`;
           console.log("Test barcode:", mockBarcode);
           onSuccess(mockBarcode);
@@ -80,14 +81,14 @@ export const useScannerDevice = () => {
       }
     } catch (error) {
       console.error("Error starting device scan:", error);
-      // Ensure UI is visible in case of error
+      // التأكد من رؤية واجهة المستخدم في حالة الخطأ
       document.body.style.visibility = 'visible';
       document.body.classList.remove('barcode-scanner-active');
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         await BarcodeScanner.showBackground();
         await BarcodeScanner.stopScan();
       }
-      throw error; // Propagate error to be handled by caller
+      throw error; // نشر الخطأ ليتم معالجته من قبل المستدعي
     }
   };
   
@@ -95,21 +96,21 @@ export const useScannerDevice = () => {
     try {
       console.log("Stopping device scan");
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-        // Stop the scanner
+        // إيقاف الماسح
         await BarcodeScanner.stopScan();
         console.log("Scanner stopped");
         
-        // Make sure app UI is visible again
+        // التأكد من رؤية واجهة التطبيق مرة أخرى
         document.body.style.visibility = 'visible';
         document.body.classList.remove('barcode-scanner-active');
         
-        // Hide camera layer
+        // إخفاء طبقة الكاميرا
         await BarcodeScanner.showBackground();
         console.log("Background restored");
       }
     } catch (error) {
       console.error("Error stopping device scan:", error);
-      // Ensure UI is visible in case of error
+      // التأكد من رؤية واجهة المستخدم في حالة الخطأ
       document.body.style.visibility = 'visible';
       document.body.classList.remove('barcode-scanner-active');
     }
