@@ -1,20 +1,23 @@
 
 import React from 'react';
 import { format, differenceInDays } from 'date-fns';
-import { Package, AlertTriangle } from 'lucide-react';
+import { Package, AlertTriangle, ScanBarcode } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
 import { Separator } from '@/components/ui/separator';
 
 interface MobileProductCardProps {
   product: Product;
   onSelect: (product: Product) => void;
+  onRemove?: (product: Product) => void;
 }
 
 const MobileProductCard: React.FC<MobileProductCardProps> = ({ 
   product,
-  onSelect
+  onSelect,
+  onRemove
 }) => {
   const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
   const isExpiring = daysUntilExpiry <= 30;
@@ -22,13 +25,15 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
 
   return (
     <Card 
-      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md h-full"
-      onClick={() => onSelect(product)}
+      className="overflow-hidden h-full flex flex-col"
     >
-      <CardContent className="p-6">
-        <div className="flex flex-col space-y-4">
+      <CardContent className="p-6 flex-1 flex flex-col">
+        <div className="flex flex-col space-y-4 h-full">
           {/* Image and Name Section */}
-          <div className="flex items-center gap-6">
+          <div 
+            className="flex items-center gap-6 cursor-pointer"
+            onClick={() => onSelect(product)}
+          >
             <div className="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
               {product.imageUrl ? (
                 <img 
@@ -55,7 +60,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
           <Separator className="my-2" />
           
           {/* Details Section */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6 flex-1">
             <div>
               <span className="text-sm text-muted-foreground block mb-2">الكمية:</span>
               <span className="font-medium text-xl">
@@ -85,6 +90,16 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
               </span>
             </div>
           )}
+          
+          {/* Remove Button */}
+          <Button
+            variant="outline"
+            className="w-full mt-4 bg-background hover:bg-secondary"
+            onClick={() => onRemove?.(product)}
+          >
+            <ScanBarcode className="ml-2" />
+            إخراج المنتج
+          </Button>
         </div>
       </CardContent>
     </Card>
