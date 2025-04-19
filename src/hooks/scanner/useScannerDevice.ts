@@ -1,5 +1,5 @@
 
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { useToast } from '@/hooks/use-toast';
 import { Camera } from '@capacitor/camera';
 
@@ -64,16 +64,16 @@ export const useScannerDevice = () => {
         console.log("[useScannerDevice] بدء عملية المسح ML Kit...");
         const { barcodes } = await BarcodeScanner.scan({
           formats: [
-            BarcodeScanner.BarcodeFormat.QrCode,
-            BarcodeScanner.BarcodeFormat.Ean13,
-            BarcodeScanner.BarcodeFormat.Ean8,
-            BarcodeScanner.BarcodeFormat.Code39,
-            BarcodeScanner.BarcodeFormat.Code128,
-            BarcodeScanner.BarcodeFormat.UpcA,
-            BarcodeScanner.BarcodeFormat.UpcE,
-            BarcodeScanner.BarcodeFormat.Pdf417,
-            BarcodeScanner.BarcodeFormat.Aztec,
-            BarcodeScanner.BarcodeFormat.DataMatrix
+            BarcodeFormat.QrCode,
+            BarcodeFormat.Ean13,
+            BarcodeFormat.Ean8,
+            BarcodeFormat.Code39,
+            BarcodeFormat.Code128,
+            BarcodeFormat.UpcA,
+            BarcodeFormat.UpcE,
+            BarcodeFormat.Pdf417,
+            BarcodeFormat.Aztec,
+            BarcodeFormat.DataMatrix
           ],
         });
         
