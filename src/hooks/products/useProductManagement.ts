@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
@@ -68,12 +67,7 @@ export const useProductManagement = () => {
   const filterProducts = () => {
     let filtered = [...products];
     
-    if (activeTab === 'expiring') {
-      filtered = filtered.filter(product => {
-        const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
-        return daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
-      });
-    } else if (activeTab === 'expired') {
+    if (activeTab === 'expired') {
       filtered = filtered.filter(product => {
         const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
         return daysUntilExpiry < 0;
@@ -101,18 +95,6 @@ export const useProductManagement = () => {
         variant: "destructive" as const,
         icon: { type: 'AlertTriangle', className: "h-3 w-3 ml-1" }
       };
-    } else if (daysUntilExpiry <= 7) {
-      return {
-        label: `ينتهي خلال ${daysUntilExpiry} أيام`,
-        variant: "destructive" as const,
-        icon: { type: 'AlertTriangle', className: "h-3 w-3 ml-1" }
-      };
-    } else if (daysUntilExpiry <= 30) {
-      return {
-        label: `ينتهي خلال ${daysUntilExpiry} يوم`,
-        variant: "warning" as const,
-        icon: { type: 'AlertTriangle', className: "h-3 w-3 ml-1" }
-      };
     } else {
       return {
         label: `صالح لمدة ${daysUntilExpiry} يوم`,
@@ -126,13 +108,6 @@ export const useProductManagement = () => {
     return products.filter(product => {
       const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
       return daysUntilExpiry < 0;
-    }).length;
-  };
-
-  const getExpiringCount = () => {
-    return products.filter(product => {
-      const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
-      return daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
     }).length;
   };
 
@@ -154,6 +129,5 @@ export const useProductManagement = () => {
     setActiveTab,
     getExpiryStatus,
     getExpiredCount,
-    getExpiringCount,
   };
 };
