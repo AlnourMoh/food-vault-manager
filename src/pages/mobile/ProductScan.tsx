@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -6,10 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
 import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScanCard';
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
+import { Product } from '@/types';
 
 const ProductScan = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [scannedProduct, setScannedProduct] = useState<any>(null);
+  const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ const ProductScan = () => {
         throw productError;
       }
       
-      setScannedProduct(product);
+      setScannedProduct(product as Product);
       
       const restaurantId = localStorage.getItem('restaurantId');
       if (restaurantId) {

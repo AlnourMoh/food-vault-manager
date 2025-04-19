@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Info, ShoppingCart } from 'lucide-react';
+import { Product } from '@/types';
 
 interface ScannedProductCardProps {
-  product: any;
+  product: Product;
   onScanAnother: () => void;
   onViewDetails: () => void;
 }
