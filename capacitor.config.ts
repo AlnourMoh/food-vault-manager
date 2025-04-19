@@ -23,15 +23,18 @@ const config: CapacitorConfig = {
       promptLabelCancel: "إلغاء",
       promptLabelConfirm: "السماح"
     },
-    BarcodeScanner: {
-      promptLabelHeader: "الوصول إلى الكاميرا",
-      promptLabelText: "تطبيق مخزن الطعام يحتاج إلى إذن الكاميرا لمسح الباركود",
-      promptLabelCancel: "إلغاء",
-      promptLabelConfirm: "السماح",
-      detectionSpeed: "normal",
-      targetedFormats: ["QR_CODE", "EAN_13", "EAN_8", "CODE_39", "CODE_128", 
-                        "UPC_A", "UPC_E", "PDF_417", "AZTEC", "DATA_MATRIX",
-                        "ITF", "CODABAR"]
+    CapacitorMlkitBarcodeScanning: {
+      presentationStyle: "fullscreen",
+      detectorSize: 0.8,
+      topTitle: "قم بتوجيه الكاميرا نحو الباركود",
+      bottomTitle: "يتم المسح تلقائيًا عند اكتشاف رمز",
+      cancelText: "إلغاء",
+      cornerColor: "#2E7D32",
+      cornerRadius: 8,
+      cornerWidth: 4,
+      formats: ["QR_CODE", "EAN_13", "EAN_8", "CODE_39", "CODE_128", 
+                "UPC_A", "UPC_E", "PDF_417", "AZTEC", "DATA_MATRIX",
+                "ITF", "CODABAR"]
     },
     Permissions: {
       camera: {

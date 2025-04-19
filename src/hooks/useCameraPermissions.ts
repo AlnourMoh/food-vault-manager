@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import { usePermissionCheck } from './scanner/permissions/usePermissionCheck';
 import { usePermissionRequest } from './scanner/permissions/usePermissionRequest';
 import { useToast } from './use-toast';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
 
 export const useCameraPermissions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const { checkBarcodePermission, checkCameraPermission } = usePermissionCheck();
+  const { checkCameraPermission } = usePermissionCheck();
   const { requestPermission } = usePermissionRequest();
   const { toast } = useToast();
 
@@ -18,30 +18,28 @@ export const useCameraPermissions = () => {
         console.log('[useCameraPermissions] فحص أذونات الكاميرا...');
         setIsLoading(true);
 
-        // أولاً نتحقق من وجود BarcodeScanner
-        if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-          console.log('[useCameraPermissions] ملحق BarcodeScanner متوفر، التحقق من الإذن...');
+        // نتحقق من وجود مكتبة ML Kit
+        if (window.Capacitor) {
+          console.log('[useCameraPermissions] مكتبة ML Kit متوفرة، التحقق من الإذن...');
           
-          // طلب الإذن وتفعيل الصلاحية بشكل مباشر
           try {
-            const status = await BarcodeScanner.checkPermission({ force: true });
-            console.log('[useCameraPermissions] حالة إذن BarcodeScanner بعد طلب مباشر:', status);
+            const available = await BarcodeScanning.isSupported();
             
-            // تحديث حالة الإذن بناءً على النتيجة المباشرة
-            setHasPermission(status.granted);
-            setIsLoading(false);
-            
-            if (!status.granted) {
-              console.log('[useCameraPermissions] لم يتم منح الإذن، سيتم طلبه مرة أخرى عند بدء المسح');
+            if (available) {
+              const status = await BarcodeScanning.checkPermissions();
+              console.log('[useCameraPermissions] حالة إذن ML Kit:', status);
+              setHasPermission(status.granted);
+              setIsLoading(false);
+              return;
+            } else {
+              console.log('[useCameraPermissions] مكتبة ML Kit غير مدعومة على هذا الجهاز');
             }
-            
-            return;
           } catch (error) {
-            console.error('[useCameraPermissions] خطأ في التحقق المباشر من إذن BarcodeScanner:', error);
+            console.error('[useCameraPermissions] خطأ في التحقق من إذن ML Kit:', error);
           }
         }
 
-        // إذا BarcodeScanner غير متوفر أو فشل، نحاول مع ملحق الكاميرا
+        // إذا لم تكن مكتبة ML Kit متاحة، نستخدم ملحق الكاميرا
         console.log('[useCameraPermissions] محاولة التحقق من خلال ملحق الكاميرا');
         const cameraStatus = await checkCameraPermission();
         if (cameraStatus) {
@@ -52,7 +50,7 @@ export const useCameraPermissions = () => {
         }
 
         // لاختبار الويب، نفترض أن الإذن ممنوح
-        console.log('[useCameraPermissions] ملحقات الكاميرا الأصلية غير متوفرة، افتراض بيئة الويب');
+        console.log('[useCameraPermissions] ملحقات الكاميرا غير متوفرة، افتراض بيئة الويب');
         setHasPermission(true);
         setIsLoading(false);
       } catch (error) {
@@ -76,21 +74,21 @@ export const useCameraPermissions = () => {
       console.log(`[useCameraPermissions] طلب إذن الكاميرا صراحةً مع force=${force}...`);
       setIsLoading(true);
       
-      // محاولة مباشرة أولاً
-      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+      // استخدام ملحق ML Kit الجديد
+      if (window.Capacitor) {
         try {
-          console.log('[useCameraPermissions] محاولة مباشرة للحصول على إذن BarcodeScanner...');
-          const status = await BarcodeScanner.checkPermission({ force: true });
-          console.log('[useCameraPermissions] نتيجة المحاولة المباشرة:', status);
+          console.log('[useCameraPermissions] محاولة طلب إذن ML Kit...');
+          const permission = await BarcodeScanning.requestPermissions();
+          console.log('[useCameraPermissions] نتيجة طلب إذن ML Kit:', permission);
           
-          if (status.granted) {
-            console.log('[useCameraPermissions] تم منح الإذن مباشرة!');
+          if (permission.granted) {
+            console.log('[useCameraPermissions] تم منح الإذن من ML Kit!');
             setHasPermission(true);
             setIsLoading(false);
             return true;
           }
         } catch (error) {
-          console.error('[useCameraPermissions] خطأ في المحاولة المباشرة:', error);
+          console.error('[useCameraPermissions] خطأ في طلب إذن ML Kit:', error);
         }
       }
       

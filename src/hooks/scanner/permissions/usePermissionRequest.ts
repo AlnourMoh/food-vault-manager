@@ -1,6 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 import { usePlatformPermissions } from './usePlatformPermissions';
 
@@ -14,33 +14,21 @@ export const usePermissionRequest = () => {
       const platform = window.Capacitor?.getPlatform();
       console.log('[usePermissionRequest] المنصة الحالية:', platform);
 
-      // طريقة 1: استخدام BarcodeScanner - الطريقة الرئيسية
-      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-        console.log(`[usePermissionRequest] محاولة #1: طلب إذن BarcodeScanner مباشرة (force = ${force})...`);
+      // طريقة 1: استخدام BarcodeScanning الجديد
+      if (window.Capacitor) {
+        console.log(`[usePermissionRequest] محاولة #1: طلب إذن BarcodeScanning...`);
         
-        // محاولة أولى دائماً بـ force=true لضمان ظهور شاشة طلب الإذن
-        const initialCheck = await BarcodeScanner.checkPermission({ force: true });
-        console.log('[usePermissionRequest] نتيجة الفحص الأولي للأذونات:', initialCheck);
+        // استخدام المكتبة الجديدة
+        const result = await BarcodeScanning.requestPermissions();
+        console.log('[usePermissionRequest] نتيجة طلب إذن ML Kit:', result);
         
-        if (initialCheck.granted) {
-          console.log('[usePermissionRequest] تم منح الإذن من المحاولة الأولى!');
+        if (result.granted) {
+          console.log('[usePermissionRequest] تم منح الإذن!');
           return true;
         }
         
-        // محاولة ثانية إذا لم تنجح الأولى
-        if (initialCheck.denied || initialCheck.asked) {
-          console.log('[usePermissionRequest] المحاولة #2: إعادة طلب الإذن مرة أخرى...');
-          const secondCheck = await BarcodeScanner.checkPermission({ force: true });
-          console.log('[usePermissionRequest] نتيجة المحاولة الثانية:', secondCheck);
-          
-          if (secondCheck.granted) {
-            console.log('[usePermissionRequest] تم منح الإذن من المحاولة الثانية!');
-            return true;
-          }
-        }
-        
         // طريقة بديلة: استخدام واجهة الإعدادات
-        console.log('[usePermissionRequest] المحاولة #3: تجربة الطرق البديلة حسب المنصة...');
+        console.log('[usePermissionRequest] المحاولة #2: تجربة الطرق البديلة حسب المنصة...');
         // محاولة التوجيه إلى إعدادات التطبيق
         if (platform === 'ios') {
           toast({
@@ -58,13 +46,13 @@ export const usePermissionRequest = () => {
           return await handleAndroidPermissions();
         }
         
-        console.log('[usePermissionRequest] فشلت جميع محاولات طلب إذن BarcodeScanner');
+        console.log('[usePermissionRequest] فشلت جميع محاولات طلب إذن BarcodeScanning');
         return false;
       } 
       
       // طريقة 2: استخدام ملحق Camera الأساسي
       if (window.Capacitor?.isPluginAvailable('Camera')) {
-        console.log('[usePermissionRequest] محاولة #4: استخدام ملحق الكاميرا...');
+        console.log('[usePermissionRequest] محاولة #3: استخدام ملحق الكاميرا...');
         
         const cameraResult = await Camera.requestPermissions({
           permissions: ['camera']
@@ -86,7 +74,7 @@ export const usePermissionRequest = () => {
       } 
       
       // طريقة 3: بيئة الويب
-      console.log('[usePermissionRequest] محاولة #5: استخدام API الويب للكاميرا');
+      console.log('[usePermissionRequest] محاولة #4: استخدام API الويب للكاميرا');
       return await handleWebPermissions();
     } catch (error) {
       console.error('[usePermissionRequest] خطأ في طلب الإذن:', error);

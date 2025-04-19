@@ -1,15 +1,20 @@
 
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 
 export const usePermissionCheck = () => {
   const checkBarcodePermission = async () => {
-    if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-      const status = await BarcodeScanner.checkPermission({ force: false });
-      return {
-        granted: status.granted,
-        neverAsked: status.neverAsked
-      };
+    if (window.Capacitor) {
+      try {
+        const status = await BarcodeScanning.checkPermissions();
+        return {
+          granted: status.granted,
+          neverAsked: false
+        };
+      } catch (error) {
+        console.error('خطأ في التحقق من إذن الماسح:', error);
+        return null;
+      }
     }
     return null;
   };

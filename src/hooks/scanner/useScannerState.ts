@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useCameraPermissions } from '../useCameraPermissions';
 import { useScannerDevice } from './useScannerDevice';
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanning } from '@capacitor-mlkit/barcode-scanning';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -31,13 +31,13 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       // محاولة الحصول على الإذن مباشرة عند بدء المسح
       console.log('[useScannerState] محاولة أولية للحصول على الإذن...');
       
-      // محاولة مباشرة باستخدام BarcodeScanner إذا كان متاحًا
-      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-        console.log('[useScannerState] استخدام BarcodeScanner للحصول على الإذن مباشرة');
-        const status = await BarcodeScanner.checkPermission({ force: true });
+      // استخدام المكتبة الجديدة للحصول على الإذن
+      if (window.Capacitor) {
+        console.log('[useScannerState] استخدام ML Kit للحصول على الإذن مباشرة');
+        const status = await BarcodeScanning.requestPermissions();
         
         if (status.granted) {
-          console.log('[useScannerState] تم منح الإذن من BarcodeScanner مباشرة');
+          console.log('[useScannerState] تم منح الإذن من ML Kit مباشرة');
           setIsScanningActive(true);
           await startDeviceScan(handleSuccessfulScan);
           return true;
