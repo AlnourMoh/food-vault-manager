@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { Package, ScanBarcode } from 'lucide-react';
@@ -22,11 +23,11 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   const isExpired = daysUntilExpiry < 0;
 
   return (
-    <Card className="w-full">
-      <CardContent className="p-3">
+    <Card className="w-full shadow-sm">
+      <CardContent className="p-4">
         <div className="flex items-start gap-3 w-full">
           {/* Image Section */}
-          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             {product.imageUrl ? (
               <img 
                 src={product.imageUrl} 
@@ -61,7 +62,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
                 )}
               </div>
 
-              <div className="text-sm text-muted-foreground space-y-1 mb-3">
+              <div className="text-sm text-muted-foreground space-y-1 mb-2">
                 <div className="flex justify-between">
                   <span>{product.quantity} {product.unit}</span>
                   <span>الكمية:</span>

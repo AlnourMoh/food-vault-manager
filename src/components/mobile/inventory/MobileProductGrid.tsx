@@ -67,9 +67,9 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 w-full px-2">
+      <div className="w-full px-0">
         {sortedProducts.map((product) => (
-          <div key={product.id} className="w-full">
+          <div key={product.id} className="w-full mb-3">
             <MobileProductCard 
               product={product}
               onSelect={handleProductSelect}
