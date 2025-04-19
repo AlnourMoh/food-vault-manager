@@ -15,16 +15,16 @@ export const useScannerDevice = () => {
         console.log("[useScannerDevice] استخدام مكتبة ML Kit للمسح");
         
         // طلب الإذن والتحقق بشكل صريح
-        const { granted } = await BarcodeScanner.requestPermissions();
-        console.log("[useScannerDevice] حالة إذن الماسح ML Kit:", granted);
+        const { camera } = await BarcodeScanner.requestPermissions();
+        console.log("[useScannerDevice] حالة إذن الماسح ML Kit:", camera);
         
-        if (!granted) {
+        if (camera !== 'granted') {
           console.error("[useScannerDevice] تم رفض الإذن للماسح الضوئي");
           
           // محاولة أخرى
           const retryPermission = await BarcodeScanner.requestPermissions();
           
-          if (!retryPermission.granted) {
+          if (retryPermission.camera !== 'granted') {
             console.error("[useScannerDevice] فشلت المحاولة الثانية في الحصول على الإذن");
             toast({
               title: "تم رفض الإذن",
@@ -63,7 +63,18 @@ export const useScannerDevice = () => {
         // بدء المسح باستخدام المكتبة الجديدة
         console.log("[useScannerDevice] بدء عملية المسح ML Kit...");
         const { barcodes } = await BarcodeScanner.scan({
-          formats: ['QR_CODE', 'EAN_13', 'EAN_8', 'CODE_39', 'CODE_128', 'UPC_A', 'UPC_E', 'PDF_417', 'AZTEC', 'DATA_MATRIX'],
+          formats: [
+            BarcodeScanner.BarcodeFormat.QrCode,
+            BarcodeScanner.BarcodeFormat.Ean13,
+            BarcodeScanner.BarcodeFormat.Ean8,
+            BarcodeScanner.BarcodeFormat.Code39,
+            BarcodeScanner.BarcodeFormat.Code128,
+            BarcodeScanner.BarcodeFormat.UpcA,
+            BarcodeScanner.BarcodeFormat.UpcE,
+            BarcodeScanner.BarcodeFormat.Pdf417,
+            BarcodeScanner.BarcodeFormat.Aztec,
+            BarcodeScanner.BarcodeFormat.DataMatrix
+          ],
         });
         
         // إعادة إظهار واجهة التطبيق

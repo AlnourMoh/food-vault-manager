@@ -8,7 +8,7 @@ export const usePermissionCheck = () => {
       try {
         const status = await BarcodeScanner.checkPermissions();
         return {
-          granted: status.granted,
+          granted: status.camera === 'granted',
           neverAsked: false
         };
       } catch (error) {

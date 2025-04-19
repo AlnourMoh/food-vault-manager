@@ -28,7 +28,7 @@ export const useCameraPermissions = () => {
             if (available) {
               const status = await BarcodeScanner.checkPermissions();
               console.log('[useCameraPermissions] حالة إذن ML Kit:', status);
-              setHasPermission(status.granted);
+              setHasPermission(status.camera === 'granted');
               setIsLoading(false);
               return;
             } else {
@@ -81,7 +81,7 @@ export const useCameraPermissions = () => {
           const permission = await BarcodeScanner.requestPermissions();
           console.log('[useCameraPermissions] نتيجة طلب إذن ML Kit:', permission);
           
-          if (permission.granted) {
+          if (permission.camera === 'granted') {
             console.log('[useCameraPermissions] تم منح الإذن من ML Kit!');
             setHasPermission(true);
             setIsLoading(false);

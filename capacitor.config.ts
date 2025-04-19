@@ -32,9 +32,9 @@ const config: CapacitorConfig = {
       cornerColor: "#2E7D32",
       cornerRadius: 8,
       cornerWidth: 4,
-      formats: ["QR_CODE", "EAN_13", "EAN_8", "CODE_39", "CODE_128", 
-                "UPC_A", "UPC_E", "PDF_417", "AZTEC", "DATA_MATRIX",
-                "ITF", "CODABAR"]
+      formats: ["QrCode", "Ean13", "Ean8", "Code39", "Code128", 
+                "UpcA", "UpcE", "Pdf417", "Aztec", "DataMatrix",
+                "Itf", "Codabar"]
     },
     Permissions: {
       camera: {

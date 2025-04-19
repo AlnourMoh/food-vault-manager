@@ -36,7 +36,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
         console.log('[useScannerState] استخدام ML Kit للحصول على الإذن مباشرة');
         const status = await BarcodeScanner.requestPermissions();
         
-        if (status.granted) {
+        if (status.camera === 'granted') {
           console.log('[useScannerState] تم منح الإذن من ML Kit مباشرة');
           setIsScanningActive(true);
           await startDeviceScan(handleSuccessfulScan);

@@ -22,7 +22,7 @@ export const usePermissionRequest = () => {
         const result = await BarcodeScanner.requestPermissions();
         console.log('[usePermissionRequest] نتيجة طلب إذن ML Kit:', result);
         
-        if (result.granted) {
+        if (result.camera === 'granted') {
           console.log('[usePermissionRequest] تم منح الإذن!');
           return true;
         }
