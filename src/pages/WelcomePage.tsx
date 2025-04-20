@@ -2,7 +2,22 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LogIn, Shield, Warehouse, Phone, Mail } from 'lucide-react';
+import { 
+  Smartphone, 
+  Shield, 
+  Warehouse, 
+  LayoutDashboard,
+  Users,
+  Search,
+  BarcodeIcon
+} from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const WelcomePage = () => {
   const navigate = useNavigate();
@@ -17,7 +32,7 @@ const WelcomePage = () => {
         </div>
         
         <p className="text-2xl text-gray-700 mb-8">
-          حلول متكاملة لإدارة مخزون المطاعم بذكاء وسهولة
+          نظام متكامل لإدارة المخزون في المطاعم بذكاء وفعالية
         </p>
         
         <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -34,48 +49,107 @@ const WelcomePage = () => {
           </div>
           
           <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all">
-            <LogIn className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-            <h3 className="font-semibold text-xl mb-2">سهولة الاستخدام</h3>
-            <p>واجهة بديهية وسريعة للتشغيل</p>
+            <Users className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+            <h3 className="font-semibold text-xl mb-2">إدارة الفريق</h3>
+            <p>تنظيم صلاحيات ومهام فريق العمل</p>
           </div>
         </div>
-        
-        <div className="flex gap-4 justify-center">
-          <Button 
-            onClick={() => navigate('/contact')} 
-            size="lg"
-            variant="outline"
-            className="text-lg px-8 py-6"
-          >
-            اشترك مجاناً
-          </Button>
+      </div>
 
-          <Button 
-            onClick={() => navigate('/restaurant/login')} 
-            size="lg"
-            className="text-lg px-8 py-6 bg-blue-600 hover:bg-blue-700"
-          >
-            <LogIn className="h-5 w-5 ml-2" />
-            <span>تسجيل الدخول</span>
-          </Button>
+      {/* Platforms Section */}
+      <div className="bg-gradient-to-b from-blue-50 to-white py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">منصات متعددة لتجربة مثالية</h2>
+          
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Web Platform */}
+            <Card className="border-2 border-blue-100 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutDashboard className="w-6 h-6 text-blue-600" />
+                  <span>لوحة تحكم الويب</span>
+                </CardTitle>
+                <CardDescription>إدارة شاملة لمخزون مطعمك</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Search className="w-5 h-5 text-blue-600" />
+                  <span>بحث متقدم عن المنتجات</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  <span>إدارة صلاحيات الفريق</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Warehouse className="w-5 h-5 text-blue-600" />
+                  <span>تقارير تفصيلية للمخزون</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Mobile App */}
+            <Card className="border-2 border-blue-100 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="w-6 h-6 text-blue-600" />
+                  <span>تطبيق الجوال</span>
+                </CardTitle>
+                <CardDescription>إدارة المخزون من أي مكان</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <BarcodeIcon className="w-5 h-5 text-blue-600" />
+                  <span>مسح الباركود للمنتجات</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  <span>تتبع تواريخ الصلاحية</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Search className="w-5 h-5 text-blue-600" />
+                  <span>جرد سريع للمخزون</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="text-center py-16 bg-blue-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold mb-6">ابدأ رحلتك مع هايجين تيك</h2>
+          <p className="text-xl text-gray-700 mb-8">
+            انضم إلى المطاعم التي تدير مخزونها بذكاء وفعالية
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={() => navigate('/contact')} 
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 py-6"
+            >
+              اشترك مجاناً
+            </Button>
+
+            <Button 
+              onClick={() => navigate('/restaurant/login')} 
+              size="lg"
+              className="text-lg px-8 py-6 bg-blue-600 hover:bg-blue-700"
+            >
+              تسجيل الدخول للنظام
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Contact Info */}
-      <div className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold mb-8">تواصل معنا</h2>
-            <div className="flex justify-center gap-8">
-              <div className="flex items-center gap-2">
-                <Phone className="text-blue-600" />
-                <span>+966 500000000</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="text-blue-600" />
-                <span>info@hygiene-tech.com</span>
-              </div>
-            </div>
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold mb-8">تواصل معنا</h2>
+          <div className="space-y-4 text-gray-700">
+            <p className="text-lg">هاتف: +966 500000000</p>
+            <p className="text-lg">البريد الإلكتروني: info@hygiene-tech.com</p>
           </div>
         </div>
       </div>
