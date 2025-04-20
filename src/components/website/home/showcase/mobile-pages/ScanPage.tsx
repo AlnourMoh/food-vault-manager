@@ -3,15 +3,18 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { BarcodeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import MobileSectionHeader from '@/components/mobile/common/MobileSectionHeader';
 
 const ScanPage = () => {
   return (
     <div className="w-full h-full bg-white p-4 overflow-hidden">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <BarcodeIcon className="h-6 w-6 text-primary" />
-          <h3 className="text-lg font-semibold">مسح الباركود</h3>
-        </div>
+        <MobileSectionHeader
+          icon={BarcodeIcon}
+          title="مسح الباركود"
+          description="قم بمسح باركود المنتج لعرض التفاصيل"
+        />
+        
         <div className="rounded-lg overflow-hidden mb-4">
           <div className="w-full aspect-video bg-gray-100 relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
             <BarcodeIcon className="h-10 w-10 text-gray-400 mb-2" />
