@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Carousel, 
@@ -90,15 +89,9 @@ const PlatformShowcase = () => {
                   className="w-full md:w-1/2 relative"
                 >
                   {platform.title === 'واجهة الويب' ? (
-                    <LaptopFrame 
-                      screenshots={platform.screenshots}
-                      deviceImage="/images/app-screenshots/dashboard.png"
-                    />
+                    <LaptopFrame />
                   ) : (
-                    <PhoneFrame 
-                      screenshots={platform.screenshots}
-                      deviceImage="/images/app-screenshots/mobile-home.png"
-                    />
+                    <PhoneFrame />
                   )}
                 </motion.div>
               </motion.div>

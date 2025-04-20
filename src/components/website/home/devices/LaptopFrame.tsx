@@ -1,22 +1,10 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselPrevious, 
-  CarouselNext 
-} from '@/components/ui/carousel';
-import { screenshotVariants, carouselSettings } from '../animations';
-import Autoplay from 'embla-carousel-autoplay';
+import WebShowcase from '../showcase/WebShowcase';
+import { screenshotVariants } from '../animations';
 
-interface LaptopFrameProps {
-  screenshots: string[];
-  deviceImage: string;
-}
-
-const LaptopFrame: React.FC<LaptopFrameProps> = ({ screenshots, deviceImage }) => {
+const LaptopFrame = () => {
   return (
     <div className="relative w-full aspect-[16/10]">
       <motion.div 
@@ -31,41 +19,14 @@ const LaptopFrame: React.FC<LaptopFrameProps> = ({ screenshots, deviceImage }) =
           </div>
           
           <div className="absolute top-4 left-0 right-0 bottom-0 bg-white overflow-hidden">
-            <Carousel 
+            <motion.div
+              variants={screenshotVariants}
+              initial="hidden"
+              animate="visible"
               className="w-full h-full"
-              opts={carouselSettings}
-              plugins={[
-                Autoplay({
-                  delay: 4000,
-                  stopOnInteraction: false
-                })
-              ]}
             >
-              <CarouselContent className="h-full">
-                {screenshots.map((screenshot, idx) => (
-                  <CarouselItem key={idx} className="basis-full h-full">
-                    <motion.div
-                      variants={screenshotVariants}
-                      initial="hidden"
-                      animate="visible"
-                      custom={idx}
-                      className="w-full h-full p-4"
-                    >
-                      <img 
-                        src={screenshot} 
-                        alt={`Web screenshot ${idx + 1}`}
-                        className="w-full h-full object-contain rounded-lg shadow-md"
-                        onError={(e) => {
-                          e.currentTarget.src = deviceImage;
-                        }}
-                      />
-                    </motion.div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-20" />
-              <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-20" />
-            </Carousel>
+              <WebShowcase />
+            </motion.div>
           </div>
         </div>
       </motion.div>
