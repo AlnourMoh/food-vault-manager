@@ -4,40 +4,42 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
 } from "@/components/ui/carousel"
 import { Card } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay"
 
 const RestaurantLogos = () => {
   const autoplay = React.useRef(
-    Autoplay({ delay: 2000, stopOnInteraction: false })
+    Autoplay({ delay: 3000, stopOnInteraction: true })
   )
 
-  // بيانات تجريبية للمطاعم المشاركة
+  // بيانات المطاعم المشاركة مع صور حقيقية
   const restaurants = [
     {
       name: "مطعم الأصيل",
-      logo: "/placeholder.svg",
+      logo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=60",
       description: "أشهى المأكولات الشرقية"
     },
     {
       name: "مطعم البحر",
-      logo: "/placeholder.svg",
+      logo: "https://images.unsplash.com/photo-1599458448510-59aecaea4752?w=800&auto=format&fit=crop&q=60",
       description: "مأكولات بحرية طازجة"
     },
     {
       name: "مطعم الريف",
-      logo: "/placeholder.svg",
+      logo: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&auto=format&fit=crop&q=60",
       description: "أطباق تقليدية شهية"
     },
     {
       name: "مطعم السلطان",
-      logo: "/placeholder.svg",
+      logo: "https://images.unsplash.com/photo-1544148103-0773bf10d330?w=800&auto=format&fit=crop&q=60",
       description: "مأكولات شامية أصيلة"
     },
     {
       name: "مطعم النخبة",
-      logo: "/placeholder.svg",
+      logo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=60",
       description: "أطباق عالمية مميزة"
     }
   ];
@@ -50,35 +52,42 @@ const RestaurantLogos = () => {
           <p className="text-muted-foreground">نفخر بشراكتنا مع أفضل المطاعم في المنطقة</p>
         </div>
 
-        <Carousel
-          plugins={[autoplay.current]}
-          className="w-full"
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-        >
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {restaurants.map((restaurant, index) => (
-              <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/3 lg:basis-1/4">
-                <Card className="p-4 h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-                  <div className="aspect-square relative mb-4 bg-purple-100/50 rounded-lg overflow-hidden">
-                    <img
-                      src={restaurant.logo}
-                      alt={restaurant.name}
-                      className="w-full h-full object-contain p-4"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2 text-center">{restaurant.name}</h3>
-                  <p className="text-sm text-muted-foreground text-center">{restaurant.description}</p>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        <div className="relative px-8">
+          <Carousel
+            plugins={[autoplay.current]}
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {restaurants.map((restaurant, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/3 lg:basis-1/4">
+                  <Card className="overflow-hidden group h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div className="aspect-[4/3] relative mb-4 overflow-hidden bg-gray-100">
+                      <img
+                        src={restaurant.logo}
+                        alt={restaurant.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-2 text-center">{restaurant.name}</h3>
+                      <p className="text-sm text-muted-foreground text-center">{restaurant.description}</p>
+                    </div>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-2" />
+            <CarouselNext className="hidden md:flex -right-2" />
+          </Carousel>
+        </div>
       </div>
     </div>
   );
 };
 
 export default RestaurantLogos;
+
