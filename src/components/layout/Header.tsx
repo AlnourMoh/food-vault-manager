@@ -22,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   const { toast } = useToast();
   
   const handleLogout = () => {
+    console.log('تنفيذ تسجيل الخروج...');
     localStorage.removeItem('isAdminLogin');
     
     toast({

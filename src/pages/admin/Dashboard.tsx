@@ -10,9 +10,15 @@ const AdminDashboard = () => {
   
   // التحقق من تسجيل دخول المسؤول
   useEffect(() => {
+    console.log('التحقق من تسجيل دخول المسؤول...');
     const isAdminLoggedIn = localStorage.getItem('isAdminLogin') === 'true';
+    console.log('حالة تسجيل دخول المسؤول:', isAdminLoggedIn);
+    
     if (!isAdminLoggedIn) {
+      console.log('المستخدم غير مسجل دخول، توجيه إلى صفحة تسجيل الدخول');
       navigate('/admin/login');
+    } else {
+      console.log('المستخدم مسجل دخول بنجاح');
     }
   }, [navigate]);
 

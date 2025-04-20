@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,31 +14,48 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // التحقق من وجود جلسة مسؤول نشطة عند تحميل الصفحة
+  useEffect(() => {
+    const isAdminLoggedIn = localStorage.getItem('isAdminLogin') === 'true';
+    if (isAdminLoggedIn) {
+      navigate('/admin/dashboard');
+    }
+  }, [navigate]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // التحقق من بيانات تسجيل الدخول للمسؤول
-    if (email === 'admin@system.com' && password === 'admin123') {
-      // تخزين معلومات المسؤول في localStorage
-      localStorage.setItem('isAdminLogin', 'true');
+    // هنا نضيف تأخيرًا بسيطًا لمحاكاة الاتصال بالخادم
+    setTimeout(() => {
+      console.log('محاولة تسجيل دخول بـ:', { email, password });
       
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك في نظام إدارة المطاعم",
-      });
+      // التحقق من بيانات تسجيل الدخول للمسؤول
+      if (email === 'admin@system.com' && password === 'admin123') {
+        console.log('تسجيل الدخول ناجح');
+        
+        // تخزين معلومات المسؤول في localStorage
+        localStorage.setItem('isAdminLogin', 'true');
+        
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك في نظام إدارة المطاعم",
+        });
+        
+        // التوجيه إلى صفحة لوحة تحكم المسؤول
+        navigate('/admin/dashboard');
+      } else {
+        console.log('فشل تسجيل الدخول: بيانات اعتماد غير صحيحة');
+        
+        toast({
+          variant: "destructive",
+          title: "خطأ في تسجيل الدخول",
+          description: "بيانات الاعتماد غير صحيحة",
+        });
+      }
       
-      // التوجيه إلى صفحة لوحة تحكم المسؤول
-      navigate('/admin/dashboard');
-    } else {
-      toast({
-        variant: "destructive",
-        title: "خطأ في تسجيل الدخول",
-        description: "بيانات الاعتماد غير صحيحة",
-      });
-    }
-    
-    setIsLoading(false);
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (

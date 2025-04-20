@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BuildingIcon, Check, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,6 +19,8 @@ interface MainSidebarProps {
 
 const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const adminMenuItems = [
     { 
@@ -31,6 +34,18 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
       icon: <Check className="ml-2 h-5 w-5 text-white" /> 
     },
   ];
+
+  const handleLogout = () => {
+    console.log('تنفيذ تسجيل الخروج من الشريط الجانبي...');
+    localStorage.removeItem('isAdminLogin');
+    
+    toast({
+      title: "تم تسجيل الخروج بنجاح",
+      description: "نتمنى لك يوماً سعيداً!",
+    });
+    
+    navigate('/');
+  };
 
   return (
     <div className={cn(
@@ -101,6 +116,7 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
             variant="destructive" 
             size="sm"
             className="flex items-center gap-2 bg-red-500 hover:bg-red-600"
+            onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
             <span>تسجيل الخروج</span>
