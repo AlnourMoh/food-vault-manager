@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Phone, whatsapp } from 'lucide-react';
+import { Phone, WhatsApp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const ContactSection = () => {
@@ -38,7 +39,7 @@ const ContactSection = () => {
               className="flex items-center gap-2 text-green-600 hover:text-green-700 border-green-600 hover:border-green-700"
               onClick={handleWhatsAppClick}
             >
-              <whatsapp className="h-4 w-4" />
+              <WhatsApp className="h-4 w-4" />
               <span>واتساب</span>
             </Button>
           </div>
@@ -51,3 +52,4 @@ const ContactSection = () => {
 };
 
 export default ContactSection;
+
