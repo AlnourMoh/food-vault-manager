@@ -9,7 +9,6 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from '@/hooks/use-toast';
 import MemberTableRow from './table/MemberTableRow';
 import { formatMemberInfoForCopy } from './utils/memberUtils';
@@ -55,31 +54,29 @@ const TeamMemberTable: React.FC<TeamMemberTableProps> = ({
   }
 
   return (
-    <TooltipProvider>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-right">الاسم</TableHead>
-            <TableHead className="text-right">الدور</TableHead>
-            <TableHead className="text-right">رقم الهاتف</TableHead>
-            <TableHead className="text-right">البريد الإلكتروني</TableHead>
-            <TableHead className="text-right">خيارات</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {teamMembers.map((member) => (
-            <MemberTableRow
-              key={member.id}
-              member={member}
-              onCopyMemberInfo={copyMemberInfo}
-              onCopyWelcomeMessage={copyMemberWelcomeMessage}
-              onEditMember={onEditMember}
-              onDeleteMember={onDeleteMember}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </TooltipProvider>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="text-right">الاسم</TableHead>
+          <TableHead className="text-right">الدور</TableHead>
+          <TableHead className="text-right">رقم الهاتف</TableHead>
+          <TableHead className="text-right">البريد الإلكتروني</TableHead>
+          <TableHead className="text-right">خيارات</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {teamMembers.map((member) => (
+          <MemberTableRow
+            key={member.id}
+            member={member}
+            onCopyMemberInfo={copyMemberInfo}
+            onCopyWelcomeMessage={copyMemberWelcomeMessage}
+            onEditMember={onEditMember}
+            onDeleteMember={onDeleteMember}
+          />
+        ))}
+      </TableBody>
+    </Table>
   );
 };
 
