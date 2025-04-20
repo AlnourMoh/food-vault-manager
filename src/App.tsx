@@ -1,10 +1,10 @@
-
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeProvider } from "@/providers/theme-provider";
 
 // Website Pages
 import WelcomePage from "./pages/WelcomePage";
@@ -66,119 +66,121 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="min-h-screen bg-background">
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            {isMobile ? (
-              <Routes>
-                <Route path="/mobile/*" element={<MobileApp />} />
-                <Route path="/*" element={<Navigate to="/mobile" replace />} />
-                <Route path="/restaurant/login" element={<RestaurantLogin />} />
-              </Routes>
-            ) : (
-              <Routes>
-                {/* Website Routes */}
-                <Route path="/" element={<WebsiteLayout><Outlet /></WebsiteLayout>}>
-                  <Route index element={<WelcomePage />} />
-                  <Route path="about" element={<AboutPage />} />
-                  <Route path="services" element={<ServicesPage />} />
-                  <Route path="contact" element={<ContactPage />} />
-                </Route>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <TooltipProvider>
+          <div className="min-h-screen bg-background">
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              {isMobile ? (
+                <Routes>
+                  <Route path="/mobile/*" element={<MobileApp />} />
+                  <Route path="/*" element={<Navigate to="/mobile" replace />} />
+                  <Route path="/restaurant/login" element={<RestaurantLogin />} />
+                </Routes>
+              ) : (
+                <Routes>
+                  {/* Website Routes */}
+                  <Route path="/" element={<WebsiteLayout><Outlet /></WebsiteLayout>}>
+                    <Route index element={<WelcomePage />} />
+                    <Route path="about" element={<AboutPage />} />
+                    <Route path="services" element={<ServicesPage />} />
+                    <Route path="contact" element={<ContactPage />} />
+                  </Route>
 
-                {/* Admin Authentication */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-                
-                {/* Protected Admin Routes */}
-                <Route path="/admin/dashboard" element={
-                  <AdminRoute>
-                    <AdminDashboard />
-                  </AdminRoute>
-                } />
-                <Route path="/restaurants" element={
-                  <AdminRoute>
-                    <Restaurants />
-                  </AdminRoute>
-                } />
-                <Route path="/restaurants/add" element={
-                  <AdminRoute>
-                    <AddRestaurant />
-                  </AdminRoute>
-                } />
-                <Route path="/restaurants/:id/credentials" element={
-                  <AdminRoute>
-                    <RestaurantCredentials />
-                  </AdminRoute>
-                } />
-                <Route path="/restaurants/:id/edit" element={
-                  <AdminRoute>
-                    <EditRestaurant />
-                  </AdminRoute>
-                } />
-                
-                {/* Restaurant Setup Route */}
-                <Route path="/restaurant/setup-password/:id" element={<RestaurantSetupPassword />} />
-                
-                {/* Old Restaurant Routes */}
-                <Route path="/storage-team" element={<StorageTeam />} />
-                <Route path="/products/add" element={<AddProducts />} />
-                <Route path="/products/remove" element={<RemoveProducts />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/expired" element={<Expired />} />
-                <Route path="/products/:productId/edit" element={<EditProduct />} />
-                
-                {/* Restaurant Authentication */}
-                <Route path="/restaurant/login" element={<RestaurantLogin />} />
-                
-                {/* Protected Restaurant Routes */}
-                <Route path="/restaurant/dashboard" element={
-                  <RestaurantRoute>
-                    <RestaurantDashboard />
-                  </RestaurantRoute>
-                } />
-                <Route path="/restaurant/storage-team" element={
-                  <RestaurantRoute>
-                    <RestaurantStorageTeam />
-                  </RestaurantRoute>
-                } />
-                <Route path="/restaurant/products/add" element={
-                  <RestaurantRoute>
-                    <AddProducts />
-                  </RestaurantRoute>
-                } />
-                <Route path="/restaurant/products/remove" element={
-                  <RestaurantRoute>
-                    <RemoveProducts />
-                  </RestaurantRoute>
-                } />
-                <Route path="/restaurant/inventory" element={
-                  <RestaurantRoute>
-                    <Inventory />
-                  </RestaurantRoute>
-                } />
-                <Route path="/restaurant/expired" element={
-                  <RestaurantRoute>
-                    <Expired />
-                  </RestaurantRoute>
-                } />
-                <Route path="/restaurant/products/:productId/edit" element={
-                  <RestaurantRoute>
-                    <EditProduct />
-                  </RestaurantRoute>
-                } />
-                
-                {/* Barcode routes */}
-                <Route path="/products/:productId/barcodes" element={<ProductBarcodes />} />
-                <Route path="/restaurant/products/:productId/barcodes" element={<ProductBarcodes />} />
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            )}
-          </BrowserRouter>
-        </div>
-      </TooltipProvider>
+                  {/* Admin Authentication */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  
+                  {/* Protected Admin Routes */}
+                  <Route path="/admin/dashboard" element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  } />
+                  <Route path="/restaurants" element={
+                    <AdminRoute>
+                      <Restaurants />
+                    </AdminRoute>
+                  } />
+                  <Route path="/restaurants/add" element={
+                    <AdminRoute>
+                      <AddRestaurant />
+                    </AdminRoute>
+                  } />
+                  <Route path="/restaurants/:id/credentials" element={
+                    <AdminRoute>
+                      <RestaurantCredentials />
+                    </AdminRoute>
+                  } />
+                  <Route path="/restaurants/:id/edit" element={
+                    <AdminRoute>
+                      <EditRestaurant />
+                    </AdminRoute>
+                  } />
+                  
+                  {/* Restaurant Setup Route */}
+                  <Route path="/restaurant/setup-password/:id" element={<RestaurantSetupPassword />} />
+                  
+                  {/* Old Restaurant Routes */}
+                  <Route path="/storage-team" element={<StorageTeam />} />
+                  <Route path="/products/add" element={<AddProducts />} />
+                  <Route path="/products/remove" element={<RemoveProducts />} />
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/expired" element={<Expired />} />
+                  <Route path="/products/:productId/edit" element={<EditProduct />} />
+                  
+                  {/* Restaurant Authentication */}
+                  <Route path="/restaurant/login" element={<RestaurantLogin />} />
+                  
+                  {/* Protected Restaurant Routes */}
+                  <Route path="/restaurant/dashboard" element={
+                    <RestaurantRoute>
+                      <RestaurantDashboard />
+                    </RestaurantRoute>
+                  } />
+                  <Route path="/restaurant/storage-team" element={
+                    <RestaurantRoute>
+                      <RestaurantStorageTeam />
+                    </RestaurantRoute>
+                  } />
+                  <Route path="/restaurant/products/add" element={
+                    <RestaurantRoute>
+                      <AddProducts />
+                    </RestaurantRoute>
+                  } />
+                  <Route path="/restaurant/products/remove" element={
+                    <RestaurantRoute>
+                      <RemoveProducts />
+                    </RestaurantRoute>
+                  } />
+                  <Route path="/restaurant/inventory" element={
+                    <RestaurantRoute>
+                      <Inventory />
+                    </RestaurantRoute>
+                  } />
+                  <Route path="/restaurant/expired" element={
+                    <RestaurantRoute>
+                      <Expired />
+                    </RestaurantRoute>
+                  } />
+                  <Route path="/restaurant/products/:productId/edit" element={
+                    <RestaurantRoute>
+                      <EditProduct />
+                    </RestaurantRoute>
+                  } />
+                  
+                  {/* Barcode routes */}
+                  <Route path="/products/:productId/barcodes" element={<ProductBarcodes />} />
+                  <Route path="/restaurant/products/:productId/barcodes" element={<ProductBarcodes />} />
+                  
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              )}
+            </BrowserRouter>
+          </div>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

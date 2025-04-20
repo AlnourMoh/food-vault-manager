@@ -19,10 +19,6 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import {
-  ChartContainer,
-  ChartTooltip
-} from '@/components/ui/chart';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -157,6 +153,36 @@ const AdminDashboard = () => {
                     <Tooltip />
                     <Legend />
                   </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>إحصائيات المبيعات حسب الفئة</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={categoryData}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" name="الكمية" fill="#8884d8" />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
