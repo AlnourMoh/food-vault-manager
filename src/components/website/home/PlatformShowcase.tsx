@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Carousel, 
@@ -6,7 +7,7 @@ import {
   CarouselNext, 
   CarouselPrevious 
 } from '@/components/ui/carousel';
-import { LayoutDashboard, Package, Database, ChartBar, Users } from 'lucide-react';
+import { LayoutDashboard, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LaptopFrame from './devices/LaptopFrame';
 import PhoneFrame from './devices/PhoneFrame';
@@ -26,13 +27,6 @@ const PlatformShowcase = () => {
         'تقارير وإحصائيات متقدمة',
         'إدارة المستخدمين والصلاحيات'
       ],
-      screenshots: [
-        '/screenshots/web/dashboard.png',
-        '/screenshots/web/products.png',
-        '/screenshots/web/inventory.png',
-        '/screenshots/web/reports.png',
-        '/screenshots/web/users.png'
-      ]
     },
     {
       title: 'تطبيق الجوال',
@@ -45,18 +39,11 @@ const PlatformShowcase = () => {
         'إضافة وتعديل المنتجات',
         'عرض تقارير سريعة'
       ],
-      screenshots: [
-        '/screenshots/mobile/scan.png',
-        '/screenshots/mobile/inventory.png',
-        '/screenshots/mobile/alerts.png',
-        '/screenshots/mobile/add-product.png',
-        '/screenshots/mobile/quick-stats.png'
-      ]
     }
   ];
 
   return (
-    <div className="container mx-auto py-16 px-4">
+    <div className="container mx-auto py-16 space-y-16">
       <motion.h2 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -66,41 +53,36 @@ const PlatformShowcase = () => {
         منصة متكاملة لإدارة المخزون
       </motion.h2>
       
-      <Carousel className="w-full max-w-5xl mx-auto">
-        <CarouselContent>
-          {platforms.map((platform, index) => (
-            <CarouselItem key={index}>
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col md:flex-row items-center gap-8 bg-background p-8 rounded-xl shadow-lg"
-              >
-                <PlatformFeatures
-                  icon={platform.icon}
-                  title={platform.title}
-                  description={platform.description}
-                  features={platform.features}
-                />
-                
-                <motion.div 
-                  variants={deviceFrameVariants}
-                  whileHover="hover"
-                  className="w-full md:w-1/2 relative"
-                >
-                  {platform.title === 'واجهة الويب' ? (
-                    <LaptopFrame />
-                  ) : (
-                    <PhoneFrame />
-                  )}
-                </motion.div>
-              </motion.div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
+      <div className="flex flex-col gap-16">
+        {platforms.map((platform, index) => (
+          <motion.div
+            key={index}
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col md:flex-row items-center gap-8 bg-background p-8 rounded-xl shadow-lg"
+          >
+            <PlatformFeatures
+              icon={platform.icon}
+              title={platform.title}
+              description={platform.description}
+              features={platform.features}
+            />
+            
+            <motion.div 
+              variants={deviceFrameVariants}
+              whileHover="hover"
+              className="w-full md:w-1/2 relative"
+            >
+              {platform.title === 'واجهة الويب' ? (
+                <LaptopFrame />
+              ) : (
+                <PhoneFrame />
+              )}
+            </motion.div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 };
