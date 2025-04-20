@@ -1,8 +1,9 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BuildingIcon, Users, ShoppingCart, BarChart } from 'lucide-react';
+import { BuildingIcon, Users, ShoppingCart, BarChartIcon } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -63,7 +64,7 @@ const AdminDashboard = () => {
     {
       title: "التقارير",
       value: "24",
-      icon: <BarChart className="h-6 w-6 text-amber-500" />,
+      icon: <BarChartIcon className="h-6 w-6 text-amber-500" />,
       color: "bg-amber-50"
     }
   ];
