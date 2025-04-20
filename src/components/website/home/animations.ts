@@ -52,8 +52,7 @@ export const deviceFrameVariants = {
 };
 
 export const carouselSettings = {
-  align: "start",
+  align: "start" as const,
   loop: true,
-  autoplay: true,
-  interval: 4000,
 };
+

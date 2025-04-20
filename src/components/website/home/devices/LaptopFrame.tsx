@@ -9,7 +9,6 @@ import {
   CarouselNext 
 } from '@/components/ui/carousel';
 import { screenshotVariants, carouselSettings } from '../animations';
-import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 
 interface LaptopFrameProps {
