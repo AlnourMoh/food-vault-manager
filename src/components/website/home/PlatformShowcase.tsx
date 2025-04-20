@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { BarcodeIcon, Search, Shield, Smartphone, Users, Warehouse } from 'lucide-react';
 
 const PlatformShowcase = () => {
@@ -16,27 +16,6 @@ const PlatformShowcase = () => {
           <WebPlatformPreview />
           <MobilePlatformPreview />
         </div>
-
-        <div className="mt-20 grid md:grid-cols-2 gap-12">
-          <PlatformFeatureCard
-            title="لوحة تحكم الويب"
-            description="إدارة شاملة لمخزون مطعمك"
-            features={[
-              { icon: Search, text: "بحث متقدم عن المنتجات" },
-              { icon: Users, text: "إدارة صلاحيات الفريق" },
-              { icon: Warehouse, text: "تقارير تفصيلية للمخزون" }
-            ]}
-          />
-          <PlatformFeatureCard
-            title="تطبيق الجوال"
-            description="إدارة المخزون من أي مكان"
-            features={[
-              { icon: BarcodeIcon, text: "مسح الباركود للمنتجات" },
-              { icon: Shield, text: "تتبع تواريخ الصلاحية" },
-              { icon: Search, text: "جرد سريع للمخزون" }
-            ]}
-          />
-        </div>
       </div>
     </div>
   );
@@ -44,13 +23,52 @@ const PlatformShowcase = () => {
 
 const WebPlatformPreview = () => (
   <div className="relative group">
-    <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[8px] rounded-t-xl h-[172px] max-w-[301px] md:h-[294px] md:max-w-[512px] group-hover:transform group-hover:scale-105 transition-all duration-300">
-      <div className="rounded-lg overflow-hidden h-[156px] md:h-[278px] bg-gradient-to-r from-blue-500 to-purple-500">
-        <img
-          src="/dashboard-preview.png"
-          className="dark:hidden h-[156px] md:h-[278px] w-full rounded-lg object-cover"
-          alt="لوحة تحكم المطعم"
-        />
+    <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[8px] rounded-t-xl h-[172px] max-w-[301px] md:h-[394px] md:max-w-[512px]">
+      <div className="rounded-lg overflow-hidden h-[156px] md:h-[378px] bg-white">
+        {/* Dashboard UI */}
+        <div className="h-full flex flex-col">
+          {/* Header */}
+          <div className="bg-white border-b p-4 flex justify-between items-center">
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <div className="w-3 h-3 bg-blue-500 rounded-full" />
+              <span className="text-sm font-medium">لوحة التحكم</span>
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 p-4 bg-gray-50">
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <DashboardCard
+                title="المخزون النشط"
+                value="1,234"
+                icon={<Warehouse className="w-5 h-5 text-blue-500" />}
+              />
+              <DashboardCard
+                title="المنتجات"
+                value="89"
+                icon={<BarcodeIcon className="w-5 h-5 text-purple-500" />}
+              />
+            </div>
+            
+            {/* Activity Graph */}
+            <div className="bg-white rounded-lg p-4 h-32 relative overflow-hidden">
+              <div className="absolute bottom-0 inset-x-0 h-24">
+                <div className="h-full w-full" style={{
+                  background: "linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.01) 100%)"
+                }}>
+                  <svg className="w-full h-full" preserveAspectRatio="none">
+                    <path
+                      d="M0 50 Q 75 20, 150 35, 225 25, 300 40 T 400 30 V 100 H 0 Z"
+                      fill="none"
+                      stroke="rgb(59, 130, 246)"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div className="relative mx-auto bg-gray-900 dark:bg-gray-700 rounded-b-xl rounded-t-sm h-[17px] max-w-[351px] md:h-[21px] md:max-w-[597px]">
@@ -65,43 +83,101 @@ const MobilePlatformPreview = () => (
     <div className="h-[46px] w-[3px] bg-gray-800 dark:bg-gray-800 absolute -right-[17px] top-[124px] rounded-r-lg"></div>
     <div className="h-[46px] w-[3px] bg-gray-800 dark:bg-gray-800 absolute -right-[17px] top-[178px] rounded-r-lg"></div>
     <div className="h-[64px] w-[3px] bg-gray-800 dark:bg-gray-800 absolute -left-[17px] top-[142px] rounded-l-lg"></div>
-    <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-gradient-to-b from-blue-500 to-purple-500">
-      <img
-        src="/mobile-preview.png"
-        className="dark:hidden w-[272px] h-[572px] object-cover"
-        alt="تطبيق الجوال"
-      />
+    <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white">
+      {/* Mobile App UI */}
+      <div className="h-full flex flex-col">
+        {/* Status Bar */}
+        <div className="bg-gray-800 text-white px-4 py-2 flex justify-between items-center text-xs">
+          <span>9:41</span>
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16" />
+            </svg>
+          </div>
+        </div>
+        
+        {/* App Content */}
+        <div className="flex-1 bg-gray-50">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold">المخزون</h2>
+              <BarcodeIcon className="w-6 h-6 text-blue-500" />
+            </div>
+            
+            {/* Product Cards */}
+            <div className="space-y-4">
+              <ProductCard
+                name="منتج 1"
+                quantity="50 كغ"
+                expiry="2024/05/20"
+              />
+              <ProductCard
+                name="منتج 2"
+                quantity="30 كغ"
+                expiry="2024/06/15"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Bottom Navigation */}
+        <div className="bg-white border-t py-2 px-6 flex justify-around">
+          <div className="flex flex-col items-center">
+            <Warehouse className="w-6 h-6 text-blue-500" />
+            <span className="text-xs mt-1">المخزون</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <BarcodeIcon className="w-6 h-6 text-gray-400" />
+            <span className="text-xs mt-1">المسح</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <Users className="w-6 h-6 text-gray-400" />
+            <span className="text-xs mt-1">الفريق</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 );
 
-interface PlatformFeatureCardProps {
+interface DashboardCardProps {
   title: string;
-  description: string;
-  features: {
-    icon: React.ElementType;
-    text: string;
-  }[];
+  value: string;
+  icon: React.ReactNode;
 }
 
-const PlatformFeatureCard = ({ title, description, features }: PlatformFeatureCardProps) => (
-  <Card className="bg-gradient-to-br from-blue-500/5 to-purple-500/5 border-2 border-blue-100 shadow-lg backdrop-blur-sm transform hover:scale-105 transition-transform">
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Smartphone className="w-6 h-6 text-blue-600" />
-        <span>{title}</span>
-      </CardTitle>
-      <CardDescription>{description}</CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-4">
-      {features.map((feature, index) => (
-        <div key={index} className="flex items-center gap-3 text-gray-700">
-          <feature.icon className="w-5 h-5 text-blue-600" />
-          <span>{feature.text}</span>
-        </div>
-      ))}
+const DashboardCard = ({ title, value, icon }: DashboardCardProps) => (
+  <Card className="bg-white">
+    <CardContent className="p-4 flex justify-between items-center">
+      <div>
+        <p className="text-sm text-gray-500">{title}</p>
+        <p className="text-xl font-semibold">{value}</p>
+      </div>
+      {icon}
     </CardContent>
   </Card>
 );
 
+interface ProductCardProps {
+  name: string;
+  quantity: string;
+  expiry: string;
+}
+
+const ProductCard = ({ name, quantity, expiry }: ProductCardProps) => (
+  <div className="bg-white rounded-lg p-4 shadow-sm">
+    <div className="flex justify-between items-start">
+      <div>
+        <h3 className="font-medium">{name}</h3>
+        <p className="text-sm text-gray-500">{quantity}</p>
+      </div>
+      <span className="text-xs text-gray-400">{expiry}</span>
+    </div>
+  </div>
+);
+
 export default PlatformShowcase;
+
