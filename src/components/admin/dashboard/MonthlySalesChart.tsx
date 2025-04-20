@@ -11,9 +11,11 @@ interface MonthlySalesChartProps {
 
 const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ data }) => {
   const { theme } = useTheme();
+  
+  console.log('بيانات المبيعات الشهرية:', data);
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>المبيعات الشهرية</CardTitle>
       </CardHeader>
@@ -24,6 +26,16 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ data }) => {
               data={data}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
+              <defs>
+                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                </linearGradient>
+                <linearGradient id="colorProducts" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -34,14 +46,16 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ data }) => {
                 dataKey="مبيعات" 
                 name="المبيعات"
                 stroke={theme === 'dark' ? '#60A5FA' : '#3B82F6'} 
-                fill={theme === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.2)'} 
+                fillOpacity={1}
+                fill="url(#colorSales)" 
               />
               <Area 
                 type="monotone" 
                 dataKey="منتجات" 
                 name="المنتجات"
                 stroke={theme === 'dark' ? '#34D399' : '#10B981'} 
-                fill={theme === 'dark' ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.2)'} 
+                fillOpacity={1}
+                fill="url(#colorProducts)" 
               />
             </AreaChart>
           </ResponsiveContainer>

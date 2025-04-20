@@ -26,11 +26,13 @@ const AdminDashboard = () => {
     }
   }, [navigate]);
 
+  console.log('بيانات لوحة التحكم:', { dashboardData, categoryData, monthlyData });
+
   if (error) {
     return (
       <MainLayout>
         <div className="p-4 text-red-500">
-          حدث خطأ أثناء تحميل البيانات
+          حدث خطأ أثناء تحميل البيانات: {error.message}
         </div>
       </MainLayout>
     );
@@ -77,4 +79,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

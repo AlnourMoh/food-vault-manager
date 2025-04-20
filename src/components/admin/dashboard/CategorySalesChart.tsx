@@ -11,9 +11,11 @@ interface CategorySalesChartProps {
 
 const CategorySalesChart: React.FC<CategorySalesChartProps> = ({ data }) => {
   const { theme } = useTheme();
+  
+  console.log('بيانات مخطط المبيعات حسب الفئة:', data);
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>إحصائيات المبيعات حسب الفئة</CardTitle>
       </CardHeader>
