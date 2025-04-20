@@ -25,12 +25,16 @@ const PlatformShowcase = () => {
       features: [
         'لوحة تحكم شاملة',
         'إدارة المنتجات بسهولة',
-        'تتبع المخزون في الوقت الفعلي'
+        'تتبع المخزون في الوقت الفعلي',
+        'تقارير وإحصائيات متقدمة',
+        'إدارة المستخدمين والصلاحيات'
       ],
       screenshots: [
         '/screenshots/web/dashboard.png',
         '/screenshots/web/inventory.png',
-        '/screenshots/web/products.png'
+        '/screenshots/web/products.png',
+        '/screenshots/web/reports.png',
+        '/screenshots/web/settings.png'
       ]
     },
     {
@@ -42,12 +46,16 @@ const PlatformShowcase = () => {
       features: [
         'مسح المنتجات بالباركود',
         'تحديث المخزون فورياً',
-        'عرض سريع للمنتجات'
+        'عرض سريع للمنتجات',
+        'إشعارات فورية للتنبيهات',
+        'وضع عدم الاتصال'
       ],
       screenshots: [
         '/screenshots/mobile/home.png',
         '/screenshots/mobile/scan.png',
-        '/screenshots/mobile/inventory.png'
+        '/screenshots/mobile/inventory.png',
+        '/screenshots/mobile/notifications.png',
+        '/screenshots/mobile/offline.png'
       ]
     }
   ];

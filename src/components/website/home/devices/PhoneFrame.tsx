@@ -8,7 +8,8 @@ import {
   CarouselPrevious, 
   CarouselNext 
 } from '@/components/ui/carousel';
-import { screenshotVariants, deviceFrameVariants } from '../animations';
+import { screenshotVariants, carouselSettings } from '../animations';
+import Autoplay from 'embla-carousel-autoplay';
 
 interface PhoneFrameProps {
   screenshots: string[];
@@ -31,10 +32,13 @@ const PhoneFrame: React.FC<PhoneFrameProps> = ({ screenshots, deviceImage }) => 
         <div className="absolute inset-0 bg-white overflow-hidden">
           <Carousel 
             className="w-full h-full"
-            opts={{
-              align: "start",
-              loop: true
-            }}
+            opts={carouselSettings}
+            plugins={[
+              Autoplay({
+                delay: 4000,
+                stopOnInteraction: false
+              })
+            ]}
           >
             <CarouselContent className="h-full">
               {screenshots.map((screenshot, idx) => (
@@ -44,12 +48,12 @@ const PhoneFrame: React.FC<PhoneFrameProps> = ({ screenshots, deviceImage }) => 
                     initial="hidden"
                     animate="visible"
                     custom={idx}
-                    className="w-full h-full"
+                    className="w-full h-full p-4"
                   >
                     <img 
                       src={screenshot} 
                       alt={`Mobile screenshot ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain rounded-lg shadow-md"
                       onError={(e) => {
                         e.currentTarget.src = deviceImage;
                       }}

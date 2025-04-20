@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Carousel, 
@@ -8,7 +8,9 @@ import {
   CarouselPrevious, 
   CarouselNext 
 } from '@/components/ui/carousel';
-import { screenshotVariants, deviceFrameVariants } from '../animations';
+import { screenshotVariants, carouselSettings } from '../animations';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 
 interface LaptopFrameProps {
   screenshots: string[];
@@ -32,10 +34,13 @@ const LaptopFrame: React.FC<LaptopFrameProps> = ({ screenshots, deviceImage }) =
           <div className="absolute top-4 left-0 right-0 bottom-0 bg-white overflow-hidden">
             <Carousel 
               className="w-full h-full"
-              opts={{
-                align: "start",
-                loop: true
-              }}
+              opts={carouselSettings}
+              plugins={[
+                Autoplay({
+                  delay: 4000,
+                  stopOnInteraction: false
+                })
+              ]}
             >
               <CarouselContent className="h-full">
                 {screenshots.map((screenshot, idx) => (
@@ -45,12 +50,12 @@ const LaptopFrame: React.FC<LaptopFrameProps> = ({ screenshots, deviceImage }) =
                       initial="hidden"
                       animate="visible"
                       custom={idx}
-                      className="w-full h-full"
+                      className="w-full h-full p-4"
                     >
                       <img 
                         src={screenshot} 
                         alt={`Web screenshot ${idx + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain rounded-lg shadow-md"
                         onError={(e) => {
                           e.currentTarget.src = deviceImage;
                         }}
