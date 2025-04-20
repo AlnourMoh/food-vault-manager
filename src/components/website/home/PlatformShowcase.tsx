@@ -1,24 +1,161 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { BarcodeIcon, Search, Shield, Smartphone, Users, Warehouse } from 'lucide-react';
+import { 
+  BarcodeIcon, 
+  Search, 
+  Shield, 
+  Smartphone, 
+  Users, 
+  Warehouse,
+  BarChart,
+  Bell,
+  CalendarClock,
+  ChefHat,
+  ClipboardCheck,
+  Receipt
+} from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const PlatformShowcase = () => {
   return (
     <div className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5"></div>
       <div className="container mx-auto px-4 relative z-10">
-        <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-          منصات متعددة لتجربة مثالية
+        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+          نظام إدارة متكامل لمطعمك
         </h2>
+        <p className="text-gray-600 text-center mb-16 max-w-2xl mx-auto">
+          نقدم لك حلاً شاملاً لإدارة المخزون والمنتجات في مطعمك بكفاءة عالية وتحكم كامل
+        </p>
         
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <WebPlatformPreview />
-          <MobilePlatformPreview />
+        <Carousel className="w-full max-w-5xl mx-auto mb-16" opts={{ loop: true }}>
+          <CarouselContent>
+            <CarouselItem>
+              <div className="relative group">
+                <WebPlatformPreview />
+              </div>
+            </CarouselItem>
+            <CarouselItem>
+              <DashboardPreview />
+            </CarouselItem>
+            <CarouselItem>
+              <div className="flex justify-center">
+                <MobilePlatformPreview />
+              </div>
+            </CarouselItem>
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+
+        <div className="grid md:grid-cols-3 gap-8 mt-20">
+          <FeatureCard 
+            icon={<ClipboardCheck className="w-8 h-8 text-blue-500" />}
+            title="إدارة المخزون"
+            description="تتبع المخزون بدقة عالية مع تنبيهات للمنتجات المنتهية والقريبة من الانتهاء"
+          />
+          <FeatureCard 
+            icon={<BarChart className="w-8 h-8 text-purple-500" />}
+            title="تقارير وإحصائيات"
+            description="رؤية شاملة لأداء مطعمك مع تحليلات متقدمة وتقارير تفصيلية"
+          />
+          <FeatureCard 
+            icon={<Bell className="w-8 h-8 text-green-500" />}
+            title="نظام تنبيهات ذكي"
+            description="تنبيهات فورية للمنتجات منخفضة المخزون والمنتهية الصلاحية"
+          />
         </div>
       </div>
     </div>
   );
 };
+
+const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
+  <Card className="transition-all duration-300 hover:shadow-lg hover:scale-105">
+    <CardContent className="p-6">
+      <div className="mb-4">
+        {icon}
+      </div>
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-gray-600">{description}</p>
+    </CardContent>
+  </Card>
+);
+
+const DashboardPreview = () => (
+  <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-800 border-[8px] rounded-t-xl h-[172px] max-w-[301px] md:h-[394px] md:max-w-[712px]">
+    <div className="rounded-lg overflow-hidden h-[156px] md:h-[378px] bg-white">
+      <div className="h-full flex flex-col">
+        <div className="bg-white border-b p-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="w-3 h-3 bg-blue-500 rounded-full" />
+            <span className="text-sm font-medium">لوحة التحكم الرئيسية</span>
+          </div>
+        </div>
+        
+        <div className="flex-1 p-4 bg-gray-50">
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <MetricCard
+              title="المبيعات اليومية"
+              value="2,450 ريال"
+              icon={<Receipt className="w-5 h-5 text-green-500" />}
+            />
+            <MetricCard
+              title="الطلبات"
+              value="48"
+              icon={<ChefHat className="w-5 h-5 text-orange-500" />}
+            />
+            <MetricCard
+              title="المنتجات النشطة"
+              value="156"
+              icon={<BarcodeIcon className="w-5 h-5 text-blue-500" />}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg p-4 h-32 relative overflow-hidden shadow-sm">
+              <h4 className="text-sm text-gray-500 mb-2">نشاط المخزون</h4>
+              <div className="absolute bottom-0 inset-x-0 h-24">
+                <div className="h-full w-full bg-gradient-to-t from-blue-50 to-transparent">
+                  <svg className="w-full h-full" preserveAspectRatio="none">
+                    <path
+                      d="M0 50 Q 75 20, 150 35, 225 25, 300 40 T 400 30 V 100 H 0 Z"
+                      fill="none"
+                      stroke="rgb(59, 130, 246)"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4 h-32 relative overflow-hidden shadow-sm">
+              <h4 className="text-sm text-gray-500 mb-2">تنبيهات هامة</h4>
+              <div className="space-y-2">
+                <div className="flex items-center text-xs text-red-500">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mr-2" />
+                  منتجات قاربت على الانتهاء (5)
+                </div>
+                <div className="flex items-center text-xs text-orange-500">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-2" />
+                  مخزون منخفض (3)
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="relative mx-auto bg-gray-900 dark:bg-gray-700 rounded-b-xl rounded-t-sm h-[17px] max-w-[351px] md:h-[21px] md:max-w-[797px]">
+      <div className="absolute left-1/2 top-0 -translate-x-1/2 rounded-b-xl w-[56px] h-[5px] md:w-[96px] md:h-[8px] bg-gray-800"></div>
+    </div>
+  </div>
+);
 
 const WebPlatformPreview = () => (
   <div className="relative group">
@@ -219,5 +356,17 @@ const ProductCard = ({ name, quantity, expiry }: ProductCardProps) => {
     </div>
   );
 };
+
+const MetricCard = ({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) => (
+  <Card>
+    <CardContent className="p-4 flex justify-between items-center">
+      <div>
+        <p className="text-sm text-gray-500">{title}</p>
+        <p className="text-lg font-semibold">{value}</p>
+      </div>
+      {icon}
+    </CardContent>
+  </Card>
+);
 
 export default PlatformShowcase;
