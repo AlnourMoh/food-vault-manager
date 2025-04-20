@@ -2,9 +2,10 @@
 import React from 'react';
 import StatsCard from '@/components/dashboard/StatsCard';
 import { BuildingIcon, Users, ShoppingCart, BarChartIcon } from 'lucide-react';
+import { DashboardData } from '@/types';
 
 interface StatsGridProps {
-  dashboardData: any;
+  dashboardData: DashboardData | null;
 }
 
 const StatsGrid: React.FC<StatsGridProps> = ({ dashboardData }) => {
@@ -61,3 +62,4 @@ const StatsGrid: React.FC<StatsGridProps> = ({ dashboardData }) => {
 };
 
 export default StatsGrid;
+

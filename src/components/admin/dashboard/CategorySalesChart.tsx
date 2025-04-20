@@ -5,8 +5,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Toolti
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useTheme } from '@/hooks/use-theme';
 
+interface CategoryData {
+  name: string;
+  value: number;
+}
+
 interface CategorySalesChartProps {
-  data: any[];
+  data: CategoryData[];
 }
 
 const CategorySalesChart: React.FC<CategorySalesChartProps> = ({ data }) => {
@@ -48,3 +53,4 @@ const CategorySalesChart: React.FC<CategorySalesChartProps> = ({ data }) => {
 };
 
 export default CategorySalesChart;
+

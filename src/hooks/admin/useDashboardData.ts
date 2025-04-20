@@ -1,21 +1,54 @@
 
 import { useState, useEffect } from 'react';
 import { getMockData } from '@/services/mockData';
+import { Product, InventoryTransaction } from '@/types';
+
+interface DashboardStats {
+  totalRestaurants: number;
+  totalStorageTeamMembers: number;
+  totalProducts: number;
+  totalExpiredProducts: number;
+  recentTransactions: InventoryTransaction[];
+  inventoryValue: number;
+  expiringProducts: Product[];
+}
 
 interface DashboardData {
-  restaurants: any[];
-  storageTeamMembers: any[];
-  products: any[];
-  inventoryTransactions: any[];
-  dashboardStats: {
-    totalRestaurants: number;
-    totalStorageTeamMembers: number;
-    totalProducts: number;
-    totalExpiredProducts: number;
-    recentTransactions: any[];
-    inventoryValue: number;
-    expiringProducts: any[];
-  };
+  restaurants: {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    manager: string;
+    registrationDate: Date;
+    isActive: boolean;
+  }[];
+  storageTeamMembers: {
+    id: string;
+    name: string;
+    role: 'manager' | 'team_member';
+    phone: string;
+    email: string;
+    restaurantId: string;
+    restaurantName: string;
+    joinDate: Date;
+    isActive: boolean;
+  }[];
+  products: Product[];
+  inventoryTransactions: InventoryTransaction[];
+  dashboardStats: DashboardStats;
+}
+
+interface CategoryData {
+  name: string;
+  value: number;
+}
+
+interface MonthlyData {
+  name: string;
+  مبيعات: number;
+  منتجات: number;
 }
 
 export const useDashboardData = () => {
@@ -38,12 +71,12 @@ export const useDashboardData = () => {
     fetchData();
   }, []);
 
-  const getCategoryData = () => {
+  const getCategoryData = (): CategoryData[] => {
     if (!dashboardData?.products) return [];
     
     const categories: Record<string, number> = {};
     
-    dashboardData.products.forEach((product: any) => {
+    dashboardData.products.forEach((product) => {
       if (categories[product.category]) {
         categories[product.category] += 1;
       } else {
@@ -70,7 +103,7 @@ export const useDashboardData = () => {
       { name: 'مايو', مبيعات: 1890, منتجات: 4800 },
       { name: 'يونيو', مبيعات: 2390, منتجات: 3800 },
       { name: 'يوليو', مبيعات: 3490, منتجات: 4300 },
-    ]
+    ] as MonthlyData[]
   };
 };
 

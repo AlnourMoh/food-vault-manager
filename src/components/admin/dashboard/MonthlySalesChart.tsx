@@ -5,8 +5,14 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useTheme } from '@/hooks/use-theme';
 
+interface MonthlyData {
+  name: string;
+  مبيعات: number;
+  منتجات: number;
+}
+
 interface MonthlySalesChartProps {
-  data: any[];
+  data: MonthlyData[];
 }
 
 const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ data }) => {
@@ -68,3 +74,4 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ data }) => {
 };
 
 export default MonthlySalesChart;
+
