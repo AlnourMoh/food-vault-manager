@@ -40,8 +40,8 @@ const AdminDashboard = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 bg-gradient-to-br from-fvm-primary/10 to-fvm-background/30 min-h-screen p-6 rounded-lg">
-        <h1 className="text-3xl font-bold tracking-tight text-fvm-foreground">لوحة تحكم المسؤول</h1>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">لوحة تحكم المسؤول</h1>
         
         {isLoading ? (
           <>

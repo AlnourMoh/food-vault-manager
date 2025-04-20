@@ -13,32 +13,32 @@ const StatsGrid: React.FC<StatsGridProps> = ({ dashboardData }) => {
     {
       title: "المطاعم",
       value: dashboardData ? dashboardData.restaurants.length : "0",
-      icon: <BuildingIcon className="h-6 w-6 text-fvm-primary" />,
-      color: "bg-fvm-primary-light",
+      icon: <BuildingIcon className="h-6 w-6 text-blue-500" />,
+      color: "bg-blue-50",
       description: "إجمالي عدد المطاعم المسجلة",
       trend: { value: 12, isPositive: true }
     },
     {
       title: "المستخدمين",
       value: dashboardData ? dashboardData.storageTeamMembers.length : "0",
-      icon: <Users className="h-6 w-6 text-fvm-secondary" />,
-      color: "bg-fvm-background",
+      icon: <Users className="h-6 w-6 text-green-500" />,
+      color: "bg-green-50",
       description: "إجمالي عدد المستخدمين",
       trend: { value: 5, isPositive: true }
     },
     {
       title: "المنتجات",
       value: dashboardData ? dashboardData.products.length : "0",
-      icon: <ShoppingCart className="h-6 w-6 text-fvm-accent" />,
-      color: "bg-fvm-primary-light/50",
+      icon: <ShoppingCart className="h-6 w-6 text-purple-500" />,
+      color: "bg-purple-50",
       description: "إجمالي عدد المنتجات",
       trend: { value: 8, isPositive: true }
     },
     {
       title: "المعاملات",
       value: dashboardData ? dashboardData.inventoryTransactions.length : "0",
-      icon: <BarChartIcon className="h-6 w-6 text-fvm-foreground" />,
-      color: "bg-fvm-background/70",
+      icon: <BarChartIcon className="h-6 w-6 text-amber-500" />,
+      color: "bg-amber-50",
       description: "إجمالي عدد المعاملات",
       trend: { value: 3, isPositive: true }
     }
@@ -54,7 +54,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({ dashboardData }) => {
           icon={stat.icon}
           description={stat.description}
           trend={stat.trend}
-          className={`${stat.color} bg-gradient-to-br from-fvm-primary/20 to-fvm-background/50`}
+          className={stat.color}
         />
       ))}
     </div>
