@@ -14,9 +14,16 @@ import { Button } from "@/components/ui/button";
 const WebsiteLayout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
   
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
   return (
     <div className="min-h-screen flex flex-col rtl">
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2">
@@ -36,28 +43,28 @@ const WebsiteLayout = ({ children }: { children?: React.ReactNode }) => {
                     </Link>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <Link 
-                      to="/about" 
-                      className={`text-gray-600 hover:text-blue-600 ${location.pathname === '/about' ? 'text-blue-600' : ''}`}
+                    <button 
+                      onClick={() => scrollToSection('about')}
+                      className="text-gray-600 hover:text-blue-600"
                     >
                       من نحن
-                    </Link>
+                    </button>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <Link 
-                      to="/services" 
-                      className={`text-gray-600 hover:text-blue-600 ${location.pathname === '/services' ? 'text-blue-600' : ''}`}
+                    <button 
+                      onClick={() => scrollToSection('services')}
+                      className="text-gray-600 hover:text-blue-600"
                     >
                       خدماتنا
-                    </Link>
+                    </button>
                   </NavigationMenuItem>
                   <NavigationMenuItem>
-                    <Link 
-                      to="/contact" 
-                      className={`text-gray-600 hover:text-blue-600 ${location.pathname === '/contact' ? 'text-blue-600' : ''}`}
+                    <button 
+                      onClick={() => scrollToSection('contact')}
+                      className="text-gray-600 hover:text-blue-600"
                     >
                       تواصل معنا
-                    </Link>
+                    </button>
                   </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>

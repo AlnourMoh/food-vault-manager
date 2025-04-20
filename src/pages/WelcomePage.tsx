@@ -12,12 +12,18 @@ const WelcomePage = () => {
   return (
     <div className="space-y-20">
       <HeroSection />
-      <AboutSection />
-      <ServicesSection />
+      <div id="about">
+        <AboutSection />
+      </div>
+      <div id="services">
+        <ServicesSection />
+      </div>
       <PlatformShowcase />
       <VideoTutorials />
       <CallToAction />
-      <ContactSection />
+      <div id="contact">
+        <ContactSection />
+      </div>
     </div>
   );
 };
