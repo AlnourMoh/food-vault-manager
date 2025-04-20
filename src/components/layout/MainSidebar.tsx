@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BuildingIcon, Check, LogOut, ChevronDown } from 'lucide-react';
+import { BuildingIcon, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -27,11 +26,6 @@ const MainSidebar: React.FC<MainSidebarProps> = ({ className }) => {
       name: 'المطاعم', 
       path: '/restaurants', 
       icon: <BuildingIcon className="ml-2 h-5 w-5 text-white" /> 
-    },
-    { 
-      name: 'التقارير', 
-      path: '/reports', 
-      icon: <Check className="ml-2 h-5 w-5 text-white" /> 
     },
   ];
 

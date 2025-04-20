@@ -91,7 +91,7 @@ function App() {
                   {/* Admin Authentication */}
                   <Route path="/admin/login" element={<AdminLogin />} />
                   
-                  {/* Protected Admin Routes */}
+                  {/* Protected Admin Routes - Removed reports route */}
                   <Route path="/admin/dashboard" element={
                     <AdminRoute>
                       <AdminDashboard />
