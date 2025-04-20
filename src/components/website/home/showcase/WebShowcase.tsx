@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { LayoutDashboard, Package, ChartBar, Users } from 'lucide-react';
 
 const WebShowcase = () => {
   const [currentPage, setCurrentPage] = useState(0);
