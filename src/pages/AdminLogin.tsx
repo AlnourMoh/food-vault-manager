@@ -31,7 +31,8 @@ const AdminLogin = () => {
       console.log('محاولة تسجيل دخول بـ:', { email, password });
       
       // التحقق من بيانات تسجيل الدخول للمسؤول
-      if (email === 'admin@system.com' && password === 'admin123') {
+      // السماح بالدخول باستخدام أي من البريدين الإلكترونيين
+      if ((email === 'admin@system.com' || email === 'admin@restaurant-system.com') && password === 'admin123') {
         console.log('تسجيل الدخول ناجح');
         
         // تخزين معلومات المسؤول في localStorage
