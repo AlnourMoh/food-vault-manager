@@ -3,11 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useTheme } from '@/hooks/use-theme';
-
-interface CategoryData {
-  name: string;
-  value: number;
-}
+import { CategoryData } from '@/types';
 
 interface CategoryDistributionChartProps {
   data: CategoryData[];
@@ -57,4 +53,3 @@ const CategoryDistributionChart: React.FC<CategoryDistributionChartProps> = ({ d
 };
 
 export default CategoryDistributionChart;
-

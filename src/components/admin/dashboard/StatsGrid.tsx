@@ -62,4 +62,3 @@ const StatsGrid: React.FC<StatsGridProps> = ({ dashboardData }) => {
 };
 
 export default StatsGrid;
-

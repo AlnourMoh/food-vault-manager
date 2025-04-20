@@ -1,55 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { getMockData } from '@/services/mockData';
-import { Product, InventoryTransaction } from '@/types';
-
-interface DashboardStats {
-  totalRestaurants: number;
-  totalStorageTeamMembers: number;
-  totalProducts: number;
-  totalExpiredProducts: number;
-  recentTransactions: InventoryTransaction[];
-  inventoryValue: number;
-  expiringProducts: Product[];
-}
-
-interface DashboardData {
-  restaurants: {
-    id: string;
-    name: string;
-    address: string;
-    phone: string;
-    email: string;
-    manager: string;
-    registrationDate: Date;
-    isActive: boolean;
-  }[];
-  storageTeamMembers: {
-    id: string;
-    name: string;
-    role: 'manager' | 'team_member';
-    phone: string;
-    email: string;
-    restaurantId: string;
-    restaurantName: string;
-    joinDate: Date;
-    isActive: boolean;
-  }[];
-  products: Product[];
-  inventoryTransactions: InventoryTransaction[];
-  dashboardStats: DashboardStats;
-}
-
-interface CategoryData {
-  name: string;
-  value: number;
-}
-
-interface MonthlyData {
-  name: string;
-  مبيعات: number;
-  منتجات: number;
-}
+import { 
+  Product, 
+  InventoryTransaction, 
+  DashboardData, 
+  DashboardStats, 
+  CategoryData, 
+  MonthlyData 
+} from '@/types';
 
 export const useDashboardData = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -106,4 +65,3 @@ export const useDashboardData = () => {
     ] as MonthlyData[]
   };
 };
-

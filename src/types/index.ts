@@ -64,3 +64,25 @@ export interface DashboardStats {
   inventoryValue: number;
   expiringProducts: Product[];
 }
+
+// Category data type
+export interface CategoryData {
+  name: string;
+  value: number;
+}
+
+// Monthly data type
+export interface MonthlyData {
+  name: string;
+  مبيعات: number;
+  منتجات: number;
+}
+
+// Dashboard Data type
+export interface DashboardData {
+  restaurants: Restaurant[];
+  storageTeamMembers: StorageTeamMember[];
+  products: Product[];
+  inventoryTransactions: InventoryTransaction[];
+  dashboardStats: DashboardStats;
+}

@@ -4,11 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useTheme } from '@/hooks/use-theme';
-
-interface CategoryData {
-  name: string;
-  value: number;
-}
+import { CategoryData } from '@/types';
 
 interface CategorySalesChartProps {
   data: CategoryData[];
@@ -53,4 +49,3 @@ const CategorySalesChart: React.FC<CategorySalesChartProps> = ({ data }) => {
 };
 
 export default CategorySalesChart;
-

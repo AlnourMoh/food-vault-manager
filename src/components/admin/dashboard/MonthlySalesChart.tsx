@@ -4,12 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useTheme } from '@/hooks/use-theme';
-
-interface MonthlyData {
-  name: string;
-  مبيعات: number;
-  منتجات: number;
-}
+import { MonthlyData } from '@/types';
 
 interface MonthlySalesChartProps {
   data: MonthlyData[];
@@ -74,4 +69,3 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ data }) => {
 };
 
 export default MonthlySalesChart;
-
