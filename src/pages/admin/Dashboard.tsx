@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,10 +21,13 @@ import {
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useTheme } from '@/hooks/use-theme';
+import { getMockData } from '@/services/mockData';
+import StatsCard from '@/components/dashboard/StatsCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const [dashboardData, setDashboardData] = useState<any>(null);
   
   // التحقق من تسجيل دخول المسؤول
   useEffect(() => {
@@ -37,57 +40,85 @@ const AdminDashboard = () => {
       navigate('/admin/login');
     } else {
       console.log('المستخدم مسجل دخول بنجاح');
+      // جلب البيانات لعرضها في لوحة التحكم
+      const data = getMockData();
+      setDashboardData(data);
     }
   }, [navigate]);
 
-  // بيانات إحصائية نموذجية - في التطبيق الحقيقي، ستأتي من قاعدة البيانات
+  // إعداد بيانات الإحصائيات
   const stats = [
     {
       title: "المطاعم",
-      value: "12",
+      value: dashboardData ? dashboardData.restaurants.length : "0",
       icon: <BuildingIcon className="h-6 w-6 text-blue-500" />,
-      color: "bg-blue-50"
+      color: "bg-blue-50",
+      description: "إجمالي عدد المطاعم المسجلة",
+      trend: { value: 12, isPositive: true }
     },
     {
       title: "المستخدمين",
-      value: "48",
+      value: dashboardData ? dashboardData.storageTeamMembers.length : "0",
       icon: <Users className="h-6 w-6 text-green-500" />,
-      color: "bg-green-50"
+      color: "bg-green-50",
+      description: "إجمالي عدد المستخدمين",
+      trend: { value: 5, isPositive: true }
     },
     {
       title: "المنتجات",
-      value: "156",
+      value: dashboardData ? dashboardData.products.length : "0",
       icon: <ShoppingCart className="h-6 w-6 text-purple-500" />,
-      color: "bg-purple-50"
+      color: "bg-purple-50",
+      description: "إجمالي عدد المنتجات",
+      trend: { value: 8, isPositive: true }
     },
     {
-      title: "التقارير",
-      value: "24",
+      title: "المعاملات",
+      value: dashboardData ? dashboardData.inventoryTransactions.length : "0",
       icon: <BarChartIcon className="h-6 w-6 text-amber-500" />,
-      color: "bg-amber-50"
+      color: "bg-amber-50",
+      description: "إجمالي عدد المعاملات",
+      trend: { value: 3, isPositive: true }
     }
   ];
 
-  // بيانات المبيعات الشهرية
+  // إعداد بيانات المبيعات الشهرية
   const monthlyData = [
-    { name: 'يناير', مبيعات: 4000 },
-    { name: 'فبراير', مبيعات: 3000 },
-    { name: 'مارس', مبيعات: 2000 },
-    { name: 'أبريل', مبيعات: 2780 },
-    { name: 'مايو', مبيعات: 1890 },
-    { name: 'يونيو', مبيعات: 2390 },
+    { name: 'يناير', مبيعات: 4000, منتجات: 2400 },
+    { name: 'فبراير', مبيعات: 3000, منتجات: 1398 },
+    { name: 'مارس', مبيعات: 2000, منتجات: 9800 },
+    { name: 'أبريل', مبيعات: 2780, منتجات: 3908 },
+    { name: 'مايو', مبيعات: 1890, منتجات: 4800 },
+    { name: 'يونيو', مبيعات: 2390, منتجات: 3800 },
+    { name: 'يوليو', مبيعات: 3490, منتجات: 4300 },
   ];
 
-  // بيانات توزيع المنتجات حسب الفئة
-  const categoryData = [
-    { name: 'حبوب', value: 400 },
-    { name: 'خضروات', value: 300 },
-    { name: 'لحوم', value: 300 },
-    { name: 'فواكه', value: 200 },
-  ];
+  // إعداد بيانات توزيع المنتجات حسب الفئة
+  const getCategoryData = () => {
+    if (!dashboardData || !dashboardData.products) return [];
+    
+    const categories: Record<string, number> = {};
+    
+    dashboardData.products.forEach((product: any) => {
+      if (categories[product.category]) {
+        categories[product.category] += 1;
+      } else {
+        categories[product.category] = 1;
+      }
+    });
+    
+    return Object.keys(categories).map(name => ({
+      name,
+      value: categories[name]
+    }));
+  };
+
+  const categoryData = dashboardData ? getCategoryData() : [];
 
   // ألوان للمخطط الدائري - تعديل لتناسب الوضع الفاتح والداكن
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+  const COLORS = theme === 'dark' 
+    ? ['#60A5FA', '#34D399', '#FBBF24', '#F87171'] 
+    : ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
   // تكوين الرسوم البيانية مع دعم وضع السمة
   const chartConfig = {
@@ -114,15 +145,15 @@ const AdminDashboard = () => {
         
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat, index) => (
-            <Card key={index}>
-              <CardHeader className={`flex flex-row items-center justify-between pb-2 ${theme === 'dark' ? 'bg-secondary' : stat.color} rounded-t-lg`}>
-                <CardTitle className="text-md font-medium">{stat.title}</CardTitle>
-                {stat.icon}
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </CardContent>
-            </Card>
+            <StatsCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              description={stat.description}
+              trend={stat.trend}
+              className={theme === 'dark' ? 'bg-secondary' : stat.color}
+            />
           ))}
         </div>
         
@@ -148,6 +179,13 @@ const AdminDashboard = () => {
                       name="sales"
                       stroke={theme === 'dark' ? '#60A5FA' : '#3B82F6'} 
                       fill={theme === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.2)'} 
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="منتجات" 
+                      name="products"
+                      stroke={theme === 'dark' ? '#34D399' : '#10B981'} 
+                      fill={theme === 'dark' ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.2)'} 
                     />
                   </AreaChart>
                 </ChartContainer>
