@@ -1,18 +1,11 @@
 
 import React from 'react';
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from '@/components/ui/carousel';
-import { LayoutDashboard, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LaptopFrame from './devices/LaptopFrame';
 import PhoneFrame from './devices/PhoneFrame';
 import PlatformFeatures from './PlatformFeatures';
 import { containerVariants, deviceFrameVariants } from './animations';
+import { LayoutDashboard, Package } from 'lucide-react';
 
 const PlatformShowcase = () => {
   const platforms = [
@@ -43,7 +36,7 @@ const PlatformShowcase = () => {
   ];
 
   return (
-    <div className="container mx-auto py-16 space-y-16">
+    <div className="relative py-16 bg-gradient-to-b from-background via-background/95 to-background">
       <motion.h2 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -53,14 +46,14 @@ const PlatformShowcase = () => {
         منصة متكاملة لإدارة المخزون
       </motion.h2>
       
-      <div className="flex flex-col gap-16">
+      <div className="container mx-auto space-y-24">
         {platforms.map((platform, index) => (
           <motion.div
             key={index}
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="flex flex-col md:flex-row items-center gap-8 bg-background p-8 rounded-xl shadow-lg"
+            className="flex flex-col md:flex-row items-center gap-8 rounded-xl"
           >
             <PlatformFeatures
               icon={platform.icon}

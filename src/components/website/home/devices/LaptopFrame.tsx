@@ -18,20 +18,20 @@ const LaptopFrame = () => {
   return (
     <div className="relative w-full aspect-[16/10]">
       <motion.div 
-        className="absolute inset-0 rounded-lg overflow-hidden shadow-2xl bg-gray-800"
+        className="absolute inset-0 rounded-lg overflow-hidden shadow-2xl bg-gradient-to-br from-gray-800 to-gray-900"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full select-none">
           <div className="absolute top-0 left-0 right-0 h-4 bg-gray-900 z-10 flex justify-center items-center">
             <div className="w-2 h-2 rounded-full bg-gray-700"></div>
           </div>
           
-          <div className="absolute top-4 left-0 right-0 bottom-0 bg-white overflow-hidden">
+          <div className="absolute top-4 left-0 right-0 bottom-0 overflow-hidden bg-gradient-to-br from-background to-secondary/30">
             <Carousel
               plugins={[autoplay.current]}
-              className="w-full h-full"
+              className="w-full h-full pointer-events-none"
               opts={{
                 align: "center",
                 loop: true,
@@ -55,7 +55,7 @@ const LaptopFrame = () => {
       </motion.div>
       
       <motion.div 
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] h-2 bg-gray-700 rounded-b-lg"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[90%] h-2 bg-gradient-to-r from-gray-800 to-gray-900 rounded-b-lg"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}

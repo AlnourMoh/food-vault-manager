@@ -1,33 +1,31 @@
-
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { LayoutDashboard, Package, ChartBar, Users, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const WebShowcase = () => {
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage] = useState(0);
   
   const pages = [
     // لوحة التحكم
-    <div key="dashboard" className="w-full h-full bg-white p-4 overflow-hidden">
+    <div key="dashboard" className="w-full h-full bg-background/95 p-4 overflow-hidden select-none pointer-events-none">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-4">
           <LayoutDashboard className="h-6 w-6 text-primary" />
           <h3 className="text-lg font-semibold">لوحة التحكم الرئيسية</h3>
         </div>
         <div className="grid grid-cols-3 gap-4">
-          <Card className="p-4 bg-blue-50">
-            <p className="text-sm text-gray-600">إجمالي المنتجات</p>
-            <p className="text-2xl font-bold">1,234</p>
+          <Card className="p-4 bg-secondary/30">
+            <p className="text-sm text-muted-foreground">إجمالي المنتجات</p>
+            <p className="text-2xl font-bold text-foreground">1,234</p>
           </Card>
-          <Card className="p-4 bg-green-50">
-            <p className="text-sm text-gray-600">المنتجات المتوفرة</p>
-            <p className="text-2xl font-bold">987</p>
+          <Card className="p-4 bg-secondary/30">
+            <p className="text-sm text-muted-foreground">المنتجات المتوفرة</p>
+            <p className="text-2xl font-bold text-foreground">987</p>
           </Card>
-          <Card className="p-4 bg-yellow-50">
-            <p className="text-sm text-gray-600">تنبيهات المخزون</p>
-            <p className="text-2xl font-bold">12</p>
+          <Card className="p-4 bg-secondary/30">
+            <p className="text-sm text-muted-foreground">تنبيهات المخزون</p>
+            <p className="text-2xl font-bold text-foreground">12</p>
           </Card>
         </div>
       </div>
@@ -185,36 +183,9 @@ const WebShowcase = () => {
     </div>
   ];
 
-  const goToPrevPage = () => {
-    setCurrentPage((prev) => (prev === 0 ? pages.length - 1 : prev - 1));
-  };
-
-  const goToNextPage = () => {
-    setCurrentPage((prev) => (prev === pages.length - 1 ? 0 : prev + 1));
-  };
-
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full bg-gradient-to-br from-background to-secondary/30">
       {pages[currentPage]}
-      
-      <div className="absolute bottom-2 right-4 flex gap-2">
-        <Button variant="outline" size="sm" onClick={goToPrevPage}>
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={goToNextPage}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-        {pages.map((_, idx) => (
-          <button
-            key={idx}
-            className={`w-2 h-2 rounded-full ${currentPage === idx ? 'bg-primary' : 'bg-gray-300'}`}
-            onClick={() => setCurrentPage(idx)}
-          />
-        ))}
-      </div>
     </div>
   );
 };
