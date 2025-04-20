@@ -1,10 +1,9 @@
+
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { LayoutDashboard, Package, ChartBar, Users, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const WebShowcase = () => {
-  const [currentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   
   const pages = [
     // لوحة التحكم
@@ -183,8 +182,29 @@ const WebShowcase = () => {
     </div>
   ];
 
+  const features = [
+    "لوحة تحكم شاملة لعرض الإحصائيات",
+    "إدارة المنتجات والمخزون بكفاءة",
+    "تتبع الصلاحية والكميات",
+    "تقارير وإحصائيات متقدمة",
+    "إدارة المستخدمين والصلاحيات"
+  ];
+
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-background to-secondary/30">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2 max-w-[200px]">
+        {features.map((feature, index) => (
+          <Button
+            key={index}
+            variant={currentPage === index ? "default" : "outline"}
+            onClick={() => setCurrentPage(index)}
+            size="sm"
+            className="text-right justify-start py-1 text-xs"
+          >
+            {feature}
+          </Button>
+        ))}
+      </div>
       {pages[currentPage]}
     </div>
   );
