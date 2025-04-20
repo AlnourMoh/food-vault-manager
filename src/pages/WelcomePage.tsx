@@ -7,6 +7,7 @@ import CallToAction from '@/components/website/home/CallToAction';
 import ContactSection from '@/components/website/home/ContactSection';
 import AboutSection from '@/components/website/home/AboutSection';
 import ServicesSection from '@/components/website/home/ServicesSection';
+import RestaurantLogos from '@/components/website/home/RestaurantLogos';
 
 const WelcomePage = () => {
   return (
@@ -19,6 +20,7 @@ const WelcomePage = () => {
         <ServicesSection />
       </div>
       <PlatformShowcase />
+      <RestaurantLogos />
       <VideoTutorials />
       <CallToAction />
       <div id="contact">
