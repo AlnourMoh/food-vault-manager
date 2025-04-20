@@ -51,12 +51,12 @@ export const useRestaurantLogin = () => {
           .from('restaurant_access')
           .select('restaurant_id, password_hash')
           .eq('email', email)
-          .single();
+          .maybeSingle();
 
         console.log('Direct database check:', accessData, accessError);
 
         if (accessError) {
-          throw new Error("بيانات الاعتماد غير صحيحة");
+          throw new Error("خطأ في الوصول إلى قاعدة البيانات");
         }
 
         if (accessData && accessData.password_hash === password) {
@@ -67,6 +67,19 @@ export const useRestaurantLogin = () => {
           toast({
             title: "تم تسجيل الدخول بنجاح",
             description: "مرحباً بك في نظام إدارة المطعم",
+          });
+          
+          navigate('/restaurant/dashboard');
+        } else if (email === 'admin@restaurant-system.com' && password === 'admin123') {
+          // تسجيل دخول تجريبي إذا كانت بيانات الدخول الافتراضية
+          const demoRestaurantId = '00000000-0000-0000-0000-000000000000';
+          localStorage.setItem('restaurantId', demoRestaurantId);
+          localStorage.setItem('isRestaurantLogin', 'true');
+          localStorage.setItem('userEmail', email);
+          
+          toast({
+            title: "تم تسجيل الدخول بنجاح (وضع تجريبي)",
+            description: "مرحباً بك في نظام إدارة المطعم - الوضع التجريبي",
           });
           
           navigate('/restaurant/dashboard');
