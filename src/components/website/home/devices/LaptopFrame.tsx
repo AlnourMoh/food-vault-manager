@@ -3,8 +3,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import WebShowcase from '../showcase/WebShowcase';
 import { screenshotVariants } from '../animations';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel"
+import Autoplay from "embla-carousel-autoplay"
 
 const LaptopFrame = () => {
+  const autoplay = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  )
+
   return (
     <div className="relative w-full aspect-[16/10]">
       <motion.div 
@@ -19,14 +29,27 @@ const LaptopFrame = () => {
           </div>
           
           <div className="absolute top-4 left-0 right-0 bottom-0 bg-white overflow-hidden">
-            <motion.div
-              variants={screenshotVariants}
-              initial="hidden"
-              animate="visible"
+            <Carousel
+              plugins={[autoplay.current]}
               className="w-full h-full"
+              opts={{
+                align: "center",
+                loop: true,
+              }}
             >
-              <WebShowcase />
-            </motion.div>
+              <CarouselContent>
+                <CarouselItem>
+                  <motion.div
+                    variants={screenshotVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="w-full h-full"
+                  >
+                    <WebShowcase />
+                  </motion.div>
+                </CarouselItem>
+              </CarouselContent>
+            </Carousel>
           </div>
         </div>
       </motion.div>

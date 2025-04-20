@@ -3,8 +3,18 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import MobileShowcase from '../showcase/MobileShowcase';
 import { screenshotVariants } from '../animations';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel"
+import Autoplay from "embla-carousel-autoplay"
 
 const PhoneFrame = () => {
+  const autoplay = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  )
+
   return (
     <div className="relative w-full max-w-[300px] mx-auto aspect-[9/16]">
       <motion.div 
@@ -18,14 +28,27 @@ const PhoneFrame = () => {
         </div>
         
         <div className="absolute inset-0 bg-white overflow-hidden">
-          <motion.div
-            variants={screenshotVariants}
-            initial="hidden"
-            animate="visible"
+          <Carousel
+            plugins={[autoplay.current]}
             className="w-full h-full"
+            opts={{
+              align: "center",
+              loop: true,
+            }}
           >
-            <MobileShowcase />
-          </motion.div>
+            <CarouselContent>
+              <CarouselItem>
+                <motion.div
+                  variants={screenshotVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="w-full h-full"
+                >
+                  <MobileShowcase />
+                </motion.div>
+              </CarouselItem>
+            </CarouselContent>
+          </Carousel>
         </div>
       </motion.div>
       
