@@ -2,9 +2,9 @@
 import React from 'react';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { Shield } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 
-const WebsiteLayout = ({ children }: { children: React.ReactNode }) => {
+const WebsiteLayout = ({ children }: { children?: React.ReactNode }) => {
   const location = useLocation();
   
   return (
@@ -58,7 +58,7 @@ const WebsiteLayout = ({ children }: { children: React.ReactNode }) => {
       </header>
       
       <main className="flex-1">
-        {children}
+        {children || <Outlet />}
       </main>
       
       <footer className="bg-gray-50 py-8 text-center text-gray-600">

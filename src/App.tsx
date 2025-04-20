@@ -1,5 +1,6 @@
+
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -66,11 +67,11 @@ function App() {
             ) : (
               <Routes>
                 {/* Website Routes */}
-                <Route element={<WebsiteLayout />}>
-                  <Route path="/" element={<WelcomePage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
+                <Route path="/" element={<WebsiteLayout><Outlet /></WebsiteLayout>}>
+                  <Route index element={<WelcomePage />} />
+                  <Route path="about" element={<AboutPage />} />
+                  <Route path="services" element={<ServicesPage />} />
+                  <Route path="contact" element={<ContactPage />} />
                 </Route>
 
                 {/* Super Admin Routes */}
