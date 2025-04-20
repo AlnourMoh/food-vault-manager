@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -60,7 +61,10 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   const handleLogout = () => {
     localStorage.removeItem('restaurantId');
     localStorage.removeItem('isRestaurantLogin');
-    navigate('/restaurant/login');
+    localStorage.removeItem('userEmail');
+    
+    // توجيه المستخدم إلى الصفحة الرئيسية بدلاً من صفحة تسجيل دخول المطعم
+    navigate('/');
   };
   
   const handleBack = () => {
