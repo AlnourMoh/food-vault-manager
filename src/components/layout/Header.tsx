@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   DropdownMenu,
@@ -10,12 +11,27 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   className?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ className }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const handleLogout = () => {
+    localStorage.removeItem('isAdminLogin');
+    
+    toast({
+      title: "تم تسجيل الخروج بنجاح",
+      description: "نتمنى لك يوماً سعيداً!",
+    });
+    
+    navigate('/');
+  };
+  
   return (
     <header className={cn("rtl sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6", className)}>
       <div className="flex flex-1 items-center justify-end">
@@ -38,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
               <DropdownMenuItem>الملف الشخصي</DropdownMenuItem>
               <DropdownMenuItem>الإعدادات</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>تسجيل الخروج</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

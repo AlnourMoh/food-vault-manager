@@ -14,7 +14,7 @@ const WelcomePage = () => {
       <div className="container mx-auto flex justify-end px-4 pt-4">
         <div className="space-x-2 rtl:space-x-reverse">
           <Button variant="outline" size="sm" asChild>
-            <Link to="/restaurants">دخول المسؤول</Link>
+            <Link to="/admin/login">دخول المسؤول</Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link to="/restaurant/login">دخول المطعم</Link>

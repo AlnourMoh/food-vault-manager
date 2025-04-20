@@ -23,6 +23,8 @@ import Inventory from "./pages/Inventory";
 import Expired from "./pages/Expired";
 import NotFound from "./pages/NotFound";
 import RestaurantLogin from "./pages/RestaurantLogin";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/admin/Dashboard";
 import RestaurantCredentials from "./pages/RestaurantCredentials";
 import RestaurantSetupPassword from "./pages/RestaurantSetupPassword";
 import RestaurantDashboard from "./pages/restaurant/Dashboard";
@@ -41,6 +43,17 @@ const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!isRestaurantLoggedIn) {
     return <Navigate to="/restaurant/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Admin route guard
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAdminLoggedIn = localStorage.getItem('isAdminLogin') === 'true';
+  
+  if (!isAdminLoggedIn) {
+    return <Navigate to="/admin/login" replace />;
   }
   
   return <>{children}</>;
@@ -74,11 +87,35 @@ function App() {
                   <Route path="contact" element={<ContactPage />} />
                 </Route>
 
-                {/* Super Admin Routes */}
-                <Route path="/restaurants" element={<Restaurants />} />
-                <Route path="/restaurants/add" element={<AddRestaurant />} />
-                <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
-                <Route path="/restaurants/:id/edit" element={<EditRestaurant />} />
+                {/* Admin Authentication */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                
+                {/* Protected Admin Routes */}
+                <Route path="/admin/dashboard" element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                } />
+                <Route path="/restaurants" element={
+                  <AdminRoute>
+                    <Restaurants />
+                  </AdminRoute>
+                } />
+                <Route path="/restaurants/add" element={
+                  <AdminRoute>
+                    <AddRestaurant />
+                  </AdminRoute>
+                } />
+                <Route path="/restaurants/:id/credentials" element={
+                  <AdminRoute>
+                    <RestaurantCredentials />
+                  </AdminRoute>
+                } />
+                <Route path="/restaurants/:id/edit" element={
+                  <AdminRoute>
+                    <EditRestaurant />
+                  </AdminRoute>
+                } />
                 
                 {/* Restaurant Setup Route */}
                 <Route path="/restaurant/setup-password/:id" element={<RestaurantSetupPassword />} />
