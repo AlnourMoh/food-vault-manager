@@ -1,9 +1,27 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BuildingIcon, Users, ShoppingCart, BarChart } from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+import {
+  ChartContainer,
+  ChartTooltip
+} from '@/components/ui/chart';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -50,6 +68,27 @@ const AdminDashboard = () => {
     }
   ];
 
+  // بيانات المبيعات الشهرية
+  const monthlyData = [
+    { name: 'يناير', مبيعات: 4000 },
+    { name: 'فبراير', مبيعات: 3000 },
+    { name: 'مارس', مبيعات: 2000 },
+    { name: 'أبريل', مبيعات: 2780 },
+    { name: 'مايو', مبيعات: 1890 },
+    { name: 'يونيو', مبيعات: 2390 },
+  ];
+
+  // بيانات توزيع المنتجات حسب الفئة
+  const categoryData = [
+    { name: 'حبوب', value: 400 },
+    { name: 'خضروات', value: 300 },
+    { name: 'لحوم', value: 300 },
+    { name: 'فواكه', value: 200 },
+  ];
+
+  // ألوان للمخطط الدائري
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -72,44 +111,52 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>آخر المطاعم المضافة</CardTitle>
+              <CardTitle>المبيعات الشهرية</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>مطعم البيت العربي</span>
-                  <span className="text-gray-600">منذ يومين</span>
-                </div>
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>مطعم الأصيل</span>
-                  <span className="text-gray-600">منذ 3 أيام</span>
-                </div>
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>مطعم القصر</span>
-                  <span className="text-gray-600">منذ أسبوع</span>
-                </div>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={monthlyData}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="مبيعات" stroke="#8884d8" fill="#8884d8" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
-              <CardTitle>تقارير النشاط</CardTitle>
+              <CardTitle>توزيع المنتجات حسب الفئة</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>تسجيل دخول جديد</span>
-                  <span className="text-gray-600">اليوم 10:30</span>
-                </div>
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>إضافة منتجات</span>
-                  <span className="text-gray-600">اليوم 09:15</span>
-                </div>
-                <div className="flex justify-between p-2 bg-gray-50 rounded">
-                  <span>تحديث مخزون</span>
-                  <span className="text-gray-600">أمس 14:45</span>
-                </div>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
