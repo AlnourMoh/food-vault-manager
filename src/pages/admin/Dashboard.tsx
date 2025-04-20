@@ -19,9 +19,12 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { useTheme } from '@/hooks/use-theme';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   
   // التحقق من تسجيل دخول المسؤول
   useEffect(() => {
@@ -83,8 +86,26 @@ const AdminDashboard = () => {
     { name: 'فواكه', value: 200 },
   ];
 
-  // ألوان للمخطط الدائري
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  // ألوان للمخطط الدائري - تعديل لتناسب الوضع الفاتح والداكن
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+
+  // تكوين الرسوم البيانية مع دعم وضع السمة
+  const chartConfig = {
+    sales: {
+      label: 'المبيعات',
+      theme: {
+        light: '#3B82F6',
+        dark: '#60A5FA',
+      },
+    },
+    products: {
+      label: 'المنتجات',
+      theme: {
+        light: '#10B981',
+        dark: '#34D399',
+      },
+    },
+  };
 
   return (
     <MainLayout>
@@ -94,7 +115,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat, index) => (
             <Card key={index}>
-              <CardHeader className={`flex flex-row items-center justify-between pb-2 ${stat.color} rounded-t-lg`}>
+              <CardHeader className={`flex flex-row items-center justify-between pb-2 ${theme === 'dark' ? 'bg-secondary' : stat.color} rounded-t-lg`}>
                 <CardTitle className="text-md font-medium">{stat.title}</CardTitle>
                 {stat.icon}
               </CardHeader>
@@ -112,7 +133,7 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={chartConfig}>
                   <AreaChart
                     data={monthlyData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -120,10 +141,16 @@ const AdminDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="مبيعات" stroke="#8884d8" fill="#8884d8" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="مبيعات" 
+                      name="sales"
+                      stroke={theme === 'dark' ? '#60A5FA' : '#3B82F6'} 
+                      fill={theme === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.2)'} 
+                    />
                   </AreaChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
@@ -140,17 +167,20 @@ const AdminDashboard = () => {
                       data={categoryData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
+                      labelLine={true}
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
                       {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]} 
+                        />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value) => [`${value}`, 'الكمية']} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -166,7 +196,7 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={chartConfig}>
                   <BarChart
                     data={categoryData}
                     margin={{
@@ -179,11 +209,15 @@ const AdminDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
+                    <ChartTooltip content={<ChartTooltipContent />} />
                     <Legend />
-                    <Bar dataKey="value" name="الكمية" fill="#8884d8" />
+                    <Bar 
+                      dataKey="value" 
+                      name="الكمية" 
+                      fill={theme === 'dark' ? '#60A5FA' : '#3B82F6'} 
+                    />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
