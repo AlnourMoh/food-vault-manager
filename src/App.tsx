@@ -1,12 +1,16 @@
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Welcome Page
+// Website Pages
 import WelcomePage from "./pages/WelcomePage";
+import AboutPage from "./pages/website/AboutPage";
+import ServicesPage from "./pages/website/ServicesPage";
+import ContactPage from "./pages/website/ContactPage";
+import WebsiteLayout from "./components/website/WebsiteLayout";
 
 // Admin/Desktop routes
 import Index from "./pages/Index";
@@ -61,9 +65,14 @@ function App() {
               </Routes>
             ) : (
               <Routes>
-                {/* New Welcome Page Route */}
-                <Route path="/" element={<WelcomePage />} />
-                
+                {/* Website Routes */}
+                <Route element={<WebsiteLayout />}>
+                  <Route path="/" element={<WelcomePage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/services" element={<ServicesPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                </Route>
+
                 {/* Super Admin Routes */}
                 <Route path="/restaurants" element={<Restaurants />} />
                 <Route path="/restaurants/add" element={<AddRestaurant />} />
