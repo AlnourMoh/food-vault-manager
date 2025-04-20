@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Package, ChartBar, Bell, BarcodeScan, ShoppingCart, List, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Package, ChartBar, Bell, BarcodeIcon, ShoppingCart, List, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const MobileShowcase = () => {
@@ -69,12 +68,12 @@ const MobileShowcase = () => {
     <div key="scan" className="w-full h-full bg-white p-4 overflow-hidden">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-4">
-          <BarcodeScan className="h-6 w-6 text-primary" />
+          <BarcodeIcon className="h-6 w-6 text-primary" />
           <h3 className="text-lg font-semibold">مسح الباركود</h3>
         </div>
         <div className="rounded-lg overflow-hidden mb-4">
           <div className="w-full aspect-video bg-gray-100 relative flex flex-col items-center justify-center border-2 border-dashed border-gray-300">
-            <BarcodeScan className="h-10 w-10 text-gray-400 mb-2" />
+            <BarcodeIcon className="h-10 w-10 text-gray-400 mb-2" />
             <p className="text-gray-500 text-sm">قم بتوجيه الكاميرا نحو الباركود</p>
             
             <div className="absolute inset-0 flex">
@@ -203,7 +202,7 @@ const MobileShowcase = () => {
             <div className="flex gap-2">
               <input className="flex-1 px-3 py-2 border rounded-lg" placeholder="أدخل رقم الباركود" />
               <Button type="button" variant="outline" size="sm">
-                <BarcodeScan className="h-4 w-4" />
+                <BarcodeIcon className="h-4 w-4" />
               </Button>
             </div>
           </div>
