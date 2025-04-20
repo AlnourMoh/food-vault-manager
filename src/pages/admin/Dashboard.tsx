@@ -1,16 +1,17 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
-import { getMockData } from '@/services/mockData';
 import StatsGrid from '@/components/admin/dashboard/StatsGrid';
 import MonthlySalesChart from '@/components/admin/dashboard/MonthlySalesChart';
 import CategoryDistributionChart from '@/components/admin/dashboard/CategoryDistributionChart';
 import CategorySalesChart from '@/components/admin/dashboard/CategorySalesChart';
+import { useDashboardData } from '@/hooks/admin/useDashboardData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const { dashboardData, isLoading, error, categoryData, monthlyData } = useDashboardData();
   
   useEffect(() => {
     console.log('التحقق من تسجيل دخول المسؤول...');
@@ -22,41 +23,38 @@ const AdminDashboard = () => {
       navigate('/admin/login');
     } else {
       console.log('المستخدم مسجل دخول بنجاح');
-      const data = getMockData();
-      setDashboardData(data);
     }
   }, [navigate]);
 
-  const monthlyData = [
-    { name: 'يناير', مبيعات: 4000, منتجات: 2400 },
-    { name: 'فبراير', مبيعات: 3000, منتجات: 1398 },
-    { name: 'مارس', مبيعات: 2000, منتجات: 9800 },
-    { name: 'أبريل', مبيعات: 2780, منتجات: 3908 },
-    { name: 'مايو', مبيعات: 1890, منتجات: 4800 },
-    { name: 'يونيو', مبيعات: 2390, منتجات: 3800 },
-    { name: 'يوليو', مبيعات: 3490, منتجات: 4300 },
-  ];
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="p-4 text-red-500">
+          حدث خطأ أثناء تحميل البيانات
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const getCategoryData = () => {
-    if (!dashboardData || !dashboardData.products) return [];
-    
-    const categories: Record<string, number> = {};
-    
-    dashboardData.products.forEach((product: any) => {
-      if (categories[product.category]) {
-        categories[product.category] += 1;
-      } else {
-        categories[product.category] = 1;
-      }
-    });
-    
-    return Object.keys(categories).map(name => ({
-      name,
-      value: categories[name]
-    }));
-  };
-
-  const categoryData = dashboardData ? getCategoryData() : [];
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-32" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Skeleton className="h-[300px]" />
+            <Skeleton className="h-[300px]" />
+          </div>
+          <Skeleton className="h-[300px]" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -79,3 +77,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
