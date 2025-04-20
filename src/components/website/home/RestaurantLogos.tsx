@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Carousel,
@@ -41,6 +40,31 @@ const RestaurantLogos = () => {
       name: "مطعم النخبة",
       logo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=60",
       description: "أطباق عالمية مميزة"
+    },
+    {
+      name: "مطعم الشرق",
+      logo: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&auto=format&fit=crop&q=60",
+      description: "نكهات شرقية أصيلة"
+    },
+    {
+      name: "مطعم الياسمين",
+      logo: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&auto=format&fit=crop&q=60",
+      description: "مأكولات عربية تقليدية"
+    },
+    {
+      name: "مطعم اللوتس",
+      logo: "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&auto=format&fit=crop&q=60",
+      description: "أطباق آسيوية مميزة"
+    },
+    {
+      name: "مطعم الزيتون",
+      logo: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800&auto=format&fit=crop&q=60",
+      description: "مطبخ متوسطي فاخر"
+    },
+    {
+      name: "مطعم القمر",
+      logo: "https://images.unsplash.com/photo-1471253794676-0f039a6c6c2d?w=800&auto=format&fit=crop&q=60",
+      description: "تجربة طعام فريدة"
     }
   ];
 
@@ -90,4 +114,3 @@ const RestaurantLogos = () => {
 };
 
 export default RestaurantLogos;
-
