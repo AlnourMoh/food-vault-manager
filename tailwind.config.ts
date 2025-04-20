@@ -63,12 +63,13 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				fvm: {
-					'primary': '#33A1DE',    // Light blue
-					'primary-light': '#66B3E6', // Even lighter blue
-					'secondary': '#E6F2FF',  // Very light blue background
-					'accent': '#1E88E5',     // Slightly darker blue for accents
-					'neutral': '#F0F4F8',    // Neutral light blue-gray
-					'dark': '#1565C0',       // Dark blue
+					'primary': '#9b87f5',    // Primary Purple
+					'primary-light': '#D6BCFA', // Light Purple
+					'secondary': '#7E69AB',  // Secondary Purple
+					'accent': '#6E59A5',     // Accent Purple
+					'neutral': '#1A1F2C',    // Dark Purple
+					'background': '#E5DEFF', // Soft Purple Background
+					'foreground': '#8B5CF6', // Vivid Purple
 				}
 			},
 			borderRadius: {
