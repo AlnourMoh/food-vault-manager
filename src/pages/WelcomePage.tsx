@@ -5,11 +5,15 @@ import PlatformShowcase from '@/components/website/home/PlatformShowcase';
 import VideoTutorials from '@/components/website/home/VideoTutorials';
 import CallToAction from '@/components/website/home/CallToAction';
 import ContactSection from '@/components/website/home/ContactSection';
+import AboutSection from '@/components/website/home/AboutSection';
+import ServicesSection from '@/components/website/home/ServicesSection';
 
 const WelcomePage = () => {
   return (
     <div className="space-y-20">
       <HeroSection />
+      <AboutSection />
+      <ServicesSection />
       <PlatformShowcase />
       <VideoTutorials />
       <CallToAction />
