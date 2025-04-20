@@ -23,7 +23,7 @@ export const useDashboardData = () => {
         setDashboardData(data);
       } catch (err) {
         console.error('خطأ في جلب البيانات:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch dashboard data'));
+        setError(err instanceof Error ? err : new Error('فشل في جلب بيانات لوحة التحكم'));
       } finally {
         setIsLoading(false);
       }
