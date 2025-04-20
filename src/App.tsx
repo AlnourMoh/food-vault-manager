@@ -1,10 +1,12 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+// Welcome Page
+import WelcomePage from "./pages/WelcomePage";
 
 // Admin/Desktop routes
 import Index from "./pages/Index";
@@ -59,8 +61,10 @@ function App() {
               </Routes>
             ) : (
               <Routes>
+                {/* New Welcome Page Route */}
+                <Route path="/" element={<WelcomePage />} />
+                
                 {/* Super Admin Routes */}
-                <Route path="/" element={<Index />} />
                 <Route path="/restaurants" element={<Restaurants />} />
                 <Route path="/restaurants/add" element={<AddRestaurant />} />
                 <Route path="/restaurants/:id/credentials" element={<RestaurantCredentials />} />
