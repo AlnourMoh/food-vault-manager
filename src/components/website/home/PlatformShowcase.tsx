@@ -8,7 +8,6 @@ import {
   CarouselPrevious 
 } from '@/components/ui/carousel';
 import { Smartphone, Laptop } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 
 const PlatformShowcase = () => {
@@ -22,6 +21,11 @@ const PlatformShowcase = () => {
         'لوحة تحكم شاملة',
         'إدارة المنتجات بسهولة',
         'تتبع المخزون في الوقت الفعلي'
+      ],
+      screenshots: [
+        '/screenshots/web/dashboard.png',
+        '/screenshots/web/inventory.png',
+        '/screenshots/web/products.png'
       ]
     },
     {
@@ -33,11 +37,15 @@ const PlatformShowcase = () => {
         'مسح المنتجات بالباركود',
         'تحديث المخزون فورياً',
         'عرض سريع للمنتجات'
+      ],
+      screenshots: [
+        '/screenshots/mobile/home.png',
+        '/screenshots/mobile/scan.png',
+        '/screenshots/mobile/inventory.png'
       ]
     }
   ];
 
-  // Animation variants for better organization and reuse
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -64,19 +72,28 @@ const PlatformShowcase = () => {
     }
   };
 
-  const imageVariants = {
+  const screenshotVariants = {
     hidden: { 
       opacity: 0, 
-      scale: 0.8 
+      x: 50 
     },
     visible: { 
       opacity: 1, 
-      scale: 1,
+      x: 0,
       transition: {
         type: "spring",
-        stiffness: 100,
-        damping: 10,
-        delay: 0.2
+        stiffness: 50,
+        damping: 20
+      }
+    }
+  };
+
+  const deviceFrameVariants = {
+    hover: {
+      scale: 1.02,
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut"
       }
     }
   };
@@ -145,17 +162,41 @@ const PlatformShowcase = () => {
                     ))}
                   </motion.ul>
                 </motion.div>
+                
                 <motion.div 
-                  variants={imageVariants}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                  className="w-full md:w-1/2"
+                  variants={deviceFrameVariants}
+                  whileHover="hover"
+                  className="w-full md:w-1/2 relative"
                 >
-                  <img 
-                    src={platform.mockup} 
-                    alt={platform.title} 
-                    className="w-full h-auto rounded-xl shadow-2xl border"
-                  />
+                  <Carousel 
+                    className="w-full"
+                    opts={{
+                      align: "start",
+                      loop: true
+                    }}
+                  >
+                    <CarouselContent>
+                      {platform.screenshots.map((screenshot, idx) => (
+                        <CarouselItem key={idx} className="basis-full">
+                          <motion.div
+                            variants={screenshotVariants}
+                            initial="hidden"
+                            animate="visible"
+                            custom={idx}
+                            className="relative aspect-[16/9] overflow-hidden rounded-xl border shadow-xl"
+                          >
+                            <img 
+                              src={screenshot} 
+                              alt={`${platform.title} screenshot ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </motion.div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                    <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                  </Carousel>
                 </motion.div>
               </motion.div>
             </CarouselItem>
