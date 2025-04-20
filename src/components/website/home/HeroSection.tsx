@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Warehouse, Users } from 'lucide-react';
 
 const HeroSection = () => {
   return (
