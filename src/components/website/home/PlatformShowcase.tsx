@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { BarcodeIcon, Search, Shield, Smartphone, Users, Warehouse } from 'lucide-react';
@@ -84,9 +83,7 @@ const MobilePlatformPreview = () => (
     <div className="h-[46px] w-[3px] bg-gray-800 dark:bg-gray-800 absolute -right-[17px] top-[178px] rounded-r-lg"></div>
     <div className="h-[64px] w-[3px] bg-gray-800 dark:bg-gray-800 absolute -left-[17px] top-[142px] rounded-l-lg"></div>
     <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white">
-      {/* Mobile App UI */}
       <div className="h-full flex flex-col">
-        {/* Status Bar */}
         <div className="bg-gray-800 text-white px-4 py-2 flex justify-between items-center text-xs">
           <span>9:41</span>
           <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -99,7 +96,6 @@ const MobilePlatformPreview = () => (
           </div>
         </div>
         
-        {/* App Content */}
         <div className="flex-1 bg-gray-50">
           <div className="p-4">
             <div className="flex items-center justify-between mb-6">
@@ -107,23 +103,26 @@ const MobilePlatformPreview = () => (
               <BarcodeIcon className="w-6 h-6 text-blue-500" />
             </div>
             
-            {/* Product Cards */}
             <div className="space-y-4">
               <ProductCard
-                name="منتج 1"
+                name="منتج طازج"
                 quantity="50 كغ"
-                expiry="2024/05/20"
+                expiry="2024/06/15"
               />
               <ProductCard
-                name="منتج 2"
+                name="منتج منتهي"
                 quantity="30 كغ"
-                expiry="2024/06/15"
+                expiry="2024/03/15"
+              />
+              <ProductCard
+                name="منتج يقارب الانتهاء"
+                quantity="25 كغ"
+                expiry="2024/04/25"
               />
             </div>
           </div>
         </div>
         
-        {/* Bottom Navigation */}
         <div className="bg-white border-t py-2 px-6 flex justify-around">
           <div className="flex flex-col items-center">
             <Warehouse className="w-6 h-6 text-blue-500" />
@@ -167,17 +166,58 @@ interface ProductCardProps {
   expiry: string;
 }
 
-const ProductCard = ({ name, quantity, expiry }: ProductCardProps) => (
-  <div className="bg-white rounded-lg p-4 shadow-sm">
-    <div className="flex justify-between items-start">
-      <div>
-        <h3 className="font-medium">{name}</h3>
-        <p className="text-sm text-gray-500">{quantity}</p>
+const ProductCard = ({ name, quantity, expiry }: ProductCardProps) => {
+  const today = new Date();
+  const expiryDate = new Date(expiry);
+  const diffTime = expiryDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  const isExpired = diffDays < 0;
+  const isExpiring = diffDays > 0 && diffDays <= 30;
+  
+  return (
+    <div 
+      className={`bg-white rounded-lg p-4 shadow-sm border-l-4 ${
+        isExpired 
+          ? 'border-red-500 bg-red-50' 
+          : isExpiring 
+            ? 'border-orange-400 bg-orange-50' 
+            : 'border-blue-500'
+      }`}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <h3 className="font-medium">{name}</h3>
+            <BarcodeIcon className="h-4 w-4 text-gray-500" />
+          </div>
+          <p className="text-sm text-gray-500 mt-1">{quantity}</p>
+          <div className="flex items-center mt-2">
+            <span className={`text-xs px-2 py-1 rounded-full ${
+              isExpired 
+                ? 'bg-red-100 text-red-700' 
+                : isExpiring 
+                  ? 'bg-orange-100 text-orange-700' 
+                  : 'text-gray-400'
+            }`}>
+              {isExpired 
+                ? 'منتهي الصلاحية' 
+                : isExpiring 
+                  ? `ينتهي خلال ${diffDays} يوم` 
+                  : expiry}
+            </span>
+          </div>
+        </div>
+        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+          <img 
+            src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=100" 
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        </div>
       </div>
-      <span className="text-xs text-gray-400">{expiry}</span>
     </div>
-  </div>
-);
+  );
+};
 
 export default PlatformShowcase;
-
