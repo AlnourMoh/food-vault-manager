@@ -38,41 +38,42 @@ const AdminDashboard = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <MainLayout>
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-48" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <Skeleton className="h-[300px]" />
-            <Skeleton className="h-[300px]" />
-          </div>
-          <Skeleton className="h-[300px]" />
-        </div>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
       <div className="space-y-6">
         <h1 className="text-3xl font-bold tracking-tight">لوحة تحكم المسؤول</h1>
         
-        <StatsGrid dashboardData={dashboardData} />
-        
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <MonthlySalesChart data={monthlyData} />
-          <CategoryDistributionChart data={categoryData} />
-        </div>
-        
-        <div className="grid grid-cols-1 gap-6 mt-6">
-          <CategorySalesChart data={categoryData} />
-        </div>
+        {isLoading ? (
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-32" />
+              ))}
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <Skeleton className="h-[300px]" />
+              <Skeleton className="h-[300px]" />
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 mt-6">
+              <Skeleton className="h-[300px]" />
+            </div>
+          </>
+        ) : (
+          <>
+            <StatsGrid dashboardData={dashboardData} />
+            
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <MonthlySalesChart data={monthlyData} />
+              <CategoryDistributionChart data={categoryData} />
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 mt-6">
+              <CategorySalesChart data={categoryData} />
+            </div>
+          </>
+        )}
       </div>
     </MainLayout>
   );

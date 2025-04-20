@@ -14,6 +14,20 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ data }) => {
   
   console.log('بيانات المبيعات الشهرية:', data);
 
+  // تأكد من أن البيانات غير فارغة
+  if (!data || data.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>المبيعات الشهرية</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <p className="text-muted-foreground">لا توجد بيانات متاحة</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>

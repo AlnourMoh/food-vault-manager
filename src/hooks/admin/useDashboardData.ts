@@ -18,6 +18,7 @@ export const useDashboardData = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const data = getMockData();
         console.log('تم جلب البيانات:', data);
         setDashboardData(data);
@@ -62,6 +63,7 @@ export const useDashboardData = () => {
   const categoryData = getCategoryData();
   
   const getMonthlyData = (): MonthlyData[] => {
+    // دائمًا تقوم بإرجاع بيانات، حتى لو كانت البيانات الاحتياطية
     return [
       { name: 'يناير', مبيعات: 4000, منتجات: 2400 },
       { name: 'فبراير', مبيعات: 3000, منتجات: 1398 },

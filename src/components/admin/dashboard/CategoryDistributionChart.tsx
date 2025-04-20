@@ -14,6 +14,20 @@ const CategoryDistributionChart: React.FC<CategoryDistributionChartProps> = ({ d
   
   console.log('بيانات توزيع المنتجات حسب الفئة:', data);
   
+  // تأكد من أن البيانات غير فارغة
+  if (!data || data.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>توزيع المنتجات حسب الفئة</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <p className="text-muted-foreground">لا توجد بيانات متاحة</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   const COLORS = theme === 'dark' 
     ? ['#60A5FA', '#34D399', '#FBBF24', '#F87171', '#A78BFA', '#EC4899'] 
     : ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
