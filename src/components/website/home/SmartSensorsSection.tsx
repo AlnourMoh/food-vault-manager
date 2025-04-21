@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // صور الأيقونات من رفعك
 const temperatureIcon = "/lovable-uploads/ed5d2dca-23ba-4eb0-bdfc-3316aec5a67b.png";
@@ -14,6 +15,7 @@ const sensors = [
     tags: ["تبريد ذكي", "امان الطعام"],
     iconImage: temperatureIcon,
     accent: "from-blue-300 via-blue-100 to-white",
+    description: "حساس متطور لمراقبة درجة حرارة الثلاجة للحفاظ على سلامة الطعام"
   },
   {
     image: "/lovable-uploads/27e2055d-bf26-46bf-9453-cd0ae9c09d70.png",
@@ -21,6 +23,7 @@ const sensors = [
     tags: ["تحذير فوري", "امان كامل"],
     iconImage: gasDetectorIcon,
     accent: "from-red-200 via-orange-100 to-white",
+    description: "نظام تنبيه فوري عند اكتشاف أي تسرب للغاز أو دخان لحماية منزلك"
   },
 ];
 
@@ -50,51 +53,56 @@ const SmartSensorsSection = () => {
           أنظمة الاستشعار الذكية لحماية منزلك أو منشأتك
         </h2>
         <p className="mx-auto text-lg md:text-xl text-gray-700 dark:text-gray-300 font-semibold tracking-tight opacity-80 max-w-md whitespace-pre-line">
-          نقدم ضمن خدماتنا المتقدمة حلولا ذكية للحفاظ على سلامة ممتلكاتك وراحتك، من خلال
+          نقدم ضمن خدماتنا المتقدمة حلولا ذكية للحفاظ على سلامة ممتلكاتك وراحتك
         </p>
       </div>
 
-      {/* معرض الحساسات بشكل أكبر وتركيز على الصور */}
+      {/* معرض الحساسات بتصميم محسن */}
       <div className="grid gap-10 md:grid-cols-2 w-full max-w-4xl px-4 animate-scale-in">
         {sensors.map((sensor) => (
           <Card
             key={sensor.title}
-            className="group relative border-0 shadow-xl bg-white/90 dark:bg-slate-900/70 rounded-3xl p-0 overflow-hidden hover:scale-105 transition-transform duration-500 backdrop-blur-3xl"
-            style={{ minHeight: 420 }}
+            className="group relative border-0 shadow-xl bg-white/90 dark:bg-slate-900/70 rounded-3xl p-0 overflow-hidden hover:scale-102 transition-transform duration-500 backdrop-blur-3xl"
           >
-            {/* صورة كبيرة مع إضاءة ظل ناعم */}
-            <div className="relative w-full h-72 md:h-80">
-              <img
-                src={sensor.image}
-                alt={sensor.title}
-                className="w-full h-full object-cover object-center rounded-t-3xl group-hover:scale-105 transition-transform duration-700 shadow-lg"
-                loading="lazy"
-                onError={e => {
-                  // fallback في حال لأي سبب لم تظهر صورة الحساس
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/placeholder.svg";
-                }}
-              />
-              
-              {/* تحسين عرض الأيقونة لجعلها أكثر وضوحاً */}
-              <div
-                className={`absolute -top-6 right-6 w-[80px] h-[80px] bg-white dark:bg-slate-800 rounded-full shadow-lg border-4 border-white dark:border-slate-900 flex items-center justify-center transform -translate-y-1/4 overflow-hidden`}
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${sensor.accent} opacity-80`} />
+            {/* صورة الحساس فقط بدون الأيقونة */}
+            <div className="relative w-full">
+              <AspectRatio ratio={16/9} className="bg-muted rounded-t-3xl">
                 <img
-                  src={sensor.iconImage}
-                  alt="أيقونة الحساس"
-                  className="w-12 h-12 object-contain relative z-10"
+                  src={sensor.image}
+                  alt={sensor.title}
+                  className="w-full h-full object-cover object-center rounded-t-3xl group-hover:scale-105 transition-transform duration-700 shadow-lg"
+                  loading="lazy"
+                  onError={e => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/placeholder.svg";
+                  }}
                 />
-              </div>
+              </AspectRatio>
             </div>
             
-            {/* تفاصيل مختصرة جداً مع تاغات واضحة */}
-            <div className="flex flex-col items-center justify-center gap-4 py-6 px-6 mt-4">
-              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white drop-shadow-md text-center">
-                {sensor.title}
-              </h3>
-              <div className="flex gap-4 flex-wrap justify-center">
+            {/* قسم التفاصيل مع الأيقونة بجانب العنوان */}
+            <div className="p-6">
+              {/* عنوان مع أيقونة */}
+              <div className="flex items-center gap-4 mb-3">
+                <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center bg-gradient-to-br ${sensor.accent} p-3 shadow-md`}>
+                  <img
+                    src={sensor.iconImage}
+                    alt={`أيقونة ${sensor.title}`}
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                  {sensor.title}
+                </h3>
+              </div>
+              
+              {/* وصف الحساس */}
+              <p className="text-gray-700 dark:text-gray-300 mb-4 mr-2">
+                {sensor.description}
+              </p>
+              
+              {/* تاغات */}
+              <div className="flex gap-3 flex-wrap">
                 {sensor.tags.map((tag) => (
                   <span
                     key={tag}
@@ -107,7 +115,7 @@ const SmartSensorsSection = () => {
             </div>
             
             {/* شريط توهج زخرفي سفلي */}
-            <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-r from-fvm-primary/30 via-transparent to-blue-400/20 blur-2xl opacity-90" />
+            <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-fvm-primary/30 via-transparent to-blue-400/20" />
           </Card>
         ))}
       </div>
@@ -116,4 +124,3 @@ const SmartSensorsSection = () => {
 };
 
 export default SmartSensorsSection;
-
