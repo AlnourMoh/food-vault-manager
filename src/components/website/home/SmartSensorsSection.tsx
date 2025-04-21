@@ -37,6 +37,13 @@ const SmartSensorsSection = () => {
         <div className="absolute bottom-0 right-0 w-48 h-48 bg-gradient-to-tl from-orange-200/50 via-red-100/30 to-white rounded-full blur-2xl opacity-50" />
       </div>
 
+      {/* عنوان "منتجاتنا" فوق العنوان الرئيسي */}
+      <div className="relative text-center mb-4 animate-fade-in">
+        <h4 className="text-lg md:text-2xl font-semibold text-fvm-primary">
+          منتجاتنا
+        </h4>
+      </div>
+
       {/* عنوان مختصر وجذاب */}
       <div className="relative text-center mb-12 animate-fade-in">
         <h2 className="text-3xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-fvm-primary to-blue-500 text-transparent bg-clip-text drop-shadow-md">
@@ -109,3 +116,4 @@ const SmartSensorsSection = () => {
 };
 
 export default SmartSensorsSection;
+
