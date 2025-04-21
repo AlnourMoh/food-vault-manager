@@ -1,12 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel"
 import { Card } from "@/components/ui/card";
-import Autoplay from "embla-carousel-autoplay"
 import { motion } from "framer-motion";
 
 const RestaurantLogos = () => {
@@ -15,15 +9,6 @@ const RestaurantLogos = () => {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  const autoplay = React.useRef(
-    Autoplay({ 
-      delay: 5000, // Slower delay for smoother movement
-      stopOnInteraction: false,
-      stopOnMouseEnter: false,
-      rootNode: (emblaRoot) => emblaRoot.parentElement
-    })
-  );
 
   // Restaurant data
   const restaurants = [
@@ -175,7 +160,8 @@ const RestaurantLogos = () => {
           </div>
         )}
 
-        <style jsx>{`
+        <style>
+          {`
           .infinite-scroll-container {
             width: 100%;
             overflow: hidden;
@@ -197,7 +183,8 @@ const RestaurantLogos = () => {
               transform: translateX(-50%);
             }
           }
-        `}</style>
+          `}
+        </style>
       </div>
     </div>
   );
