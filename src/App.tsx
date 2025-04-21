@@ -75,9 +75,10 @@ function App() {
             <BrowserRouter>
               {isMobile ? (
                 <Routes>
+                  <Route path="/" element={<Navigate to="/mobile" replace />} />
                   <Route path="/mobile/*" element={<MobileApp />} />
-                  <Route path="/*" element={<Navigate to="/mobile" replace />} />
                   <Route path="/restaurant/login" element={<RestaurantLogin />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               ) : (
                 <Routes>
@@ -173,6 +174,9 @@ function App() {
                   {/* Barcode routes */}
                   <Route path="/products/:productId/barcodes" element={<ProductBarcodes />} />
                   <Route path="/restaurant/products/:productId/barcodes" element={<ProductBarcodes />} />
+                  
+                  {/* Mobile route for desktop testing */}
+                  <Route path="/mobile/*" element={<MobileApp />} />
                   
                   {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
