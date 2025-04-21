@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -10,9 +11,21 @@ import { Card } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay"
 
 const RestaurantLogos = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  // تأكد من أن الكود يعمل فقط على جانب العميل
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const autoplay = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: true })
-  )
+    Autoplay({ 
+      delay: 2000, 
+      stopOnInteraction: false, 
+      stopOnMouseEnter: true,
+      rootNode: (emblaRoot) => emblaRoot.parentElement
+    })
+  );
 
   // بيانات المطاعم المشاركة مع صور حقيقية
   const restaurants = [
@@ -68,46 +81,58 @@ const RestaurantLogos = () => {
     }
   ];
 
+  // تكرار المطاعم لضمان استمرارية الحركة
+  const duplicatedRestaurants = [...restaurants, ...restaurants];
+
   return (
-    <div className="py-16 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/10 dark:to-purple-800/5">
+    <div className="py-16 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/10 dark:to-purple-800/5 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">المطاعم المشاركة</h2>
           <p className="text-muted-foreground">نفخر بشراكتنا مع أفضل المطاعم في المنطقة</p>
         </div>
 
-        <div className="relative px-8">
-          <Carousel
-            plugins={[autoplay.current]}
-            className="w-full"
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {restaurants.map((restaurant, index) => (
-                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/3 lg:basis-1/4">
-                  <Card className="overflow-hidden group h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                    <div className="aspect-[4/3] relative mb-4 overflow-hidden bg-gray-100">
-                      <img
-                        src={restaurant.logo}
-                        alt={restaurant.name}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-2 text-center">{restaurant.name}</h3>
-                      <p className="text-sm text-muted-foreground text-center">{restaurant.description}</p>
-                    </div>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-2" />
-            <CarouselNext className="hidden md:flex -right-2" />
-          </Carousel>
-        </div>
+        {isClient && (
+          <div className="relative">
+            <Carousel
+              plugins={[autoplay.current]}
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: true,
+                skipSnaps: false,
+                dragFree: true,
+                inViewThreshold: 0,
+                containScroll: "trimSnaps",
+              }}
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {duplicatedRestaurants.map((restaurant, index) => (
+                  <CarouselItem 
+                    key={index} 
+                    className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 transition-all duration-500"
+                  >
+                    <Card className="overflow-hidden group h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                      <div className="aspect-[4/3] relative mb-4 overflow-hidden bg-gray-100">
+                        <img
+                          src={restaurant.logo}
+                          alt={restaurant.name}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-2 text-center">{restaurant.name}</h3>
+                        <p className="text-sm text-muted-foreground text-center">{restaurant.description}</p>
+                      </div>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex -left-2 z-10" />
+              <CarouselNext className="hidden md:flex -right-2 z-10" />
+            </Carousel>
+          </div>
+        )}
       </div>
     </div>
   );
