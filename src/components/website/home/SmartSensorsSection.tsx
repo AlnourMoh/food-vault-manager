@@ -6,14 +6,14 @@ import { Card } from "@/components/ui/card";
 const sensors = [
   {
     image: "/lovable-uploads/0c68a540-df0c-4724-bd5c-70b429c55171.png",
-    title: "حساس قياس درجة حرارة الثلاجة:",
+    title: "حساس قياس درجة حرارة الثلاجة",
     tags: ["تبريد ذكي", "أمان الطعام"],
     icon: Thermometer,
     accent: "from-blue-300 via-blue-100 to-white",
   },
   {
     image: "/lovable-uploads/e9e041d5-f1a0-4fef-91e0-69e6ee513d3d.png",
-    title: "حساس كشف تسرب الغازات والدخان:",
+    title: "حساس كشف تسرب الغازات والدخان",
     tags: ["تحذير فوري", "أمان كامل"],
     icon: AlarmSmoke,
     accent: "from-red-200 via-orange-100 to-white",
@@ -36,10 +36,10 @@ const SmartSensorsSection = () => {
       {/* عنوان مختصر وجذاب */}
       <div className="relative text-center mb-12 animate-fade-in">
         <h2 className="text-3xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-fvm-primary to-blue-500 text-transparent bg-clip-text drop-shadow-md">
-          أنظمة الاستشعار الذكية لحماية منزلك أو منشأتك:
+          أنظمة الاستشعار الذكية لحماية منزلك أو منشأتك
         </h2>
         <p className="mx-auto text-lg md:text-xl text-gray-700 dark:text-gray-300 font-semibold tracking-tight opacity-80 max-w-md whitespace-pre-line">
-          نقدم ضمن خدماتنا المتقدمة حلولًا ذكية للحفاظ على سلامة ممتلكاتك وراحتك، من خلال:
+          نقدم ضمن خدماتنا المتقدمة حلولا ذكية للحفاظ على سلامة ممتلكاتك وراحتك، من خلال
         </p>
       </div>
 
@@ -50,7 +50,7 @@ const SmartSensorsSection = () => {
           return (
             <Card
               key={sensor.title}
-              className="group relative border-0 shadow-xl bg-white/90 dark:bg-slate-900/70 rounded-3xl p-0 overflow-hidden hover:scale-110 transition-transform duration-500 backdrop-blur-3xl"
+              className="group relative border-0 shadow-xl bg-white/90 dark:bg-slate-900/70 rounded-3xl p-0 overflow-hidden hover:scale-105 transition-transform duration-500 backdrop-blur-3xl"
               style={{ minHeight: 420 }}
             >
               {/* صورة كبيرة مع إضاءة ظل ناعم وأيقونة مميزة */}
@@ -58,8 +58,16 @@ const SmartSensorsSection = () => {
                 <img
                   src={sensor.image}
                   alt={sensor.title}
-                  className="w-full h-full object-cover object-center rounded-t-3xl group-hover:scale-110 transition-transform duration-700 shadow-lg"
+                  className="w-full h-full object-cover object-center rounded-t-3xl group-hover:scale-105 transition-transform duration-700 shadow-lg"
                   loading="lazy"
+                  onError={(e) => {
+                    // إذا فشل تحميل الصورة الأصلية، استخدم صورة احتياطية
+                    const target = e.target as HTMLImageElement;
+                    console.log(`فشل تحميل الصورة: ${target.src}`);
+                    if (target.src.includes('e9e041d5-f1a0-4fef-91e0-69e6ee513d3d')) {
+                      target.src = '/placeholder.svg';
+                    }
+                  }}
                 />
                 <div
                   className={`absolute -top-8 right-8 bg-gradient-to-br ${sensor.accent} p-4 rounded-full shadow-2xl border-4 border-white dark:border-slate-900`}
@@ -94,4 +102,3 @@ const SmartSensorsSection = () => {
 };
 
 export default SmartSensorsSection;
-
