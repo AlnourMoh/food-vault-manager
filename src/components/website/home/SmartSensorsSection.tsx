@@ -6,14 +6,14 @@ import { Card } from "@/components/ui/card";
 const sensors = [
   {
     image: "/lovable-uploads/0c68a540-df0c-4724-bd5c-70b429c55171.png",
-    title: "حساس الحرارة",
+    title: "حساس قياس درجة حرارة الثلاجة:",
     tags: ["تبريد ذكي", "أمان الطعام"],
     icon: Thermometer,
     accent: "from-blue-300 via-blue-100 to-white",
   },
   {
-    image: "/lovable-uploads/2a9c706a-93de-4941-b46a-79067c57f712.png",
-    title: "كاشف الغازات والدخان",
+    image: "/lovable-uploads/e9e041d5-f1a0-4fef-91e0-69e6ee513d3d.png",
+    title: "حساس كشف تسرب الغازات والدخان:",
     tags: ["تحذير فوري", "أمان كامل"],
     icon: AlarmSmoke,
     accent: "from-red-200 via-orange-100 to-white",
