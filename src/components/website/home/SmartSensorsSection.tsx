@@ -6,19 +6,19 @@ import { Card } from "@/components/ui/card";
 const temperatureIcon = "/lovable-uploads/ed5d2dca-23ba-4eb0-bdfc-3316aec5a67b.png";
 const gasDetectorIcon = "/lovable-uploads/feb572ef-6b0a-4428-a409-e069facabb99.png";
 
-// صور الحساسات (تثبيت صورة كاشف الغاز الجديدة تماما)
+// صور الحساسات
 const sensors = [
   {
     image: "/lovable-uploads/0c68a540-df0c-4724-bd5c-70b429c55171.png",
     title: "حساس قياس درجة حرارة الثلاجة",
-    tags: ["تبريد ذكي", "امان الطعام"], // حذف الضمة
+    tags: ["تبريد ذكي", "امان الطعام"],
     iconImage: temperatureIcon,
     accent: "from-blue-300 via-blue-100 to-white",
   },
   {
-    image: "/lovable-uploads/27e2055d-bf26-46bf-9453-cd0ae9c09d70.png", // صورة مضمونة الظهور
+    image: "/lovable-uploads/27e2055d-bf26-46bf-9453-cd0ae9c09d70.png",
     title: "حساس كشف تسرب الغازات والدخان",
-    tags: ["تحذير فوري", "امان كامل"], // حذف الضمة
+    tags: ["تحذير فوري", "امان كامل"],
     iconImage: gasDetectorIcon,
     accent: "from-red-200 via-orange-100 to-white",
   },
@@ -55,7 +55,7 @@ const SmartSensorsSection = () => {
             className="group relative border-0 shadow-xl bg-white/90 dark:bg-slate-900/70 rounded-3xl p-0 overflow-hidden hover:scale-105 transition-transform duration-500 backdrop-blur-3xl"
             style={{ minHeight: 420 }}
           >
-            {/* صورة كبيرة مع إضاءة ظل ناعم وأيقونة صورة مخصصة */}
+            {/* صورة كبيرة مع إضاءة ظل ناعم */}
             <div className="relative w-full h-72 md:h-80">
               <img
                 src={sensor.image}
@@ -63,25 +63,28 @@ const SmartSensorsSection = () => {
                 className="w-full h-full object-cover object-center rounded-t-3xl group-hover:scale-105 transition-transform duration-700 shadow-lg"
                 loading="lazy"
                 onError={e => {
-                  // fallback في حال لأي سبب لم تظهر صورة الحساس - نضع صورة عامة placeholder
+                  // fallback في حال لأي سبب لم تظهر صورة الحساس
                   const target = e.target as HTMLImageElement;
                   target.src = "/placeholder.svg";
                 }}
               />
+              
+              {/* تحسين عرض الأيقونة لجعلها أكثر وضوحاً */}
               <div
-                className={`absolute -top-8 right-8 bg-gradient-to-br ${sensor.accent} p-4 rounded-full shadow-2xl border-4 border-white dark:border-slate-900 flex items-center justify-center`}
-                style={{ width: 68, height: 68 }}
+                className={`absolute -top-6 right-6 w-[80px] h-[80px] bg-white dark:bg-slate-800 rounded-full shadow-lg border-4 border-white dark:border-slate-900 flex items-center justify-center transform -translate-y-1/4 overflow-hidden`}
               >
+                <div className={`absolute inset-0 bg-gradient-to-br ${sensor.accent} opacity-80`} />
                 <img
                   src={sensor.iconImage}
                   alt="أيقونة الحساس"
-                  className="w-12 h-12 object-contain"
+                  className="w-12 h-12 object-contain relative z-10"
                 />
               </div>
             </div>
+            
             {/* تفاصيل مختصرة جداً مع تاغات واضحة */}
-            <div className="flex flex-col items-center justify-center gap-4 py-6 px-6">
-              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white drop-shadow-md">
+            <div className="flex flex-col items-center justify-center gap-4 py-6 px-6 mt-4">
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white drop-shadow-md text-center">
                 {sensor.title}
               </h3>
               <div className="flex gap-4 flex-wrap justify-center">
@@ -95,6 +98,7 @@ const SmartSensorsSection = () => {
                 ))}
               </div>
             </div>
+            
             {/* شريط توهج زخرفي سفلي */}
             <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-r from-fvm-primary/30 via-transparent to-blue-400/20 blur-2xl opacity-90" />
           </Card>
