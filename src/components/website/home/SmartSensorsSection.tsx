@@ -12,7 +12,7 @@ const sensors = [
     accent: "from-blue-300 via-blue-100 to-white",
   },
   {
-    image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&auto=format&fit=crop&q=80",
+    image: "/lovable-uploads/2a9c706a-93de-4941-b46a-79067c57f712.png",
     title: "كاشف الغازات والدخان",
     tags: ["تحذير فوري", "أمان كامل"],
     icon: AlarmSmoke,
@@ -39,7 +39,7 @@ const SmartSensorsSection = () => {
           الأمان الذكي بصريًا
         </h2>
         <p className="mx-auto text-lg md:text-xl text-gray-700 dark:text-gray-300 font-semibold tracking-tight opacity-80 max-w-md">
-          تجربة فورية مع صور توضيحية جذابة بدون حاجة لقراءة مطولة
+          تجربة فورية مع صور توضيحية جذابة
         </p>
       </div>
 
@@ -94,3 +94,4 @@ const SmartSensorsSection = () => {
 };
 
 export default SmartSensorsSection;
+
