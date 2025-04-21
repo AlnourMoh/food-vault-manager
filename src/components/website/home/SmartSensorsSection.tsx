@@ -40,9 +40,9 @@ const SmartSensorsSection = () => {
         <div className="absolute bottom-0 right-0 w-48 h-48 bg-gradient-to-tl from-orange-200/50 via-red-100/30 to-white rounded-full blur-2xl opacity-50" />
       </div>
 
-      {/* عنوان "منتجاتنا" فوق العنوان الرئيسي */}
+      {/* كلمة منتجاتنا - تنسيق عنوان خدماتنا */}
       <div className="relative text-center mb-4 animate-fade-in">
-        <h4 className="text-lg md:text-2xl font-semibold text-fvm-primary">
+        <h4 className="text-3xl font-bold mb-12 bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
           منتجاتنا
         </h4>
       </div>
@@ -80,17 +80,16 @@ const SmartSensorsSection = () => {
               </AspectRatio>
             </div>
             
-            {/* قسم التفاصيل مع الأيقونة بجانب العنوان */}
+            {/* قسم التفاصيل مع أيقونة كبيرة واضحة بدون دائرة */}
             <div className="p-6">
-              {/* عنوان مع أيقونة */}
+              {/* عنوان مع أيقونة كبيرة بشكل أوضح */}
               <div className="flex items-center gap-4 mb-3">
-                <div className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center bg-gradient-to-br ${sensor.accent} p-3 shadow-md`}>
-                  <img
-                    src={sensor.iconImage}
-                    alt={`أيقونة ${sensor.title}`}
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
+                <img
+                  src={sensor.iconImage}
+                  alt={`أيقونة ${sensor.title}`}
+                  className="w-16 h-16 object-contain"
+                  style={{minWidth: 64, minHeight: 64}}
+                />
                 <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                   {sensor.title}
                 </h3>
