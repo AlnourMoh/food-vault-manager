@@ -1,21 +1,25 @@
 
 import React from "react";
-import { Thermometer, AlarmSmoke } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
+// صور الأيقونات من رفعك
+const temperatureIcon = "/lovable-uploads/ed5d2dca-23ba-4eb0-bdfc-3316aec5a67b.png";
+const gasDetectorIcon = "/lovable-uploads/feb572ef-6b0a-4428-a409-e069facabb99.png";
+
+// صور الحساسات (تثبيت صورة كاشف الغاز الجديدة تماما)
 const sensors = [
   {
     image: "/lovable-uploads/0c68a540-df0c-4724-bd5c-70b429c55171.png",
     title: "حساس قياس درجة حرارة الثلاجة",
-    tags: ["تبريد ذكي", "أمان الطعام"],
-    icon: Thermometer,
+    tags: ["تبريد ذكي", "امان الطعام"], // حذف الضمة
+    iconImage: temperatureIcon,
     accent: "from-blue-300 via-blue-100 to-white",
   },
   {
-    image: "/lovable-uploads/e9e041d5-f1a0-4fef-91e0-69e6ee513d3d.png",
+    image: "/lovable-uploads/27e2055d-bf26-46bf-9453-cd0ae9c09d70.png", // صورة مضمونة الظهور
     title: "حساس كشف تسرب الغازات والدخان",
-    tags: ["تحذير فوري", "أمان كامل"],
-    icon: AlarmSmoke,
+    tags: ["تحذير فوري", "امان كامل"], // حذف الضمة
+    iconImage: gasDetectorIcon,
     accent: "from-red-200 via-orange-100 to-white",
   },
 ];
@@ -45,57 +49,56 @@ const SmartSensorsSection = () => {
 
       {/* معرض الحساسات بشكل أكبر وتركيز على الصور */}
       <div className="grid gap-10 md:grid-cols-2 w-full max-w-4xl px-4 animate-scale-in">
-        {sensors.map((sensor) => {
-          const Icon = sensor.icon;
-          return (
-            <Card
-              key={sensor.title}
-              className="group relative border-0 shadow-xl bg-white/90 dark:bg-slate-900/70 rounded-3xl p-0 overflow-hidden hover:scale-105 transition-transform duration-500 backdrop-blur-3xl"
-              style={{ minHeight: 420 }}
-            >
-              {/* صورة كبيرة مع إضاءة ظل ناعم وأيقونة مميزة */}
-              <div className="relative w-full h-72 md:h-80">
+        {sensors.map((sensor) => (
+          <Card
+            key={sensor.title}
+            className="group relative border-0 shadow-xl bg-white/90 dark:bg-slate-900/70 rounded-3xl p-0 overflow-hidden hover:scale-105 transition-transform duration-500 backdrop-blur-3xl"
+            style={{ minHeight: 420 }}
+          >
+            {/* صورة كبيرة مع إضاءة ظل ناعم وأيقونة صورة مخصصة */}
+            <div className="relative w-full h-72 md:h-80">
+              <img
+                src={sensor.image}
+                alt={sensor.title}
+                className="w-full h-full object-cover object-center rounded-t-3xl group-hover:scale-105 transition-transform duration-700 shadow-lg"
+                loading="lazy"
+                onError={e => {
+                  // fallback في حال لأي سبب لم تظهر صورة الحساس - نضع صورة عامة placeholder
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder.svg";
+                }}
+              />
+              <div
+                className={`absolute -top-8 right-8 bg-gradient-to-br ${sensor.accent} p-4 rounded-full shadow-2xl border-4 border-white dark:border-slate-900 flex items-center justify-center`}
+                style={{ width: 68, height: 68 }}
+              >
                 <img
-                  src={sensor.image}
-                  alt={sensor.title}
-                  className="w-full h-full object-cover object-center rounded-t-3xl group-hover:scale-105 transition-transform duration-700 shadow-lg"
-                  loading="lazy"
-                  onError={(e) => {
-                    // إذا فشل تحميل الصورة الأصلية، استخدم صورة احتياطية
-                    const target = e.target as HTMLImageElement;
-                    console.log(`فشل تحميل الصورة: ${target.src}`);
-                    if (target.src.includes('e9e041d5-f1a0-4fef-91e0-69e6ee513d3d')) {
-                      target.src = '/placeholder.svg';
-                    }
-                  }}
+                  src={sensor.iconImage}
+                  alt="أيقونة الحساس"
+                  className="w-12 h-12 object-contain"
                 />
-                <div
-                  className={`absolute -top-8 right-8 bg-gradient-to-br ${sensor.accent} p-4 rounded-full shadow-2xl border-4 border-white dark:border-slate-900`}
-                >
-                  <Icon size={40} className="text-fvm-primary drop-shadow-lg" />
-                </div>
               </div>
-              {/* تفاصيل مختصرة جداً مع تاغات واضحة */}
-              <div className="flex flex-col items-center justify-center gap-4 py-6 px-6">
-                <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white drop-shadow-md">
-                  {sensor.title}
-                </h3>
-                <div className="flex gap-4 flex-wrap justify-center">
-                  {sensor.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="bg-fvm-primary/20 text-fvm-primary px-4 py-1 rounded-3xl text-base font-semibold shadow-inner"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+            </div>
+            {/* تفاصيل مختصرة جداً مع تاغات واضحة */}
+            <div className="flex flex-col items-center justify-center gap-4 py-6 px-6">
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white drop-shadow-md">
+                {sensor.title}
+              </h3>
+              <div className="flex gap-4 flex-wrap justify-center">
+                {sensor.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-fvm-primary/20 text-fvm-primary px-4 py-1 rounded-3xl text-base font-semibold shadow-inner"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
-              {/* شريط توهج زخرفي سفلي */}
-              <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-r from-fvm-primary/30 via-transparent to-blue-400/20 blur-2xl opacity-90" />
-            </Card>
-          );
-        })}
+            </div>
+            {/* شريط توهج زخرفي سفلي */}
+            <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-r from-fvm-primary/30 via-transparent to-blue-400/20 blur-2xl opacity-90" />
+          </Card>
+        ))}
       </div>
     </section>
   );
