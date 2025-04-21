@@ -4,8 +4,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel"
 import { Card } from "@/components/ui/card";
 import Autoplay from "embla-carousel-autoplay"
@@ -14,21 +12,20 @@ import { motion } from "framer-motion";
 const RestaurantLogos = () => {
   const [isClient, setIsClient] = useState(false);
 
-  // تأكد من أن الكود يعمل فقط على جانب العميل
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const autoplay = React.useRef(
     Autoplay({ 
-      delay: 3000, // زيادة الوقت بين التحريكات للحصول على حركة أكثر سلاسة
-      stopOnInteraction: false, 
-      stopOnMouseEnter: false, // لا تتوقف عند وضع المؤشر
+      delay: 5000, // Slower delay for smoother movement
+      stopOnInteraction: false,
+      stopOnMouseEnter: false,
       rootNode: (emblaRoot) => emblaRoot.parentElement
     })
   );
 
-  // بيانات المطاعم المشاركة مع صور حقيقية
+  // Restaurant data
   const restaurants = [
     {
       name: "مطعم الأصيل",
@@ -107,9 +104,6 @@ const RestaurantLogos = () => {
     }
   ];
 
-  // تكرار المطاعم ثلاث مرات لضمان استمرارية الحركة دون انقطاع
-  const duplicatedRestaurants = [...restaurants, ...restaurants, ...restaurants];
-
   return (
     <div className="py-16 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-900/10 dark:to-purple-800/5 overflow-hidden">
       <div className="container mx-auto px-4">
@@ -134,25 +128,11 @@ const RestaurantLogos = () => {
 
         {isClient && (
           <div className="relative overflow-hidden">
-            <Carousel
-              plugins={[autoplay.current]}
-              className="w-full"
-              opts={{
-                align: "start",
-                loop: true,
-                skipSnaps: false,
-                dragFree: true,
-                inViewThreshold: 0.1,
-                containScroll: "trimSnaps",
-                slidesToScroll: 1,
-              }}
-            >
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {duplicatedRestaurants.map((restaurant, index) => (
-                  <CarouselItem 
-                    key={index} 
-                    className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5 transition-transform duration-500 ease-linear"
-                  >
+            <div className="infinite-scroll-container">
+              <div className="infinite-scroll-track">
+                {/* First set of restaurants */}
+                {restaurants.map((restaurant, index) => (
+                  <div key={`first-${index}`} className="inline-block px-2 md:px-4 w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5">
                     <Card className="overflow-hidden group h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                       <div className="aspect-[4/3] relative mb-4 overflow-hidden bg-gray-100">
                         <img
@@ -167,16 +147,57 @@ const RestaurantLogos = () => {
                         <p className="text-sm text-muted-foreground text-center">{restaurant.description}</p>
                       </div>
                     </Card>
-                  </CarouselItem>
+                  </div>
                 ))}
-              </CarouselContent>
-              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white/80 to-transparent z-10 dark:from-background/80 pointer-events-none" />
-              <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white/80 to-transparent z-10 dark:from-background/80 pointer-events-none" />
-              <CarouselPrevious className="hidden md:flex -left-2 z-20" />
-              <CarouselNext className="hidden md:flex -right-2 z-20" />
-            </Carousel>
+                {/* Second set of restaurants (exact duplicate for seamless loop) */}
+                {restaurants.map((restaurant, index) => (
+                  <div key={`second-${index}`} className="inline-block px-2 md:px-4 w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5">
+                    <Card className="overflow-hidden group h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                      <div className="aspect-[4/3] relative mb-4 overflow-hidden bg-gray-100">
+                        <img
+                          src={restaurant.logo}
+                          alt={restaurant.name}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-2 text-center">{restaurant.name}</h3>
+                        <p className="text-sm text-muted-foreground text-center">{restaurant.description}</p>
+                      </div>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white/80 to-transparent z-10 dark:from-background/80 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white/80 to-transparent z-10 dark:from-background/80 pointer-events-none" />
           </div>
         )}
+
+        <style jsx>{`
+          .infinite-scroll-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+          }
+          
+          .infinite-scroll-track {
+            display: flex;
+            white-space: nowrap;
+            will-change: transform;
+            animation: infiniteScroll 120s linear infinite;
+          }
+          
+          @keyframes infiniteScroll {
+            from {
+              transform: translateX(0);
+            }
+            to {
+              transform: translateX(-50%);
+            }
+          }
+        `}</style>
       </div>
     </div>
   );
