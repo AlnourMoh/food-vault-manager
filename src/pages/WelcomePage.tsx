@@ -1,4 +1,3 @@
-
 import React from 'react';
 import HeroSection from '@/components/website/home/HeroSection';
 import PlatformShowcase from '@/components/website/home/PlatformShowcase';
@@ -8,6 +7,7 @@ import ContactSection from '@/components/website/home/ContactSection';
 import AboutSection from '@/components/website/home/AboutSection';
 import ServicesSection from '@/components/website/home/ServicesSection';
 import RestaurantLogos from '@/components/website/home/RestaurantLogos';
+import SmartSensorsSection from '@/components/website/home/SmartSensorsSection';
 
 const WelcomePage = () => {
   return (
@@ -19,6 +19,7 @@ const WelcomePage = () => {
       <div id="services">
         <ServicesSection />
       </div>
+      <SmartSensorsSection />
       <PlatformShowcase />
       <RestaurantLogos />
       <VideoTutorials />
