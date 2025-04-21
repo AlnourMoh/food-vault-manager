@@ -36,10 +36,10 @@ const SmartSensorsSection = () => {
       {/* عنوان مختصر وجذاب */}
       <div className="relative text-center mb-12 animate-fade-in">
         <h2 className="text-3xl md:text-5xl font-extrabold mb-3 bg-gradient-to-r from-fvm-primary to-blue-500 text-transparent bg-clip-text drop-shadow-md">
-          الأمان الذكي بصريًا
+          أنظمة الاستشعار الذكية لحماية منزلك أو منشأتك:
         </h2>
-        <p className="mx-auto text-lg md:text-xl text-gray-700 dark:text-gray-300 font-semibold tracking-tight opacity-80 max-w-md">
-          تجربة فورية مع صور توضيحية جذابة
+        <p className="mx-auto text-lg md:text-xl text-gray-700 dark:text-gray-300 font-semibold tracking-tight opacity-80 max-w-md whitespace-pre-line">
+          نقدم ضمن خدماتنا المتقدمة حلولًا ذكية للحفاظ على سلامة ممتلكاتك وراحتك، من خلال:
         </p>
       </div>
 
