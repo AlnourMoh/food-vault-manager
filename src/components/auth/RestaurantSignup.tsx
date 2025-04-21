@@ -2,14 +2,13 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { signupSchema, type SignupFormData } from './schemas/signupSchema';
 import { useEmailVerification } from './hooks/useEmailVerification';
-import { EmailField } from './components/EmailField';
-import { PasswordFields } from './components/PasswordFields';
+import { EmailVerification } from './components/EmailVerification';
+import { SignupForm } from './components/SignupForm';
 
 export const RestaurantSignup = () => {
   const { toast } = useToast();
@@ -65,27 +64,18 @@ export const RestaurantSignup = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <EmailField form={form} disabled={emailVerified} />
-        
-        {emailVerified && <PasswordFields form={form} />}
-
         {!emailVerified ? (
-          <Button 
-            type="button" 
-            className="w-full"
-            disabled={verifyingEmail}
-            onClick={handleVerifyEmail}
-          >
-            {verifyingEmail ? 'جاري التحقق...' : 'تحقق من البريد الإلكتروني'}
-          </Button>
+          <EmailVerification 
+            form={form}
+            verifyingEmail={verifyingEmail}
+            onVerifyEmail={handleVerifyEmail}
+          />
         ) : (
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={verifyingEmail}
-          >
-            تسجيل
-          </Button>
+          <SignupForm 
+            form={form}
+            verifyingEmail={verifyingEmail}
+            onSubmit={onSubmit}
+          />
         )}
       </form>
     </Form>
