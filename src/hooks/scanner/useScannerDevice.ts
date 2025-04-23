@@ -1,7 +1,6 @@
 
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { useToast } from '@/hooks/use-toast';
-import { Camera } from '@capacitor/camera';
 
 export const useScannerDevice = () => {
   const { toast } = useToast();
@@ -10,29 +9,23 @@ export const useScannerDevice = () => {
     try {
       console.log("[useScannerDevice] بدء عملية المسح");
       
-      // التحقق من دعم المنصة للماسح الجديد
+      // التحقق من دعم المنصة للماسح
       if (window.Capacitor) {
         console.log("[useScannerDevice] استخدام مكتبة ML Kit للمسح");
         
         // طلب الإذن والتحقق بشكل صريح
         const { camera } = await BarcodeScanner.requestPermissions();
-        console.log("[useScannerDevice] حالة إذن الماسح ML Kit:", camera);
+        console.log("[useScannerDevice] حالة إذن الماسح:", camera);
         
         if (camera !== 'granted') {
           console.error("[useScannerDevice] تم رفض الإذن للماسح الضوئي");
           
-          // محاولة أخرى
-          const retryPermission = await BarcodeScanner.requestPermissions();
-          
-          if (retryPermission.camera !== 'granted') {
-            console.error("[useScannerDevice] فشلت المحاولة الثانية في الحصول على الإذن");
-            toast({
-              title: "تم رفض الإذن",
-              description: "لم يتم منح إذن الكاميرا. يرجى تمكين الإذن في إعدادات جهازك",
-              variant: "destructive"
-            });
-            throw new Error("تم رفض الإذن للماسح الضوئي");
-          }
+          toast({
+            title: "تم رفض الإذن",
+            description: "لم يتم منح إذن الكاميرا. يرجى تمكين الإذن في إعدادات جهازك",
+            variant: "destructive"
+          });
+          throw new Error("تم رفض الإذن للماسح الضوئي");
         }
         
         // التحقق من دعم الماسح
@@ -56,11 +49,7 @@ export const useScannerDevice = () => {
           return;
         }
         
-        // إعداد واجهة المستخدم للمسح
-        console.log("[useScannerDevice] تجهيز الماسح...");
-        document.body.classList.add('barcode-scanner-active');
-        
-        // بدء المسح باستخدام المكتبة الجديدة
+        // بدء عملية المسح
         console.log("[useScannerDevice] بدء عملية المسح ML Kit...");
         const { barcodes } = await BarcodeScanner.scan({
           formats: [
@@ -77,9 +66,6 @@ export const useScannerDevice = () => {
           ],
         });
         
-        // إعادة إظهار واجهة التطبيق
-        document.body.classList.remove('barcode-scanner-active');
-        
         if (barcodes && barcodes.length > 0) {
           console.log("[useScannerDevice] تم مسح الباركود:", barcodes[0].rawValue);
           onSuccess(barcodes[0].rawValue || '');
@@ -91,42 +77,9 @@ export const useScannerDevice = () => {
             variant: "default"
           });
         }
-      } else if (window.Capacitor?.isPluginAvailable('Camera')) {
-        // محاولة استخدام الكاميرا العادية إذا لم يكن الماسح متاحًا
-        console.log("[useScannerDevice] ML Kit غير متوفر، محاولة استخدام الكاميرا العادية");
-        
-        const cameraResult = await Camera.requestPermissions({
-          permissions: ['camera']
-        });
-        
-        if (cameraResult.camera === 'granted') {
-          // محاكاة المسح في حالة عدم وجود ماسح حقيقي
-          toast({
-            title: "تنبيه",
-            description: "ماسح الباركود غير متوفر، سيتم محاكاة عملية المسح",
-            variant: "default"
-          });
-          
-          setTimeout(() => {
-            const mockBarcode = `TEST-${Math.floor(Math.random() * 1000)}`;
-            console.log("[useScannerDevice] باركود اختباري:", mockBarcode);
-            onSuccess(mockBarcode);
-          }, 2000);
-        } else {
-          toast({
-            title: "تم رفض الإذن",
-            description: "لم يتم منح إذن الكاميرا",
-            variant: "destructive"
-          });
-        }
       } else {
         // للتطوير/الويب: محاكاة المسح
         console.log("[useScannerDevice] في بيئة الويب، استخدام محاكاة للمسح");
-        toast({
-          title: "بيئة الويب",
-          description: "هذه محاكاة للماسح الضوئي في بيئة الويب",
-          variant: "default"
-        });
         
         setTimeout(() => {
           const mockBarcode = `TEST-${Math.floor(Math.random() * 1000)}`;
@@ -136,8 +89,6 @@ export const useScannerDevice = () => {
       }
     } catch (error) {
       console.error("[useScannerDevice] خطأ في بدء عملية المسح:", error);
-      // التأكد من رؤية واجهة المستخدم في حالة الخطأ
-      document.body.classList.remove('barcode-scanner-active');
       
       toast({
         title: "خطأ في المسح",
@@ -152,10 +103,8 @@ export const useScannerDevice = () => {
   const stopDeviceScan = async () => {
     try {
       console.log("[useScannerDevice] إيقاف عملية المسح");
-      document.body.classList.remove('barcode-scanner-active');
     } catch (error) {
       console.error("[useScannerDevice] خطأ في إيقاف عملية المسح:", error);
-      document.body.classList.remove('barcode-scanner-active');
     }
   };
   
