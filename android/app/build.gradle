@@ -1,3 +1,4 @@
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
@@ -52,7 +53,7 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation "androidx.coordinatorlayout:coordinatorlayout:1.6.1"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
     implementation "androidx.core:core-splashscreen:1.1.0-alpha02"
     implementation "androidx.core:core-ktx:1.12.0"
     implementation project(':capacitor-android')
@@ -68,17 +69,15 @@ afterEvaluate {
     if (servicesJSON.exists()) {
         apply plugin: 'com.google.gms.google-services'
     } else {
-        logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work.")
+        logger.info("google-services.json not found, google-services plugin not applied.")
     }
 }
 
 configurations.all {
     resolutionStrategy {
-        force 'androidx.coordinatorlayout:coordinatorlayout:1.6.1'
+        force 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
         force 'androidx.appcompat:appcompat:1.6.1'
         force 'androidx.core:core-ktx:1.12.0'
         force 'androidx.fragment:fragment:1.6.1'
     }
 }    
-   
-
