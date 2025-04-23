@@ -9,14 +9,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: npm run build
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build web app
+        run: npm run build
       - uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
-      - run: npx cap add android
-      - run: cd android && ./gradlew assembleDebug --stacktrace
+          cache: 'gradle'
+      - name: Sync Capacitor
+        run: |
+          npx cap sync
+          npx cap update android
+      - name: Build Android app
+        run: cd android && ./gradlew assembleDebug --stacktrace
       - name: Verify APK File
         run: ls -l android/app/build/outputs/apk/debug/
       - uses: actions/upload-artifact@v4

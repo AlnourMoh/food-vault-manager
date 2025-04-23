@@ -3,11 +3,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace "app_lowable_foodvault-manager"
+    namespace "app.lovable.foodvault.manager"
     compileSdkVersion 34
 
     defaultConfig {
-        applicationId "app_lowable_foodvault-manager"
+        applicationId "app.lovable.foodvault.manager"
         minSdkVersion 21
         targetSdkVersion 34
         versionCode 1
