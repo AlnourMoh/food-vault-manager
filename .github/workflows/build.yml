@@ -15,6 +15,8 @@ jobs:
           java-version: '17'
       - run: npx cap add android
       - run: cd android && ./gradlew assembleDebug
+      - name: Verify APK File
+        run: ls -l android/app/build/outputs/apk/debug/
       - uses: actions/upload-artifact@v3
         with:
           name: app-debug
