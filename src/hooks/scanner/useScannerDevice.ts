@@ -103,6 +103,7 @@ export const useScannerDevice = () => {
   const stopDeviceScan = async () => {
     try {
       console.log("[useScannerDevice] إيقاف عملية المسح");
+      // No special cleanup needed for MLKit scanner
     } catch (error) {
       console.error("[useScannerDevice] خطأ في إيقاف عملية المسح:", error);
     }

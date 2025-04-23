@@ -17,14 +17,33 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
     try {
       setIsScanningActive(true);
       
-      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-        const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
-        document.body.classList.add('barcode-scanner-active');
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         
-        const result = await BarcodeScanner.startScan();
+        // Request permissions
+        const { camera } = await BarcodeScanner.requestPermissions();
+        if (camera !== 'granted') {
+          toast({
+            title: "تم رفض الإذن",
+            description: "لم يتم منح إذن الكاميرا. يرجى تمكين الإذن في إعدادات جهازك",
+            variant: "destructive"
+          });
+          stopScan();
+          return;
+        }
         
-        if (result.hasContent) {
-          handleSuccessfulScan(result.content);
+        // Start scanning
+        const result = await BarcodeScanner.scan();
+        
+        if (result.barcodes.length > 0) {
+          handleSuccessfulScan(result.barcodes[0].rawValue || '');
+        } else {
+          toast({
+            title: "لم يتم العثور على باركود",
+            description: "لم يتم العثور على أي باركود. حاول مرة أخرى.",
+            variant: "default"
+          });
+          stopScan();
         }
       } else {
         // For development/web: simulate scanning
@@ -46,12 +65,6 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
   
   const stopScan = async () => {
     setIsScanningActive(false);
-    
-    if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-      const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
-      await BarcodeScanner.stopScan();
-      document.body.classList.remove('barcode-scanner-active');
-    }
   };
   
   const handleSuccessfulScan = async (code: string) => {

@@ -7,7 +7,7 @@ import { ScannerView } from './scanner/ScannerView';
 import { ScannerReadyView } from './scanner/ScannerReadyView';
 import { DigitalCodeInput } from './scanner/DigitalCodeInput';
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner as CapacitorBarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanner as MLKitBarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -21,15 +21,15 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   
   // Handle scanner initialization
   useEffect(() => {
-    if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-      // Check if scanner UI is already active (might happen if the app crashed previously)
-      CapacitorBarcodeScanner.showBackground().catch(e => console.error('Error showing background', e));
-    }
+    const initializeScanner = async () => {
+      // We don't need to do any UI preparation for MLKit
+      setIsInitializing(false);
+    };
+    
+    initializeScanner();
     
     return () => {
-      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-        CapacitorBarcodeScanner.showBackground().catch(e => console.error('Error showing background on unmount', e));
-      }
+      // No cleanup needed for MLKit
     };
   }, []);
   
