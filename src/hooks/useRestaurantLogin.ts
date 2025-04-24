@@ -34,9 +34,9 @@ export const useRestaurantLogin = () => {
       const authData = data as unknown as AuthResponse;
       
       if (authData && authData.authenticated) {
+        // تسجيل دخول ناجح
         localStorage.setItem('restaurantId', authData.restaurant_id);
         localStorage.setItem('isRestaurantLogin', 'true');
-        // تخزين البريد الإلكتروني للمستخدم للاستخدام اللاحق في التطبيق المحمول
         localStorage.setItem('userEmail', email);
         
         toast({
@@ -45,52 +45,55 @@ export const useRestaurantLogin = () => {
         });
         
         navigate('/restaurant/dashboard');
-      } else {
-        // محاولة تسجيل الدخول باستخدام طريقة احتياطية (التحقق المباشر من الجدول)
-        const { data: accessData, error: accessError } = await supabase
-          .from('restaurant_access')
-          .select('restaurant_id, password_hash')
-          .eq('email', email)
-          .maybeSingle();
+        return;
+      } 
+      
+      // التحقق المباشر من جدول restaurant_access
+      const { data: accessData } = await supabase
+        .from('restaurant_access')
+        .select('restaurant_id, password_hash, email')
+        .eq('email', email)
+        .single();
 
-        console.log('Direct database check:', accessData, accessError);
+      console.log('Direct database check:', accessData);
 
-        if (accessError) {
-          throw new Error("خطأ في الوصول إلى قاعدة البيانات");
-        }
-
-        if (accessData && accessData.password_hash === password) {
-          localStorage.setItem('restaurantId', accessData.restaurant_id);
-          localStorage.setItem('isRestaurantLogin', 'true');
-          localStorage.setItem('userEmail', email);
-          
-          toast({
-            title: "تم تسجيل الدخول بنجاح",
-            description: "مرحباً بك في نظام إدارة المطعم",
-          });
-          
-          navigate('/restaurant/dashboard');
-        } else if (email === 'admin@restaurant-system.com' && password === 'admin123') {
-          // تسجيل دخول تجريبي إذا كانت بيانات الدخول الافتراضية
-          const demoRestaurantId = '00000000-0000-0000-0000-000000000000';
-          localStorage.setItem('restaurantId', demoRestaurantId);
-          localStorage.setItem('isRestaurantLogin', 'true');
-          localStorage.setItem('userEmail', email);
-          
-          toast({
-            title: "تم تسجيل الدخول بنجاح (وضع تجريبي)",
-            description: "مرحباً بك في نظام إدارة المطعم - الوضع التجريبي",
-          });
-          
-          navigate('/restaurant/dashboard');
-        } else {
-          toast({
-            variant: "destructive",
-            title: "خطأ في تسجيل الدخول",
-            description: "بيانات الاعتماد غير صحيحة",
-          });
-        }
+      if (accessData && accessData.password_hash === password) {
+        localStorage.setItem('restaurantId', accessData.restaurant_id);
+        localStorage.setItem('isRestaurantLogin', 'true');
+        localStorage.setItem('userEmail', email);
+        
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك في نظام إدارة المطعم",
+        });
+        
+        navigate('/restaurant/dashboard');
+        return;
+      } 
+      
+      // تسجيل دخول تجريبي
+      if (email === 'admin@restaurant-system.com' && password === 'admin123') {
+        const demoRestaurantId = '00000000-0000-0000-0000-000000000000';
+        localStorage.setItem('restaurantId', demoRestaurantId);
+        localStorage.setItem('isRestaurantLogin', 'true');
+        localStorage.setItem('userEmail', email);
+        
+        toast({
+          title: "تم تسجيل الدخول بنجاح (وضع تجريبي)",
+          description: "مرحباً بك في نظام إدارة المطعم - الوضع التجريبي",
+        });
+        
+        navigate('/restaurant/dashboard');
+        return;
       }
+      
+      // إذا وصلنا إلى هنا، فبيانات الاعتماد غير صحيحة
+      toast({
+        variant: "destructive",
+        title: "خطأ في تسجيل الدخول",
+        description: "بيانات الاعتماد غير صحيحة",
+      });
+
     } catch (error: any) {
       console.error("Error logging in:", error);
       toast({
