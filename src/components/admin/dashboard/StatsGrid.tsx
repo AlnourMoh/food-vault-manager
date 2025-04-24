@@ -1,6 +1,6 @@
 
 import React from 'react';
-import StatsCard from '@/components/dashboard/StatsCard';
+import { StatsCard } from '@/components/dashboard/StatsCard';
 import { BuildingIcon, Users, ShoppingCart, BarChartIcon } from 'lucide-react';
 import { DashboardData } from '@/types';
 
