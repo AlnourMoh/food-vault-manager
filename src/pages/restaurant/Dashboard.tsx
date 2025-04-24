@@ -1,165 +1,102 @@
 
 import React, { useState, useEffect } from 'react';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
-import { supabase } from '@/integrations/supabase/client';
-import { StatsCard } from '@/components/dashboard/StatsCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { getMockData } from '@/services/mockData';
+import { StatsCard } from '@/components/dashboard/StatsCard'; // Changed to named import
+import StatsGrid from '@/components/admin/dashboard/StatsGrid';
+import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { ResetPasswordAlert } from '@/components/auth/components/ResetPasswordAlert';
+import { supabase } from '@/integrations/supabase/client';
 
-interface ResetPasswordRequest {
-  id: string;
-  title: string;
-  message: string;
-  email: string;
-  created_at: string;
-}
-
-const RestaurantDashboard = () => {
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    lowStockProducts: 0,
-    expiringSoonProducts: 0,
-    expiredProducts: 0
-  });
-  const [passwordResetRequests, setPasswordResetRequests] = useState<ResetPasswordRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const restaurantId = localStorage.getItem('restaurantId');
+const Dashboard = () => {
+  const { dashboardStats } = getMockData();
+  const { restaurant, loading } = useRestaurantData();
+  const [passwordResetRequests, setPasswordResetRequests] = useState<{ email: string, id: string }[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
 
   useEffect(() => {
-    if (restaurantId) {
-      fetchDashboardData();
-      fetchPasswordResetRequests();
-    }
-  }, [restaurantId]);
+    const fetchPasswordResetRequests = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('type', 'password_reset_request')
+          .order('created_at', { ascending: false });
 
-  const fetchDashboardData = async () => {
+        if (error) throw error;
+
+        const requests = data?.map(notification => {
+          // استخراج البريد الإلكتروني من رسالة الإشعار
+          const emailMatch = notification.message.match(/البريد الإلكتروني: ([^\s]+)/);
+          const email = emailMatch ? emailMatch[1] : 'غير معروف';
+          
+          return {
+            id: notification.id,
+            email: email
+          };
+        }) || [];
+
+        setPasswordResetRequests(requests);
+      } catch (error) {
+        console.error('Error fetching password reset requests:', error);
+      } finally {
+        setLoadingRequests(false);
+      }
+    };
+
+    fetchPasswordResetRequests();
+  }, []);
+
+  const handleCloseRequest = async (id: string) => {
     try {
-      // Fetch total products
-      const { count: totalProducts } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', restaurantId);
-
-      // Fetch low stock products
-      const { count: lowStockProducts } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', restaurantId)
-        .lt('quantity', 10);
-
-      // Fetch expiring soon products (within 30 days)
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      
-      const { count: expiringSoonProducts } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', restaurantId)
-        .gt('expiry_date', new Date().toISOString())
-        .lt('expiry_date', thirtyDaysFromNow.toISOString());
-
-      // Fetch expired products
-      const { count: expiredProducts } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', restaurantId)
-        .lt('expiry_date', new Date().toISOString());
-
-      setStats({
-        totalProducts: totalProducts || 0,
-        lowStockProducts: lowStockProducts || 0,
-        expiringSoonProducts: expiringSoonProducts || 0,
-        expiredProducts: expiredProducts || 0
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPasswordResetRequests = async () => {
-    try {
-      // نستخرج طلبات إعادة تعيين كلمة المرور من جدول الإشعارات
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('type', 'password_reset_request')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // استخراج البريد الإلكتروني من الرسائل
-      const requests = data.map(notification => {
-        // استخراج البريد الإلكتروني من الرسالة باستخدام تعبير منتظم
-        const emailMatch = notification.message.match(/البريد الإلكتروني: ([^\s]+)/);
-        const email = emailMatch ? emailMatch[1] : '';
-
-        return {
-          id: notification.id,
-          title: notification.title,
-          message: notification.message,
-          email: email,
-          created_at: notification.created_at
-        };
-      });
-
-      setPasswordResetRequests(requests);
-    } catch (error) {
-      console.error('Error fetching password reset requests:', error);
-    }
-  };
-
-  const handleClosePasswordResetRequest = async (requestId: string) => {
-    try {
-      // حذف طلب إعادة تعيين كلمة المرور من قاعدة البيانات
       const { error } = await supabase
         .from('notifications')
         .delete()
-        .eq('id', requestId);
+        .eq('id', id);
 
       if (error) throw error;
 
-      // تحديث القائمة
-      setPasswordResetRequests(prevRequests => 
-        prevRequests.filter(request => request.id !== requestId)
-      );
+      setPasswordResetRequests(prev => prev.filter(request => request.id !== id));
     } catch (error) {
-      console.error('Error closing password reset request:', error);
+      console.error('Error closing request:', error);
     }
   };
 
   return (
     <RestaurantLayout>
-      <div className="space-y-6 p-6">
-        <h1 className="text-2xl font-bold">لوحة المعلومات</h1>
-        
-        {!loading && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatsCard title="إجمالي المنتجات" value={stats.totalProducts} />
-            <StatsCard title="منتجات منخفضة المخزون" value={stats.lowStockProducts} />
-            <StatsCard title="منتجات تنتهي قريبًا" value={stats.expiringSoonProducts} />
-            <StatsCard title="منتجات منتهية الصلاحية" value={stats.expiredProducts} />
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">لوحة تحكم المطعم</h1>
+
+        {!loading && restaurant && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{restaurant.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>مرحبًا بك في لوحة تحكم مطعمك</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {passwordResetRequests.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">طلبات إعادة تعيين كلمة المرور</h2>
+            {passwordResetRequests.map(request => (
+              <ResetPasswordAlert 
+                key={request.id}
+                email={request.email}
+                onClose={() => handleCloseRequest(request.id)}
+              />
+            ))}
           </div>
         )}
 
-        {/* قسم طلبات إعادة تعيين كلمة المرور */}
-        {passwordResetRequests.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">طلبات إعادة تعيين كلمة المرور</h2>
-            <div className="space-y-4">
-              {passwordResetRequests.map(request => (
-                <ResetPasswordAlert 
-                  key={request.id} 
-                  email={request.email}
-                  onClose={() => handleClosePasswordResetRequest(request.id)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        <StatsGrid dashboardData={null} />
       </div>
     </RestaurantLayout>
   );
 };
 
-export default RestaurantDashboard;
+export default Dashboard;
