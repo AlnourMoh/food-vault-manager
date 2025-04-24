@@ -1,11 +1,25 @@
+
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
 import MobileHome from '@/pages/mobile/MobileHome';
 import ProductScan from '@/pages/mobile/ProductScan';
 import ProductManagement from '@/pages/mobile/ProductManagement';
 import MobileAccount from '@/pages/mobile/MobileAccount';
+import RestaurantLogin from '@/pages/RestaurantLogin';
+
+// Auth guard component to protect routes
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
+  const location = useLocation();
+  
+  if (!isRestaurantLoggedIn) {
+    return <Navigate to="/mobile/login" state={{ from: location }} replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 const MobileApp = () => {
   useEffect(() => {
@@ -31,22 +45,49 @@ const MobileApp = () => {
     
     return () => {
       if (window.Capacitor) {
-        // Clean up listeners when component unmounts
         CapacitorApp.removeAllListeners();
       }
     };
   }, []);
   
   return (
-    <MobileLayout>
-      <Routes>
-        <Route path="/" element={<MobileHome />} />
-        <Route path="/scan" element={<ProductScan />} />
-        <Route path="/product-management" element={<ProductManagement />} />
-        <Route path="/account" element={<MobileAccount />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </MobileLayout>
+    <Routes>
+      <Route path="/login" element={<RestaurantLogin />} />
+      
+      <Route path="/" element={
+        <ProtectedRoute>
+          <MobileLayout>
+            <MobileHome />
+          </MobileLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/scan" element={
+        <ProtectedRoute>
+          <MobileLayout>
+            <ProductScan />
+          </MobileLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/product-management" element={
+        <ProtectedRoute>
+          <MobileLayout>
+            <ProductManagement />
+          </MobileLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/account" element={
+        <ProtectedRoute>
+          <MobileLayout>
+            <MobileAccount />
+          </MobileLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -75,9 +74,8 @@ function App() {
             <BrowserRouter>
               {isMobile ? (
                 <Routes>
-                  <Route path="/" element={<Navigate to="/mobile" replace />} />
+                  <Route path="/" element={<Navigate to="/mobile/login" replace />} />
                   <Route path="/mobile/*" element={<MobileApp />} />
-                  <Route path="/restaurant/login" element={<RestaurantLogin />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               ) : (
