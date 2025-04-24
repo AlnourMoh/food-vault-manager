@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 interface StatsCardProps {
   title: string;
   value: string | number;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   description?: string;
   trend?: {
     value: number;
@@ -15,7 +15,7 @@ interface StatsCardProps {
   className?: string;
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({
+export const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   icon,
@@ -29,9 +29,11 @@ const StatsCard: React.FC<StatsCardProps> = ({
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-          {icon}
-        </div>
+        {icon && (
+          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+            {icon}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
@@ -51,4 +53,4 @@ const StatsCard: React.FC<StatsCardProps> = ({
   );
 };
 
-export default StatsCard;
+// Remove the default export since we're now using named export
