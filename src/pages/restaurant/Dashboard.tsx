@@ -4,7 +4,7 @@ import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getMockData } from '@/services/mockData';
-import { StatsCard } from '@/components/dashboard/StatsCard'; // Changed to named import
+import { StatsCard } from '@/components/dashboard/StatsCard';
 import StatsGrid from '@/components/admin/dashboard/StatsGrid';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { ResetPasswordAlert } from '@/components/auth/components/ResetPasswordAlert';
@@ -12,7 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { dashboardStats } = getMockData();
-  const { restaurant, loading } = useRestaurantData();
+  const restaurantId = localStorage.getItem('restaurantId') || undefined;
+  const { restaurantName, email, isLoading } = useRestaurantData(restaurantId);
   const [passwordResetRequests, setPasswordResetRequests] = useState<{ email: string, id: string }[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
 
@@ -69,10 +70,10 @@ const Dashboard = () => {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">لوحة تحكم المطعم</h1>
 
-        {!loading && restaurant && (
+        {!isLoading && restaurantName && (
           <Card>
             <CardHeader>
-              <CardTitle>{restaurant.name}</CardTitle>
+              <CardTitle>{restaurantName}</CardTitle>
             </CardHeader>
             <CardContent>
               <p>مرحبًا بك في لوحة تحكم مطعمك</p>
