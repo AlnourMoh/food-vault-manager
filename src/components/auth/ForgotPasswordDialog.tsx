@@ -21,8 +21,40 @@ export const ForgotPasswordDialog = () => {
   const { toast } = useToast();
 
   const handleForgotPassword = async () => {
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: "يرجى إدخال البريد الإلكتروني",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // أولاً: التحقق من وجود البريد الإلكتروني في قاعدة البيانات
+      const { data: checkData, error: checkError } = await supabase
+        .from('restaurant_access')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (checkError) {
+        throw new Error("حدث خطأ أثناء التحقق من البريد الإلكتروني");
+      }
+
+      // إذا لم يتم العثور على البريد الإلكتروني
+      if (!checkData) {
+        toast({
+          variant: "destructive",
+          title: "البريد الإلكتروني غير موجود",
+          description: "لم يتم العثور على حساب مرتبط بهذا البريد الإلكتروني",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // إذا تم العثور على البريد الإلكتروني، نرسل طلب استعادة كلمة المرور
       const { error } = await supabase.rpc('request_password_reset', {
         p_email: email
       });
@@ -36,6 +68,7 @@ export const ForgotPasswordDialog = () => {
       setShowDialog(false);
       setEmail('');
     } catch (error: any) {
+      console.error("Error in password reset:", error);
       toast({
         variant: "destructive",
         title: "خطأ في إرسال الطلب",
