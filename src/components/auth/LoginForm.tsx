@@ -35,7 +35,8 @@ export function LoginForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await handleLogin(values.email, values.password);
+    // Normalize email to lowercase before sending
+    await handleLogin(values.email.toLowerCase(), values.password);
   }
 
   return (
@@ -48,7 +49,11 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>البريد الإلكتروني</FormLabel>
               <FormControl>
-                <Input placeholder="your@email.com" {...field} />
+                <Input 
+                  placeholder="your@email.com" 
+                  {...field} 
+                  onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

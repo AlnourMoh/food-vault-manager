@@ -19,9 +19,12 @@ export const useRestaurantLogin = () => {
     console.log('Attempting login with:', { email });
 
     try {
+      // Make sure email is lowercase for consistent comparison
+      const normalizedEmail = email.toLowerCase();
+      
       // 1. التحقق من بيانات الاعتماد باستخدام وظيفة authenticate_restaurant
       const { data, error } = await supabase.rpc('authenticate_restaurant', {
-        p_email: email,
+        p_email: normalizedEmail,
         p_password: password
       });
 
@@ -37,7 +40,7 @@ export const useRestaurantLogin = () => {
         // تسجيل دخول ناجح
         localStorage.setItem('restaurantId', authData.restaurant_id);
         localStorage.setItem('isRestaurantLogin', 'true');
-        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userEmail', normalizedEmail);
         
         toast({
           title: "تم تسجيل الدخول بنجاح",
@@ -52,7 +55,7 @@ export const useRestaurantLogin = () => {
       const { data: accessData } = await supabase
         .from('restaurant_access')
         .select('restaurant_id, password_hash, email')
-        .eq('email', email)
+        .eq('email', normalizedEmail)
         .single();
 
       console.log('Direct database check for restaurant access:', accessData);
@@ -60,7 +63,7 @@ export const useRestaurantLogin = () => {
       if (accessData && accessData.password_hash === password) {
         localStorage.setItem('restaurantId', accessData.restaurant_id);
         localStorage.setItem('isRestaurantLogin', 'true');
-        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userEmail', normalizedEmail);
         
         toast({
           title: "تم تسجيل الدخول بنجاح",
@@ -75,7 +78,7 @@ export const useRestaurantLogin = () => {
       const { data: teamMemberData } = await supabase
         .from('company_members')
         .select('id, company_id, name, email, role, phone')
-        .eq('email', email)
+        .eq('email', normalizedEmail)
         .eq('is_active', true)
         .maybeSingle();
         
@@ -85,8 +88,8 @@ export const useRestaurantLogin = () => {
       if (teamMemberData) {
         const { data: memberAccessData } = await supabase
           .from('restaurant_access')
-          .select('password_hash')
-          .eq('email', email)
+          .select('password_hash, restaurant_id')
+          .eq('email', normalizedEmail)
           .maybeSingle();
           
         console.log('Team member password check:', memberAccessData);
@@ -94,7 +97,7 @@ export const useRestaurantLogin = () => {
         if (memberAccessData && memberAccessData.password_hash === password) {
           localStorage.setItem('restaurantId', teamMemberData.company_id);
           localStorage.setItem('isRestaurantLogin', 'true');
-          localStorage.setItem('userEmail', email);
+          localStorage.setItem('userEmail', normalizedEmail);
           localStorage.setItem('userName', teamMemberData.name);
           localStorage.setItem('userRole', teamMemberData.role);
           
@@ -104,6 +107,22 @@ export const useRestaurantLogin = () => {
           });
           
           navigate('/restaurant/dashboard');
+          return;
+        } else if (memberAccessData) {
+          // كلمة المرور غير صحيحة لكن البريد الإلكتروني موجود
+          toast({
+            variant: "destructive",
+            title: "خطأ في تسجيل الدخول",
+            description: "كلمة المرور غير صحيحة",
+          });
+          return;
+        } else {
+          // البريد موجود في فريق المخزن لكن لا يوجد له إعدادات دخول
+          toast({
+            variant: "destructive",
+            title: "الحساب غير مكتمل الإعداد",
+            description: "يرجى استخدام خيار 'عضو جديد؟ تسجيل' لإكمال إعداد حسابك",
+          });
           return;
         }
       }

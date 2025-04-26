@@ -34,10 +34,12 @@ export const RestaurantSignup = () => {
     }
 
     try {
+      const normalizedEmail = data.email.toLowerCase();
+      
       const { error: updateError } = await supabase
         .from('restaurant_access')
         .update({ password_hash: data.password })
-        .eq('email', data.email);
+        .eq('email', normalizedEmail);
 
       if (updateError) {
         console.error('Error updating password:', updateError);

@@ -26,7 +26,7 @@ export const useEmailVerification = () => {
       const { data: member, error: memberError } = await supabase
         .from('company_members')
         .select('email, role, name, company_id')
-        .eq('email', email)
+        .eq('email', email.toLowerCase())
         .eq('is_active', true)
         .maybeSingle();
 
@@ -41,7 +41,7 @@ export const useEmailVerification = () => {
       const { data: accessData, error: accessError } = await supabase
         .from('restaurant_access')
         .select('email, password_hash, restaurant_id')
-        .eq('email', email)
+        .eq('email', email.toLowerCase())
         .maybeSingle();
 
       console.log('نتيجة البحث في restaurant_access:', { accessData, accessError });
@@ -62,13 +62,19 @@ export const useEmailVerification = () => {
           const restaurantId = member.company_id;
           
           // إضافة السجل في restaurant_access مع كلمة مرور مؤقتة
-          await supabase
+          const { error: insertError } = await supabase
             .from('restaurant_access')
             .insert({
-              email: email,
+              email: email.toLowerCase(),
               restaurant_id: restaurantId,
               password_hash: 'temporary_password'
             });
+            
+          if (insertError) {
+            console.error('خطأ في إضافة السجل إلى restaurant_access:', insertError);
+            throw insertError;
+          }
+            
           console.log('تم إضافة البريد إلى restaurant_access بكلمة مرور مؤقتة');
         }
 
