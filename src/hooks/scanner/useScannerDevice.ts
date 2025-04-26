@@ -88,8 +88,8 @@ export const useScannerDevice = () => {
           // Check if MLKit is supported before trying to disable torch
           const isSupported = await BarcodeScanner.isSupported();
           if (isSupported) {
-            // Fixed: The enableTorch method expects a boolean parameter, not the isSupported value
-            await BarcodeScanner.enableTorch({ enable: false });
+            // Directly pass false as a boolean
+            await BarcodeScanner.enableTorch(false);
           }
         } catch (error) {
           console.error("[useScannerDevice] Error disabling torch:", error);
@@ -105,3 +105,4 @@ export const useScannerDevice = () => {
     stopDeviceScan
   };
 };
+
