@@ -4,6 +4,7 @@ import { useCameraPermissions } from '../useCameraPermissions';
 import { useScannerDevice } from './useScannerDevice';
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { App } from '@capacitor/app';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -37,15 +38,49 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       // If we don't have permission, try to request it
       if (hasPermission === false) {
         console.log('[useScannerState] Requesting permission as it was denied');
-        const permissionGranted = await requestPermission(true);
-        if (!permissionGranted) {
-          console.log('[useScannerState] Permission still not granted after request');
-          toast({
-            title: "إذن الكاميرا مطلوب",
-            description: "يجب السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي",
-            variant: "destructive"
-          });
-          return false;
+        
+        // Using Capacitor App API to try opening settings if available
+        if (window.Capacitor) {
+          try {
+            const permissionGranted = await requestPermission(true);
+            if (!permissionGranted) {
+              console.log('[useScannerState] Permission still not granted after request');
+              
+              // Show more helpful toast with instructions
+              toast({
+                title: "إذن الكاميرا مطلوب",
+                description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
+                variant: "destructive",
+                action: {
+                  label: "إعدادات",
+                  onClick: async () => {
+                    // Try to direct user to app settings if possible
+                    try {
+                      await App.openUrl("app-settings:");
+                    } catch (e) {
+                      console.error('Could not open settings URL:', e);
+                    }
+                  }
+                }
+              });
+              return false;
+            }
+          } catch (error) {
+            console.error('[useScannerState] Error during permission request:', error);
+            return false;
+          }
+        } else {
+          // Web environment permission handling
+          const permissionGranted = await requestPermission(true);
+          if (!permissionGranted) {
+            console.log('[useScannerState] Browser denied camera permission');
+            toast({
+              title: "إذن الكاميرا مطلوب",
+              description: "يرجى السماح للموقع باستخدام الكاميرا من إعدادات المتصفح",
+              variant: "destructive"
+            });
+            return false;
+          }
         }
       }
       
@@ -57,6 +92,11 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
             console.log('[useScannerState] MLKit scanner is supported');
           } else {
             console.log('[useScannerState] MLKit scanner is NOT supported');
+            toast({
+              title: "ماسح الباركود غير مدعوم",
+              description: "يبدو أن جهازك لا يدعم مكتبة مسح الباركود، سيتم استخدام طريقة بديلة",
+              variant: "default"
+            });
           }
         } catch (error) {
           console.error('[useScannerState] Error checking if MLKit scanner is supported:', error);
@@ -71,7 +111,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       console.error('[useScannerState] خطأ في بدء المسح:', error);
       toast({
         title: "خطأ في المسح",
-        description: "حدث خطأ أثناء محاولة بدء المسح",
+        description: "حدث خطأ أثناء محاولة بدء المسح. حاول استخدام الإدخال اليدوي بدلاً من ذلك",
         variant: "destructive"
       });
       setIsScanningActive(false);

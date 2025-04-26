@@ -1,3 +1,4 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
@@ -81,13 +82,13 @@ export const useScannerDevice = () => {
     try {
       console.log("[useScannerDevice] إيقاف عملية المسح");
       
-      // If we're using the MLKit scanner, we need to stop it
+      // If we're using the MLKit scanner, we need to disable torch
       if (window.Capacitor) {
         try {
           // Check if MLKit is supported before trying to disable torch
           const available = await BarcodeScanner.isSupported();
           if (available) {
-            // No arguments needed, pass nothing
+            // تصحيح هنا - لا تمرير أي معلمات للدالة enableTorch
             await BarcodeScanner.enableTorch();
           }
         } catch (error) {

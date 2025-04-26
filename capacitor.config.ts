@@ -29,6 +29,12 @@ const config: CapacitorConfig = {
     },
     CapacitorHttp: {
       enabled: true
+    },
+    // إضافة إعدادات ماسح الباركود MLKit
+    MLKitBarcodeScanning: {
+      keys: {
+        // يمكن إضافة مفاتيح API خاصة بـ Google Cloud إذا كان ذلك مطلوبًا
+      }
     }
   },
   android: {
@@ -45,7 +51,8 @@ const config: CapacitorConfig = {
     permissions: [
       "android.permission.CAMERA",
       "android.permission.ACCESS_NETWORK_STATE",
-      "android.permission.INTERNET"
+      "android.permission.INTERNET",
+      "android.permission.FLASHLIGHT" // إضافة إذن للفلاش
     ]
   },
   ios: {

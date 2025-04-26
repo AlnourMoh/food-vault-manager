@@ -23,16 +23,45 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   useEffect(() => {
     const initializeScanner = async () => {
       try {
+        console.log('Initializing barcode scanner...');
+        
         // Check if we're running on a device with Capacitor
         if (window.Capacitor) {
-          const available = await MLKitBarcodeScanner.isSupported();
-          console.log('MLKit BarcodeScanner available:', available);
-          
-          if (available) {
-            // Pre-check camera permissions
-            const permissions = await MLKitBarcodeScanner.checkPermissions();
-            console.log('Camera permissions state:', permissions);
+          try {
+            // Check if MLKit barcode scanner is available
+            const available = await MLKitBarcodeScanner.isSupported();
+            console.log('MLKit BarcodeScanner available:', available);
+            
+            if (available) {
+              // Pre-check camera permissions
+              const permissions = await MLKitBarcodeScanner.checkPermissions();
+              console.log('Camera permissions state:', permissions);
+              
+              if (permissions.camera === 'prompt') {
+                console.log('Permission prompt will be shown');
+              } else if (permissions.camera === 'denied') {
+                console.log('Camera permission is denied');
+                toast({
+                  title: "إذن الكاميرا مرفوض",
+                  description: "يرجى منح إذن الكاميرا في إعدادات التطبيق",
+                  variant: "destructive"
+                });
+              }
+            } else {
+              console.log('MLKit scanner is NOT available on this device');
+              toast({
+                title: "ماسح الباركود غير متوفر",
+                description: "جهازك لا يدعم ماسح الباركود، سيتم استخدام وضع الإدخال اليدوي",
+                variant: "default"
+              });
+              // Automatically switch to manual mode if scanner isn't available
+              setIsManualEntry(true);
+            }
+          } catch (error) {
+            console.error('Error checking barcode scanner availability:', error);
           }
+        } else {
+          console.log('Running in web environment, using mock scanner');
         }
       } catch (error) {
         console.error('Error during scanner initialization:', error);
@@ -42,7 +71,12 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     };
     
     initializeScanner();
-  }, []);
+    
+    // Cleanup
+    return () => {
+      console.log('Barcode scanner component unmounting');
+    };
+  }, [toast]);
   
   const {
     isLoading,
@@ -55,13 +89,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   
   // Automatically start scanning when the component mounts if we have permission
   useEffect(() => {
-    console.log('BarcodeScanner mounted, hasPermission:', hasPermission, 'isLoading:', isLoading);
+    console.log('BarcodeScanner state update - hasPermission:', hasPermission, 'isLoading:', isLoading, 'isScanningActive:', isScanningActive);
     
     const initializeScanner = async () => {
       try {
-        if (!isLoading) {
-          setIsInitializing(false);
-          
+        if (!isLoading && !isInitializing) {
           if (hasPermission === true && !isScanningActive && !isManualEntry) {
             console.log('Auto-starting scanner because we have permission');
             await startScan();
@@ -69,7 +101,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         }
       } catch (error) {
         console.error('Error initializing scanner:', error);
-        setIsInitializing(false);
         toast({
           title: "خطأ",
           description: "حدث خطأ أثناء تهيئة الماسح الضوئي",
@@ -81,13 +112,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     initializeScanner();
     
     return () => {
-      console.log('BarcodeScanner unmounting, stopping scan');
+      console.log('BarcodeScanner useEffect cleanup, stopping scan');
       stopScan();
     };
-  }, [hasPermission, isLoading, isScanningActive, startScan, stopScan, isManualEntry, toast]);
+  }, [hasPermission, isLoading, isScanningActive, startScan, stopScan, isManualEntry, toast, isInitializing]);
   
   const handleRequestPermission = async () => {
-    console.log('BarcodeScanner: Requesting permission...');
+    console.log('BarcodeScanner: Requesting permission explicitly...');
     try {
       console.log('Starting permission request and scan workflow');
       const result = await startScan();
