@@ -28,7 +28,7 @@ export const useMobileAuth = () => {
       // Otherwise redirect to inventory
       navigate('/mobile/inventory', { replace: true });
     } else if (!location.pathname.includes('/login')) {
-      // If not logged in and not on login page, redirect to login
+      // If not logged in and not on login page, redirect to login immediately
       navigate('/mobile/login', { state: { from: location }, replace: true });
     }
   }, [isRestaurantLoggedIn, location, navigate]);

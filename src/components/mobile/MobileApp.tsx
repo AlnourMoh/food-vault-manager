@@ -38,30 +38,9 @@ const MobileApp = () => {
       }
     };
     
-    // On initial load, check connection but don't block the UI
-    const checkConnection = async () => {
-      // For authenticated users, immediately show app UI
-      if (localStorage.getItem('isRestaurantLogin') === 'true') {
-        setIsInitialLoading(false);
-        setInitialCheckDone(true);
-        return;
-      }
-      
-      // Only check connection for non-authenticated users
-      try {
-        await checkServerConnection();
-      } finally {
-        // Always continue to the app after a short delay
-        setTimeout(() => {
-          setIsInitialLoading(false);
-          setInitialCheckDone(true);
-        }, 500); // Even shorter delay for faster UI rendering
-      }
-    };
-    
-    if (!initialCheckDone) {
-      checkConnection();
-    }
+    // Skip connection checks entirely and immediately proceed to the app
+    setIsInitialLoading(false);
+    setInitialCheckDone(true);
     
     setupCapacitor();
     
@@ -70,13 +49,8 @@ const MobileApp = () => {
         CapacitorApp.removeAllListeners();
       }
     };
-  }, [checkServerConnection, initialCheckDone, setInitialCheckDone, setIsInitialLoading]);
+  }, [setInitialCheckDone, setIsInitialLoading]);
 
-  // Show loading only during initial startup and if not logged in
-  if (isInitialLoading && localStorage.getItem('isRestaurantLogin') !== 'true') {
-    return <InitialLoading />;
-  }
-  
   // Check authentication status
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
   

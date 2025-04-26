@@ -12,6 +12,7 @@ const InventoryContent = () => {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [hasError, setHasError] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string>('');
+  // Never show the network error by default
   const [showNetworkError, setShowNetworkError] = useState(false);
   const [errorTransitionActive, setErrorTransitionActive] = useState(false);
   const { forceReconnect } = useServerConnection();
@@ -33,31 +34,9 @@ const InventoryContent = () => {
   const isAuthenticated = localStorage.getItem('isRestaurantLogin') === 'true';
 
   useEffect(() => {
-    // If authenticated, never show network error screen
-    if (isAuthenticated) {
-      setShowNetworkError(false);
-      setErrorTransitionActive(false);
-      return;
-    }
-
-    let timeoutId: number | undefined;
-    
-    if (hasError) {
-      setErrorTransitionActive(true);
-      timeoutId = window.setTimeout(() => {
-        setShowNetworkError(true);
-      }, 1500);
-    } else {
-      setShowNetworkError(false);
-      // Add additional delay before allowing transitions again
-      setTimeout(() => {
-        setErrorTransitionActive(false);
-      }, 1000);
-    }
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
+    // Always skip error screen even for non-authenticated users
+    setShowNetworkError(false);
+    setErrorTransitionActive(false);
   }, [hasError, isAuthenticated]);
 
   useEffect(() => {
@@ -78,12 +57,14 @@ const InventoryContent = () => {
       console.error('Error fetching products:', error);
       setErrorDetails(error instanceof Error ? error.message : 'خطأ غير معروف في جلب البيانات');
       
-      // Only set error if not authenticated
-      if (!isAuthenticated) {
-        setHasError(true);
-      }
+      // Show toast instead of full error screen
+      toast({
+        variant: "destructive",
+        title: "خطأ في جلب البيانات",
+        description: "سيتم إعادة المحاولة تلقائيًا"
+      });
     }
-  }, [error, isAuthenticated]);
+  }, [error]);
 
   const handleRetry = async () => {
     console.log('Retrying product fetch');
@@ -111,16 +92,7 @@ const InventoryContent = () => {
     }
   };
 
-  // For authenticated users, always show the inventory UI
-  if (showNetworkError && !isAuthenticated) {
-    return (
-      <NetworkErrorView 
-        onRetry={handleRetry} 
-        additionalInfo={`فشل في تحميل بيانات المخزون. ${errorDetails}`}
-      />
-    );
-  }
-
+  // Always show inventory UI and never show the error screen
   return (
     <div className="pb-16">
       <MobileInventoryHeader 
