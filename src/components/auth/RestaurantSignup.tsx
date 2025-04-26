@@ -24,7 +24,7 @@ export const RestaurantSignup = () => {
   });
 
   const handleVerifyEmail = () => {
-    const email = form.getValues('email');
+    const email = form.getValues('email').toLowerCase();
     verifyEmail(email);
   };
 
