@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -70,7 +69,8 @@ const MobileApp = () => {
     return <InitialLoading />;
   }
   
-  if (showErrorScreen) {
+  const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
+  if (showErrorScreen && !isRestaurantLoggedIn) {
     return (
       <NetworkErrorView 
         onRetry={handleRetry} 
@@ -86,7 +86,7 @@ const MobileApp = () => {
       <Route path="/" element={
         <ProtectedRoute>
           <MobileLayout>
-            <MobileHome />
+            <MobileInventory />
           </MobileLayout>
         </ProtectedRoute>
       } />
