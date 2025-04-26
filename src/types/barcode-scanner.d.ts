@@ -31,7 +31,8 @@ export interface BarcodeScannerPlugin extends Plugin {
   checkPermissions(): Promise<{ camera: PermissionState }>;
   requestPermissions(): Promise<{ camera: PermissionState }>;
   scan(options?: ScanOptions): Promise<ScanResult>;
-  enableTorch(options: { enable: boolean }): Promise<void>;
+  enableTorch(): Promise<void>;
+  disableTorch(): Promise<void>;
   startScan(options: StartScanOptions): Promise<void>;
   stopScan(): Promise<void>;
 }
@@ -42,7 +43,7 @@ export interface ScanOptions {
 
 export interface StartScanOptions {
   formats?: BarcodeFormat[];
-  scanMode?: 'single' | 'continuous';
+  continuous?: boolean;
   onScanComplete?: (result: ScanResult) => void;
 }
 

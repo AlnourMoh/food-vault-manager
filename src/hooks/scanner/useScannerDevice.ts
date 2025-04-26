@@ -45,7 +45,7 @@ export const useScannerDevice = () => {
                 BarcodeFormat.Ean8,
                 BarcodeFormat.Code39
               ],
-              scanMode: 'continuous',
+              continuous: true,
               onScanComplete: (result) => {
                 console.log("[useScannerDevice] تم اكتشاف باركود:", result);
                 if (result.barcodes.length > 0) {
@@ -117,7 +117,7 @@ export const useScannerDevice = () => {
             
             // Then try to disable torch
             try {
-              await BarcodeScanner.enableTorch({ enable: false });
+              await BarcodeScanner.disableTorch();
             } catch (e) {
               console.log("[useScannerDevice] خطأ في إيقاف الإضاءة:", e);
               // Non-critical error, can continue

@@ -71,7 +71,12 @@ export const ScannerView = ({
     try {
       flashOn.current = !flashOn.current;
       console.log(`Toggling flashlight to ${flashOn.current ? 'ON' : 'OFF'}`);
-      await BarcodeScanner.enableTorch({ enable: flashOn.current });
+      
+      if (flashOn.current) {
+        await BarcodeScanner.enableTorch();
+      } else {
+        await BarcodeScanner.disableTorch();
+      }
     } catch (error) {
       console.error('Error toggling flashlight:', error);
     }
