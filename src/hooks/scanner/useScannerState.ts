@@ -7,6 +7,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { App } from '@capacitor/app';
 import { Button } from '@/components/ui/button';
 import React from 'react';
+import { ToastAction } from '@/components/ui/toast';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -53,8 +54,9 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 title: "إذن الكاميرا مطلوب",
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
-                action: React.createElement(Button, {
-                  onClick: async () => {
+                action: <ToastAction 
+                  altText="إعدادات"
+                  onClick={async () => {
                     // Try to direct user to app settings if possible
                     try {
                       // Fix: Use the correct method to open app settings URL
@@ -70,11 +72,10 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                     } catch (e) {
                       console.error('Could not open settings URL:', e);
                     }
-                  },
-                  variant: "secondary",
-                  size: "sm",
-                  children: "إعدادات"
-                })
+                  }}
+                >
+                  إعدادات
+                </ToastAction>
               });
               return false;
             }
