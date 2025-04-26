@@ -83,8 +83,16 @@ export const useScannerDevice = () => {
       console.log("[useScannerDevice] إيقاف عملية المسح");
       
       // If we're using the MLKit scanner, we need to stop it
-      if (window.Capacitor && await BarcodeScanner.isSupported()) {
-        await BarcodeScanner.enableTorch(false);
+      if (window.Capacitor) {
+        try {
+          // Check if MLKit is supported before trying to disable torch
+          const isSupported = await BarcodeScanner.isSupported();
+          if (isSupported) {
+            await BarcodeScanner.enableTorch(false);
+          }
+        } catch (error) {
+          console.error("[useScannerDevice] Error disabling torch:", error);
+        }
       }
     } catch (error) {
       console.error("[useScannerDevice] خطأ في إيقاف عملية المسح:", error);
