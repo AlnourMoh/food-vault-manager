@@ -34,73 +34,71 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   
   const startScan = async () => {
     try {
-      console.log('[useScannerState] محاولة بدء المسح، حالة الإذن:', hasPermission);
+      console.log('[useScannerState] بدء المسح الآن...');
       
-      // نتأكد أولاً من إلغاء أي مسح نشط حالي
+      // إلغاء أي مسح نشط حالي
       await stopDeviceScan();
       
-      // التحقق من الأذونات وطلبها إذا لزم الأمر
-      if (hasPermission === false) {
-        console.log('[useScannerState] طلب الإذن لأنه تم رفضه');
-        const permissionGranted = await requestPermission(true);
-        
-        if (!permissionGranted) {
-          console.log('[useScannerState] ما زال الإذن غير ممنوح بعد الطلب');
-          
-          toast({
-            title: "إذن الكاميرا مطلوب",
-            description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار.",
-            variant: "destructive",
-            action: <ToastAction 
-              onClick={() => {
-                try {
-                  if (window.Capacitor?.getPlatform() === 'ios') {
-                    App.exitApp();
-                  } else {
-                    window.location.href = 'app-settings:';
-                  }
-                } catch (e) {
-                  console.error('Could not open settings URL:', e);
-                }
-              }}
-              altText="إعدادات"
-            >
-              إعدادات
-            </ToastAction>
-          });
-          return false;
-        }
-      }
-      
-      // فحص توفر الماسح
-      console.log('[useScannerState] جاري فحص توفر الماسح...');
-      
-      // فحص دعم الجهاز للمسح
-      let isSupported = false;
-      if (window.Capacitor) {
-        try {
-          const supportResult = await BarcodeScanner.isSupported();
-          isSupported = supportResult.supported;
-          console.log('[useScannerState] هل ماسح الباركود مدعوم:', isSupported);
-          
-          if (!isSupported) {
-            console.log('[useScannerState] ماسح الباركود غير مدعوم');
-            toast({
-              title: "ماسح الباركود غير مدعوم",
-              description: "سيتم استخدام طريقة الإدخال اليدوي بدلاً من ذلك",
-              variant: "default"
-            });
-          }
-        } catch (error) {
-          console.error('[useScannerState] خطأ في فحص دعم الماسح:', error);
-        }
-      }
-      
-      // تفعيل المسح
+      // تفعيل حالة المسح فوراً لإظهار واجهة المسح
       setIsScanningActive(true);
+      
+      // التحقق من الأذونات وطلبها فوراً إذا لزم الأمر
+      if (hasPermission === false) {
+        console.log('[useScannerState] طلب إذن الكاميرا');
+        
+        // نستخدم BarcodeScanner مباشرة للحصول على الإذن
+        if (window.Capacitor) {
+          try {
+            const result = await BarcodeScanner.requestPermissions();
+            console.log('[useScannerState] نتيجة طلب إذن الكاميرا:', result);
+            
+            if (result.camera !== 'granted') {
+              console.log('[useScannerState] ما زال الإذن غير ممنوح');
+              
+              toast({
+                title: "إذن الكاميرا مطلوب",
+                description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار.",
+                variant: "destructive",
+                action: <ToastAction 
+                  onClick={() => {
+                    try {
+                      if (window.Capacitor?.getPlatform() === 'ios') {
+                        App.exitApp();
+                      } else {
+                        window.location.href = 'app-settings:';
+                      }
+                    } catch (e) {
+                      console.error('Could not open settings URL:', e);
+                    }
+                  }}
+                  altText="إعدادات"
+                >
+                  إعدادات
+                </ToastAction>
+              });
+              
+              setIsScanningActive(false);
+              return false;
+            }
+          } catch (error) {
+            console.error('[useScannerState] خطأ في طلب إذن الكاميرا:', error);
+          }
+        } else {
+          // طلب الإذن باستخدام آلية الإذن العامة
+          const permissionGranted = await requestPermission(true);
+          
+          if (!permissionGranted) {
+            console.log('[useScannerState] ما زال الإذن غير ممنوح بعد الطلب');
+            setIsScanningActive(false);
+            return false;
+          }
+        }
+      }
+      
+      // التحقق من جاهزية الماسح وبدء المسح فوراً
+      console.log('[useScannerState] بدء عملية المسح الفعلية');
       const success = await startDeviceScan(handleSuccessfulScan);
       
-      // إذا فشل المسح، نعيد الواجهة إلى حالتها السابقة
       if (!success) {
         console.log('[useScannerState] فشل بدء المسح');
         setIsScanningActive(false);

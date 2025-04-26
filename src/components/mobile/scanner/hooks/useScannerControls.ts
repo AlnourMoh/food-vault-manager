@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 
@@ -28,6 +28,21 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     cancelMockScan
   } = useMockScanner();
 
+  // Auto-start scanner if permission is available and no errors
+  useEffect(() => {
+    if (!isLoading && hasPermission === true && !hasScannerError && !isScanningActive && !isManualEntry) {
+      console.log('[useScannerControls] بدء المسح تلقائيًا بعد التحقق من الأذونات');
+      const timeout = setTimeout(() => {
+        startScan().catch(error => {
+          console.error('[useScannerControls] خطأ في بدء المسح التلقائي:', error);
+          setHasScannerError(true);
+        });
+      }, 500);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading, hasPermission, hasScannerError, isScanningActive]);
+
   const handleManualEntry = () => {
     console.log('[Scanner] التحويل إلى إدخال الكود يدويًا');
     stopScan();
@@ -41,7 +56,15 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   };
 
   const handleRetry = () => {
+    console.log('[Scanner] إعادة المحاولة بعد خطأ');
     setHasScannerError(false);
+    // Attempt to start scanning again after a short delay
+    setTimeout(() => {
+      startScan().catch(error => {
+        console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
+        setHasScannerError(true);
+      });
+    }, 500);
   };
 
   return {

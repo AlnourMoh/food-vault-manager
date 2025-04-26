@@ -1,44 +1,62 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useScannerInitialization = () => {
   const [isInitializing, setIsInitializing] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     const initializeScanner = async () => {
       try {
+        console.log("[useScannerInitialization] تهيئة الماسح الضوئي...");
+        
+        // Check if running in Capacitor environment
         if (window.Capacitor) {
           try {
-            const available = await BarcodeScanner.isSupported();
-            console.log('[Scanner] هل ماسح MLKit متاح:', available);
+            // Check if the BarcodeScanner plugin is available
+            const { supported } = await BarcodeScanner.isSupported();
+            console.log("[useScannerInitialization] هل ماسح الباركود مدعوم:", supported);
             
-            if (available) {
-              const permissions = await BarcodeScanner.checkPermissions();
-              console.log('[Scanner] حالة أذونات الكاميرا:', permissions);
-            } else {
-              console.log('[Scanner] ماسح MLKit غير متاح على هذا الجهاز');
-              toast({
-                title: "ماسح الباركود غير متوفر",
-                description: "جهازك لا يدعم ماسح الباركود، سيتم استخدام وضع الإدخال اليدوي",
-                variant: "default"
-              });
+            if (supported) {
+              // Prepare the scanner in advance
+              try {
+                await BarcodeScanner.prepare();
+                console.log("[useScannerInitialization] تم تجهيز الماسح");
+              } catch (prepareError) {
+                console.warn("[useScannerInitialization] خطأ في تجهيز الماسح:", prepareError);
+              }
             }
-          } catch (error) {
-            console.error('[Scanner] خطأ في فحص توفر ماسح الباركود:', error);
+          } catch (supportError) {
+            console.warn("[useScannerInitialization] خطأ في فحص دعم الماسح:", supportError);
           }
         }
+        
+        console.log("[useScannerInitialization] اكتملت تهيئة الماسح");
       } catch (error) {
-        console.error('[Scanner] خطأ أثناء تهيئة الماسح:', error);
+        console.error("[useScannerInitialization] خطأ في تهيئة الماسح:", error);
       } finally {
         setIsInitializing(false);
       }
     };
     
     initializeScanner();
-  }, [toast]);
-
+    
+    return () => {
+      // Cleanup on component unmount
+      if (window.Capacitor) {
+        BarcodeScanner.isSupported().then(({ supported }) => {
+          if (supported) {
+            console.log("[useScannerInitialization] تنظيف موارد الماسح عند إلغاء التحميل");
+            BarcodeScanner.hideBackground().catch(error => {
+              console.warn("[useScannerInitialization] خطأ في إخفاء خلفية الماسح:", error);
+            });
+          }
+        }).catch(error => {
+          console.warn("[useScannerInitialization] خطأ في فحص دعم الماسح عند التنظيف:", error);
+        });
+      }
+    };
+  }, []);
+  
   return { isInitializing };
 };

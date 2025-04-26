@@ -34,7 +34,10 @@ export const useScannerDevice = () => {
         return true;
       }
       
+      // Request camera permissions immediately
+      console.log("[useScannerDevice] طلب أذونات الكاميرا");
       const { camera } = await BarcodeScanner.requestPermissions();
+      
       if (camera !== 'granted') {
         console.log("[useScannerDevice] إذن الكاميرا غير ممنوح:", camera);
         toast({
@@ -45,9 +48,13 @@ export const useScannerDevice = () => {
         return false;
       }
 
-      // إعداد واجهة المسح
+      // إعداد واجهة المسح فوراً
       console.log("[useScannerDevice] إعداد واجهة المسح");
-      setupScannerBackground();
+      await setupScannerBackground();
+      
+      // Prepare the scanner
+      console.log("[useScannerDevice] تجهيز الماسح الضوئي");
+      await BarcodeScanner.prepare();
       
       // إعداد مستمع المسح
       console.log("[useScannerDevice] إعداد مستمع المسح");
@@ -56,21 +63,22 @@ export const useScannerDevice = () => {
         onSuccess(code);
       });
 
-      // محاولة المسح البسيط أولاً
-      console.log("[useScannerDevice] محاولة المسح البسيط");
-      const simpleResult = await performSimpleScan();
-      if (simpleResult) {
-        console.log("[useScannerDevice] نجح المسح البسيط:", simpleResult);
-        onSuccess(simpleResult);
-        return true;
-      }
-
-      // إذا فشل المسح البسيط، نجرب المسح المستمر
-      console.log("[useScannerDevice] محاولة المسح المستمر");
+      // بدء المسح المستمر فوراً
+      console.log("[useScannerDevice] بدء المسح المستمر مباشرة");
       const continuousScanStarted = await startContinuousScan();
       
       if (!continuousScanStarted) {
-        console.log("[useScannerDevice] فشل بدء المسح المستمر، استخدام المحاكاة");
+        console.log("[useScannerDevice] فشل بدء المسح المستمر، محاولة المسح البسيط");
+        
+        // محاولة المسح البسيط كخطة بديلة
+        const simpleResult = await performSimpleScan();
+        if (simpleResult) {
+          console.log("[useScannerDevice] نجح المسح البسيط:", simpleResult);
+          onSuccess(simpleResult);
+          return true;
+        }
+        
+        console.log("[useScannerDevice] فشل المسح البسيط أيضاً، استخدام المحاكاة");
         cleanupScannerBackground();
         startMockScan(onSuccess);
       }
@@ -97,8 +105,10 @@ export const useScannerDevice = () => {
       if (window.Capacitor) {
         const { supported } = await BarcodeScanner.isSupported();
         if (supported) {
+          // Make sure to stop all scanning processes
           await BarcodeScanner.stopScan();
           await disableTorch();
+          await BarcodeScanner.hideBackground();
           cleanupScannerBackground();
         }
       }

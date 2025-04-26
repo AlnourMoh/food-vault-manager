@@ -28,15 +28,24 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     handleManualInput
   } = useScannerControls({ onScan, onClose });
 
-  // Cleanup when component unmounts
+  // Automatically start scanning when component mounts
   useEffect(() => {
+    console.log('[BarcodeScanner] المكون تم تحميله، بدء المسح تلقائياً');
+    
+    // Wait for initialization to complete
+    if (!isInitializing && !isScanningActive && !isManualEntry && !isMockScanActive) {
+      console.log('[BarcodeScanner] بدء المسح تلقائياً بعد تحميل المكون');
+      startScan();
+    }
+    
+    // Cleanup when component unmounts
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون');
       document.body.style.background = '';
       document.body.classList.remove('barcode-scanner-active');
       document.body.classList.remove('scanner-transparent-background');
     };
-  }, []);
+  }, [isInitializing, isScanningActive]);
   
   // لا نعرض شيئًا أثناء التهيئة
   if (isInitializing) {

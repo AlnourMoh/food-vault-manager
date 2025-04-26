@@ -26,18 +26,24 @@ export const ScannerView = ({
 
   useEffect(() => {
     console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
-    const setupScannerUI = () => {
+    const setupScannerUI = async () => {
       if (!hasPermissionError) {
         try {
           console.log("Setting up scanner UI");
           scannerActive.current = true;
           
-          // تأخير قصير لضمان تهيئة الواجهة قبل تفعيل الماسح
+          // Making sure the UI is ready before activating the scanner
           setTimeout(() => {
             document.body.style.visibility = 'visible';
             document.body.classList.add('barcode-scanner-active');
             document.body.classList.add('scanner-transparent-background');
             document.body.style.background = 'transparent';
+            
+            // Ensure the BarcodeScanner is ready
+            if (window.Capacitor && BarcodeScanner) {
+              console.log("Preparing BarcodeScanner...");
+              BarcodeScanner.prepare();
+            }
           }, 100);
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
@@ -55,6 +61,12 @@ export const ScannerView = ({
         document.body.classList.remove('barcode-scanner-active');
         document.body.classList.remove('scanner-transparent-background');
         document.body.style.background = '';
+        
+        // Clean up the BarcodeScanner
+        if (window.Capacitor && BarcodeScanner) {
+          console.log("Cleaning up BarcodeScanner...");
+          BarcodeScanner.hideBackground();
+        }
       } catch (e) {
         console.error('Error restoring UI on unmount:', e);
       }
