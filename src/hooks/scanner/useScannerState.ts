@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useCameraPermissions } from '../useCameraPermissions';
 import { useScannerDevice } from './useScannerDevice';
@@ -6,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { App } from '@capacitor/app';
 import { ToastAction } from '@/components/ui/toast';
+import React from 'react';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -48,28 +48,24 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 title: "إذن الكاميرا مطلوب",
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
-                action: function() {
-                  return {
-                    type: ToastAction,
-                    props: {
-                      onClick: () => {
-                        try {
-                          if (window.Capacitor?.getPlatform() === 'ios') {
-                            App.exitApp();
-                          } else {
-                            App.getInfo().then((appInfo) => {
-                              console.log('App info:', appInfo);
-                              window.location.href = 'app-settings:';
-                            });
-                          }
-                        } catch (e) {
-                          console.error('Could not open settings URL:', e);
-                        }
-                      },
-                      children: "إعدادات"
+                action: React.createElement(ToastAction, {
+                  key: "settings-action",
+                  onClick: () => {
+                    try {
+                      if (window.Capacitor?.getPlatform() === 'ios') {
+                        App.exitApp();
+                      } else {
+                        App.getInfo().then((appInfo) => {
+                          console.log('App info:', appInfo);
+                          window.location.href = 'app-settings:';
+                        });
+                      }
+                    } catch (e) {
+                      console.error('Could not open settings URL:', e);
                     }
-                  }
-                }()
+                  },
+                  children: "إعدادات"
+                })
               });
               return false;
             }
@@ -79,7 +75,6 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
           }
         }
       }
-      
       
       if (window.Capacitor) {
         try {
