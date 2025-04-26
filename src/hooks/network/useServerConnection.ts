@@ -106,11 +106,18 @@ export const useServerConnection = () => {
     }
   }, []);
 
+  // Add the forceReconnect method that's being used in MobileApp and MobileInventory
+  const forceReconnect = useCallback(async (): Promise<boolean> => {
+    console.log('Force reconnecting to server...');
+    return await retryServerConnection();
+  }, [retryServerConnection]);
+
   return {
     isConnectedToServer,
     serverCheckDone,
     errorInfo,
     checkServerConnection,
-    retryServerConnection
+    retryServerConnection,
+    forceReconnect // Include the new method in the return object
   };
 };
