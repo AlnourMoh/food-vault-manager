@@ -46,7 +46,6 @@ export const useScannerDevice = () => {
                 BarcodeFormat.Ean8,
                 BarcodeFormat.Code39
               ],
-              continuous: true,
               onScanComplete: (result) => {
                 console.log("[useScannerDevice] تم اكتشاف باركود:", result);
                 if (result.barcodes.length > 0) {
