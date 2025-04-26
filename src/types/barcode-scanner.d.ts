@@ -21,7 +21,7 @@ export enum BarcodeFormat {
   Ean13 = 'EAN_13',
   ITF = 'ITF',
   PDF417 = 'PDF_417',
-  QRCode = 'QR_CODE',
+  QrCode = 'QR_CODE',
   UPCA = 'UPC_A',
   UPCE = 'UPC_E',
 }
@@ -42,7 +42,7 @@ export interface ScanOptions {
 
 export interface StartScanOptions {
   formats?: BarcodeFormat[];
-  detectionMode?: 'single' | 'continuous';
+  scanMode?: 'single' | 'continuous';
   onScanComplete?: (result: ScanResult) => void;
 }
 

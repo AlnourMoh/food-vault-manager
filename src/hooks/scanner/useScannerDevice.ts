@@ -39,13 +39,13 @@ export const useScannerDevice = () => {
             // Start the camera stream
             await BarcodeScanner.startScan({
               formats: [
-                BarcodeFormat.QRCode,
+                BarcodeFormat.QrCode,
                 BarcodeFormat.Code128,
                 BarcodeFormat.Ean13,
                 BarcodeFormat.Ean8,
                 BarcodeFormat.Code39
               ],
-              detectionMode: 'continuous',
+              scanMode: 'continuous',
               onScanComplete: (result) => {
                 console.log("[useScannerDevice] تم اكتشاف باركود:", result);
                 if (result.barcodes.length > 0) {
