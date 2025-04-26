@@ -28,8 +28,18 @@ const InventoryContent = () => {
 
   const { data: products, isLoading, error, refetch } = useMobileProducts(retryAttempt);
 
-  // Delay showing error to prevent flickering
+  // For authenticated users, we'll always try to show the inventory interface
+  // even if there are network errors
+  const isAuthenticated = localStorage.getItem('isRestaurantLogin') === 'true';
+
   useEffect(() => {
+    // If authenticated, never show network error screen
+    if (isAuthenticated) {
+      setShowNetworkError(false);
+      setErrorTransitionActive(false);
+      return;
+    }
+
     let timeoutId: number | undefined;
     
     if (hasError) {
@@ -48,7 +58,7 @@ const InventoryContent = () => {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [hasError]);
+  }, [hasError, isAuthenticated]);
 
   useEffect(() => {
     if (products) {
@@ -67,9 +77,13 @@ const InventoryContent = () => {
     if (error) {
       console.error('Error fetching products:', error);
       setErrorDetails(error instanceof Error ? error.message : 'خطأ غير معروف في جلب البيانات');
-      setHasError(true);
+      
+      // Only set error if not authenticated
+      if (!isAuthenticated) {
+        setHasError(true);
+      }
     }
-  }, [error]);
+  }, [error, isAuthenticated]);
 
   const handleRetry = async () => {
     console.log('Retrying product fetch');
@@ -97,7 +111,8 @@ const InventoryContent = () => {
     }
   };
 
-  if (showNetworkError) {
+  // For authenticated users, always show the inventory UI
+  if (showNetworkError && !isAuthenticated) {
     return (
       <NetworkErrorView 
         onRetry={handleRetry} 

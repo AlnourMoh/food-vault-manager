@@ -20,8 +20,7 @@ const MobileApp = () => {
     setIsInitialLoading,
     setInitialCheckDone,
     initialCheckDone,
-    isInitialLoading,
-    errorInfo
+    isInitialLoading
   } = useMobileConnection();
   
   useEffect(() => {
@@ -39,8 +38,16 @@ const MobileApp = () => {
       }
     };
     
-    // On initial load, check connection once
+    // On initial load, check connection but don't block the UI
     const checkConnection = async () => {
+      // For authenticated users, immediately show app UI
+      if (localStorage.getItem('isRestaurantLogin') === 'true') {
+        setIsInitialLoading(false);
+        setInitialCheckDone(true);
+        return;
+      }
+      
+      // Only check connection for non-authenticated users
       try {
         await checkServerConnection();
       } finally {
@@ -48,7 +55,7 @@ const MobileApp = () => {
         setTimeout(() => {
           setIsInitialLoading(false);
           setInitialCheckDone(true);
-        }, 2000);
+        }, 1000); // Reduced delay for faster UI rendering
       }
     };
     
@@ -65,7 +72,8 @@ const MobileApp = () => {
     };
   }, [checkServerConnection, initialCheckDone, setInitialCheckDone, setIsInitialLoading]);
 
-  if (isInitialLoading) {
+  // Show loading only during initial startup and if not logged in
+  if (isInitialLoading && localStorage.getItem('isRestaurantLogin') !== 'true') {
     return <InitialLoading />;
   }
   

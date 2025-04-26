@@ -21,7 +21,17 @@ export const useMobileConnection = () => {
   const [showErrorScreen, setShowErrorScreen] = useState(false);
   const [errorTransitionActive, setErrorTransitionActive] = useState(false);
 
+  // Check if user is authenticated
+  const isAuthenticated = localStorage.getItem('isRestaurantLogin') === 'true';
+
   useEffect(() => {
+    // For authenticated users, never show error screen
+    if (isAuthenticated) {
+      setShowErrorScreen(false);
+      setErrorTransitionActive(false);
+      return;
+    }
+
     let timeoutId: number | undefined;
     
     if (!isOnline || (!isConnectedToServer && serverCheckDone)) {
@@ -41,7 +51,7 @@ export const useMobileConnection = () => {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isOnline, isConnectedToServer, serverCheckDone]);
+  }, [isOnline, isConnectedToServer, serverCheckDone, isAuthenticated]);
 
   const handleRetry = useCallback(async () => {
     setRetryCount(prev => prev + 1);
