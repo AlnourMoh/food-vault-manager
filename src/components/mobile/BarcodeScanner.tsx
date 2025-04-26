@@ -7,6 +7,7 @@ import { ScannerView } from './scanner/ScannerView';
 import { ScannerReadyView } from './scanner/ScannerReadyView';
 import { DigitalCodeInput } from './scanner/DigitalCodeInput';
 import { useToast } from '@/hooks/use-toast';
+import { BarcodeScanner as MLKitBarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -18,18 +19,29 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const [isInitializing, setIsInitializing] = useState(true);
   const { toast } = useToast();
   
-  // Handle scanner initialization - simplified to use mock only
+  // Handle scanner initialization
   useEffect(() => {
     const initializeScanner = async () => {
-      // Simplified initialization
-      setIsInitializing(false);
+      try {
+        // Check if we're running on a device with Capacitor
+        if (window.Capacitor) {
+          const available = await MLKitBarcodeScanner.isSupported();
+          console.log('MLKit BarcodeScanner available:', available);
+          
+          if (available) {
+            // Pre-check camera permissions
+            const permissions = await MLKitBarcodeScanner.checkPermissions();
+            console.log('Camera permissions state:', permissions);
+          }
+        }
+      } catch (error) {
+        console.error('Error during scanner initialization:', error);
+      } finally {
+        setIsInitializing(false);
+      }
     };
     
     initializeScanner();
-    
-    return () => {
-      // No cleanup needed for mock scanner
-    };
   }, []);
   
   const {

@@ -31,11 +31,13 @@ const MobileInventoryContent = ({
   };
 
   const handleScanStart = (product: Product) => {
+    console.log('Starting scan for product:', product.name);
     setScanningProduct(product);
     setIsScannerOpen(true);
   };
 
   const handleScanComplete = async (code: string) => {
+    console.log('Scan completed with code:', code);
     if (!scanningProduct) {
       toast({
         title: "خطأ",
