@@ -5,7 +5,6 @@ import { useScannerDevice } from './useScannerDevice';
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { App } from '@capacitor/app';
-import { ToastAction } from '@/components/ui/toast';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -52,12 +51,12 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 title: "إذن الكاميرا مطلوب",
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
-                action: <ToastAction 
-                  altText="إعدادات"
-                  onClick={() => {
+                action: {
+                  altText: "إعدادات",
+                  onClick: () => {
                     // Try to direct user to app settings if possible
                     try {
-                      // Fix: Use the correct method to open app settings URL
+                      // Use the correct method to open app settings URL
                       if (window.Capacitor?.getPlatform() === 'ios') {
                         App.exitApp();
                       } else {
@@ -71,10 +70,9 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                     } catch (e) {
                       console.error('Could not open settings URL:', e);
                     }
-                  }}
-                >
-                  إعدادات
-                </ToastAction>
+                  },
+                  children: "إعدادات"
+                }
               });
               return false;
             }
