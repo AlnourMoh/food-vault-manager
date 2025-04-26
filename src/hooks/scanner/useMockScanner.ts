@@ -1,39 +1,73 @@
 
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-export const useMockScanner = () => {
+interface UseMockScannerResult {
+  startMockScan: (onSuccess: (code: string) => void) => void;
+  isMockScanActive: boolean;
+  handleManualInput: (code: string) => void;
+  cancelMockScan: () => void;
+}
+
+export const useMockScanner = (): UseMockScannerResult => {
   const { toast } = useToast();
+  const [isMockScanActive, setIsMockScanActive] = useState(false);
+  const [currentCallback, setCurrentCallback] = useState<((code: string) => void) | null>(null);
 
   const startMockScan = (onSuccess: (code: string) => void) => {
+    console.log("[useMockScanner] بدء وضع المحاكاة");
+    setIsMockScanActive(true);
+    setCurrentCallback(() => onSuccess);
+    
     toast({
       title: "وضع المحاكاة",
       description: "يتم استخدام محاكاة للماسح الضوئي، يمكنك إدخال الرمز يدويًا",
       variant: "default"
     });
-    
-    // إظهار مربع حوار للإدخال اليدوي
-    setTimeout(() => {
-      try {
-        const manualCode = prompt("أدخل رمز الباركود يدويًا:");
-        if (manualCode && manualCode.trim() !== "") {
-          const mockBarcode = manualCode.trim();
-          console.log("[useMockScanner] باركود تم إدخاله يدويًا:", mockBarcode);
-          onSuccess(mockBarcode);
-        } else {
-          console.log("[useMockScanner] تم إلغاء الإدخال اليدوي، استخدام رمز عشوائي");
-          const randomCode = `TEST-${Math.floor(Math.random() * 1000000)}`;
-          console.log("[useMockScanner] باركود محاكاة:", randomCode);
-          onSuccess(randomCode);
-        }
-      } catch (error) {
-        console.error("[useMockScanner] خطأ في وضع المحاكاة:", error);
-        const fallbackCode = `TEST-${Math.floor(Math.random() * 1000000)}`;
-        onSuccess(fallbackCode);
+  };
+
+  const handleManualInput = (code: string) => {
+    if (!code || code.trim() === "") {
+      console.log("[useMockScanner] تم إدخال رمز فارغ");
+      toast({
+        title: "خطأ في الإدخال",
+        description: "الرجاء إدخال رمز صحيح",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const processedCode = code.trim();
+      console.log("[useMockScanner] تم إدخال الرمز يدويًا:", processedCode);
+      
+      if (currentCallback) {
+        currentCallback(processedCode);
       }
-    }, 500);
+      
+      setIsMockScanActive(false);
+      setCurrentCallback(null);
+      
+    } catch (error) {
+      console.error("[useMockScanner] خطأ في معالجة الرمز المدخل:", error);
+      toast({
+        title: "خطأ في المعالجة",
+        description: "حدث خطأ أثناء معالجة الرمز المدخل",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const cancelMockScan = () => {
+    console.log("[useMockScanner] تم إلغاء المسح المحاكى");
+    setIsMockScanActive(false);
+    setCurrentCallback(null);
   };
 
   return {
-    startMockScan
+    startMockScan,
+    isMockScanActive,
+    handleManualInput,
+    cancelMockScan
   };
 };

@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useScannerState } from '@/hooks/scanner/useScannerState';
+import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 
 interface UseScannerControlsProps {
   onScan: (code: string) => void;
@@ -20,14 +21,22 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     stopScan
   } = useScannerState({ onScan, onClose });
 
+  const {
+    startMockScan,
+    isMockScanActive,
+    handleManualInput,
+    cancelMockScan
+  } = useMockScanner();
+
   const handleManualEntry = () => {
     console.log('[Scanner] التحويل إلى إدخال الكود يدويًا');
     stopScan();
-    setIsManualEntry(true);
+    startMockScan(onScan);
   };
 
   const handleManualCancel = () => {
     console.log('[Scanner] تم إلغاء الإدخال اليدوي');
+    cancelMockScan();
     setIsManualEntry(false);
   };
 
@@ -47,6 +56,8 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     stopScan,
     handleManualEntry,
     handleManualCancel,
-    handleRetry
+    handleRetry,
+    isMockScanActive,
+    handleManualInput
   };
 };

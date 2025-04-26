@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useScannerInitialization } from './scanner/hooks/useScannerInitialization';
 import { useScannerControls } from './scanner/hooks/useScannerControls';
 import { ScannerContainer } from './scanner/ScannerContainer';
+import { DigitalCodeInput } from './scanner/DigitalCodeInput';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -22,10 +23,12 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     stopScan,
     handleManualEntry,
     handleManualCancel,
-    handleRetry
+    handleRetry,
+    isMockScanActive,
+    handleManualInput
   } = useScannerControls({ onScan, onClose });
 
-  // تنظيف عند إغلاق المكون
+  // Cleanup when component unmounts
   useEffect(() => {
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون');
@@ -38,6 +41,16 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   // لا نعرض شيئًا أثناء التهيئة
   if (isInitializing) {
     return null;
+  }
+
+  // Show manual input interface when mock scanning is active
+  if (isMockScanActive) {
+    return (
+      <DigitalCodeInput 
+        onSubmit={handleManualInput}
+        onCancel={handleManualCancel}
+      />
+    );
   }
 
   return (
@@ -55,6 +68,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       handleManualEntry={handleManualEntry}
       handleManualCancel={handleManualCancel}
       handleRequestPermission={startScan}
+      handleRetry={handleRetry}
     />
   );
 };
