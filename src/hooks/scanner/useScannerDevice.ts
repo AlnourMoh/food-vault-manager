@@ -38,6 +38,7 @@ export const useScannerDevice = () => {
             console.log("[useScannerDevice] بدء المسح باستخدام MLKit");
             setupScannerBackground();
             
+            // Modified scan options to match the API
             const scanOptions: StartScanOptions = {
               formats: [
                 BarcodeFormat.QrCode,
@@ -45,18 +46,34 @@ export const useScannerDevice = () => {
                 BarcodeFormat.Ean13,
                 BarcodeFormat.Ean8,
                 BarcodeFormat.Code39
-              ],
-              onScanComplete: (result) => {
+              ]
+            };
+
+            // Use scan event listener instead of onScanComplete callback
+            const listener = BarcodeScanner.addListener(
+              'barcodeScanned',
+              async (result) => {
                 console.log("[useScannerDevice] تم اكتشاف باركود:", result);
-                if (result.barcodes.length > 0) {
-                  const code = result.barcodes[0].rawValue || '';
+                if (result.barcode) {
+                  const code = result.barcode.rawValue || '';
                   console.log("[useScannerDevice] المسح ناجح:", code);
+                  
+                  // Remove the listener to prevent multiple callbacks
+                  await listener.remove();
+                  
+                  // Stop the scan
+                  try {
+                    await BarcodeScanner.stopScan();
+                  } catch (stopError) {
+                    console.error("[useScannerDevice] خطأ في إيقاف المسح:", stopError);
+                  }
+                  
                   onSuccess(code);
                   return;
                 }
                 console.log("[useScannerDevice] لم يتم العثور على باركود");
               }
-            };
+            );
 
             await BarcodeScanner.startScan(scanOptions);
             return;

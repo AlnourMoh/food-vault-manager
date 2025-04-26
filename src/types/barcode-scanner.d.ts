@@ -37,6 +37,7 @@ export interface BarcodeScannerPlugin extends Plugin {
   disableTorch(): Promise<void>;
   startScan(options?: StartScanOptions): Promise<void>;
   stopScan(): Promise<void>;
+  addListener(eventName: 'barcodeScanned', listenerFunc: (result: { barcode: BarcodeResult }) => void): Promise<{ remove: () => Promise<void> }>;
 }
 
 export interface ScanOptions {
@@ -45,8 +46,6 @@ export interface ScanOptions {
 
 export interface StartScanOptions {
   formats?: BarcodeFormat[];
-  continuous?: boolean;
-  onScanComplete?: (result: ScanResult) => void;
 }
 
 export interface ScanResult {
@@ -65,4 +64,3 @@ interface Point {
   x: number;
   y: number;
 }
-
