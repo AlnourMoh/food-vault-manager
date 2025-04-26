@@ -54,28 +54,32 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 title: "إذن الكاميرا مطلوب",
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
-                action: <ToastAction 
-                  altText="إعدادات"
-                  onClick={async () => {
-                    // Try to direct user to app settings if possible
-                    try {
-                      // Fix: Use the correct method to open app settings URL
-                      if (window.Capacitor?.getPlatform() === 'ios') {
-                        await App.exitApp();
-                      } else {
-                        // For Android and others, try a universal approach
-                        const appInfo = await App.getInfo();
-                        console.log('App info:', appInfo);
-                        // This is a fallback approach as direct settings URLs may not work on all devices
-                        window.location.href = 'app-settings:';
+                action: (
+                  <ToastAction 
+                    altText="إعدادات"
+                    onClick={() => {
+                      // Try to direct user to app settings if possible
+                      try {
+                        // Fix: Use the correct method to open app settings URL
+                        if (window.Capacitor?.getPlatform() === 'ios') {
+                          App.exitApp();
+                        } else {
+                          // For Android and others, try a universal approach
+                          const appInfoPromise = App.getInfo();
+                          appInfoPromise.then((appInfo) => {
+                            console.log('App info:', appInfo);
+                            // This is a fallback approach as direct settings URLs may not work on all devices
+                            window.location.href = 'app-settings:';
+                          });
+                        }
+                      } catch (e) {
+                        console.error('Could not open settings URL:', e);
                       }
-                    } catch (e) {
-                      console.error('Could not open settings URL:', e);
-                    }
-                  }}
-                >
-                  إعدادات
-                </ToastAction>
+                    }}
+                  >
+                    إعدادات
+                  </ToastAction>
+                )
               });
               return false;
             }
