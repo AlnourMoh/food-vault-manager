@@ -12,6 +12,7 @@ const InventoryContent = () => {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [hasError, setHasError] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string>('');
+  const [showNetworkError, setShowNetworkError] = useState(false);
   const { forceReconnect } = useServerConnection();
   
   const {
@@ -25,6 +26,23 @@ const InventoryContent = () => {
   } = useInventory();
 
   const { data: products, isLoading, error, refetch } = useMobileProducts(retryAttempt);
+
+  // Delay showing error to prevent flickering
+  useEffect(() => {
+    let timeoutId: number | undefined;
+    
+    if (hasError) {
+      timeoutId = window.setTimeout(() => {
+        setShowNetworkError(true);
+      }, 1000);
+    } else {
+      setShowNetworkError(false);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [hasError]);
 
   useEffect(() => {
     if (products) {
@@ -70,7 +88,7 @@ const InventoryContent = () => {
     }
   };
 
-  if (hasError) {
+  if (showNetworkError) {
     return (
       <NetworkErrorView 
         onRetry={handleRetry} 

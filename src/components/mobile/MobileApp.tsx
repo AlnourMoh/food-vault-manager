@@ -32,6 +32,7 @@ const MobileApp = () => {
     isConnectedToServer, 
     serverCheckDone, 
     errorInfo,
+    isChecking,
     checkServerConnection,
     forceReconnect
   } = useServerConnection();
@@ -39,6 +40,30 @@ const MobileApp = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
+  
+  // Add state to prevent flickering of error screen
+  const [showErrorScreen, setShowErrorScreen] = useState(false);
+
+  useEffect(() => {
+    // Handle connection state changes with a delay to prevent flickering
+    let timeoutId: number | undefined;
+    
+    if (!isOnline || (!isConnectedToServer && serverCheckDone)) {
+      // Set a delay before showing the error screen
+      timeoutId = window.setTimeout(() => {
+        setShowErrorScreen(true);
+      }, 1000);
+    } else if (isOnline && isConnectedToServer && serverCheckDone) {
+      // Set a delay before hiding the error screen
+      timeoutId = window.setTimeout(() => {
+        setShowErrorScreen(false);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isOnline, isConnectedToServer, serverCheckDone]);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -49,8 +74,11 @@ const MobileApp = () => {
       } catch (error) {
         console.error('Error during connection check:', error);
       } finally {
-        setIsInitialLoading(false);
-        setInitialCheckDone(true);
+        // Set a delay before removing the initial loading state
+        setTimeout(() => {
+          setIsInitialLoading(false);
+          setInitialCheckDone(true);
+        }, 1500);
       }
     };
 
@@ -81,7 +109,10 @@ const MobileApp = () => {
     const handleOnlineStatusChange = () => {
       if (navigator.onLine) {
         console.log('Device came online, checking server connection');
-        checkServerConnection();
+        // Add a small delay before checking connection
+        setTimeout(() => {
+          checkServerConnection();
+        }, 1000);
       }
     };
     
@@ -127,7 +158,7 @@ const MobileApp = () => {
   }
   
   // Show network error view only after we've checked and if there are actual connection issues
-  if (initialCheckDone && (!isOnline || (!isConnectedToServer && serverCheckDone))) {
+  if (initialCheckDone && showErrorScreen) {
     return (
       <NetworkErrorView 
         onRetry={handleRetry} 

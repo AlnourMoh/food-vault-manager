@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import RetryControls from './network/RetryControls';
@@ -19,25 +18,40 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
+  const [lastRetryTime, setLastRetryTime] = useState(0);
 
   useEffect(() => {
     if (autoRetryEnabled && retryCount < 5) {
+      const now = Date.now();
+      
+      // Don't retry too frequently
+      if (now - lastRetryTime < 5000 && lastRetryTime !== 0) {
+        return;
+      }
+      
+      const backoffTime = Math.min(5000 + (retryCount * 5000), 30000); // Exponential backoff
+      console.log(`Scheduling auto retry attempt ${retryCount + 1} in ${backoffTime}ms`);
+      
       const timer = setTimeout(() => {
         console.log(`Auto retry attempt ${retryCount + 1}`);
         handleRetry();
         setRetryCount(prev => prev + 1);
-      }, Math.min(5000 + (retryCount * 5000), 30000)); // Exponential backoff
+        setLastRetryTime(Date.now());
+      }, backoffTime);
       
       return () => clearTimeout(timer);
     }
-  }, [retryCount, autoRetryEnabled]);
+  }, [retryCount, autoRetryEnabled, lastRetryTime]);
 
   useEffect(() => {
     const checkNetworkStatus = () => {
       gatherNetworkInfo();
       
-      if (navigator.onLine && autoRetryEnabled && onRetry && retryCount < 3) {
+      const now = Date.now();
+      if (navigator.onLine && autoRetryEnabled && onRetry && retryCount < 3 && 
+          (now - lastRetryTime > 10000 || lastRetryTime === 0)) {
         handleRetry();
+        setLastRetryTime(now);
       }
     };
     
@@ -75,6 +89,11 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   };
 
   const handleRetry = () => {
+    if (isChecking) {
+      console.log('Already checking, ignoring retry request');
+      return;
+    }
+    
     setIsChecking(true);
     setProgress(0);
     console.log('NetworkErrorView: Checking connection...');
@@ -89,10 +108,9 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          setIsChecking(false);
           return 100;
         }
-        return prev + 4;
+        return prev + 2; // Slow down the progress a bit
       });
     }, 100);
 
@@ -101,7 +119,15 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     if (onRetry) {
       setTimeout(() => {
         onRetry();
+        // Keep checking state for a bit longer to avoid UI flicker
+        setTimeout(() => {
+          setIsChecking(false);
+        }, 1000);
       }, 500);
+    } else {
+      setTimeout(() => {
+        setIsChecking(false);
+      }, 2000);
     }
   };
 
@@ -121,6 +147,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       description: "يرجى الانتظار...",
     });
     
+    // Keep key authentication data
     const restaurantId = localStorage.getItem('restaurantId');
     const isRestaurantLogin = localStorage.getItem('isRestaurantLogin');
     const userEmail = localStorage.getItem('userEmail');
@@ -128,11 +155,13 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     
     localStorage.clear();
     
+    // Restore key authentication data
     if (restaurantId) localStorage.setItem('restaurantId', restaurantId);
     if (isRestaurantLogin) localStorage.setItem('isRestaurantLogin', isRestaurantLogin);
     if (userEmail) localStorage.setItem('userEmail', userEmail);
     if (userName) localStorage.setItem('userName', userName);
     
+    // Clear service worker registrations
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         for (const registration of registrations) {
@@ -141,6 +170,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       });
     }
     
+    // Clear cache storage
     if ('caches' in window) {
       caches.keys().then(names => {
         names.forEach(name => {
@@ -149,9 +179,10 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       });
     }
     
+    // A longer delay to ensure cache clearing completes
     setTimeout(() => {
       window.location.href = window.location.href.split('#')[0];
-    }, 1000);
+    }, 2000);
   };
 
   return (

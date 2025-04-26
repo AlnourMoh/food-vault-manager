@@ -22,16 +22,20 @@ const RetryControls = ({
   if (isChecking) {
     return (
       <div className="w-full space-y-2">
-        <Progress value={progress} className="w-full" />
-        <p className="text-sm text-muted-foreground">جارٍ التحقق من الاتصال...</p>
+        <Progress value={progress} className="w-full h-2 bg-gray-200" />
+        <p className="text-sm text-muted-foreground animate-pulse">جارٍ التحقق من الاتصال...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      <Button onClick={onRetry} className="w-full" size="lg">
-        <RefreshCcw className="w-4 h-4 ml-2" />
+      <Button 
+        onClick={onRetry} 
+        className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70" 
+        size="lg"
+      >
+        <RefreshCcw className="w-4 h-4 ml-2 animate-spin-slow" />
         إعادة المحاولة
       </Button>
       

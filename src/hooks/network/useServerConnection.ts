@@ -7,8 +7,19 @@ export const useServerConnection = () => {
   const [isConnectedToServer, setIsConnectedToServer] = useState(true);
   const [serverCheckDone, setServerCheckDone] = useState(false);
   const [errorInfo, setErrorInfo] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState(0);
 
   const checkServerConnection = async () => {
+    // Don't check too frequently (at most once every 5 seconds)
+    const now = Date.now();
+    if (now - lastCheckTime < 5000 && lastCheckTime !== 0) {
+      console.log('Skipping server check - too soon since last check');
+      return;
+    }
+    
+    setLastCheckTime(now);
+    
     if (!navigator.onLine) {
       console.log('Device is offline, skipping server connection check');
       setIsConnectedToServer(false);
@@ -16,10 +27,17 @@ export const useServerConnection = () => {
       return;
     }
     
+    if (isChecking) {
+      console.log('Already checking connection, skipping duplicate check');
+      return;
+    }
+    
+    setIsChecking(true);
     console.log('Checking server connection...');
+    
     try {
       // Set up a timeout for the request
-      const timeoutDuration = 5000; // 5 seconds
+      const timeoutDuration = 8000; // 8 seconds
       
       const startTime = Date.now();
       
@@ -28,7 +46,7 @@ export const useServerConnection = () => {
         supabase.from('companies').select('count', { count: 'exact', head: true }),
         new Promise<never>((_, reject) => {
           setTimeout(() => {
-            reject(new Error('Request timed out after 5 seconds'));
+            reject(new Error('Request timed out after 8 seconds'));
           }, timeoutDuration);
         })
       ]);
@@ -52,21 +70,29 @@ export const useServerConnection = () => {
       setErrorInfo(`استثناء أثناء الاتصال: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
       setIsConnectedToServer(false);
     } finally {
+      setIsChecking(false);
       setServerCheckDone(true);
     }
   };
   
   // Add a new retry function that returns true if connection is successful
   const retryServerConnection = useCallback(async (): Promise<boolean> => {
+    if (isChecking) {
+      console.log('Already checking connection, skipping retry');
+      return false;
+    }
+    
     if (!navigator.onLine) {
       console.log('Device is offline, cannot retry connection');
       return false;
     }
     
+    setIsChecking(true);
     console.log('Retrying server connection...');
+    
     try {
       // Set up a timeout for the request
-      const timeoutDuration = 5000; // 5 seconds
+      const timeoutDuration = 8000; // 8 seconds
       
       // Use a simple and fast query to check connection
       const startTime = Date.now();
@@ -76,7 +102,7 @@ export const useServerConnection = () => {
         supabase.from('companies').select('count', { count: 'exact', head: true }).limit(1),
         new Promise<never>((_, reject) => {
           setTimeout(() => {
-            reject(new Error('Request timed out after 5 seconds'));
+            reject(new Error('Request timed out after 8 seconds'));
           }, timeoutDuration);
         })
       ]);
@@ -102,9 +128,11 @@ export const useServerConnection = () => {
       setIsConnectedToServer(false);
       return false;
     } finally {
+      setIsChecking(false);
       setServerCheckDone(true);
+      setLastCheckTime(Date.now());
     }
-  }, []);
+  }, [isChecking]);
 
   // Add the forceReconnect method that's being used in MobileApp and MobileInventory
   const forceReconnect = useCallback(async (): Promise<boolean> => {
@@ -116,8 +144,9 @@ export const useServerConnection = () => {
     isConnectedToServer,
     serverCheckDone,
     errorInfo,
+    isChecking,
     checkServerConnection,
     retryServerConnection,
-    forceReconnect // Include the new method in the return object
+    forceReconnect
   };
 };
