@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 interface UseNetworkRetryProps {
@@ -9,6 +10,32 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
   const [isChecking, setIsChecking] = useState(false);
   const [progress, setProgress] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastRetryTime, setLastRetryTime] = useState(0);
+
+  // Auto retry mechanism
+  useEffect(() => {
+    let retryTimer: number | undefined;
+    
+    if (autoRetryEnabled && !isChecking && navigator.onLine) {
+      // Calculate delay based on retry count (exponential backoff)
+      const now = Date.now();
+      const timeSinceLastRetry = now - lastRetryTime;
+      const minRetryInterval = Math.min(30000, 5000 * Math.pow(1.5, retryCount)); // Max 30 seconds
+      
+      if (lastRetryTime === 0 || timeSinceLastRetry > minRetryInterval) {
+        // Auto retry after calculated delay
+        retryTimer = window.setTimeout(() => {
+          console.log(`Auto retry attempt #${retryCount + 1}`);
+          handleRetry();
+        }, 5000); // Initial delay of 5 seconds for first retry
+      }
+    }
+    
+    return () => {
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [autoRetryEnabled, isChecking, retryCount, lastRetryTime]);
 
   const handleRetry = () => {
     if (isChecking) {
@@ -18,6 +45,9 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
     
     setIsChecking(true);
     setProgress(0);
+    setRetryCount(prev => prev + 1);
+    setLastRetryTime(Date.now());
+    
     console.log('NetworkErrorView: Checking connection...');
     console.log('NetworkErrorView: Current online status:', navigator.onLine);
     
@@ -46,6 +76,20 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
     } else {
       setTimeout(() => {
         setIsChecking(false);
+        
+        // Provide user feedback based on online status
+        if (navigator.onLine) {
+          toast({
+            title: "تم التحقق من الاتصال",
+            description: "أنت متصل بالإنترنت ولكن قد لا يزال هناك مشكلة في الاتصال بالخادم"
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "فشل الاتصال",
+            description: "تأكد من اتصالك بالإنترنت أو بشبكة WiFi"
+          });
+        }
       }, 2500);
     }
   };
@@ -109,6 +153,7 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
     progress,
     autoRetryEnabled,
     setAutoRetryEnabled,
+    retryCount,
     handleRetry,
     handleForceReload,
     handleClearCache

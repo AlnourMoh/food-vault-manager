@@ -20,6 +20,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     progress,
     autoRetryEnabled,
     setAutoRetryEnabled,
+    retryCount,
     handleRetry,
     handleForceReload,
     handleClearCache
@@ -39,6 +40,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
           onRetry={handleRetry}
           autoRetryEnabled={autoRetryEnabled}
           setAutoRetryEnabled={setAutoRetryEnabled}
+          retryCount={retryCount}
         />
         
         <CacheControls
@@ -46,13 +48,13 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
           onClearCache={handleClearCache}
         />
         
+        <TroubleshootingSteps />
+        
         <NetworkInfo 
           networkInfo={networkInfo}
           showDebugInfo={showDebugInfo}
           setShowDebugInfo={setShowDebugInfo}
         />
-        
-        <TroubleshootingSteps />
       </div>
     </div>
   );
