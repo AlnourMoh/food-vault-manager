@@ -20,6 +20,7 @@ interface ScannerContainerProps {
   handleManualEntry: () => void;
   handleManualCancel: () => void;
   handleRequestPermission: () => void;
+  handleRetry: () => void; // Added this missing prop
 }
 
 export const ScannerContainer: React.FC<ScannerContainerProps> = ({
@@ -35,7 +36,8 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   stopScan,
   handleManualEntry,
   handleManualCancel,
-  handleRequestPermission
+  handleRequestPermission,
+  handleRetry // Added this prop parameter
 }) => {
   if (isManualEntry) {
     return (
