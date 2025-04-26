@@ -52,15 +52,17 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
                 action: {
-                  label: "إعدادات",
+                  // Fix: Remove 'label' property and use children instead
                   onClick: async () => {
                     // Try to direct user to app settings if possible
                     try {
-                      await App.openUrl("app-settings:");
+                      // Fix: Use the proper method to open app settings
+                      await App.openUrl({ url: "app-settings:" });
                     } catch (e) {
                       console.error('Could not open settings URL:', e);
                     }
-                  }
+                  },
+                  children: "إعدادات",
                 }
               });
               return false;
