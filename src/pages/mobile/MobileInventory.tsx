@@ -96,16 +96,18 @@ const MobileInventory = () => {
     },
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
-    onSuccess: () => {
-      // On successful fetch after error
-      if (hasError) {
-        toast({
-          title: "تم استرجاع البيانات بنجاح",
-          description: "تم تحميل بيانات المخزون بنجاح",
-        });
-      }
-    }
   });
+
+  // Handle successful data fetching after previous error
+  useEffect(() => {
+    if (products && hasError) {
+      toast({
+        title: "تم استرجاع البيانات بنجاح",
+        description: "تم تحميل بيانات المخزون بنجاح",
+      });
+      setHasError(false);
+    }
+  }, [products, hasError]);
 
   const categories = useMemo(() => {
     if (!products) return [];

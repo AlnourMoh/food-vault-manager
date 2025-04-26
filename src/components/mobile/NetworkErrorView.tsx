@@ -10,6 +10,15 @@ interface NetworkErrorViewProps {
   additionalInfo?: string;
 }
 
+// Type declaration for Navigator with NetworkInformation
+interface NetworkInformation {
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+  saveData?: boolean;
+  type?: string;
+}
+
 const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additionalInfo }) => {
   const [isChecking, setIsChecking] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -67,8 +76,10 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     const info = [];
     info.push(`متصل بالإنترنت: ${navigator.onLine ? 'نعم' : 'لا'}`);
     
-    if (navigator.connection) {
-      const conn = navigator.connection as any;
+    // Safely access connection information if available
+    const nav = navigator as any;
+    if (nav.connection) {
+      const conn = nav.connection as NetworkInformation;
       if (conn.effectiveType) info.push(`نوع الاتصال: ${conn.effectiveType}`);
       if (conn.downlink) info.push(`سرعة التنزيل: ${conn.downlink} Mbps`);
       if (conn.rtt) info.push(`زمن الاستجابة: ${conn.rtt} ms`);
