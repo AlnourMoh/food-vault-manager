@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
