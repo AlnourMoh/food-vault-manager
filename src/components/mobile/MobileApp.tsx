@@ -2,12 +2,10 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
-import MobileHome from '@/pages/mobile/MobileHome';
 import ProductScan from '@/pages/mobile/ProductScan';
 import ProductManagement from '@/pages/mobile/ProductManagement';
 import MobileAccount from '@/pages/mobile/MobileAccount';
 import RestaurantLogin from '@/pages/RestaurantLogin';
-import NetworkErrorView from '@/components/mobile/NetworkErrorView';
 import MobileInventory from '@/pages/mobile/MobileInventory';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { InitialLoading } from './common/InitialLoading';
@@ -70,13 +68,8 @@ const MobileApp = () => {
   }
   
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
-  if (showErrorScreen && !isRestaurantLoggedIn) {
-    return (
-      <NetworkErrorView 
-        onRetry={handleRetry} 
-        additionalInfo={errorInfo} 
-      />
-    );
+  if (!isRestaurantLoggedIn && showErrorScreen) {
+    return <Navigate to="/mobile/login" replace />;
   }
   
   return (
