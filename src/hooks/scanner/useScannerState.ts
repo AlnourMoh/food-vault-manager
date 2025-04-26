@@ -5,9 +5,6 @@ import { useScannerDevice } from './useScannerDevice';
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { App } from '@capacitor/app';
-import { Button } from '@/components/ui/button';
-import React from 'react';
-import { ToastAction } from '@/components/ui/toast';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -54,32 +51,28 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 title: "إذن الكاميرا مطلوب",
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
-                action: (
-                  <ToastAction 
-                    altText="إعدادات"
-                    onClick={() => {
-                      // Try to direct user to app settings if possible
-                      try {
-                        // Fix: Use the correct method to open app settings URL
-                        if (window.Capacitor?.getPlatform() === 'ios') {
-                          App.exitApp();
-                        } else {
-                          // For Android and others, try a universal approach
-                          const appInfoPromise = App.getInfo();
-                          appInfoPromise.then((appInfo) => {
-                            console.log('App info:', appInfo);
-                            // This is a fallback approach as direct settings URLs may not work on all devices
-                            window.location.href = 'app-settings:';
-                          });
-                        }
-                      } catch (e) {
-                        console.error('Could not open settings URL:', e);
+                action: {
+                  label: "إعدادات",
+                  altText: "إعدادات",
+                  onClick: () => {
+                    // Try to direct user to app settings if possible
+                    try {
+                      // Fix: Use the correct method to open app settings URL
+                      if (window.Capacitor?.getPlatform() === 'ios') {
+                        App.exitApp();
+                      } else {
+                        // For Android and others, try a universal approach
+                        App.getInfo().then((appInfo) => {
+                          console.log('App info:', appInfo);
+                          // This is a fallback approach as direct settings URLs may not work on all devices
+                          window.location.href = 'app-settings:';
+                        });
                       }
-                    }}
-                  >
-                    إعدادات
-                  </ToastAction>
-                )
+                    } catch (e) {
+                      console.error('Could not open settings URL:', e);
+                    }
+                  }
+                }
               });
               return false;
             }
