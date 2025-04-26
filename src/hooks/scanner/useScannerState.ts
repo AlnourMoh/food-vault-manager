@@ -52,7 +52,6 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
                 action: {
-                  altText: "إعدادات",
                   onClick: () => {
                     // Try to direct user to app settings if possible
                     try {
