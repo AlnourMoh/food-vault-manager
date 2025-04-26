@@ -5,15 +5,9 @@ export const useTorchControl = () => {
   const enableTorch = async () => {
     if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
       try {
-        // Check if torch is available
-        const torchAvailable = await BarcodeScanner.checkTorch();
-        
-        if (torchAvailable.available) {
-          console.log('[useTorchControl] تشغيل الفلاش');
-          await BarcodeScanner.toggleTorch();
-        } else {
-          console.log('[useTorchControl] الفلاش غير متوفر على هذا الجهاز');
-        }
+        console.log('[useTorchControl] تشغيل الفلاش');
+        // المكتبة الجديدة تستخدم toggleTorch مباشرة بدون فحص
+        await BarcodeScanner.toggleTorch();
       } catch (error) {
         console.error('[useTorchControl] خطأ في تشغيل الفلاش:', error);
       }
@@ -23,8 +17,8 @@ export const useTorchControl = () => {
   const disableTorch = async () => {
     if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
       try {
-        // Check if torch is on first (not directly supported in this API, but we'll toggle anyway)
         console.log('[useTorchControl] إيقاف الفلاش');
+        // نستخدم toggleTorch مرة أخرى لإيقاف الفلاش
         await BarcodeScanner.toggleTorch();
       } catch (error) {
         console.error('[useTorchControl] خطأ في إيقاف الفلاش:', error);
