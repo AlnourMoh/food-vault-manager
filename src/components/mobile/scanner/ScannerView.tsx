@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { ScannerControls } from './components/ScannerControls';
 import { ScannerFrame } from './components/ScannerFrame';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
@@ -39,10 +38,19 @@ export const ScannerView = ({
             document.body.classList.add('scanner-transparent-background');
             document.body.style.background = 'transparent';
             
-            // Ensure the BarcodeScanner is ready
+            // Check if BarcodeScanner plugin is available before calling
             if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-              console.log("Preparing BarcodeScanner...");
-              BarcodeScanner.prepare();
+              try {
+                console.log("Preparing BarcodeScanner...");
+                // Dynamically import to avoid errors in web environment
+                import('@capacitor-community/barcode-scanner').then(({ BarcodeScanner }) => {
+                  BarcodeScanner.prepare();
+                }).catch(err => {
+                  console.error('Error loading BarcodeScanner:', err);
+                });
+              } catch (e) {
+                console.error('Error preparing BarcodeScanner:', e);
+              }
             }
           }, 100);
         } catch (e) {
@@ -64,8 +72,12 @@ export const ScannerView = ({
         
         // Clean up the BarcodeScanner
         if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-          console.log("Cleaning up BarcodeScanner...");
-          BarcodeScanner.hideBackground();
+          import('@capacitor-community/barcode-scanner').then(({ BarcodeScanner }) => {
+            BarcodeScanner.showBackground().catch(e => console.error('Error showing background:', e));
+            BarcodeScanner.stopScan().catch(e => console.error('Error stopping scan:', e));
+          }).catch(err => {
+            console.error('Error loading BarcodeScanner for cleanup:', err);
+          });
         }
       } catch (e) {
         console.error('Error restoring UI on unmount:', e);
@@ -78,8 +90,12 @@ export const ScannerView = ({
     
     try {
       console.log(`Toggling flashlight`);
-      await BarcodeScanner.toggleTorch();
-      flashOn.current = !flashOn.current;
+      import('@capacitor-community/barcode-scanner').then(({ BarcodeScanner }) => {
+        BarcodeScanner.toggleTorch();
+        flashOn.current = !flashOn.current;
+      }).catch(err => {
+        console.error('Error loading BarcodeScanner for flashlight:', err);
+      });
     } catch (error) {
       console.error('Error toggling flashlight:', error);
     }

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
+import { useToast } from '@/hooks/use-toast';
 
 interface UseScannerControlsProps {
   onScan: (code: string) => void;
@@ -11,6 +12,7 @@ interface UseScannerControlsProps {
 export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps) => {
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
+  const { toast } = useToast();
   
   const {
     isLoading,
@@ -33,19 +35,30 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     if (!isLoading && hasPermission === true && !hasScannerError && !isScanningActive && !isManualEntry) {
       console.log('[useScannerControls] بدء المسح تلقائيًا بعد التحقق من الأذونات');
       const timeout = setTimeout(() => {
-        startScan().catch(error => {
-          console.error('[useScannerControls] خطأ في بدء المسح التلقائي:', error);
-          setHasScannerError(true);
-        });
+        try {
+          startScan().catch(error => {
+            console.error('[useScannerControls] خطأ في بدء المسح التلقائي:', error);
+            toast({
+              title: "تعذر استخدام الكاميرا",
+              description: "سيتم تفعيل وضع الإدخال اليدوي",
+              variant: "default"
+            });
+            handleManualEntry();
+          });
+        } catch (error) {
+          console.error('[useScannerControls] استثناء غير متوقع:', error);
+          handleManualEntry();
+        }
       }, 500);
       
       return () => clearTimeout(timeout);
     }
-  }, [isLoading, hasPermission, hasScannerError, isScanningActive]);
+  }, [isLoading, hasPermission, hasScannerError, isScanningActive, isManualEntry]);
 
   const handleManualEntry = () => {
     console.log('[Scanner] التحويل إلى إدخال الكود يدويًا');
     stopScan();
+    setIsManualEntry(true);
     startMockScan(onScan);
   };
 
@@ -63,6 +76,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
       startScan().catch(error => {
         console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
         setHasScannerError(true);
+        handleManualEntry();
       });
     }, 500);
   };

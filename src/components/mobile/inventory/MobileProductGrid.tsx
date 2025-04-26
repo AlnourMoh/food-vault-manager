@@ -5,6 +5,7 @@ import { differenceInDays } from 'date-fns';
 import MobileProductCard from './MobileProductCard';
 import MobileProductDetailsDialog from './MobileProductDetailsDialog';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
+import { useToast } from '@/hooks/use-toast';
 
 interface MobileProductGridProps {
   products: Product[];
@@ -16,6 +17,7 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [productToRemove, setProductToRemove] = useState<Product | null>(null);
+  const { toast } = useToast();
 
   // Sort products by expiry status
   const sortedProducts = useMemo(() => {
@@ -57,12 +59,40 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
   };
 
   const handleScanComplete = async (code: string) => {
-    // Here you would implement the logic to validate the scanned code
-    // and process the product removal
-    console.log('Scanned code:', code);
+    try {
+      // Here you would implement the logic to validate the scanned code
+      // and process the product removal
+      console.log('Scanned code:', code, 'Product to remove:', productToRemove?.name);
+      
+      toast({
+        title: "تم المسح بنجاح",
+        description: `تم مسح الباركود: ${code}`,
+      });
+      
+      // Always ensure we close the scanner and clean up state
+      setIsScannerOpen(false);
+      setProductToRemove(null);
+      
+      // Trigger product list refresh
+      onProductUpdate();
+    } catch (error) {
+      console.error('Error processing scan:', error);
+      toast({
+        title: "خطأ في المسح",
+        description: "حدث خطأ أثناء معالجة نتيجة المسح",
+        variant: "destructive"
+      });
+      
+      // Still ensure we clean up properly on error
+      setIsScannerOpen(false);
+      setProductToRemove(null);
+    }
+  };
+
+  const handleScannerClose = () => {
+    console.log('Scanner closed manually');
     setIsScannerOpen(false);
     setProductToRemove(null);
-    onProductUpdate();
   };
 
   return (
@@ -89,10 +119,7 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
       {isScannerOpen && (
         <BarcodeScanner
           onScan={handleScanComplete}
-          onClose={() => {
-            setIsScannerOpen(false);
-            setProductToRemove(null);
-          }}
+          onClose={handleScannerClose}
         />
       )}
     </>

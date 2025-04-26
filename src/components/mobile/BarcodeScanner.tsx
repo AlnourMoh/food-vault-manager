@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useScannerInitialization } from './scanner/hooks/useScannerInitialization';
 import { useScannerControls } from './scanner/hooks/useScannerControls';
 import { ScannerContainer } from './scanner/ScannerContainer';
-import { DigitalCodeInput } from './scanner/DigitalCodeInput';
+import { useToast } from '@/hooks/use-toast';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -12,6 +12,8 @@ interface BarcodeScannerProps {
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const { isInitializing } = useScannerInitialization();
+  const { toast } = useToast();
+  
   const {
     isManualEntry,
     hasScannerError,
@@ -32,34 +34,45 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   useEffect(() => {
     console.log('[BarcodeScanner] المكون تم تحميله، بدء المسح تلقائياً');
     
+    let scanTimeout: number;
+    
     // Wait for initialization to complete
     if (!isInitializing && !isScanningActive && !isManualEntry && !isMockScanActive) {
       console.log('[BarcodeScanner] بدء المسح تلقائياً بعد تحميل المكون');
-      startScan();
+      
+      // Small delay to ensure UI is ready
+      scanTimeout = window.setTimeout(() => {
+        try {
+          startScan().catch(error => {
+            console.error('[BarcodeScanner] خطأ في بدء المسح التلقائي:', error);
+            toast({
+              title: "خطأ في تهيئة الماسح",
+              description: "سيتم محاولة استخدام وضع الإدخال اليدوي",
+              variant: "default"
+            });
+            handleManualEntry();
+          });
+        } catch (error) {
+          console.error('[BarcodeScanner] استثناء غير متوقع عند بدء المسح:', error);
+          handleManualEntry();
+        }
+      }, 500);
     }
     
     // Cleanup when component unmounts
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون');
+      window.clearTimeout(scanTimeout);
       document.body.style.background = '';
       document.body.classList.remove('barcode-scanner-active');
       document.body.classList.remove('scanner-transparent-background');
+      stopScan();
     };
-  }, [isInitializing, isScanningActive]);
+  }, [isInitializing, isScanningActive, isManualEntry, isMockScanActive]);
   
   // لا نعرض شيئًا أثناء التهيئة
   if (isInitializing) {
     return null;
-  }
-
-  // Show manual input interface when mock scanning is active
-  if (isMockScanActive) {
-    return (
-      <DigitalCodeInput 
-        onSubmit={handleManualInput}
-        onCancel={handleManualCancel}
-      />
-    );
   }
 
   return (
