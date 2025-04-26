@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
@@ -11,16 +10,29 @@ import MobileInventory from '@/pages/mobile/MobileInventory';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 
 const MobileApp = () => {
+  const [lastBackPress, setLastBackPress] = useState<number>(0);
+  const DOUBLE_PRESS_DELAY = 300; // 300ms window for double press
+
   useEffect(() => {
     const setupCapacitor = async () => {
       if (window.Capacitor) {
         console.log('Capacitor is available, setting up listeners');
         CapacitorApp.addListener('backButton', ({ canGoBack }) => {
           console.log('Back button pressed, canGoBack:', canGoBack);
+          
+          const currentTime = Date.now();
+          
           if (canGoBack) {
             window.history.back();
           } else {
-            CapacitorApp.exitApp();
+            // Check if this is a double press
+            if (currentTime - lastBackPress <= DOUBLE_PRESS_DELAY) {
+              // Double press detected - minimize the app
+              CapacitorApp.minimizeApp();
+            } else {
+              // First press - update timestamp
+              setLastBackPress(currentTime);
+            }
           }
         });
       }
@@ -33,7 +45,7 @@ const MobileApp = () => {
         CapacitorApp.removeAllListeners();
       }
     };
-  }, []);
+  }, [lastBackPress]);
 
   // Check authentication status
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
