@@ -32,11 +32,11 @@ const RetryControls = ({
     <div className="space-y-3">
       <Button 
         onClick={onRetry} 
-        className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70" 
+        className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
         size="lg"
       >
         <RefreshCcw className="w-4 h-4 ml-2 animate-spin-slow" />
-        إعادة المحاولة
+        إعادة المحاولة الآن
       </Button>
       
       <div className="flex items-center justify-center mt-2">

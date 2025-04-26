@@ -13,6 +13,7 @@ const InventoryContent = () => {
   const [hasError, setHasError] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string>('');
   const [showNetworkError, setShowNetworkError] = useState(false);
+  const [errorTransitionActive, setErrorTransitionActive] = useState(false);
   const { forceReconnect } = useServerConnection();
   
   const {
@@ -32,11 +33,16 @@ const InventoryContent = () => {
     let timeoutId: number | undefined;
     
     if (hasError) {
+      setErrorTransitionActive(true);
       timeoutId = window.setTimeout(() => {
         setShowNetworkError(true);
-      }, 1000);
+      }, 1500);
     } else {
       setShowNetworkError(false);
+      // Add additional delay before allowing transitions again
+      setTimeout(() => {
+        setErrorTransitionActive(false);
+      }, 1000);
     }
     
     return () => {
@@ -73,18 +79,21 @@ const InventoryContent = () => {
       description: "جاري تحميل بيانات المخزون مرة أخرى",
     });
     
-    const serverConnected = await forceReconnect();
-    
-    if (serverConnected) {
-      setRetryAttempt(prev => prev + 1);
-      setHasError(false);
-      refetch();
-    } else {
-      toast({
-        title: "فشل الاتصال بالخادم",
-        description: "تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
-        variant: "destructive"
-      });
+    // Prevent multiple rapid reconnections
+    if (!errorTransitionActive) {
+      const serverConnected = await forceReconnect();
+      
+      if (serverConnected) {
+        setRetryAttempt(prev => prev + 1);
+        setHasError(false);
+        refetch();
+      } else {
+        toast({
+          title: "فشل الاتصال بالخادم",
+          description: "تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
+          variant: "destructive"
+        });
+      }
     }
   };
 

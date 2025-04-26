@@ -9,8 +9,9 @@ export const useServerConnection = () => {
   const [errorInfo, setErrorInfo] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [lastCheckTime, setLastCheckTime] = useState(0);
+  const [connectionTestInProgress, setConnectionTestInProgress] = useState(false);
 
-  const checkServerConnection = async () => {
+  const checkServerConnection = useCallback(async () => {
     // Don't check too frequently (at most once every 5 seconds)
     const now = Date.now();
     if (now - lastCheckTime < 5000 && lastCheckTime !== 0) {
@@ -27,17 +28,18 @@ export const useServerConnection = () => {
       return;
     }
     
-    if (isChecking) {
+    if (isChecking || connectionTestInProgress) {
       console.log('Already checking connection, skipping duplicate check');
       return;
     }
     
     setIsChecking(true);
+    setConnectionTestInProgress(true);
     console.log('Checking server connection...');
     
     try {
       // Set up a timeout for the request
-      const timeoutDuration = 8000; // 8 seconds
+      const timeoutDuration = 10000; // 10 seconds
       
       const startTime = Date.now();
       
@@ -46,13 +48,16 @@ export const useServerConnection = () => {
         supabase.from('companies').select('count', { count: 'exact', head: true }),
         new Promise<never>((_, reject) => {
           setTimeout(() => {
-            reject(new Error('Request timed out after 8 seconds'));
+            reject(new Error('Request timed out after 10 seconds'));
           }, timeoutDuration);
         })
       ]);
       
       const responseTime = Date.now() - startTime;
       console.log(`Server responded in ${responseTime}ms`);
+      
+      // Wait at least 1.5 seconds to avoid flickering
+      await new Promise(resolve => setTimeout(resolve, Math.max(0, 1500 - responseTime)));
       
       // Handle the response
       if ('error' in result && result.error) {
@@ -72,12 +77,16 @@ export const useServerConnection = () => {
     } finally {
       setIsChecking(false);
       setServerCheckDone(true);
+      // Add a small delay before allowing another connection test
+      setTimeout(() => {
+        setConnectionTestInProgress(false);
+      }, 2000);
     }
-  };
+  }, [isChecking, connectionTestInProgress, lastCheckTime]);
   
   // Add a new retry function that returns true if connection is successful
   const retryServerConnection = useCallback(async (): Promise<boolean> => {
-    if (isChecking) {
+    if (isChecking || connectionTestInProgress) {
       console.log('Already checking connection, skipping retry');
       return false;
     }
@@ -88,11 +97,12 @@ export const useServerConnection = () => {
     }
     
     setIsChecking(true);
+    setConnectionTestInProgress(true);
     console.log('Retrying server connection...');
     
     try {
       // Set up a timeout for the request
-      const timeoutDuration = 8000; // 8 seconds
+      const timeoutDuration = 10000; // 10 seconds
       
       // Use a simple and fast query to check connection
       const startTime = Date.now();
@@ -102,13 +112,16 @@ export const useServerConnection = () => {
         supabase.from('companies').select('count', { count: 'exact', head: true }).limit(1),
         new Promise<never>((_, reject) => {
           setTimeout(() => {
-            reject(new Error('Request timed out after 8 seconds'));
+            reject(new Error('Request timed out after 10 seconds'));
           }, timeoutDuration);
         })
       ]);
       
       const responseTime = Date.now() - startTime;
       console.log(`Retry response time: ${responseTime}ms`);
+      
+      // Wait at least 1 second to avoid flickering
+      await new Promise(resolve => setTimeout(resolve, Math.max(0, 1000 - responseTime)));
       
       // Handle the response
       if ('error' in result && result.error) {
@@ -131,8 +144,12 @@ export const useServerConnection = () => {
       setIsChecking(false);
       setServerCheckDone(true);
       setLastCheckTime(Date.now());
+      // Add a small delay before allowing another connection test
+      setTimeout(() => {
+        setConnectionTestInProgress(false);
+      }, 2000);
     }
-  }, [isChecking]);
+  }, [isChecking, connectionTestInProgress]);
 
   // Add the forceReconnect method that's being used in MobileApp and MobileInventory
   const forceReconnect = useCallback(async (): Promise<boolean> => {

@@ -41,8 +41,9 @@ const MobileApp = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   
-  // Add state to prevent flickering of error screen
+  // Add state to prevent flickering of error screen with a longer delay
   const [showErrorScreen, setShowErrorScreen] = useState(false);
+  const [errorTransitionActive, setErrorTransitionActive] = useState(false);
 
   useEffect(() => {
     // Handle connection state changes with a delay to prevent flickering
@@ -50,14 +51,19 @@ const MobileApp = () => {
     
     if (!isOnline || (!isConnectedToServer && serverCheckDone)) {
       // Set a delay before showing the error screen
+      setErrorTransitionActive(true);
       timeoutId = window.setTimeout(() => {
         setShowErrorScreen(true);
-      }, 1000);
+      }, 2000); // Increased delay to 2 seconds
     } else if (isOnline && isConnectedToServer && serverCheckDone) {
       // Set a delay before hiding the error screen
       timeoutId = window.setTimeout(() => {
         setShowErrorScreen(false);
-      }, 1000);
+        // Add additional delay before allowing transitions again
+        setTimeout(() => {
+          setErrorTransitionActive(false);
+        }, 1000);
+      }, 1500);
     }
     
     return () => {
@@ -78,7 +84,7 @@ const MobileApp = () => {
         setTimeout(() => {
           setIsInitialLoading(false);
           setInitialCheckDone(true);
-        }, 1500);
+        }, 2000); // Increased to 2 seconds
       }
     };
 
@@ -111,8 +117,10 @@ const MobileApp = () => {
         console.log('Device came online, checking server connection');
         // Add a small delay before checking connection
         setTimeout(() => {
-          checkServerConnection();
-        }, 1000);
+          if (!errorTransitionActive) {
+            checkServerConnection();
+          }
+        }, 1500); // Increased to 1.5 seconds
       }
     };
     
@@ -124,7 +132,7 @@ const MobileApp = () => {
       }
       window.removeEventListener('online', handleOnlineStatusChange);
     };
-  }, [isOnline, retryCount, initialCheckDone, checkServerConnection]);
+  }, [isOnline, retryCount, initialCheckDone, checkServerConnection, errorTransitionActive]);
 
   const handleRetry = async () => {
     setRetryCount(prev => prev + 1);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import RetryControls from './network/RetryControls';
@@ -19,6 +20,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
   const [lastRetryTime, setLastRetryTime] = useState(0);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
 
   useEffect(() => {
     if (autoRetryEnabled && retryCount < 5) {
@@ -29,7 +31,8 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
         return;
       }
       
-      const backoffTime = Math.min(5000 + (retryCount * 5000), 30000); // Exponential backoff
+      // Exponential backoff: 5s, 10s, 20s, 30s, 30s max
+      const backoffTime = Math.min(5000 * Math.pow(2, retryCount), 30000);
       console.log(`Scheduling auto retry attempt ${retryCount + 1} in ${backoffTime}ms`);
       
       const timer = setTimeout(() => {
@@ -37,21 +40,23 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
         handleRetry();
         setRetryCount(prev => prev + 1);
         setLastRetryTime(Date.now());
+        setConnectionAttempts(prev => prev + 1);
       }, backoffTime);
       
       return () => clearTimeout(timer);
     }
-  }, [retryCount, autoRetryEnabled, lastRetryTime]);
+  }, [retryCount, autoRetryEnabled, lastRetryTime, onRetry]);
 
   useEffect(() => {
     const checkNetworkStatus = () => {
       gatherNetworkInfo();
       
       const now = Date.now();
-      if (navigator.onLine && autoRetryEnabled && onRetry && retryCount < 3 && 
-          (now - lastRetryTime > 10000 || lastRetryTime === 0)) {
+      if (navigator.onLine && autoRetryEnabled && onRetry && 
+          connectionAttempts < 3 && (now - lastRetryTime > 15000 || lastRetryTime === 0)) {
         handleRetry();
         setLastRetryTime(now);
+        setConnectionAttempts(prev => prev + 1);
       }
     };
     
@@ -70,7 +75,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     const info = [];
     info.push(`متصل بالإنترنت: ${navigator.onLine ? 'نعم' : 'لا'}`);
     info.push(`وقت الفحص: ${new Date().toLocaleTimeString()}`);
-    info.push(`عدد محاولات إعادة الاتصال: ${retryCount}`);
+    info.push(`عدد محاولات إعادة الاتصال: ${connectionAttempts}`);
     
     if ('connection' in navigator && navigator.connection) {
       const conn = navigator.connection as any;
@@ -110,24 +115,26 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
           clearInterval(interval);
           return 100;
         }
-        return prev + 2; // Slow down the progress a bit
+        // Slow down the progress to match the delays we've added elsewhere
+        return prev + 1.5;
       });
     }, 100);
 
     gatherNetworkInfo();
     
     if (onRetry) {
+      // Introduce a slight delay before triggering retry
       setTimeout(() => {
         onRetry();
         // Keep checking state for a bit longer to avoid UI flicker
         setTimeout(() => {
           setIsChecking(false);
-        }, 1000);
-      }, 500);
+        }, 1500);
+      }, 800);
     } else {
       setTimeout(() => {
         setIsChecking(false);
-      }, 2000);
+      }, 2500);
     }
   };
 
@@ -137,7 +144,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       title: "جاري إعادة تحميل التطبيق",
       description: "يرجى الانتظار...",
     });
-    setTimeout(() => window.location.reload(), 500);
+    setTimeout(() => window.location.reload(), 800);
   };
 
   const clearCacheAndReload = () => {
@@ -182,12 +189,12 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     // A longer delay to ensure cache clearing completes
     setTimeout(() => {
       window.location.href = window.location.href.split('#')[0];
-    }, 2000);
+    }, 2500);
   };
 
   return (
     <div className="rtl min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
-      <div className="space-y-6 max-w-md">
+      <div className="space-y-6 max-w-md animate-fadeIn">
         <ErrorDisplay additionalInfo={additionalInfo} />
         
         <RetryControls
