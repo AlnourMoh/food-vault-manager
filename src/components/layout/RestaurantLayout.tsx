@@ -10,7 +10,8 @@ import {
   Users,
   Home,
   LogOut,
-  ArrowRight
+  ArrowRight,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -27,6 +28,8 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   
   const restaurantId = localStorage.getItem('restaurantId');
+  const userName = localStorage.getItem('userName');
+  const userRole = localStorage.getItem('userRole');
   
   const { restaurantName, isLoading } = useRestaurantData(restaurantId);
 
@@ -62,6 +65,8 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
     localStorage.removeItem('restaurantId');
     localStorage.removeItem('isRestaurantLogin');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
     
     // توجيه المستخدم إلى الصفحة الرئيسية بدلاً من صفحة تسجيل دخول المطعم
     navigate('/');
@@ -81,6 +86,19 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
             نظام إدارة المطعم
           </h2>
         </div>
+        
+        {userName && (
+          <div className="px-4 py-2 bg-sidebar-accent bg-opacity-20">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-sidebar-foreground" />
+              <span className="text-sm font-medium text-sidebar-foreground">{userName}</span>
+            </div>
+            <div className="text-xs text-sidebar-foreground opacity-75 mt-1">
+              {userRole === 'admin' ? 'مدير النظام' : userRole === 'staff' ? 'إدارة المخزن' : 'مستخدم'}
+            </div>
+          </div>
+        )}
+        
         <div className="flex-1 overflow-auto py-2">
           <nav className="grid items-start px-2 gap-1">
             {menuItems.map((item, index) => (

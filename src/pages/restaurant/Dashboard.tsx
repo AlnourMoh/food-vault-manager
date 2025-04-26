@@ -13,7 +13,11 @@ import { supabase } from '@/integrations/supabase/client';
 const Dashboard = () => {
   const { dashboardStats } = getMockData();
   const restaurantId = localStorage.getItem('restaurantId') || undefined;
-  const { restaurantName, email, isLoading } = useRestaurantData(restaurantId);
+  const userEmail = localStorage.getItem('userEmail');
+  const userName = localStorage.getItem('userName');
+  const userRole = localStorage.getItem('userRole');
+  
+  const { restaurantName, isLoading } = useRestaurantData(restaurantId);
   const [passwordResetRequests, setPasswordResetRequests] = useState<{ email: string, id: string }[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
 
@@ -77,6 +81,10 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p>مرحبًا بك في لوحة تحكم مطعمك</p>
+              {userName && (
+                <p className="mt-2">المستخدم: <strong>{userName}</strong> | الدور: <strong>{userRole === 'admin' ? 'مدير النظام' : userRole === 'staff' ? 'إدارة المخزن' : 'مستخدم'}</strong></p>
+              )}
+              {userEmail && <p className="text-muted-foreground text-sm">البريد الإلكتروني: {userEmail}</p>}
             </CardContent>
           </Card>
         )}
