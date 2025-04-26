@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useCameraPermissions } from '../useCameraPermissions';
 import { useScannerDevice } from './useScannerDevice';
@@ -48,24 +47,26 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 title: "إذن الكاميرا مطلوب",
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
-                action: {
-                  altText: "إعدادات",
-                  onClick: () => {
-                    try {
-                      if (window.Capacitor?.getPlatform() === 'ios') {
-                        App.exitApp();
-                      } else {
-                        App.getInfo().then((appInfo) => {
-                          console.log('App info:', appInfo);
-                          window.location.href = 'app-settings:';
-                        });
+                action: (
+                  <ToastAction 
+                    onClick={() => {
+                      try {
+                        if (window.Capacitor?.getPlatform() === 'ios') {
+                          App.exitApp();
+                        } else {
+                          App.getInfo().then((appInfo) => {
+                            console.log('App info:', appInfo);
+                            window.location.href = 'app-settings:';
+                          });
+                        }
+                      } catch (e) {
+                        console.error('Could not open settings URL:', e);
                       }
-                    } catch (e) {
-                      console.error('Could not open settings URL:', e);
-                    }
-                  },
-                  children: "إعدادات"
-                }
+                    }}
+                  >
+                    إعدادات
+                  </ToastAction>
+                )
               });
               return false;
             }
@@ -75,6 +76,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
           }
         }
       }
+      
       
       if (window.Capacitor) {
         try {
