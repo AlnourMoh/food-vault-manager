@@ -10,16 +10,40 @@ declare global {
   }
 }
 
+export enum BarcodeFormat {
+  Aztec = 'AZTEC',
+  Codabar = 'CODABAR',
+  Code39 = 'CODE_39',
+  Code93 = 'CODE_93',
+  Code128 = 'CODE_128',
+  DataMatrix = 'DATA_MATRIX',
+  Ean8 = 'EAN_8',
+  Ean13 = 'EAN_13',
+  ITF = 'ITF',
+  PDF417 = 'PDF_417',
+  QRCode = 'QR_CODE',
+  UPCA = 'UPC_A',
+  UPCE = 'UPC_E',
+}
+
 export interface BarcodeScannerPlugin extends Plugin {
   isSupported(): Promise<{ supported: boolean }>;
   checkPermissions(): Promise<{ camera: PermissionState }>;
   requestPermissions(): Promise<{ camera: PermissionState }>;
   scan(options?: ScanOptions): Promise<ScanResult>;
-  enableTorch(): Promise<void>;
+  enableTorch(options: { enable: boolean }): Promise<void>;
+  startScan(options: StartScanOptions): Promise<void>;
+  stopScan(): Promise<void>;
 }
 
 export interface ScanOptions {
   formats?: string[];
+}
+
+export interface StartScanOptions {
+  formats?: BarcodeFormat[];
+  detectionMode?: 'single' | 'continuous';
+  onScanComplete?: (result: ScanResult) => void;
 }
 
 export interface ScanResult {

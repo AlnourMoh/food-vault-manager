@@ -1,6 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useScannerDevice = () => {
   const { toast } = useToast();
@@ -32,18 +32,19 @@ export const useScannerDevice = () => {
             
             console.log("[useScannerDevice] بدء المسح باستخدام MLKit");
             
-            // Prepare the scanner UI
-            await BarcodeScanner.prepare({
-              detectorSize: { width: 200, height: 200 }
-            });
-            
             // Important: Set background to transparent to see the camera preview
             document.body.classList.add('scanner-transparent-background');
             document.body.style.background = 'transparent';
             
             // Start the camera stream
             await BarcodeScanner.startScan({
-              formats: ['QR_CODE', 'CODE_128', 'EAN_13', 'EAN_8', 'CODE_39'],
+              formats: [
+                BarcodeFormat.QRCode,
+                BarcodeFormat.Code128,
+                BarcodeFormat.Ean13,
+                BarcodeFormat.Ean8,
+                BarcodeFormat.Code39
+              ],
               detectionMode: 'continuous',
               onScanComplete: (result) => {
                 console.log("[useScannerDevice] تم اكتشاف باركود:", result);
@@ -116,7 +117,7 @@ export const useScannerDevice = () => {
             
             // Then try to disable torch
             try {
-              await BarcodeScanner.enableTorch({enable: false});
+              await BarcodeScanner.enableTorch({ enable: false });
             } catch (e) {
               console.log("[useScannerDevice] خطأ في إيقاف الإضاءة:", e);
               // Non-critical error, can continue
