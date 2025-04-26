@@ -22,9 +22,7 @@ const MobileInventoryContent: React.FC<MobileInventoryContentProps> = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-12 space-y-4">
-        <div className="relative h-10 w-10">
-          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
-        </div>
+        <Spinner size="lg" />
         <p className="text-sm text-muted-foreground">جاري تحميل المنتجات...</p>
       </div>
     );
@@ -55,6 +53,7 @@ const MobileInventoryContent: React.FC<MobileInventoryContentProps> = ({
     <div className="px-4 pb-4">
       <MobileProductGrid 
         products={filteredProducts}
+        onProductUpdate={onProductUpdate}
       />
     </div>
   );
