@@ -8,6 +8,7 @@ import MobileInventoryEmpty from '@/components/mobile/inventory/MobileInventoryE
 import MobileProductSkeleton from '@/components/mobile/inventory/MobileProductSkeleton';
 import NetworkErrorView from '@/components/mobile/NetworkErrorView';
 import { Product } from '@/types';
+import { toast } from '@/hooks/use-toast';
 
 interface SupabaseProduct {
   id: string;
@@ -32,25 +33,36 @@ const MobileInventory = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string>('');
+  const [retryAttempt, setRetryAttempt] = useState(0);
   
   const { data: products, isLoading, error, refetch } = useQuery({
-    queryKey: ['mobile-products'],
+    queryKey: ['mobile-products', restaurantId, retryAttempt],
     queryFn: async () => {
       console.log('Fetching products for restaurant ID:', restaurantId);
       if (!restaurantId) {
-        console.error('No restaurant ID found in localStorage');
-        return [];
+        const errorMsg = 'لم يتم العثور على معرف المطعم في الذاكرة المحلية';
+        console.error(errorMsg);
+        setErrorDetails(errorMsg);
+        setHasError(true);
+        throw new Error(errorMsg);
       }
       
       try {
+        console.log('Making API request to Supabase');
+        const startTime = Date.now();
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .eq('company_id', restaurantId)
           .eq('status', 'active');
           
+        const requestTime = Date.now() - startTime;
+        console.log(`API request completed in ${requestTime}ms`);
+          
         if (error) {
           console.error('Error fetching products:', error);
+          setErrorDetails(`خطأ في جلب المنتجات: ${error.message}`);
           setHasError(true);
           throw error;
         }
@@ -77,11 +89,22 @@ const MobileInventory = () => {
         return transformedProducts;
       } catch (error) {
         console.error('Failed to fetch products:', error);
+        setErrorDetails(error instanceof Error ? error.message : 'خطأ غير معروف في جلب البيانات');
         setHasError(true);
         throw error;
       }
     },
-    retry: 1,
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    onSuccess: () => {
+      // On successful fetch after error
+      if (hasError) {
+        toast({
+          title: "تم استرجاع البيانات بنجاح",
+          description: "تم تحميل بيانات المخزون بنجاح",
+        });
+      }
+    }
   });
 
   const categories = useMemo(() => {
@@ -107,13 +130,25 @@ const MobileInventory = () => {
 
   // Handle retry when error occurs
   const handleRetry = () => {
+    console.log('Retrying product fetch');
     setHasError(false);
+    setRetryAttempt(prev => prev + 1);
     refetch();
+    
+    toast({
+      title: "إعادة محاولة تحميل البيانات",
+      description: "جاري تحميل بيانات المخزون مرة أخرى",
+    });
   };
 
   // If there is an error, show network error view
   if (hasError) {
-    return <NetworkErrorView onRetry={handleRetry} />;
+    return (
+      <NetworkErrorView 
+        onRetry={handleRetry} 
+        additionalInfo={`فشل في تحميل بيانات المخزون. ${errorDetails}`}
+      />
+    );
   }
 
   return (

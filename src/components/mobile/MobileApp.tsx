@@ -10,6 +10,8 @@ import MobileAccount from '@/pages/mobile/MobileAccount';
 import RestaurantLogin from '@/pages/RestaurantLogin';
 import NetworkErrorView from '@/components/mobile/NetworkErrorView';
 import MobileInventory from '@/pages/mobile/MobileInventory';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // Auth guard component to protect routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -25,15 +27,31 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const MobileApp = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isConnectedToServer, setIsConnectedToServer] = useState(true);
+  const [serverCheckDone, setServerCheckDone] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [errorInfo, setErrorInfo] = useState('');
 
   useEffect(() => {
     // Listen for network status changes
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      console.log('Network status changed: online');
+      setIsOnline(true);
+      checkServerConnection();
+    };
+    
+    const handleOffline = () => {
+      console.log('Network status changed: offline');
+      setIsOnline(false);
+      setIsConnectedToServer(false);
+      setServerCheckDone(true);
+    };
     
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    
+    // Initial server connection check
+    checkServerConnection();
     
     const setupCapacitor = async () => {
       if (window.Capacitor) {
@@ -63,23 +81,96 @@ const MobileApp = () => {
         CapacitorApp.removeAllListeners();
       }
     };
-  }, []);
+  }, [retryCount]);
+
+  // Function to check if we can connect to Supabase server
+  const checkServerConnection = async () => {
+    if (!navigator.onLine) {
+      console.log('Device is offline, skipping server connection check');
+      setIsConnectedToServer(false);
+      setServerCheckDone(true);
+      return;
+    }
+    
+    console.log('Checking server connection...');
+    try {
+      // Simple health check to Supabase
+      const startTime = Date.now();
+      const { error } = await supabase.from('companies').select('count', { count: 'exact', head: true });
+      const responseTime = Date.now() - startTime;
+      
+      console.log(`Server responded in ${responseTime}ms`);
+      
+      if (error) {
+        console.error('Server connection check failed:', error.message);
+        setErrorInfo(`خطأ في الاتصال بالخادم: ${error.message}`);
+        setIsConnectedToServer(false);
+      } else {
+        console.log('Server connection check passed');
+        setIsConnectedToServer(true);
+        
+        // Show toast on reconnection after failure
+        if (!isConnectedToServer && serverCheckDone) {
+          toast({
+            title: "تم استعادة الاتصال",
+            description: "تم استعادة الاتصال بالخادم بنجاح",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Server connection check failed with exception:', error);
+      setErrorInfo(`استثناء أثناء الاتصال: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+      setIsConnectedToServer(false);
+    } finally {
+      setServerCheckDone(true);
+    }
+  };
 
   const handleRetry = () => {
     // Increase retry count to force re-render
     setRetryCount(prev => prev + 1);
+    
+    // Reset states
+    setServerCheckDone(false);
+    setIsConnectedToServer(true);
+    
     // Check network status again
     setIsOnline(navigator.onLine);
     
-    // Force reload if needed
-    if (navigator.onLine) {
-      window.location.reload();
-    }
+    // Clear error info
+    setErrorInfo('');
+    
+    // Check server connection
+    checkServerConnection();
+    
+    console.log('Retry attempt:', retryCount + 1);
+    
+    toast({
+      title: "محاولة إعادة الاتصال",
+      description: "جاري التحقق من حالة الشبكة والاتصال بالخادم",
+    });
   };
   
-  // Show network error view if device is offline
-  if (!isOnline) {
-    return <NetworkErrorView onRetry={handleRetry} />;
+  // Show loading state while checking server connection
+  if (!serverCheckDone) {
+    return (
+      <div className="rtl min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4">جاري التحقق من الاتصال...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show network error view if device is offline or can't connect to server
+  if (!isOnline || !isConnectedToServer) {
+    return (
+      <NetworkErrorView 
+        onRetry={handleRetry} 
+        additionalInfo={errorInfo} 
+      />
+    );
   }
   
   return (
