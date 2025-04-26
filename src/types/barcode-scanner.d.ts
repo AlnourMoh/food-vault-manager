@@ -37,7 +37,6 @@ export interface BarcodeScannerPlugin extends Plugin {
   disableTorch(): Promise<void>;
   startScan(options?: StartScanOptions): Promise<void>;
   stopScan(): Promise<void>;
-  // Add the missing methods that are causing TypeScript errors
   prepare(): Promise<void>;
   hideBackground(): Promise<void>;
   addListener(eventName: 'barcodesScanned', listenerFunc: (event: BarcodesScannedEvent) => void): Promise<PluginListenerHandle>;
