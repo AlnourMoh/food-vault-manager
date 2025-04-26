@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -11,6 +12,7 @@ import NetworkErrorView from '@/components/mobile/NetworkErrorView';
 import MobileInventory from '@/pages/mobile/MobileInventory';
 import { useNetworkStatus } from '@/hooks/network/useNetworkStatus';
 import { useServerConnection } from '@/hooks/network/useServerConnection';
+import { toast } from '@/hooks/use-toast';
 
 // Auth guard component to protect routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -30,16 +32,22 @@ const MobileApp = () => {
     isConnectedToServer, 
     serverCheckDone, 
     errorInfo,
-    checkServerConnection, 
-    setServerCheckDone,
-    setIsConnectedToServer 
+    checkServerConnection,
+    forceReconnect
   } = useServerConnection();
+  
   const [retryCount, setRetryCount] = useState(0);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
-    if (isOnline) {
-      checkServerConnection();
-    }
+    const checkConnection = async () => {
+      if (isOnline) {
+        await checkServerConnection();
+      }
+      setIsInitialLoading(false);
+    };
+
+    checkConnection();
     
     const setupCapacitor = async () => {
       if (window.Capacitor) {
@@ -59,21 +67,44 @@ const MobileApp = () => {
     
     setupCapacitor();
     
+    // Set up automatic reconnection attempts when online status changes
+    const handleOnlineStatusChange = () => {
+      if (navigator.onLine) {
+        console.log('Device came online, checking server connection');
+        checkServerConnection();
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatusChange);
+    
     return () => {
       if (window.Capacitor) {
         CapacitorApp.removeAllListeners();
       }
+      window.removeEventListener('online', handleOnlineStatusChange);
     };
   }, [isOnline, retryCount]);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setRetryCount(prev => prev + 1);
-    setServerCheckDone(false);
-    setIsConnectedToServer(true);
-    checkServerConnection();
+    
+    toast({
+      title: "إعادة محاولة الاتصال",
+      description: "جاري التحقق من الاتصال بالخادم...",
+    });
+    
+    const success = await forceReconnect();
+    
+    if (success) {
+      toast({
+        title: "تم الاتصال بنجاح",
+        description: "تم استعادة الاتصال بالخادم بنجاح",
+      });
+    }
   };
   
-  if (!serverCheckDone) {
+  // Show loading indicator while making the initial connection check
+  if (isInitialLoading) {
     return (
       <div className="rtl min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -84,7 +115,8 @@ const MobileApp = () => {
     );
   }
   
-  if (!isOnline || !isConnectedToServer) {
+  // Show network error view if connection issues are detected
+  if (!isOnline || (!isConnectedToServer && serverCheckDone)) {
     return (
       <NetworkErrorView 
         onRetry={handleRetry} 
@@ -93,6 +125,7 @@ const MobileApp = () => {
     );
   }
   
+  // If we're connected, show the app
   return (
     <Routes>
       <Route path="/login" element={<RestaurantLogin />} />

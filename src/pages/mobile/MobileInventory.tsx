@@ -9,6 +9,7 @@ import MobileProductSkeleton from '@/components/mobile/inventory/MobileProductSk
 import NetworkErrorView from '@/components/mobile/NetworkErrorView';
 import { Product } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { useServerConnection } from '@/hooks/network/useServerConnection';
 
 interface SupabaseProduct {
   id: string;
@@ -35,6 +36,7 @@ const MobileInventory = () => {
   const [hasError, setHasError] = useState(false);
   const [errorDetails, setErrorDetails] = useState<string>('');
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const { forceReconnect } = useServerConnection();
   
   const { data: products, isLoading, error, refetch } = useQuery({
     queryKey: ['mobile-products', restaurantId, retryAttempt],
@@ -55,7 +57,8 @@ const MobileInventory = () => {
           .from('products')
           .select('*')
           .eq('company_id', restaurantId)
-          .eq('status', 'active');
+          .eq('status', 'active')
+          .timeout(10000); // Add timeout to prevent long hanging requests
           
         const requestTime = Date.now() - startTime;
         console.log(`API request completed in ${requestTime}ms`);
@@ -94,7 +97,7 @@ const MobileInventory = () => {
         throw error;
       }
     },
-    retry: 2,
+    retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 
@@ -108,6 +111,19 @@ const MobileInventory = () => {
       setHasError(false);
     }
   }, [products, hasError]);
+
+  // Add effect to auto-retry on network reconnect
+  useEffect(() => {
+    const handleOnlineStatusChange = () => {
+      if (navigator.onLine && hasError) {
+        console.log('Device came online, retrying product fetch');
+        handleRetry();
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatusChange);
+    return () => window.removeEventListener('online', handleOnlineStatusChange);
+  }, [hasError]);
 
   const categories = useMemo(() => {
     if (!products) return [];
@@ -131,16 +147,28 @@ const MobileInventory = () => {
   console.log('Is loading:', isLoading);
 
   // Handle retry when error occurs
-  const handleRetry = () => {
+  const handleRetry = async () => {
     console.log('Retrying product fetch');
-    setHasError(false);
-    setRetryAttempt(prev => prev + 1);
-    refetch();
     
     toast({
       title: "إعادة محاولة تحميل البيانات",
       description: "جاري تحميل بيانات المخزون مرة أخرى",
     });
+    
+    // First try to check server connection
+    const serverConnected = await forceReconnect();
+    
+    if (serverConnected) {
+      setRetryAttempt(prev => prev + 1);
+      setHasError(false);
+      refetch();
+    } else {
+      toast({
+        title: "فشل الاتصال بالخادم",
+        description: "تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
+        variant: "destructive"
+      });
+    }
   };
 
   // If there is an error, show network error view

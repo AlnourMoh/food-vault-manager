@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { WifiOff, RefreshCcw, ExternalLink } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -17,11 +16,33 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   const [progress, setProgress] = useState(0);
   const [networkInfo, setNetworkInfo] = useState<string>('');
   const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    if (retryCount < 3) {
+      const timer = setTimeout(() => {
+        console.log(`Auto retry attempt ${retryCount + 1}`);
+        handleRetry();
+        setRetryCount(prev => prev + 1);
+      }, 30000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [retryCount]);
 
   const gatherNetworkInfo = () => {
     const info = [];
     info.push(`متصل بالإنترنت: ${navigator.onLine ? 'نعم' : 'لا'}`);
     info.push(`وقت الفحص: ${new Date().toLocaleTimeString()}`);
+    info.push(`عدد محاولات إعادة الاتصال: ${retryCount}`);
+    
+    if ('connection' in navigator && navigator.connection) {
+      const conn = navigator.connection as any;
+      if (conn.effectiveType) {
+        info.push(`نوع الاتصال: ${conn.effectiveType}`);
+      }
+    }
+    
     setNetworkInfo(info.join('\n'));
   };
 
@@ -41,16 +62,19 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
         if (prev >= 100) {
           clearInterval(interval);
           setIsChecking(false);
-          if (onRetry) {
-            onRetry();
-          }
           return 100;
         }
-        return prev + 10;
+        return prev + 4;
       });
-    }, 100);
+    }, 200);
 
     gatherNetworkInfo();
+    
+    if (onRetry) {
+      setTimeout(() => {
+        onRetry();
+      }, 1000);
+    }
   };
 
   const forceReload = () => {
@@ -69,8 +93,17 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       description: "يرجى الانتظار...",
     });
     
-    localStorage.removeItem('isRestaurantLogin');
-    localStorage.removeItem('restaurantId');
+    const restaurantId = localStorage.getItem('restaurantId');
+    const isRestaurantLogin = localStorage.getItem('isRestaurantLogin');
+    const userEmail = localStorage.getItem('userEmail');
+    const userName = localStorage.getItem('userName');
+    
+    localStorage.clear();
+    
+    if (restaurantId) localStorage.setItem('restaurantId', restaurantId);
+    if (isRestaurantLogin) localStorage.setItem('isRestaurantLogin', isRestaurantLogin);
+    if (userEmail) localStorage.setItem('userEmail', userEmail);
+    if (userName) localStorage.setItem('userName', userName);
     
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
