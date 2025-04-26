@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Package, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const MobileInventoryEmpty = () => {
+interface MobileInventoryEmptyProps {
+  onAddProduct: () => void;
+}
+
+const MobileInventoryEmpty: React.FC<MobileInventoryEmptyProps> = ({ onAddProduct }) => {
   const navigate = useNavigate();
   
   return (
@@ -14,10 +18,17 @@ const MobileInventoryEmpty = () => {
       <p className="text-gray-500 mb-4">قم بإضافة منتجات جديدة للبدء</p>
       <Button 
         onClick={() => navigate('/mobile/products/add')}
-        className="gap-2"
+        className="gap-2 mb-2"
       >
         <Plus className="h-4 w-4" />
         إضافة منتج
+      </Button>
+      <Button
+        variant="outline"
+        onClick={onAddProduct}
+        className="text-sm"
+      >
+        تحديث المنتجات
       </Button>
     </div>
   );
