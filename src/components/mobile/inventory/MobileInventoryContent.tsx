@@ -1,12 +1,9 @@
 
-import React, { useState } from 'react';
-import MobileProductCard from './MobileProductCard';
-import MobileProductSkeleton from './MobileProductSkeleton';
-import MobileInventoryEmpty from './MobileInventoryEmpty';
+import React from 'react';
 import { Product } from '@/types';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import BarcodeScanner from '@/components/mobile/BarcodeScanner';
+import MobileProductGrid from './MobileProductGrid';
+import MobileInventoryEmpty from './MobileInventoryEmpty';
+import { Spinner } from '@/components/ui/spinner';
 
 interface MobileInventoryContentProps {
   products: Product[] | null;
@@ -15,160 +12,51 @@ interface MobileInventoryContentProps {
   filteredProducts: Product[];
 }
 
-const MobileInventoryContent = ({ 
-  products, 
+const MobileInventoryContent: React.FC<MobileInventoryContentProps> = ({
+  products,
   isLoading,
   onProductUpdate,
-  filteredProducts 
-}: MobileInventoryContentProps) => {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [scanningProduct, setScanningProduct] = useState<Product | null>(null);
-  const { toast } = useToast();
-
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-  };
-
-  const handleScanStart = (product: Product) => {
-    console.log('Starting scan for product:', product.name);
-    setScanningProduct(product);
-    setIsScannerOpen(true);
-  };
-
-  const handleScanComplete = async (code: string) => {
-    console.log('Scan completed with code:', code);
-    if (!scanningProduct) {
-      toast({
-        title: "خطأ",
-        description: "لم يتم تحديد المنتج للمسح",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Get the restaurant ID from localStorage
-      const restaurantId = localStorage.getItem('restaurantId');
-      if (!restaurantId) {
-        throw new Error('معرف المطعم غير موجود');
-      }
-
-      // Verify the product code exists and belongs to this product
-      const { data: productCode, error: codeError } = await supabase
-        .from('product_codes')
-        .select('product_id, is_used')
-        .eq('qr_code', code)
-        .single();
-
-      if (codeError) {
-        toast({
-          title: "باركود غير صحيح",
-          description: "لم يتم العثور على هذا الباركود في النظام",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (productCode.product_id !== scanningProduct.id) {
-        toast({
-          title: "باركود غير متطابق",
-          description: "هذا الباركود لا يتطابق مع المنتج المحدد",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (productCode.is_used) {
-        toast({
-          title: "باركود مستخدم",
-          description: "تم استخدام هذا الباركود من قبل",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Update product quantity and mark code as used
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ 
-          quantity: scanningProduct.quantity - 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', scanningProduct.id);
-
-      if (updateError) throw updateError;
-
-      // Mark the code as used
-      const { error: usedError } = await supabase
-        .from('product_codes')
-        .update({ 
-          is_used: true,
-          used_by: restaurantId,
-          used_at: new Date().toISOString()
-        })
-        .eq('qr_code', code);
-
-      if (usedError) throw usedError;
-
-      toast({
-        title: "تم تسجيل خروج المنتج",
-        description: `تم تسجيل خروج وحدة واحدة من ${scanningProduct.name}`,
-      });
-
-      // Refresh the products list
-      onProductUpdate();
-
-    } catch (error) {
-      console.error('Error processing scan:', error);
-      toast({
-        title: "خطأ في المعالجة",
-        description: "حدث خطأ أثناء معالجة المسح",
-        variant: "destructive"
-      });
-    } finally {
-      setIsScannerOpen(false);
-      setScanningProduct(null);
-    }
-  };
-
+  filteredProducts
+}) => {
+  // عرض حالة التحميل
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <MobileProductSkeleton key={i} />
-        ))}
+      <div className="flex flex-col items-center justify-center p-12 space-y-4">
+        <div className="relative h-10 w-10">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+        <p className="text-sm text-muted-foreground">جاري تحميل المنتجات...</p>
       </div>
     );
   }
 
-  if (!products || products.length === 0 || filteredProducts.length === 0) {
-    return <MobileInventoryEmpty />;
+  // عرض حالة عدم وجود منتجات
+  if (!products || products.length === 0) {
+    return <MobileInventoryEmpty onAddProduct={onProductUpdate} />;
   }
 
-  return (
-    <>
-      <div className="space-y-4">
-        {filteredProducts.map((product) => (
-          <MobileProductCard
-            key={product.id}
-            product={product}
-            onSelect={handleProductSelect}
-            onRemove={handleScanStart}
-          />
-        ))}
+  // عرض حالة عدم وجود نتائج بحث
+  if (filteredProducts.length === 0) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-muted-foreground">لا توجد منتجات تطابق البحث</p>
+        <button 
+          onClick={onProductUpdate}
+          className="mt-2 text-primary underline text-sm"
+        >
+          تحديث المنتجات
+        </button>
       </div>
+    );
+  }
 
-      {isScannerOpen && (
-        <BarcodeScanner
-          onScan={handleScanComplete}
-          onClose={() => {
-            setIsScannerOpen(false);
-            setScanningProduct(null);
-          }}
-        />
-      )}
-    </>
+  // عرض المنتجات المصفاة
+  return (
+    <div className="px-4 pb-4">
+      <MobileProductGrid 
+        products={filteredProducts}
+      />
+    </div>
   );
 };
 

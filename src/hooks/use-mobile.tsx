@@ -6,8 +6,8 @@ const MOBILE_BREAKPOINT = 768;
 export function useIsMobile() {
   // تعريف الحالة أولاً مع قيمة افتراضية
   const [isMobile, setIsMobile] = useState(
-    // نستخدم window فقط إذا كانت متاحة، وإلا نضع قيمة افتراضية false
-    typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : false
+    // تجنب استخدام window في التهيئة المبدئية خارج useEffect
+    false
   );
 
   useEffect(() => {
@@ -17,6 +17,9 @@ export function useIsMobile() {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
+    
+    // تعيين القيمة الأولية
+    checkIfMobile();
     
     // إضافة مستمع لتغيرات حجم النافذة
     window.addEventListener('resize', checkIfMobile);
