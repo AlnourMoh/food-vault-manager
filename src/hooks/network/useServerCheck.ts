@@ -28,28 +28,26 @@ export const useServerCheck = (): ServerCheckReturn => {
     try {
       // Set up a timeout for the request
       const timeoutDuration = 5000; // 5 seconds
-      const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), timeoutDuration);
       
       const startTime = Date.now();
-      const { data, error } = await Promise.race([
+      
+      // Use Promise.race to implement timeout
+      const result = await Promise.race([
         supabase.from('companies').select('count', { count: 'exact', head: true }),
-        new Promise<{data: null, error: Error}>((_, reject) => {
+        new Promise<never>((_, reject) => {
           setTimeout(() => {
-            reject({ data: null, error: new Error('Request timed out') });
+            reject(new Error('Request timed out after 5 seconds'));
           }, timeoutDuration);
         })
       ]);
       
-      // Clear the timeout
-      clearTimeout(timeoutId);
-      
       const responseTime = Date.now() - startTime;
       console.log(`Server responded in ${responseTime}ms`);
       
-      if (error) {
-        console.error('Server connection check failed:', error.message);
-        setErrorInfo(`خطأ في الاتصال بالخادم: ${error.message}`);
+      // Handle the response
+      if ('error' in result && result.error) {
+        console.error('Server connection check failed:', result.error.message);
+        setErrorInfo(`خطأ في الاتصال بالخادم: ${result.error.message}`);
         setIsConnectedToServer(false);
       } else {
         console.log('Server connection check passed');
@@ -80,11 +78,13 @@ export const useServerCheck = (): ServerCheckReturn => {
       
       // Use a simple and fast query to check connection
       const startTime = Date.now();
-      const { data, error } = await Promise.race([
+      
+      // Use Promise.race to implement timeout
+      const result = await Promise.race([
         supabase.from('companies').select('count', { count: 'exact', head: true }).limit(1),
-        new Promise<{data: null, error: Error}>((_, reject) => {
+        new Promise<never>((_, reject) => {
           setTimeout(() => {
-            reject({ data: null, error: new Error('Request timed out') });
+            reject(new Error('Request timed out after 5 seconds'));
           }, timeoutDuration);
         })
       ]);
@@ -92,9 +92,10 @@ export const useServerCheck = (): ServerCheckReturn => {
       const responseTime = Date.now() - startTime;
       console.log(`Retry response time: ${responseTime}ms`);
       
-      if (error) {
-        console.error('Retry server connection failed:', error.message);
-        setErrorInfo(`خطأ في الاتصال بالخادم: ${error.message}`);
+      // Handle the response
+      if ('error' in result && result.error) {
+        console.error('Retry server connection failed:', result.error.message);
+        setErrorInfo(`خطأ في الاتصال بالخادم: ${result.error.message}`);
         setIsConnectedToServer(false);
         return false;
       } else {

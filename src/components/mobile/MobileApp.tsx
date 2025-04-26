@@ -38,16 +38,26 @@ const MobileApp = () => {
   
   const [retryCount, setRetryCount] = useState(0);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
     const checkConnection = async () => {
-      if (isOnline) {
-        await checkServerConnection();
+      try {
+        if (isOnline) {
+          await checkServerConnection();
+        }
+      } catch (error) {
+        console.error('Error during connection check:', error);
+      } finally {
+        setIsInitialLoading(false);
+        setInitialCheckDone(true);
       }
-      setIsInitialLoading(false);
     };
 
-    checkConnection();
+    // Only run the check if it hasn't been done yet
+    if (!initialCheckDone) {
+      checkConnection();
+    }
     
     const setupCapacitor = async () => {
       if (window.Capacitor) {
@@ -83,7 +93,7 @@ const MobileApp = () => {
       }
       window.removeEventListener('online', handleOnlineStatusChange);
     };
-  }, [isOnline, retryCount]);
+  }, [isOnline, retryCount, initialCheckDone, checkServerConnection]);
 
   const handleRetry = async () => {
     setRetryCount(prev => prev + 1);
@@ -93,6 +103,7 @@ const MobileApp = () => {
       description: "جاري التحقق من الاتصال بالخادم...",
     });
     
+    // Force connection check immediately
     const success = await forceReconnect();
     
     if (success) {
@@ -115,8 +126,8 @@ const MobileApp = () => {
     );
   }
   
-  // Show network error view if connection issues are detected
-  if (!isOnline || (!isConnectedToServer && serverCheckDone)) {
+  // Show network error view only after we've checked and if there are actual connection issues
+  if (initialCheckDone && (!isOnline || (!isConnectedToServer && serverCheckDone))) {
     return (
       <NetworkErrorView 
         onRetry={handleRetry} 

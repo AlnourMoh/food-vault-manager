@@ -57,33 +57,39 @@ const MobileInventory = () => {
         // Set up a timeout for the request
         const timeoutDuration = 10000; // 10 seconds
         
-        const fetchPromise = supabase
-          .from('products')
-          .select('*')
-          .eq('company_id', restaurantId)
-          .eq('status', 'active');
-          
         // Use Promise.race to implement timeout
-        const { data, error } = await Promise.race([
-          fetchPromise,
-          new Promise<{data: null, error: Error}>((_resolve, reject) => {
+        const result = await Promise.race([
+          supabase
+            .from('products')
+            .select('*')
+            .eq('company_id', restaurantId)
+            .eq('status', 'active'),
+          new Promise<never>((_, reject) => {
             setTimeout(() => {
-              reject({ data: null, error: new Error('Request timed out after 10 seconds') });
+              reject(new Error('Request timed out after 10 seconds'));
             }, timeoutDuration);
           })
         ]);
           
         const requestTime = Date.now() - startTime;
         console.log(`API request completed in ${requestTime}ms`);
-          
-        if (error) {
-          console.error('Error fetching products:', error);
-          setErrorDetails(`خطأ في جلب المنتجات: ${error.message}`);
+        
+        // Handle the response
+        if ('error' in result && result.error) {
+          console.error('Error fetching products:', result.error);
+          setErrorDetails(`خطأ في جلب المنتجات: ${result.error.message}`);
           setHasError(true);
-          throw error;
+          throw result.error;
         }
         
+        // If we got here, we have a successful response
+        const data = 'data' in result ? result.data : null;
+        
         console.log('Products fetched from Supabase:', data);
+        
+        if (!data) {
+          throw new Error('لم يتم استلام بيانات من الخادم');
+        }
         
         const transformedProducts: Product[] = (data as SupabaseProduct[]).map(item => ({
           id: item.id,
@@ -110,8 +116,8 @@ const MobileInventory = () => {
         throw error;
       }
     },
-    retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 
   // Handle successful data fetching after previous error

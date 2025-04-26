@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { WifiOff, RefreshCcw, ExternalLink } from 'lucide-react';
@@ -17,18 +18,43 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   const [networkInfo, setNetworkInfo] = useState<string>('');
   const [showDebugInfo, setShowDebugInfo] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
 
+  // Auto-retry logic
   useEffect(() => {
-    if (retryCount < 3) {
+    if (autoRetryEnabled && retryCount < 5) {
       const timer = setTimeout(() => {
         console.log(`Auto retry attempt ${retryCount + 1}`);
         handleRetry();
         setRetryCount(prev => prev + 1);
-      }, 30000);
+      }, Math.min(5000 + (retryCount * 5000), 30000)); // Exponential backoff
       
       return () => clearTimeout(timer);
     }
-  }, [retryCount]);
+  }, [retryCount, autoRetryEnabled]);
+
+  // Check network status whenever component mounts or navigator.onLine changes
+  useEffect(() => {
+    const checkNetworkStatus = () => {
+      gatherNetworkInfo();
+      
+      // If we're online and auto-retry is enabled, try a reconnect
+      if (navigator.onLine && autoRetryEnabled && onRetry && retryCount < 3) {
+        handleRetry();
+      }
+    };
+    
+    checkNetworkStatus();
+    
+    // Set up event listeners for network status changes
+    window.addEventListener('online', checkNetworkStatus);
+    window.addEventListener('offline', checkNetworkStatus);
+    
+    return () => {
+      window.removeEventListener('online', checkNetworkStatus);
+      window.removeEventListener('offline', checkNetworkStatus);
+    };
+  }, []);
 
   const gatherNetworkInfo = () => {
     const info = [];
@@ -40,6 +66,12 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       const conn = navigator.connection as any;
       if (conn.effectiveType) {
         info.push(`نوع الاتصال: ${conn.effectiveType}`);
+      }
+      if (conn.downlink) {
+        info.push(`سرعة التحميل: ${conn.downlink} Mbps`);
+      }
+      if (conn.rtt) {
+        info.push(`وقت الاستجابة: ${conn.rtt} ms`);
       }
     }
     
@@ -66,14 +98,14 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
         }
         return prev + 4;
       });
-    }, 200);
+    }, 100);
 
     gatherNetworkInfo();
     
     if (onRetry) {
       setTimeout(() => {
         onRetry();
-      }, 1000);
+      }, 500);
     }
   };
 
@@ -93,18 +125,22 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       description: "يرجى الانتظار...",
     });
     
+    // Save important data before clearing cache
     const restaurantId = localStorage.getItem('restaurantId');
     const isRestaurantLogin = localStorage.getItem('isRestaurantLogin');
     const userEmail = localStorage.getItem('userEmail');
     const userName = localStorage.getItem('userName');
     
+    // Clear localStorage
     localStorage.clear();
     
+    // Restore important data
     if (restaurantId) localStorage.setItem('restaurantId', restaurantId);
     if (isRestaurantLogin) localStorage.setItem('isRestaurantLogin', isRestaurantLogin);
     if (userEmail) localStorage.setItem('userEmail', userEmail);
     if (userName) localStorage.setItem('userName', userName);
     
+    // Unregister service workers if available
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         for (const registration of registrations) {
@@ -113,6 +149,16 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       });
     }
     
+    // Clear cache if available
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          caches.delete(name);
+        });
+      });
+    }
+    
+    // Reload the page after a short delay
     setTimeout(() => {
       window.location.href = window.location.href.split('#')[0];
     }, 1000);
@@ -158,6 +204,19 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
               <Button variant="outline" onClick={clearCacheAndReload}>
                 مسح الذاكرة المؤقتة
               </Button>
+            </div>
+            
+            <div className="flex items-center justify-center mt-2">
+              <input 
+                type="checkbox" 
+                id="auto-retry" 
+                className="mr-2"
+                checked={autoRetryEnabled}
+                onChange={() => setAutoRetryEnabled(!autoRetryEnabled)}
+              />
+              <label htmlFor="auto-retry" className="text-sm text-muted-foreground">
+                محاولة إعادة الاتصال تلقائياً
+              </label>
             </div>
           </div>
         )}
