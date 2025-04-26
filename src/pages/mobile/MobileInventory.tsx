@@ -1,11 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import MobileProductGrid from '@/components/mobile/inventory/MobileProductGrid';
 import MobileInventoryHeader from '@/components/mobile/inventory/MobileInventoryHeader';
 import MobileInventoryEmpty from '@/components/mobile/inventory/MobileInventoryEmpty';
 import MobileProductSkeleton from '@/components/mobile/inventory/MobileProductSkeleton';
+import NetworkErrorView from '@/components/mobile/NetworkErrorView';
 import { Product } from '@/types';
 
 interface SupabaseProduct {
@@ -30,8 +31,9 @@ const MobileInventory = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
   
-  const { data: products, isLoading, refetch } = useQuery({
+  const { data: products, isLoading, error, refetch } = useQuery({
     queryKey: ['mobile-products'],
     queryFn: async () => {
       console.log('Fetching products for restaurant ID:', restaurantId);
@@ -40,37 +42,46 @@ const MobileInventory = () => {
         return [];
       }
       
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('company_id', restaurantId)
-        .eq('status', 'active');
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('company_id', restaurantId)
+          .eq('status', 'active');
+          
+        if (error) {
+          console.error('Error fetching products:', error);
+          setHasError(true);
+          throw error;
+        }
         
-      if (error) {
-        console.error('Error fetching products:', error);
+        console.log('Products fetched from Supabase:', data);
+        
+        const transformedProducts: Product[] = (data as SupabaseProduct[]).map(item => ({
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          unit: item.unit || '',
+          quantity: item.quantity,
+          expiryDate: new Date(item.expiry_date),
+          entryDate: new Date(item.production_date),
+          restaurantId: item.company_id,
+          restaurantName: '',
+          addedBy: '',
+          status: 'active',
+          imageUrl: item.image_url || undefined
+        }));
+        
+        console.log('Transformed products:', transformedProducts);
+        setHasError(false);
+        return transformedProducts;
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        setHasError(true);
         throw error;
       }
-      
-      console.log('Products fetched from Supabase:', data);
-      
-      const transformedProducts: Product[] = (data as SupabaseProduct[]).map(item => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        unit: item.unit || '',
-        quantity: item.quantity,
-        expiryDate: new Date(item.expiry_date),
-        entryDate: new Date(item.production_date),
-        restaurantId: item.company_id,
-        restaurantName: '',
-        addedBy: '',
-        status: 'active',
-        imageUrl: item.image_url || undefined
-      }));
-      
-      console.log('Transformed products:', transformedProducts);
-      return transformedProducts;
     },
+    retry: 1,
   });
 
   const categories = useMemo(() => {
@@ -93,6 +104,17 @@ const MobileInventory = () => {
 
   console.log('Filtered products:', filteredProducts);
   console.log('Is loading:', isLoading);
+
+  // Handle retry when error occurs
+  const handleRetry = () => {
+    setHasError(false);
+    refetch();
+  };
+
+  // If there is an error, show network error view
+  if (hasError) {
+    return <NetworkErrorView onRetry={handleRetry} />;
+  }
 
   return (
     <div className="pb-16">

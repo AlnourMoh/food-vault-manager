@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
@@ -8,6 +8,8 @@ import ProductScan from '@/pages/mobile/ProductScan';
 import ProductManagement from '@/pages/mobile/ProductManagement';
 import MobileAccount from '@/pages/mobile/MobileAccount';
 import RestaurantLogin from '@/pages/RestaurantLogin';
+import NetworkErrorView from '@/components/mobile/NetworkErrorView';
+import MobileInventory from '@/pages/mobile/MobileInventory';
 
 // Auth guard component to protect routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -22,7 +24,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const MobileApp = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [retryCount, setRetryCount] = useState(0);
+
   useEffect(() => {
+    // Listen for network status changes
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
     const setupCapacitor = async () => {
       if (window.Capacitor) {
         console.log('Capacitor is available, setting up listeners');
@@ -44,11 +56,31 @@ const MobileApp = () => {
     setupCapacitor();
     
     return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      
       if (window.Capacitor) {
         CapacitorApp.removeAllListeners();
       }
     };
   }, []);
+
+  const handleRetry = () => {
+    // Increase retry count to force re-render
+    setRetryCount(prev => prev + 1);
+    // Check network status again
+    setIsOnline(navigator.onLine);
+    
+    // Force reload if needed
+    if (navigator.onLine) {
+      window.location.reload();
+    }
+  };
+  
+  // Show network error view if device is offline
+  if (!isOnline) {
+    return <NetworkErrorView onRetry={handleRetry} />;
+  }
   
   return (
     <Routes>
@@ -70,10 +102,18 @@ const MobileApp = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="/product-management" element={
+      <Route path="/products/add" element={
         <ProtectedRoute>
           <MobileLayout>
             <ProductManagement />
+          </MobileLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/inventory" element={
+        <ProtectedRoute>
+          <MobileLayout>
+            <MobileInventory key={`inventory-${retryCount}`} />
           </MobileLayout>
         </ProtectedRoute>
       } />
