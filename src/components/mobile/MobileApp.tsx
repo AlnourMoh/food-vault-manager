@@ -9,20 +9,8 @@ import MobileAccount from '@/pages/mobile/MobileAccount';
 import RestaurantLogin from '@/pages/RestaurantLogin';
 import MobileInventory from '@/pages/mobile/MobileInventory';
 import { ProtectedRoute } from './auth/ProtectedRoute';
-import { InitialLoading } from './common/InitialLoading';
-import { useMobileConnection } from '@/hooks/network/useMobileConnection';
 
 const MobileApp = () => {
-  const {
-    retryCount,
-    handleRetry,
-    checkServerConnection,
-    setIsInitialLoading,
-    setInitialCheckDone,
-    initialCheckDone,
-    isInitialLoading
-  } = useMobileConnection();
-  
   useEffect(() => {
     const setupCapacitor = async () => {
       if (window.Capacitor) {
@@ -38,10 +26,6 @@ const MobileApp = () => {
       }
     };
     
-    // Skip connection checks entirely and immediately proceed to the app
-    setIsInitialLoading(false);
-    setInitialCheckDone(true);
-    
     setupCapacitor();
     
     return () => {
@@ -49,7 +33,7 @@ const MobileApp = () => {
         CapacitorApp.removeAllListeners();
       }
     };
-  }, [setInitialCheckDone, setIsInitialLoading]);
+  }, []);
 
   // Check authentication status
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
@@ -64,7 +48,7 @@ const MobileApp = () => {
     );
   }
   
-  // If authenticated, show the full app regardless of connection status
+  // If authenticated, always show the full app without any network checks
   return (
     <Routes>
       <Route path="/login" element={<Navigate to="/mobile/inventory" replace />} />
@@ -96,7 +80,7 @@ const MobileApp = () => {
       <Route path="/inventory" element={
         <ProtectedRoute>
           <MobileLayout>
-            <MobileInventory key={`inventory-${retryCount}`} />
+            <MobileInventory />
           </MobileLayout>
         </ProtectedRoute>
       } />

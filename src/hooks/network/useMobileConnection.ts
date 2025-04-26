@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNetworkStatus } from './useNetworkStatus';
 import { useServerConnection } from './useServerConnection';
@@ -15,45 +16,15 @@ export const useMobileConnection = () => {
   } = useServerConnection();
   
   const [retryCount, setRetryCount] = useState(0);
-  // Start with these both as false to prevent loading screens
+  // Always start with initialCheckDone as true to prevent loading screens
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(true);
+  
+  // These state variables are now always false to never show the error screen
   const [showErrorScreen, setShowErrorScreen] = useState(false);
   const [errorTransitionActive, setErrorTransitionActive] = useState(false);
 
-  // Check if user is authenticated
-  const isAuthenticated = localStorage.getItem('isRestaurantLogin') === 'true';
-
-  useEffect(() => {
-    // For authenticated users, never show error screen
-    if (isAuthenticated) {
-      setShowErrorScreen(false);
-      setErrorTransitionActive(false);
-      return;
-    }
-
-    let timeoutId: number | undefined;
-    
-    if (!isOnline || (!isConnectedToServer && serverCheckDone)) {
-      // Still track connection state but don't show error screen
-      timeoutId = window.setTimeout(() => {
-        // Always keep showErrorScreen as false for better UX
-        setShowErrorScreen(false);
-      }, 2000);
-    } else if (isOnline && isConnectedToServer && serverCheckDone) {
-      timeoutId = window.setTimeout(() => {
-        setShowErrorScreen(false);
-        setTimeout(() => {
-          setErrorTransitionActive(false);
-        }, 500);
-      }, 500);
-    }
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isOnline, isConnectedToServer, serverCheckDone, isAuthenticated]);
-
+  // Handle the retry functionality without showing error screens
   const handleRetry = useCallback(async () => {
     setRetryCount(prev => prev + 1);
     
@@ -78,8 +49,9 @@ export const useMobileConnection = () => {
     serverCheckDone,
     errorInfo,
     isChecking,
-    showErrorScreen: false, // Always return false to hide error screen
-    errorTransitionActive: false, // Always disable transition
+    // Always return false for these values to prevent error screen from showing
+    showErrorScreen: false,
+    errorTransitionActive: false,
     isInitialLoading,
     initialCheckDone,
     retryCount,

@@ -25,7 +25,8 @@ export const useMobileAuth = () => {
       ) {
         return;
       }
-      // Otherwise redirect to inventory
+      
+      // Immediately redirect to inventory without any delay or checks
       navigate('/mobile/inventory', { replace: true });
     } else if (!location.pathname.includes('/login')) {
       // If not logged in and not on login page, redirect to login immediately
