@@ -13,13 +13,20 @@ const MobileAccount = () => {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      // First clear the login state before attempting to sign out
       localStorage.removeItem('restaurantId');
       localStorage.removeItem('isRestaurantLogin');
+      
+      // Then perform Supabase signout
+      await supabase.auth.signOut();
+      
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });
-      navigate('/restaurant/login');
+      
+      // Navigate directly to the login page without going through the router
+      // This prevents the network error screen from appearing
+      window.location.href = '/mobile/login';
     } catch (error) {
       console.error('Error logging out:', error);
       toast({

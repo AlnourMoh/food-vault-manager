@@ -55,7 +55,7 @@ const MobileApp = () => {
         setTimeout(() => {
           setIsInitialLoading(false);
           setInitialCheckDone(true);
-        }, 1000); // Reduced delay for faster UI rendering
+        }, 500); // Even shorter delay for faster UI rendering
       }
     };
     

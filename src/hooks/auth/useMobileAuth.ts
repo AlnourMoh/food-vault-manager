@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -8,6 +9,11 @@ export const useMobileAuth = () => {
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
   
   useEffect(() => {
+    // Skip redirection if we are in the process of logging out
+    if (location.pathname.includes('/logout')) {
+      return;
+    }
+    
     // Always prioritize sending logged-in users to /mobile/inventory
     if (isRestaurantLoggedIn) {
       // If already on a valid page, don't redirect
