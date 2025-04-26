@@ -1,5 +1,5 @@
 
-import { Plugin } from '@capacitor/core';
+import { Plugin, PluginListenerHandle } from '@capacitor/core';
 
 declare global {
   interface Window {
@@ -37,7 +37,9 @@ export interface BarcodeScannerPlugin extends Plugin {
   disableTorch(): Promise<void>;
   startScan(options?: StartScanOptions): Promise<void>;
   stopScan(): Promise<void>;
-  addListener(eventName: 'barcodeScanned', listenerFunc: (result: { barcode: BarcodeResult }) => void): Promise<{ remove: () => Promise<void> }>;
+  addListener(eventName: 'barcodesScanned', listenerFunc: (event: BarcodesScannedEvent) => void): Promise<PluginListenerHandle>;
+  addListener(eventName: 'scanError', listenerFunc: (event: ScanErrorEvent) => void): Promise<PluginListenerHandle>;
+  addListener(eventName: 'googleBarcodeScannerModuleInstallProgress', listenerFunc: (event: GoogleBarcodeScannerModuleInstallProgressEvent) => void): Promise<PluginListenerHandle>;
 }
 
 export interface ScanOptions {
@@ -63,4 +65,18 @@ export interface BarcodeResult {
 interface Point {
   x: number;
   y: number;
+}
+
+// Add the event interfaces
+export interface BarcodesScannedEvent {
+  barcodes: BarcodeResult[];
+}
+
+export interface ScanErrorEvent {
+  error: string;
+}
+
+export interface GoogleBarcodeScannerModuleInstallProgressEvent {
+  state: 'downloading' | 'installing';
+  progress: number;
 }

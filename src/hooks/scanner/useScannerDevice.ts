@@ -49,17 +49,22 @@ export const useScannerDevice = () => {
               ]
             };
 
-            // Use scan event listener instead of onScanComplete callback
-            const listener = BarcodeScanner.addListener(
-              'barcodeScanned',
+            // Use scan event listener with the correct event name 'barcodesScanned'
+            const listenerPromise = BarcodeScanner.addListener(
+              'barcodesScanned',
               async (result) => {
                 console.log("[useScannerDevice] تم اكتشاف باركود:", result);
-                if (result.barcode) {
-                  const code = result.barcode.rawValue || '';
+                if (result.barcodes && result.barcodes.length > 0) {
+                  const code = result.barcodes[0].rawValue || '';
                   console.log("[useScannerDevice] المسح ناجح:", code);
                   
-                  // Remove the listener to prevent multiple callbacks
-                  await listener.remove();
+                  // Get the listener handle and remove it properly
+                  try {
+                    const listenerHandle = await listenerPromise;
+                    await listenerHandle.remove();
+                  } catch (removeError) {
+                    console.error("[useScannerDevice] خطأ في إزالة المستمع:", removeError);
+                  }
                   
                   // Stop the scan
                   try {
