@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -13,14 +14,13 @@ import { useMobileConnection } from '@/hooks/network/useMobileConnection';
 
 const MobileApp = () => {
   const {
-    showErrorScreen,
-    isInitialLoading,
     retryCount,
     handleRetry,
     checkServerConnection,
     setIsInitialLoading,
     setInitialCheckDone,
     initialCheckDone,
+    isInitialLoading,
     errorInfo
   } = useMobileConnection();
   
@@ -39,10 +39,12 @@ const MobileApp = () => {
       }
     };
     
+    // On initial load, check connection once
     const checkConnection = async () => {
       try {
         await checkServerConnection();
       } finally {
+        // Always continue to the app after a short delay
         setTimeout(() => {
           setIsInitialLoading(false);
           setInitialCheckDone(true);
@@ -67,14 +69,23 @@ const MobileApp = () => {
     return <InitialLoading />;
   }
   
+  // Check authentication status
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
-  if (!isRestaurantLoggedIn && showErrorScreen) {
-    return <Navigate to="/mobile/login" replace />;
+  
+  // Force login page when not authenticated
+  if (!isRestaurantLoggedIn) {
+    return (
+      <Routes>
+        <Route path="/login" element={<RestaurantLogin />} />
+        <Route path="*" element={<Navigate to="/mobile/login" replace />} />
+      </Routes>
+    );
   }
   
+  // If authenticated, show the full app regardless of connection status
   return (
     <Routes>
-      <Route path="/login" element={<RestaurantLogin />} />
+      <Route path="/login" element={<Navigate to="/mobile/inventory" replace />} />
       
       <Route path="/" element={
         <ProtectedRoute>
@@ -116,7 +127,7 @@ const MobileApp = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/inventory" replace />} />
     </Routes>
   );
 };
