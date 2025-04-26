@@ -26,9 +26,23 @@ export const useServerCheck = (): ServerCheckReturn => {
     
     console.log('Checking server connection...');
     try {
+      // Set up a timeout for the request
+      const timeoutDuration = 5000; // 5 seconds
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), timeoutDuration);
+      
       const startTime = Date.now();
-      const { data, error } = await supabase.from('companies').select('count', { count: 'exact', head: true })
-        .timeout(5000); // Add timeout to prevent long hanging requests
+      const { data, error } = await Promise.race([
+        supabase.from('companies').select('count', { count: 'exact', head: true }),
+        new Promise<{data: null, error: Error}>((_, reject) => {
+          setTimeout(() => {
+            reject({ data: null, error: new Error('Request timed out') });
+          }, timeoutDuration);
+        })
+      ]);
+      
+      // Clear the timeout
+      clearTimeout(timeoutId);
       
       const responseTime = Date.now() - startTime;
       console.log(`Server responded in ${responseTime}ms`);
@@ -61,10 +75,22 @@ export const useServerCheck = (): ServerCheckReturn => {
     
     console.log('Retrying server connection...');
     try {
+      // Set up a timeout for the request
+      const timeoutDuration = 5000; // 5 seconds
+      
       // Use a simple and fast query to check connection
-      const { data, error } = await supabase.from('companies').select('count', { count: 'exact', head: true })
-        .limit(1)
-        .timeout(5000);
+      const startTime = Date.now();
+      const { data, error } = await Promise.race([
+        supabase.from('companies').select('count', { count: 'exact', head: true }).limit(1),
+        new Promise<{data: null, error: Error}>((_, reject) => {
+          setTimeout(() => {
+            reject({ data: null, error: new Error('Request timed out') });
+          }, timeoutDuration);
+        })
+      ]);
+      
+      const responseTime = Date.now() - startTime;
+      console.log(`Retry response time: ${responseTime}ms`);
       
       if (error) {
         console.error('Retry server connection failed:', error.message);

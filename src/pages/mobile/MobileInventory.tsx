@@ -53,12 +53,25 @@ const MobileInventory = () => {
       try {
         console.log('Making API request to Supabase');
         const startTime = Date.now();
-        const { data, error } = await supabase
+        
+        // Set up a timeout for the request
+        const timeoutDuration = 10000; // 10 seconds
+        
+        const fetchPromise = supabase
           .from('products')
           .select('*')
           .eq('company_id', restaurantId)
-          .eq('status', 'active')
-          .timeout(10000); // Add timeout to prevent long hanging requests
+          .eq('status', 'active');
+          
+        // Use Promise.race to implement timeout
+        const { data, error } = await Promise.race([
+          fetchPromise,
+          new Promise<{data: null, error: Error}>((_resolve, reject) => {
+            setTimeout(() => {
+              reject({ data: null, error: new Error('Request timed out after 10 seconds') });
+            }, timeoutDuration);
+          })
+        ]);
           
         const requestTime = Date.now() - startTime;
         console.log(`API request completed in ${requestTime}ms`);
