@@ -25,7 +25,7 @@ export const useEmailVerification = () => {
       // 1. التحقق من وجود البريد في جدول company_members 
       const { data: member, error: memberError } = await supabase
         .from('company_members')
-        .select('email, role, name')
+        .select('email, role, name, company_id')
         .eq('email', email)
         .eq('is_active', true)
         .maybeSingle();
@@ -58,12 +58,15 @@ export const useEmailVerification = () => {
 
         // إذا لم يكن موجوداً في restaurant_access، إضافته
         if (!accessData && member) {
+          // استخراج restaurant_id من member
+          const restaurantId = member.company_id;
+          
           // إضافة السجل في restaurant_access مع كلمة مرور مؤقتة
           await supabase
             .from('restaurant_access')
             .insert({
               email: email,
-              restaurant_id: member.company_id,
+              restaurant_id: restaurantId,
               password_hash: 'temporary_password'
             });
           console.log('تم إضافة البريد إلى restaurant_access بكلمة مرور مؤقتة');
