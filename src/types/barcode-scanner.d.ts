@@ -33,7 +33,7 @@ export interface BarcodeScannerPlugin extends Plugin {
   scan(options?: ScanOptions): Promise<ScanResult>;
   enableTorch(): Promise<void>;
   disableTorch(): Promise<void>;
-  startScan(options: StartScanOptions): Promise<void>;
+  startScan(options?: StartScanOptions): Promise<void>;
   stopScan(): Promise<void>;
 }
 
