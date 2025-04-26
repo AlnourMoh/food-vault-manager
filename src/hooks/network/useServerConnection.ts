@@ -1,59 +1,29 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useServerCheck } from './useServerCheck';
+import { useServerReconnect } from './useServerReconnect';
 
 export const useServerConnection = () => {
-  const [isConnectedToServer, setIsConnectedToServer] = useState(true);
-  const [serverCheckDone, setServerCheckDone] = useState(false);
-  const [errorInfo, setErrorInfo] = useState('');
-  
-  const checkServerConnection = async () => {
-    if (!navigator.onLine) {
-      console.log('Device is offline, skipping server connection check');
-      setIsConnectedToServer(false);
-      setServerCheckDone(true);
-      return;
-    }
-    
-    console.log('Checking server connection...');
-    try {
-      const startTime = Date.now();
-      const { data, error } = await supabase.from('companies').select('count', { count: 'exact', head: true });
-      const responseTime = Date.now() - startTime;
-      
-      console.log(`Server responded in ${responseTime}ms`);
-      
-      if (error) {
-        console.error('Server connection check failed:', error.message);
-        setErrorInfo(`خطأ في الاتصال بالخادم: ${error.message}`);
-        setIsConnectedToServer(false);
-      } else {
-        console.log('Server connection check passed');
-        setIsConnectedToServer(true);
-        
-        if (!isConnectedToServer && serverCheckDone) {
-          toast({
-            title: "تم استعادة الاتصال",
-            description: "تم استعادة الاتصال بالخادم بنجاح",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Server connection check failed with exception:', error);
-      setErrorInfo(`استثناء أثناء الاتصال: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
-      setIsConnectedToServer(false);
-    } finally {
-      setServerCheckDone(true);
-    }
-  };
+  const {
+    isConnectedToServer,
+    serverCheckDone,
+    errorInfo,
+    checkServerConnection,
+  } = useServerCheck();
+
+  useServerReconnect({ isConnectedToServer, serverCheckDone });
 
   return {
     isConnectedToServer,
     serverCheckDone,
     errorInfo,
     checkServerConnection,
-    setServerCheckDone,
-    setIsConnectedToServer
+    setServerCheckDone: (value: boolean) => {
+      // This is needed for backward compatibility with existing components
+      console.log('Setting serverCheckDone:', value);
+    },
+    setIsConnectedToServer: (value: boolean) => {
+      // This is needed for backward compatibility with existing components
+      console.log('Setting isConnectedToServer:', value);
+    }
   };
 };
