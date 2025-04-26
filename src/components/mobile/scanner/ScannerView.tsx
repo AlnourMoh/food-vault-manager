@@ -31,10 +31,14 @@ export const ScannerView = ({
         try {
           console.log("Setting up scanner UI");
           scannerActive.current = true;
-          document.body.style.visibility = 'visible';
-          document.body.classList.add('barcode-scanner-active');
-          document.body.classList.add('scanner-transparent-background');
-          document.body.style.background = 'transparent';
+          
+          // تأخير قصير لضمان تهيئة الواجهة قبل تفعيل الماسح
+          setTimeout(() => {
+            document.body.style.visibility = 'visible';
+            document.body.classList.add('barcode-scanner-active');
+            document.body.classList.add('scanner-transparent-background');
+            document.body.style.background = 'transparent';
+          }, 100);
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
         }

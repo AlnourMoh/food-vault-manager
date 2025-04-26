@@ -36,73 +36,77 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
     try {
       console.log('[useScannerState] محاولة بدء المسح، حالة الإذن:', hasPermission);
       
+      // نتأكد أولاً من إلغاء أي مسح نشط حالي
+      await stopDeviceScan();
+      
+      // التحقق من الأذونات وطلبها إذا لزم الأمر
       if (hasPermission === false) {
         console.log('[useScannerState] طلب الإذن لأنه تم رفضه');
+        const permissionGranted = await requestPermission(true);
         
-        if (window.Capacitor) {
-          try {
-            const permissionGranted = await requestPermission(true);
-            if (!permissionGranted) {
-              console.log('[useScannerState] مازال الإذن غير ممنوح بعد الطلب');
-              
-              toast({
-                title: "إذن الكاميرا مطلوب",
-                description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
-                variant: "destructive",
-                action: <ToastAction 
-                  onClick={() => {
-                    try {
-                      if (window.Capacitor?.getPlatform() === 'ios') {
-                        App.exitApp();
-                      } else {
-                        App.getInfo().then((appInfo) => {
-                          console.log('App info:', appInfo);
-                          window.location.href = 'app-settings:';
-                        });
-                      }
-                    } catch (e) {
-                      console.error('Could not open settings URL:', e);
-                    }
-                  }}
-                  altText="إعدادات"
-                >
-                  إعدادات
-                </ToastAction>
-              });
-              return false;
-            }
-          } catch (error) {
-            console.error('[useScannerState] خطأ أثناء طلب الإذن:', error);
-            return false;
-          }
+        if (!permissionGranted) {
+          console.log('[useScannerState] ما زال الإذن غير ممنوح بعد الطلب');
+          
+          toast({
+            title: "إذن الكاميرا مطلوب",
+            description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار.",
+            variant: "destructive",
+            action: <ToastAction 
+              onClick={() => {
+                try {
+                  if (window.Capacitor?.getPlatform() === 'ios') {
+                    App.exitApp();
+                  } else {
+                    window.location.href = 'app-settings:';
+                  }
+                } catch (e) {
+                  console.error('Could not open settings URL:', e);
+                }
+              }}
+              altText="إعدادات"
+            >
+              إعدادات
+            </ToastAction>
+          });
+          return false;
         }
       }
       
-      // تسجيل الدخول قبل محاولة بدء المسح
+      // فحص توفر الماسح
       console.log('[useScannerState] جاري فحص توفر الماسح...');
       
-      // فحص ما إذا كان ماسح الباركود متاحًا
+      // فحص دعم الجهاز للمسح
+      let isSupported = false;
       if (window.Capacitor) {
         try {
-          const isSupported = await BarcodeScanner.isSupported();
-          console.log('[useScannerState] هل ماسح MLKit مدعوم:', isSupported);
+          const supportResult = await BarcodeScanner.isSupported();
+          isSupported = supportResult.supported;
+          console.log('[useScannerState] هل ماسح الباركود مدعوم:', isSupported);
           
           if (!isSupported) {
-            console.log('[useScannerState] ماسح MLKit غير مدعوم');
+            console.log('[useScannerState] ماسح الباركود غير مدعوم');
             toast({
               title: "ماسح الباركود غير مدعوم",
-              description: "يبدو أن جهازك لا يدعم مكتبة مسح الباركود، سيتم استخدام طريقة بديلة",
+              description: "سيتم استخدام طريقة الإدخال اليدوي بدلاً من ذلك",
               variant: "default"
             });
           }
         } catch (error) {
-          console.error('[useScannerState] خطأ في فحص ما إذا كان ماسح MLKit مدعومًا:', error);
+          console.error('[useScannerState] خطأ في فحص دعم الماسح:', error);
         }
       }
       
       // تفعيل المسح
       setIsScanningActive(true);
-      await startDeviceScan(handleSuccessfulScan);
+      const success = await startDeviceScan(handleSuccessfulScan);
+      
+      // إذا فشل المسح، نعيد الواجهة إلى حالتها السابقة
+      if (!success) {
+        console.log('[useScannerState] فشل بدء المسح');
+        setIsScanningActive(false);
+        return false;
+      }
+      
       return true;
     } catch (error) {
       console.error('[useScannerState] خطأ في بدء المسح:', error);

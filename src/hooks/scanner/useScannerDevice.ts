@@ -22,47 +22,72 @@ export const useScannerDevice = () => {
       console.log("[useScannerDevice] بدء عملية المسح");
       const { isSupported, isCapacitor } = await checkDeviceSupport();
       
-      if (isCapacitor && isSupported) {
-        const { camera } = await BarcodeScanner.requestPermissions();
-        if (camera !== 'granted') {
-          console.log("[useScannerDevice] إذن الكاميرا غير ممنوح:", camera);
-          toast({
-            title: "تم رفض الإذن",
-            description: "يجب منح إذن الكاميرا لاستخدام الماسح الضوئي",
-            variant: "destructive"
-          });
-          throw new Error("Camera permission not granted");
-        }
-
-        setupScannerBackground();
-        await setupScanListener(async (code) => {
-          await stopDeviceScan();
-          onSuccess(code);
-        });
-
-        // محاولة المسح البسيط أولاً
-        const simpleResult = await performSimpleScan();
-        if (simpleResult) {
-          onSuccess(simpleResult);
-          return;
-        }
-
-        // إذا فشل المسح البسيط، نجرب المسح المستمر
-        await startContinuousScan();
-        return;
+      if (!isCapacitor) {
+        console.log("[useScannerDevice] بيئة غير مدعومة، استخدام المحاكاة");
+        startMockScan(onSuccess);
+        return true;
       }
       
-      // استخدام المحاكاة إذا لم يكن الجهاز مدعومًا
-      startMockScan(onSuccess);
+      if (!isSupported) {
+        console.log("[useScannerDevice] الجهاز غير مدعوم، استخدام المحاكاة");
+        startMockScan(onSuccess);
+        return true;
+      }
       
+      const { camera } = await BarcodeScanner.requestPermissions();
+      if (camera !== 'granted') {
+        console.log("[useScannerDevice] إذن الكاميرا غير ممنوح:", camera);
+        toast({
+          title: "تم رفض الإذن",
+          description: "يجب منح إذن الكاميرا لاستخدام الماسح الضوئي",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // إعداد واجهة المسح
+      console.log("[useScannerDevice] إعداد واجهة المسح");
+      setupScannerBackground();
+      
+      // إعداد مستمع المسح
+      console.log("[useScannerDevice] إعداد مستمع المسح");
+      await setupScanListener(async (code) => {
+        await stopDeviceScan();
+        onSuccess(code);
+      });
+
+      // محاولة المسح البسيط أولاً
+      console.log("[useScannerDevice] محاولة المسح البسيط");
+      const simpleResult = await performSimpleScan();
+      if (simpleResult) {
+        console.log("[useScannerDevice] نجح المسح البسيط:", simpleResult);
+        onSuccess(simpleResult);
+        return true;
+      }
+
+      // إذا فشل المسح البسيط، نجرب المسح المستمر
+      console.log("[useScannerDevice] محاولة المسح المستمر");
+      const continuousScanStarted = await startContinuousScan();
+      
+      if (!continuousScanStarted) {
+        console.log("[useScannerDevice] فشل بدء المسح المستمر، استخدام المحاكاة");
+        cleanupScannerBackground();
+        startMockScan(onSuccess);
+      }
+      
+      return true;
     } catch (error) {
       console.error("[useScannerDevice] خطأ في بدء عملية المسح:", error);
+      cleanupScannerBackground();
+      
       toast({
         title: "خطأ في المسح",
         description: "حدث خطأ أثناء محاولة بدء المسح، جاري تشغيل وضع المحاكاة",
-        variant: "destructive"
+        variant: "default"
       });
+      
       startMockScan(onSuccess);
+      return true; // نعيد true لأننا انتقلنا إلى وضع المحاكاة
     }
   };
   
