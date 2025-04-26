@@ -1,5 +1,6 @@
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { StartScanOptions } from '@/types/barcode-scanner';
 
 export const useScannerDevice = () => {
   const { toast } = useToast();
@@ -35,8 +36,8 @@ export const useScannerDevice = () => {
             document.body.classList.add('scanner-transparent-background');
             document.body.style.background = 'transparent';
             
-            // Start the camera stream
-            await BarcodeScanner.startScan({
+            // Start the camera stream with proper type usage
+            const scanOptions: StartScanOptions = {
               formats: [
                 BarcodeFormat.QrCode,
                 BarcodeFormat.Code128,
@@ -56,7 +57,9 @@ export const useScannerDevice = () => {
                   console.log("[useScannerDevice] لم يتم العثور على باركود");
                 }
               }
-            });
+            };
+
+            await BarcodeScanner.startScan(scanOptions);
             return;
           } else {
             console.log("[useScannerDevice] ماسح MLKit غير متوفر على هذا الجهاز");
