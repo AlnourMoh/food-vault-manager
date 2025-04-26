@@ -1,8 +1,12 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera, Keyboard, Flashlight } from 'lucide-react';
+import { X } from 'lucide-react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { ScannerControls } from './components/ScannerControls';
+import { ScannerFrame } from './components/ScannerFrame';
+import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
+import { PermissionErrorView } from './components/PermissionErrorView';
 
 interface ScannerViewProps {
   onStop: () => void;
@@ -11,8 +15,8 @@ interface ScannerViewProps {
   onManualEntry?: () => void;
 }
 
-export const ScannerView = ({ 
-  onStop, 
+export const ScannerView = ({
+  onStop,
   hasPermissionError = false,
   onRequestPermission,
   onManualEntry
@@ -20,17 +24,13 @@ export const ScannerView = ({
   const scannerActive = useRef(false);
   const flashOn = useRef(false);
 
-  // Make sure the scanning UI is properly displayed
   useEffect(() => {
     console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
     const setupScannerUI = () => {
       if (!hasPermissionError) {
         try {
           console.log("Setting up scanner UI");
-          // Set scanner as active
           scannerActive.current = true;
-          
-          // Make scanning visible when this component mounts
           document.body.style.visibility = 'visible';
           document.body.classList.add('barcode-scanner-active');
           document.body.classList.add('scanner-transparent-background');
@@ -47,7 +47,6 @@ export const ScannerView = ({
       try {
         console.log("ScannerView unmounting - cleaning up UI");
         scannerActive.current = false;
-        // Ensure the UI is restored when component unmounts
         document.body.style.visibility = 'visible';
         document.body.classList.remove('barcode-scanner-active');
         document.body.classList.remove('scanner-transparent-background');
@@ -58,13 +57,6 @@ export const ScannerView = ({
     };
   }, [hasPermissionError]);
 
-  const handleRequestPermission = () => {
-    console.log('Request permission button clicked in ScannerView');
-    if (onRequestPermission) {
-      onRequestPermission();
-    }
-  };
-  
   const toggleFlashlight = async () => {
     if (!window.Capacitor) return;
     
@@ -84,87 +76,25 @@ export const ScannerView = ({
 
   if (hasPermissionError) {
     return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-background">
-        <div className="text-center p-6 max-w-md space-y-4">
-          <div className="mx-auto bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-2">
-            <Camera className="h-8 w-8" />
-          </div>
-          <h2 className="text-xl font-bold">لا يوجد إذن للكاميرا</h2>
-          <p className="text-muted-foreground mb-4">
-            يرجى السماح بالوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي
-          </p>
-          <div className="flex flex-col space-y-2">
-            <Button 
-              onClick={handleRequestPermission}
-              className="w-full"
-              variant="default"
-            >
-              <Camera className="h-4 w-4 ml-2" />
-              طلب الإذن مجددًا
-            </Button>
-            
-            {onManualEntry && (
-              <Button 
-                onClick={onManualEntry}
-                className="w-full"
-                variant="secondary"
-              >
-                <Keyboard className="h-4 w-4 ml-2" />
-                إدخال الكود يدويًا
-              </Button>
-            )}
-            
-            <Button 
-              onClick={onStop}
-              className="w-full"
-              variant="outline"
-            >
-              <X className="h-4 w-4 ml-2" />
-              إغلاق
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PermissionErrorView
+        onRequestPermission={onRequestPermission || (() => {})}
+        onManualEntry={onManualEntry}
+        onStop={onStop}
+      />
     );
   }
 
   return (
     <div className="absolute inset-0 flex flex-col items-center bg-black bg-opacity-50">
-      {/* مؤشر حالة الماسح النشط */}
-      <div className="scanner-active-indicator">
-        الماسح نشط
-      </div>
+      <ScannerStatusIndicator />
       
       <div className="flex-1 w-full relative flex items-center justify-center">
-        <div className="w-72 h-72 border-4 border-primary rounded-lg scanner-target-frame flex items-center justify-center">
-          <div className="text-white text-center px-4">
-            <p className="mb-2 font-bold">قم بتوجيه الكاميرا نحو الباركود</p>
-            <p className="text-sm opacity-80">يتم المسح تلقائيًا عند اكتشاف رمز</p>
-          </div>
-        </div>
+        <ScannerFrame />
         
-        <div className="absolute top-24 inset-x-0 flex justify-center">
-          <Button 
-            variant="outline"
-            size="icon" 
-            className="rounded-full h-12 w-12 bg-background/20 hover:bg-background/40"
-            onClick={toggleFlashlight}
-          >
-            <Flashlight className="h-6 w-6 text-white" />
-          </Button>
-        </div>
-        
-        <div className="absolute bottom-24 inset-x-0 flex justify-center">
-          <Button 
-            variant="secondary"
-            size="lg" 
-            className="rounded-full px-6"
-            onClick={onManualEntry}
-          >
-            <Keyboard className="h-5 w-5 ml-2" />
-            إدخال الكود يدويًا
-          </Button>
-        </div>
+        <ScannerControls
+          onToggleFlash={toggleFlashlight}
+          onManualEntry={onManualEntry || (() => {})}
+        />
         
         <div className="absolute bottom-8 inset-x-0 flex justify-center">
           <Button 
