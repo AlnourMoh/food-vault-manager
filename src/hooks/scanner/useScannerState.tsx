@@ -64,6 +64,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                       console.error('Could not open settings URL:', e);
                     }
                   }}
+                  altText="إعدادات"
                 >
                   إعدادات
                 </ToastAction>
