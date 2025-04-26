@@ -21,7 +21,14 @@ const NotFound = () => {
   };
 
   if (isMobile) {
-    return <NetworkErrorView onRetry={handleRetry} />;
+    return (
+      <NetworkErrorView 
+        onRetry={handleRetry} 
+        errorCode="HTTP 404"
+        additionalInfo="الصفحة التي تحاول الوصول إليها غير موجودة"
+        url={window.location.href}
+      />
+    );
   }
 
   return (

@@ -9,7 +9,10 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     // استخدام التطبيق بدون الاعتماد على خادم خارجي
     // url: 'https://b3b6b969-583d-416c-9d8b-788fa375abca.lovableproject.com?forceHideBadge=true',
-    cleartext: true
+    cleartext: true,
+    // Allow app to run in offline mode with cached content
+    allowNavigation: ['*'],
+    errorPath: 'error.html'
   },
   plugins: {
     SplashScreen: {
@@ -40,7 +43,9 @@ const config: CapacitorConfig = {
     },
     appendUserAgent: "FoodVaultManager",
     permissions: [
-      "android.permission.CAMERA"
+      "android.permission.CAMERA",
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.INTERNET"
     ]
   },
   ios: {

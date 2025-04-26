@@ -12,9 +12,16 @@ import TroubleshootingSteps from './network/TroubleshootingSteps';
 interface NetworkErrorViewProps {
   onRetry?: () => void;
   additionalInfo?: string;
+  errorCode?: string;
+  url?: string;
 }
 
-const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additionalInfo }) => {
+const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ 
+  onRetry, 
+  additionalInfo, 
+  errorCode,
+  url
+}) => {
   const { 
     isChecking,
     progress,
@@ -32,7 +39,11 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   return (
     <div className="rtl min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
       <div className="space-y-6 max-w-md animate-fadeIn">
-        <ErrorDisplay additionalInfo={additionalInfo} />
+        <ErrorDisplay 
+          additionalInfo={additionalInfo} 
+          errorCode={errorCode} 
+          url={url}
+        />
         
         <RetryControls
           isChecking={isChecking}

@@ -4,9 +4,11 @@ import { WifiOff } from 'lucide-react';
 
 interface ErrorDisplayProps {
   additionalInfo?: string;
+  errorCode?: string;
+  url?: string;
 }
 
-const ErrorDisplay = ({ additionalInfo }: ErrorDisplayProps) => {
+const ErrorDisplay = ({ additionalInfo, errorCode, url }: ErrorDisplayProps) => {
   return (
     <div className="space-y-3">
       <div className="bg-muted rounded-full p-6 w-24 h-24 mx-auto flex items-center justify-center">
@@ -14,6 +16,20 @@ const ErrorDisplay = ({ additionalInfo }: ErrorDisplayProps) => {
       </div>
       
       <h1 className="text-2xl font-bold">صفحة الويب غير متاحة</h1>
+      
+      {url && (
+        <div className="text-sm text-muted-foreground">
+          <p>The web page at <span className="font-mono break-all">{url}</span></p>
+          <p>could not be loaded because:</p>
+        </div>
+      )}
+      
+      {errorCode && (
+        <div className="bg-muted p-3 rounded-md font-mono text-md">
+          {errorCode}
+        </div>
+      )}
+      
       <p className="text-muted-foreground">
         يبدو أن هناك مشكلة في الاتصال بالخادم أو بالإنترنت. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.
       </p>
