@@ -48,24 +48,28 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
                 title: "إذن الكاميرا مطلوب",
                 description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار. انقر للانتقال إلى الإعدادات",
                 variant: "destructive",
-                action: {
-                  altText: "إعدادات",
-                  onClick: () => {
-                    try {
-                      if (window.Capacitor?.getPlatform() === 'ios') {
-                        App.exitApp();
-                      } else {
-                        App.getInfo().then((appInfo) => {
-                          console.log('App info:', appInfo);
-                          window.location.href = 'app-settings:';
-                        });
-                      }
-                    } catch (e) {
-                      console.error('Could not open settings URL:', e);
+                action: function() {
+                  return {
+                    type: ToastAction,
+                    props: {
+                      onClick: () => {
+                        try {
+                          if (window.Capacitor?.getPlatform() === 'ios') {
+                            App.exitApp();
+                          } else {
+                            App.getInfo().then((appInfo) => {
+                              console.log('App info:', appInfo);
+                              window.location.href = 'app-settings:';
+                            });
+                          }
+                        } catch (e) {
+                          console.error('Could not open settings URL:', e);
+                        }
+                      },
+                      children: "إعدادات"
                     }
-                  },
-                  children: "إعدادات"
-                }
+                  }
+                }()
               });
               return false;
             }
