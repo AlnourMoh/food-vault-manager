@@ -1,6 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { useTorchControl } from './useTorchControl';
 import { useScannerUI } from './useScannerUI';
 import { useMockScanner } from './useMockScanner';
@@ -40,11 +40,11 @@ export const useScannerDevice = () => {
             
             const scanOptions: StartScanOptions = {
               formats: [
-                'QR_CODE',
-                'CODE_128',
-                'EAN_13',
-                'EAN_8',
-                'CODE_39'
+                BarcodeFormat.QrCode,
+                BarcodeFormat.Code128,
+                BarcodeFormat.Ean13,
+                BarcodeFormat.Ean8,
+                BarcodeFormat.Code39
               ],
               continuous: true,
               onScanComplete: (result) => {
@@ -117,4 +117,3 @@ export const useScannerDevice = () => {
     stopDeviceScan
   };
 };
-
