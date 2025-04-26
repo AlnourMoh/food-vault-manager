@@ -96,7 +96,7 @@ const MobileApp = () => {
     try {
       // Simple health check to Supabase
       const startTime = Date.now();
-      const { error } = await supabase.from('companies').select('count', { count: 'exact', head: true });
+      const { data, error } = await supabase.from('companies').select('count', { count: 'exact', head: true });
       const responseTime = Date.now() - startTime;
       
       console.log(`Server responded in ${responseTime}ms`);
