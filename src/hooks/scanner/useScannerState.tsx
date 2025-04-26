@@ -37,13 +37,13 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       console.log('[useScannerState] محاولة بدء المسح، حالة الإذن:', hasPermission);
       
       if (hasPermission === false) {
-        console.log('[useScannerState] Requesting permission as it was denied');
+        console.log('[useScannerState] طلب الإذن لأنه تم رفضه');
         
         if (window.Capacitor) {
           try {
             const permissionGranted = await requestPermission(true);
             if (!permissionGranted) {
-              console.log('[useScannerState] Permission still not granted after request');
+              console.log('[useScannerState] مازال الإذن غير ممنوح بعد الطلب');
               
               toast({
                 title: "إذن الكاميرا مطلوب",
@@ -72,19 +72,23 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
               return false;
             }
           } catch (error) {
-            console.error('[useScannerState] Error during permission request:', error);
+            console.error('[useScannerState] خطأ أثناء طلب الإذن:', error);
             return false;
           }
         }
       }
       
+      // تسجيل الدخول قبل محاولة بدء المسح
+      console.log('[useScannerState] جاري فحص توفر الماسح...');
+      
+      // فحص ما إذا كان ماسح الباركود متاحًا
       if (window.Capacitor) {
         try {
           const isSupported = await BarcodeScanner.isSupported();
-          if (isSupported) {
-            console.log('[useScannerState] MLKit scanner is supported');
-          } else {
-            console.log('[useScannerState] MLKit scanner is NOT supported');
+          console.log('[useScannerState] هل ماسح MLKit مدعوم:', isSupported);
+          
+          if (!isSupported) {
+            console.log('[useScannerState] ماسح MLKit غير مدعوم');
             toast({
               title: "ماسح الباركود غير مدعوم",
               description: "يبدو أن جهازك لا يدعم مكتبة مسح الباركود، سيتم استخدام طريقة بديلة",
@@ -92,10 +96,11 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
             });
           }
         } catch (error) {
-          console.error('[useScannerState] Error checking if MLKit scanner is supported:', error);
+          console.error('[useScannerState] خطأ في فحص ما إذا كان ماسح MLKit مدعومًا:', error);
         }
       }
       
+      // تفعيل المسح
       setIsScanningActive(true);
       await startDeviceScan(handleSuccessfulScan);
       return true;

@@ -23,32 +23,34 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   useEffect(() => {
     const initializeScanner = async () => {
       try {
-        console.log('Initializing barcode scanner...');
+        console.log('[BarcodeScanner] تهيئة ماسح الباركود...');
         
         // Check if we're running on a device with Capacitor
         if (window.Capacitor) {
           try {
             // Check if MLKit barcode scanner is available
             const available = await MLKitBarcodeScanner.isSupported();
-            console.log('MLKit BarcodeScanner available:', available);
+            console.log('[BarcodeScanner] هل ماسح MLKit متاح:', available);
             
             if (available) {
               // Pre-check camera permissions
               const permissions = await MLKitBarcodeScanner.checkPermissions();
-              console.log('Camera permissions state:', permissions);
+              console.log('[BarcodeScanner] حالة أذونات الكاميرا:', permissions);
               
               if (permissions.camera === 'prompt') {
-                console.log('Permission prompt will be shown');
+                console.log('[BarcodeScanner] سيتم عرض طلب إذن الاستخدام');
               } else if (permissions.camera === 'denied') {
-                console.log('Camera permission is denied');
+                console.log('[BarcodeScanner] تم رفض إذن الكاميرا');
                 toast({
                   title: "إذن الكاميرا مرفوض",
                   description: "يرجى منح إذن الكاميرا في إعدادات التطبيق",
                   variant: "destructive"
                 });
+              } else if (permissions.camera === 'granted') {
+                console.log('[BarcodeScanner] تم منح إذن الكاميرا بالفعل');
               }
             } else {
-              console.log('MLKit scanner is NOT available on this device');
+              console.log('[BarcodeScanner] ماسح MLKit غير متاح على هذا الجهاز');
               toast({
                 title: "ماسح الباركود غير متوفر",
                 description: "جهازك لا يدعم ماسح الباركود، سيتم استخدام وضع الإدخال اليدوي",
@@ -58,13 +60,15 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
               setIsManualEntry(true);
             }
           } catch (error) {
-            console.error('Error checking barcode scanner availability:', error);
+            console.error('[BarcodeScanner] خطأ في فحص توفر ماسح الباركود:', error);
+            // Show detailed error in development mode
+            console.error('Error details:', JSON.stringify(error));
           }
         } else {
-          console.log('Running in web environment, using mock scanner');
+          console.log('[BarcodeScanner] تشغيل في بيئة الويب، استخدام ماسح وهمي');
         }
       } catch (error) {
-        console.error('Error during scanner initialization:', error);
+        console.error('[BarcodeScanner] خطأ أثناء تهيئة الماسح:', error);
       } finally {
         setIsInitializing(false);
       }
@@ -74,7 +78,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     
     // Cleanup
     return () => {
-      console.log('Barcode scanner component unmounting');
+      console.log('[BarcodeScanner] تنظيف مكون الماسح');
+      // Make sure any UI changes are reverted on unmount
+      document.body.style.background = '';
+      document.body.classList.remove('barcode-scanner-active');
+      document.body.classList.remove('scanner-transparent-background');
     };
   }, [toast]);
   
@@ -89,18 +97,19 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   
   // Automatically start scanning when the component mounts if we have permission
   useEffect(() => {
-    console.log('BarcodeScanner state update - hasPermission:', hasPermission, 'isLoading:', isLoading, 'isScanningActive:', isScanningActive);
+    console.log('[BarcodeScanner] تحديث حالة الماسح - hasPermission:', hasPermission, 'isLoading:', isLoading, 'isScanningActive:', isScanningActive);
     
     const initializeScanner = async () => {
       try {
+        // Only start scanning if we're not loading, not initializing, have permission, not already scanning, and not in manual entry mode
         if (!isLoading && !isInitializing) {
           if (hasPermission === true && !isScanningActive && !isManualEntry) {
-            console.log('Auto-starting scanner because we have permission');
+            console.log('[BarcodeScanner] بدء المسح تلقائيًا لأن لدينا الإذن');
             await startScan();
           }
         }
       } catch (error) {
-        console.error('Error initializing scanner:', error);
+        console.error('[BarcodeScanner] خطأ في تهيئة الماسح:', error);
         toast({
           title: "خطأ",
           description: "حدث خطأ أثناء تهيئة الماسح الضوئي",
@@ -109,22 +118,25 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       }
     };
     
-    initializeScanner();
+    // Initialize the scanner when component is ready
+    if (!isInitializing) {
+      initializeScanner();
+    }
     
     return () => {
-      console.log('BarcodeScanner useEffect cleanup, stopping scan');
+      console.log('[BarcodeScanner] تنظيف useEffect, إيقاف المسح');
       stopScan();
     };
   }, [hasPermission, isLoading, isScanningActive, startScan, stopScan, isManualEntry, toast, isInitializing]);
   
   const handleRequestPermission = async () => {
-    console.log('BarcodeScanner: Requesting permission explicitly...');
+    console.log('[BarcodeScanner] طلب الإذن بشكل صريح...');
     try {
-      console.log('Starting permission request and scan workflow');
+      console.log('[BarcodeScanner] بدء عملية طلب الإذن والمسح');
       const result = await startScan();
-      console.log('Permission request and scan result:', result);
+      console.log('[BarcodeScanner] نتيجة طلب الإذن والمسح:', result);
     } catch (error) {
-      console.error('Error requesting permission:', error);
+      console.error('[BarcodeScanner] خطأ في طلب الإذن:', error);
       toast({
         title: "خطأ في الإذن",
         description: "حدث خطأ أثناء طلب إذن الكاميرا",
@@ -134,18 +146,18 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   };
   
   const handleManualEntry = () => {
-    console.log('Switching to manual code entry');
+    console.log('[BarcodeScanner] التحويل إلى إدخال الكود يدويًا');
     stopScan(); // Make sure to stop any active scanning
     setIsManualEntry(true);
   };
   
   const handleManualSubmit = (code: string) => {
-    console.log('Manual code submitted:', code);
+    console.log('[BarcodeScanner] تم إرسال الكود يدويًا:', code);
     onScan(code);
   };
   
   const handleManualCancel = () => {
-    console.log('Manual entry canceled');
+    console.log('[BarcodeScanner] تم إلغاء الإدخال اليدوي');
     setIsManualEntry(false);
   };
   

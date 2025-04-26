@@ -5,6 +5,11 @@
   --background: transparent !important;
 }
 
+.scanner-transparent-background {
+  background: transparent !important;
+  visibility: visible !important;
+}
+
 app-root.scanner-active ion-app {
   background: transparent !important;
 }
@@ -172,5 +177,42 @@ body.barcode-scanner-active {
   100% {
     top: 100%;
     opacity: 0.8;
+  }
+}
+
+/* تصحيح مشاكل العرض مع MLKit */
+body.barcode-scanner-active .ion-page,
+body.barcode-scanner-active ion-content {
+  background: transparent !important;
+}
+
+.capacitor-mlkit-barcode-scanning {
+  z-index: 9999;
+}
+
+/* مؤشرات الماسح النشط */
+.scanner-active-indicator {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  z-index: 9999;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
   }
 }

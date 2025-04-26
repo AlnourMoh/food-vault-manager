@@ -1,7 +1,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera, Keyboard } from 'lucide-react';
+import { X, Camera, Keyboard, Flashlight } from 'lucide-react';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface ScannerViewProps {
   onStop: () => void;
@@ -17,6 +18,7 @@ export const ScannerView = ({
   onManualEntry
 }: ScannerViewProps) => {
   const scannerActive = useRef(false);
+  const flashOn = useRef(false);
 
   // Make sure the scanning UI is properly displayed
   useEffect(() => {
@@ -31,6 +33,8 @@ export const ScannerView = ({
           // Make scanning visible when this component mounts
           document.body.style.visibility = 'visible';
           document.body.classList.add('barcode-scanner-active');
+          document.body.classList.add('scanner-transparent-background');
+          document.body.style.background = 'transparent';
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
         }
@@ -46,6 +50,8 @@ export const ScannerView = ({
         // Ensure the UI is restored when component unmounts
         document.body.style.visibility = 'visible';
         document.body.classList.remove('barcode-scanner-active');
+        document.body.classList.remove('scanner-transparent-background');
+        document.body.style.background = '';
       } catch (e) {
         console.error('Error restoring UI on unmount:', e);
       }
@@ -56,6 +62,18 @@ export const ScannerView = ({
     console.log('Request permission button clicked in ScannerView');
     if (onRequestPermission) {
       onRequestPermission();
+    }
+  };
+  
+  const toggleFlashlight = async () => {
+    if (!window.Capacitor) return;
+    
+    try {
+      flashOn.current = !flashOn.current;
+      console.log(`Toggling flashlight to ${flashOn.current ? 'ON' : 'OFF'}`);
+      await BarcodeScanner.enableTorch({enable: flashOn.current});
+    } catch (error) {
+      console.error('Error toggling flashlight:', error);
     }
   };
 
@@ -107,12 +125,28 @@ export const ScannerView = ({
 
   return (
     <div className="absolute inset-0 flex flex-col items-center bg-black bg-opacity-50">
+      {/* مؤشر حالة الماسح النشط */}
+      <div className="scanner-active-indicator">
+        الماسح نشط
+      </div>
+      
       <div className="flex-1 w-full relative flex items-center justify-center">
         <div className="w-72 h-72 border-4 border-primary rounded-lg scanner-target-frame flex items-center justify-center">
           <div className="text-white text-center px-4">
             <p className="mb-2 font-bold">قم بتوجيه الكاميرا نحو الباركود</p>
             <p className="text-sm opacity-80">يتم المسح تلقائيًا عند اكتشاف رمز</p>
           </div>
+        </div>
+        
+        <div className="absolute top-24 inset-x-0 flex justify-center">
+          <Button 
+            variant="outline"
+            size="icon" 
+            className="rounded-full h-12 w-12 bg-background/20 hover:bg-background/40"
+            onClick={toggleFlashlight}
+          >
+            <Flashlight className="h-6 w-6 text-white" />
+          </Button>
         </div>
         
         <div className="absolute bottom-24 inset-x-0 flex justify-center">
