@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import MobileLayout from '@/components/layout/MobileLayout';
 import MobileHome from '@/pages/mobile/MobileHome';
@@ -10,89 +10,24 @@ import MobileAccount from '@/pages/mobile/MobileAccount';
 import RestaurantLogin from '@/pages/RestaurantLogin';
 import NetworkErrorView from '@/components/mobile/NetworkErrorView';
 import MobileInventory from '@/pages/mobile/MobileInventory';
-import { useNetworkStatus } from '@/hooks/network/useNetworkStatus';
-import { useServerConnection } from '@/hooks/network/useServerConnection';
-import { toast } from '@/hooks/use-toast';
-
-// Auth guard component to protect routes
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
-  const location = useLocation();
-  
-  if (!isRestaurantLoggedIn) {
-    return <Navigate to="/mobile/login" state={{ from: location }} replace />;
-  }
-  
-  return <>{children}</>;
-};
+import { ProtectedRoute } from './auth/ProtectedRoute';
+import { InitialLoading } from './common/InitialLoading';
+import { useMobileConnection } from '@/hooks/network/useMobileConnection';
 
 const MobileApp = () => {
-  const { isOnline } = useNetworkStatus();
-  const { 
-    isConnectedToServer, 
-    serverCheckDone, 
-    errorInfo,
-    isChecking,
+  const {
+    showErrorScreen,
+    isInitialLoading,
+    retryCount,
+    handleRetry,
     checkServerConnection,
-    forceReconnect
-  } = useServerConnection();
+    setIsInitialLoading,
+    setInitialCheckDone,
+    initialCheckDone,
+    errorInfo
+  } = useMobileConnection();
   
-  const [retryCount, setRetryCount] = useState(0);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
-  
-  // Add state to prevent flickering of error screen with a longer delay
-  const [showErrorScreen, setShowErrorScreen] = useState(false);
-  const [errorTransitionActive, setErrorTransitionActive] = useState(false);
-
   useEffect(() => {
-    // Handle connection state changes with a delay to prevent flickering
-    let timeoutId: number | undefined;
-    
-    if (!isOnline || (!isConnectedToServer && serverCheckDone)) {
-      // Set a delay before showing the error screen
-      setErrorTransitionActive(true);
-      timeoutId = window.setTimeout(() => {
-        setShowErrorScreen(true);
-      }, 2000); // Increased delay to 2 seconds
-    } else if (isOnline && isConnectedToServer && serverCheckDone) {
-      // Set a delay before hiding the error screen
-      timeoutId = window.setTimeout(() => {
-        setShowErrorScreen(false);
-        // Add additional delay before allowing transitions again
-        setTimeout(() => {
-          setErrorTransitionActive(false);
-        }, 1000);
-      }, 1500);
-    }
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isOnline, isConnectedToServer, serverCheckDone]);
-
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        if (isOnline) {
-          await checkServerConnection();
-        }
-      } catch (error) {
-        console.error('Error during connection check:', error);
-      } finally {
-        // Set a delay before removing the initial loading state
-        setTimeout(() => {
-          setIsInitialLoading(false);
-          setInitialCheckDone(true);
-        }, 2000); // Increased to 2 seconds
-      }
-    };
-
-    // Only run the check if it hasn't been done yet
-    if (!initialCheckDone) {
-      checkConnection();
-    }
-    
     const setupCapacitor = async () => {
       if (window.Capacitor) {
         console.log('Capacitor is available, setting up listeners');
@@ -104,69 +39,38 @@ const MobileApp = () => {
             CapacitorApp.exitApp();
           }
         });
-      } else {
-        console.log('Capacitor is not available in this environment');
       }
     };
+    
+    const checkConnection = async () => {
+      try {
+        await checkServerConnection();
+      } finally {
+        setTimeout(() => {
+          setIsInitialLoading(false);
+          setInitialCheckDone(true);
+        }, 2000);
+      }
+    };
+    
+    if (!initialCheckDone) {
+      checkConnection();
+    }
     
     setupCapacitor();
-    
-    // Set up automatic reconnection attempts when online status changes
-    const handleOnlineStatusChange = () => {
-      if (navigator.onLine) {
-        console.log('Device came online, checking server connection');
-        // Add a small delay before checking connection
-        setTimeout(() => {
-          if (!errorTransitionActive) {
-            checkServerConnection();
-          }
-        }, 1500); // Increased to 1.5 seconds
-      }
-    };
-    
-    window.addEventListener('online', handleOnlineStatusChange);
     
     return () => {
       if (window.Capacitor) {
         CapacitorApp.removeAllListeners();
       }
-      window.removeEventListener('online', handleOnlineStatusChange);
     };
-  }, [isOnline, retryCount, initialCheckDone, checkServerConnection, errorTransitionActive]);
+  }, [checkServerConnection, initialCheckDone, setInitialCheckDone, setIsInitialLoading]);
 
-  const handleRetry = async () => {
-    setRetryCount(prev => prev + 1);
-    
-    toast({
-      title: "إعادة محاولة الاتصال",
-      description: "جاري التحقق من الاتصال بالخادم...",
-    });
-    
-    // Force connection check immediately
-    const success = await forceReconnect();
-    
-    if (success) {
-      toast({
-        title: "تم الاتصال بنجاح",
-        description: "تم استعادة الاتصال بالخادم بنجاح",
-      });
-    }
-  };
-  
-  // Show loading indicator while making the initial connection check
   if (isInitialLoading) {
-    return (
-      <div className="rtl min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4">جاري التحقق من الاتصال...</p>
-        </div>
-      </div>
-    );
+    return <InitialLoading />;
   }
   
-  // Show network error view only after we've checked and if there are actual connection issues
-  if (initialCheckDone && showErrorScreen) {
+  if (showErrorScreen) {
     return (
       <NetworkErrorView 
         onRetry={handleRetry} 
@@ -175,7 +79,6 @@ const MobileApp = () => {
     );
   }
   
-  // If we're connected, show the app
   return (
     <Routes>
       <Route path="/login" element={<RestaurantLogin />} />
