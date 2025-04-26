@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useCameraPermissions } from '../useCameraPermissions';
 import { useScannerDevice } from './useScannerDevice';
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { App } from '@capacitor/app';
 import { ToastAction } from '@/components/ui/toast';
 import React from 'react';
@@ -46,13 +46,13 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       if (hasPermission === false) {
         console.log('[useScannerState] طلب إذن الكاميرا');
         
-        // نستخدم BarcodeScanner مباشرة للحصول على الإذن
-        if (window.Capacitor) {
+        // طلب الإذن مباشرة
+        if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
           try {
-            const result = await BarcodeScanner.requestPermissions();
-            console.log('[useScannerState] نتيجة طلب إذن الكاميرا:', result);
+            const permissionStatus = await BarcodeScanner.checkPermission({ force: true });
+            console.log('[useScannerState] نتيجة طلب إذن الكاميرا:', permissionStatus);
             
-            if (result.camera !== 'granted') {
+            if (!permissionStatus.granted) {
               console.log('[useScannerState] ما زال الإذن غير ممنوح');
               
               toast({

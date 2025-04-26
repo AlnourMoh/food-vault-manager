@@ -1,6 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { Camera } from '@capacitor/camera';
 import { usePlatformPermissions } from './usePlatformPermissions';
 
@@ -14,22 +14,22 @@ export const usePermissionRequest = () => {
       const platform = window.Capacitor?.getPlatform();
       console.log('[usePermissionRequest] المنصة الحالية:', platform);
 
-      // طريقة 1: استخدام BarcodeScanner الجديد
-      if (window.Capacitor) {
-        console.log(`[usePermissionRequest] محاولة #1: طلب إذن BarcodeScanner...`);
+      // طريقة 1: استخدام BarcodeScanner
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+        console.log(`[usePermissionRequest] محاولة طلب إذن BarcodeScanner...`);
         
-        // استخدام المكتبة الجديدة
-        const result = await BarcodeScanner.requestPermissions();
-        console.log('[usePermissionRequest] نتيجة طلب إذن ML Kit:', result);
+        // طلب الإذن من المستخدم
+        const permissionStatus = await BarcodeScanner.checkPermission({ force: true });
+        console.log('[usePermissionRequest] نتيجة طلب إذن BarcodeScanner:', permissionStatus);
         
-        if (result.camera === 'granted') {
+        if (permissionStatus.granted) {
           console.log('[usePermissionRequest] تم منح الإذن!');
           return true;
         }
         
         // طريقة بديلة: استخدام واجهة الإعدادات
-        console.log('[usePermissionRequest] المحاولة #2: تجربة الطرق البديلة حسب المنصة...');
-        // محاولة التوجيه إلى إعدادات التطبيق
+        console.log('[usePermissionRequest] تجربة الطرق البديلة حسب المنصة...');
+        
         if (platform === 'ios') {
           toast({
             title: "الإذن مطلوب",
@@ -52,7 +52,7 @@ export const usePermissionRequest = () => {
       
       // طريقة 2: استخدام ملحق Camera الأساسي
       if (window.Capacitor?.isPluginAvailable('Camera')) {
-        console.log('[usePermissionRequest] محاولة #3: استخدام ملحق الكاميرا...');
+        console.log('[usePermissionRequest] استخدام ملحق الكاميرا...');
         
         const cameraResult = await Camera.requestPermissions({
           permissions: ['camera']
@@ -74,7 +74,7 @@ export const usePermissionRequest = () => {
       } 
       
       // طريقة 3: بيئة الويب
-      console.log('[usePermissionRequest] محاولة #4: استخدام API الويب للكاميرا');
+      console.log('[usePermissionRequest] استخدام API الويب للكاميرا');
       return await handleWebPermissions();
     } catch (error) {
       console.error('[usePermissionRequest] خطأ في طلب الإذن:', error);

@@ -1,24 +1,34 @@
 
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 
 export const useTorchControl = () => {
   const enableTorch = async () => {
-    try {
-      if (window.Capacitor) {
-        await BarcodeScanner.enableTorch();
+    if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+      try {
+        // Check if torch is available
+        const torchAvailable = await BarcodeScanner.checkTorch();
+        
+        if (torchAvailable.available) {
+          console.log('[useTorchControl] تشغيل الفلاش');
+          await BarcodeScanner.toggleTorch();
+        } else {
+          console.log('[useTorchControl] الفلاش غير متوفر على هذا الجهاز');
+        }
+      } catch (error) {
+        console.error('[useTorchControl] خطأ في تشغيل الفلاش:', error);
       }
-    } catch (error) {
-      console.error('[useTorchControl] خطأ في تشغيل الإضاءة:', error);
     }
   };
 
   const disableTorch = async () => {
-    try {
-      if (window.Capacitor) {
-        await BarcodeScanner.disableTorch();
+    if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+      try {
+        // Check if torch is on first (not directly supported in this API, but we'll toggle anyway)
+        console.log('[useTorchControl] إيقاف الفلاش');
+        await BarcodeScanner.toggleTorch();
+      } catch (error) {
+        console.error('[useTorchControl] خطأ في إيقاف الفلاش:', error);
       }
-    } catch (error) {
-      console.error('[useTorchControl] خطأ في إيقاف الإضاءة:', error);
     }
   };
 
@@ -27,4 +37,3 @@ export const useTorchControl = () => {
     disableTorch
   };
 };
-

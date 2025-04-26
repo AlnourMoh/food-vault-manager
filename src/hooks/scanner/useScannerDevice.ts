@@ -1,21 +1,16 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { useTorchControl } from './useTorchControl';
 import { useScannerUI } from './useScannerUI';
 import { useMockScanner } from './useMockScanner';
 import { useDeviceDetection } from './device/useDeviceDetection';
-import { useScanOperations } from './device/useScanOperations';
-import { useScanListener } from './device/useScanListener';
 
 export const useScannerDevice = () => {
   const { toast } = useToast();
-  const { enableTorch, disableTorch } = useTorchControl();
   const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
   const { startMockScan } = useMockScanner();
   const { checkDeviceSupport } = useDeviceDetection();
-  const { performSimpleScan, startContinuousScan } = useScanOperations();
-  const { setupScanListener } = useScanListener();
   
   const startDeviceScan = async (onSuccess: (code: string) => void) => {
     try {
@@ -36,10 +31,10 @@ export const useScannerDevice = () => {
       
       // Request camera permissions immediately
       console.log("[useScannerDevice] طلب أذونات الكاميرا");
-      const { camera } = await BarcodeScanner.requestPermissions();
+      const permissionStatus = await BarcodeScanner.checkPermission({ force: true });
       
-      if (camera !== 'granted') {
-        console.log("[useScannerDevice] إذن الكاميرا غير ممنوح:", camera);
+      if (!permissionStatus.granted) {
+        console.log("[useScannerDevice] إذن الكاميرا غير ممنوح:", permissionStatus);
         toast({
           title: "تم رفض الإذن",
           description: "يجب منح إذن الكاميرا لاستخدام الماسح الضوئي",
@@ -55,35 +50,31 @@ export const useScannerDevice = () => {
       // Prepare the scanner
       console.log("[useScannerDevice] تجهيز الماسح الضوئي");
       await BarcodeScanner.prepare();
-      
-      // إعداد مستمع المسح
-      console.log("[useScannerDevice] إعداد مستمع المسح");
-      await setupScanListener(async (code) => {
-        await stopDeviceScan();
-        onSuccess(code);
-      });
 
-      // بدء المسح المستمر فوراً
-      console.log("[useScannerDevice] بدء المسح المستمر مباشرة");
-      const continuousScanStarted = await startContinuousScan();
+      // Show camera with transparency
+      await BarcodeScanner.hideBackground();
       
-      if (!continuousScanStarted) {
-        console.log("[useScannerDevice] فشل بدء المسح المستمر، محاولة المسح البسيط");
-        
-        // محاولة المسح البسيط كخطة بديلة
-        const simpleResult = await performSimpleScan();
-        if (simpleResult) {
-          console.log("[useScannerDevice] نجح المسح البسيط:", simpleResult);
-          onSuccess(simpleResult);
-          return true;
-        }
-        
-        console.log("[useScannerDevice] فشل المسح البسيط أيضاً، استخدام المحاكاة");
-        cleanupScannerBackground();
-        startMockScan(onSuccess);
+      // بدء المسح
+      console.log("[useScannerDevice] بدء عملية المسح الفعلية");
+      const result = await BarcodeScanner.startScan({ targetedFormats: ['QR_CODE', 'EAN_13', 'CODE_128'] });
+      
+      // إغلاق المسح بعد النتيجة
+      cleanupScannerBackground();
+      
+      // معالجة النتيجة
+      if (result.hasContent) {
+        console.log("[useScannerDevice] تم العثور على محتوى:", result.content);
+        onSuccess(result.content);
+        return true;
+      } else {
+        console.log("[useScannerDevice] لم يتم العثور على محتوى");
+        toast({
+          title: "لم يتم العثور على باركود",
+          description: "حاول مرة أخرى مع توجيه الكاميرا بشكل أفضل",
+          variant: "default"
+        });
+        return false;
       }
-      
-      return true;
     } catch (error) {
       console.error("[useScannerDevice] خطأ في بدء عملية المسح:", error);
       cleanupScannerBackground();
@@ -102,15 +93,11 @@ export const useScannerDevice = () => {
   const stopDeviceScan = async () => {
     try {
       console.log("[useScannerDevice] إيقاف عملية المسح");
-      if (window.Capacitor) {
-        const { supported } = await BarcodeScanner.isSupported();
-        if (supported) {
-          // Make sure to stop all scanning processes
-          await BarcodeScanner.stopScan();
-          await disableTorch();
-          await BarcodeScanner.hideBackground();
-          cleanupScannerBackground();
-        }
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+        // Make sure to stop scanning
+        await BarcodeScanner.stopScan();
+        await BarcodeScanner.showBackground();
+        cleanupScannerBackground();
       }
     } catch (error) {
       console.error("[useScannerDevice] خطأ في إيقاف المسح:", error);

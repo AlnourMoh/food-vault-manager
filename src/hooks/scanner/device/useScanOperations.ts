@@ -1,44 +1,41 @@
 
-import { BarcodeScanner, BarcodeFormat, StartScanOptions } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { useToast } from '@/hooks/use-toast';
+import { SupportedFormat } from '@/types/barcode-scanner';
 
 export const useScanOperations = () => {
   const { toast } = useToast();
 
-  const getScanOptions = (): StartScanOptions => ({
-    formats: [
-      BarcodeFormat.QrCode,
-      BarcodeFormat.Code128,
-      BarcodeFormat.Ean13,
-      BarcodeFormat.Ean8,
-      BarcodeFormat.Code39
-    ]
+  const getScanOptions = () => ({
+    targetedFormats: [
+      SupportedFormat.QR_CODE,
+      SupportedFormat.CODE_128,
+      SupportedFormat.EAN_13,
+      SupportedFormat.EAN_8,
+      SupportedFormat.CODE_39
+    ],
+    showTorchButton: true,
+    showFlipCameraButton: false,
+    prompt: "قم بتوجيه الكاميرا نحو الباركود"
   });
 
   const performSimpleScan = async () => {
     try {
       console.log("[useScanOperations] استخدام طريقة المسح البسيطة");
-      const result = await BarcodeScanner.scan();
-      return result.barcodes[0]?.rawValue || null;
+      const result = await BarcodeScanner.startScan(getScanOptions());
+      
+      if (result.hasContent) {
+        return result.content;
+      }
+      return null;
     } catch (error) {
       console.error("[useScanOperations] فشل المسح البسيط:", error);
       return null;
     }
   };
 
-  const startContinuousScan = async () => {
-    try {
-      console.log("[useScanOperations] بدء المسح المستمر");
-      await BarcodeScanner.startScan(getScanOptions());
-      return true;
-    } catch (error) {
-      console.error("[useScanOperations] فشل بدء المسح المستمر:", error);
-      return false;
-    }
-  };
-
   return {
     performSimpleScan,
-    startContinuousScan
+    getScanOptions
   };
 };

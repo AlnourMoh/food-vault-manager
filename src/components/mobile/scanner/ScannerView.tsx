@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { ScannerControls } from './components/ScannerControls';
 import { ScannerFrame } from './components/ScannerFrame';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
@@ -40,7 +40,7 @@ export const ScannerView = ({
             document.body.style.background = 'transparent';
             
             // Ensure the BarcodeScanner is ready
-            if (window.Capacitor && BarcodeScanner) {
+            if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
               console.log("Preparing BarcodeScanner...");
               BarcodeScanner.prepare();
             }
@@ -63,7 +63,7 @@ export const ScannerView = ({
         document.body.style.background = '';
         
         // Clean up the BarcodeScanner
-        if (window.Capacitor && BarcodeScanner) {
+        if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
           console.log("Cleaning up BarcodeScanner...");
           BarcodeScanner.hideBackground();
         }
@@ -74,17 +74,12 @@ export const ScannerView = ({
   }, [hasPermissionError]);
 
   const toggleFlashlight = async () => {
-    if (!window.Capacitor) return;
+    if (!window.Capacitor || !window.Capacitor.isPluginAvailable('BarcodeScanner')) return;
     
     try {
+      console.log(`Toggling flashlight`);
+      await BarcodeScanner.toggleTorch();
       flashOn.current = !flashOn.current;
-      console.log(`Toggling flashlight to ${flashOn.current ? 'ON' : 'OFF'}`);
-      
-      if (flashOn.current) {
-        await BarcodeScanner.enableTorch();
-      } else {
-        await BarcodeScanner.disableTorch();
-      }
     } catch (error) {
       console.error('Error toggling flashlight:', error);
     }
