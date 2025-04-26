@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { WifiOff, RefreshCcw, ExternalLink } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
+import RetryControls from './network/RetryControls';
+import CacheControls from './network/CacheControls';
+import ErrorDisplay from './network/ErrorDisplay';
 import NetworkInfo from './network/NetworkInfo';
 import TroubleshootingSteps from './network/TroubleshootingSteps';
 
@@ -20,7 +19,6 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
 
-  // Auto-retry logic
   useEffect(() => {
     if (autoRetryEnabled && retryCount < 5) {
       const timer = setTimeout(() => {
@@ -33,12 +31,10 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     }
   }, [retryCount, autoRetryEnabled]);
 
-  // Check network status whenever component mounts or navigator.onLine changes
   useEffect(() => {
     const checkNetworkStatus = () => {
       gatherNetworkInfo();
       
-      // If we're online and auto-retry is enabled, try a reconnect
       if (navigator.onLine && autoRetryEnabled && onRetry && retryCount < 3) {
         handleRetry();
       }
@@ -46,7 +42,6 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
     
     checkNetworkStatus();
     
-    // Set up event listeners for network status changes
     window.addEventListener('online', checkNetworkStatus);
     window.addEventListener('offline', checkNetworkStatus);
     
@@ -125,22 +120,18 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       description: "يرجى الانتظار...",
     });
     
-    // Save important data before clearing cache
     const restaurantId = localStorage.getItem('restaurantId');
     const isRestaurantLogin = localStorage.getItem('isRestaurantLogin');
     const userEmail = localStorage.getItem('userEmail');
     const userName = localStorage.getItem('userName');
     
-    // Clear localStorage
     localStorage.clear();
     
-    // Restore important data
     if (restaurantId) localStorage.setItem('restaurantId', restaurantId);
     if (isRestaurantLogin) localStorage.setItem('isRestaurantLogin', isRestaurantLogin);
     if (userEmail) localStorage.setItem('userEmail', userEmail);
     if (userName) localStorage.setItem('userName', userName);
     
-    // Unregister service workers if available
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
         for (const registration of registrations) {
@@ -149,7 +140,6 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       });
     }
     
-    // Clear cache if available
     if ('caches' in window) {
       caches.keys().then(names => {
         names.forEach(name => {
@@ -158,7 +148,6 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
       });
     }
     
-    // Reload the page after a short delay
     setTimeout(() => {
       window.location.href = window.location.href.split('#')[0];
     }, 1000);
@@ -167,59 +156,20 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({ onRetry, additional
   return (
     <div className="rtl min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
       <div className="space-y-6 max-w-md">
-        <div className="bg-muted rounded-full p-6 w-24 h-24 mx-auto flex items-center justify-center">
-          <WifiOff className="w-12 h-12 text-muted-foreground" />
-        </div>
+        <ErrorDisplay additionalInfo={additionalInfo} />
         
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">عذراً، حدث خطأ في الاتصال</h1>
-          <p className="text-muted-foreground">
-            يبدو أن هناك مشكلة في الاتصال بالإنترنت أو السيرفر. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.
-          </p>
-          {additionalInfo && (
-            <div className="bg-red-50 text-red-700 p-2 rounded-md text-sm mt-2">
-              {additionalInfo}
-            </div>
-          )}
-        </div>
-
-        {isChecking ? (
-          <div className="w-full space-y-2">
-            <Progress value={progress} className="w-full" />
-            <p className="text-sm text-muted-foreground">جارٍ التحقق من الاتصال...</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <Button onClick={handleRetry} className="w-full" size="lg">
-              <RefreshCcw className="w-4 h-4 ml-2" />
-              إعادة المحاولة
-            </Button>
-            
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" onClick={forceReload}>
-                <ExternalLink className="w-4 h-4 ml-1" />
-                إعادة تحميل التطبيق
-              </Button>
-              
-              <Button variant="outline" onClick={clearCacheAndReload}>
-                مسح الذاكرة المؤقتة
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-center mt-2">
-              <input 
-                type="checkbox" 
-                id="auto-retry" 
-                className="mr-2"
-                checked={autoRetryEnabled}
-                onChange={() => setAutoRetryEnabled(!autoRetryEnabled)}
-              />
-              <label htmlFor="auto-retry" className="text-sm text-muted-foreground">
-                محاولة إعادة الاتصال تلقائياً
-              </label>
-            </div>
-          </div>
-        )}
+        <RetryControls
+          isChecking={isChecking}
+          progress={progress}
+          onRetry={handleRetry}
+          autoRetryEnabled={autoRetryEnabled}
+          setAutoRetryEnabled={setAutoRetryEnabled}
+        />
+        
+        <CacheControls
+          onForceReload={forceReload}
+          onClearCache={clearCacheAndReload}
+        />
         
         <NetworkInfo 
           networkInfo={networkInfo}
