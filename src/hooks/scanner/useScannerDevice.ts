@@ -28,126 +28,167 @@ export const useScannerDevice = () => {
         return true;
       }
       
-      // Dynamically import the BarcodeScanner to prevent issues during initialization
-      const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
-      
-      // Request camera permissions immediately
-      console.log("[useScannerDevice] طلب أذونات الكاميرا");
+      // استخدام MLKit Barcode Scanner بدلاً من المكتبة الأخرى التي تسبب تعارضات
       try {
-        const permissionStatus = await BarcodeScanner.checkPermission({ force: true });
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         
-        if (!permissionStatus.granted) {
-          console.log("[useScannerDevice] إذن الكاميرا غير ممنوح:", permissionStatus);
-          toast({
-            title: "تم رفض الإذن",
-            description: "يجب منح إذن الكاميرا لاستخدام الماسح الضوئي",
-            variant: "destructive"
-          });
-          return false;
+        // التحقق من الأذونات أولاً
+        const status = await BarcodeScanner.checkPermissions();
+        console.log("[useScannerDevice] حالة أذونات المسح:", status);
+        
+        if (status.camera !== 'granted') {
+          const result = await BarcodeScanner.requestPermissions();
+          console.log("[useScannerDevice] نتيجة طلب الأذونات:", result);
+          
+          if (result.camera !== 'granted') {
+            toast({
+              title: "إذن الكاميرا مطلوب",
+              description: "يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي",
+              variant: "destructive"
+            });
+            return false;
+          }
         }
-      } catch (permError) {
-        console.error("[useScannerDevice] خطأ في طلب أذونات الكاميرا:", permError);
-        startMockScan(onSuccess);
-        return true;
-      }
-
-      // إعداد واجهة المسح فوراً
-      console.log("[useScannerDevice] إعداد واجهة المسح");
-      await setupScannerBackground();
-      
-      // Prepare the scanner
-      console.log("[useScannerDevice] تجهيز الماسح الضوئي");
-      try {
-        await BarcodeScanner.prepare();
-      } catch (prepareError) {
-        console.error("[useScannerDevice] خطأ في تجهيز الماسح:", prepareError);
-        cleanupScannerBackground();
-        startMockScan(onSuccess);
-        return true;
-      }
-
-      // Show camera with transparency
-      try {
-        await BarcodeScanner.hideBackground();
-      } catch (bgError) {
-        console.error("[useScannerDevice] خطأ في إخفاء الخلفية:", bgError);
-      }
-      
-      // بدء المسح
-      console.log("[useScannerDevice] بدء عملية المسح الفعلية");
-      try {
-        const result = await BarcodeScanner.startScan({ 
-          targetedFormats: ['QR_CODE', 'EAN_13', 'CODE_128'] 
-        });
         
-        // إغلاق المسح بعد النتيجة
+        // إعداد واجهة المسح
+        await setupScannerBackground();
+        
+        // بدء المسح
+        const barcode = await BarcodeScanner.scan();
+        console.log("[useScannerDevice] نتيجة المسح:", barcode);
+        
+        // تنظيف الواجهة بعد المسح
         cleanupScannerBackground();
         
-        // معالجة النتيجة
-        if (result.hasContent) {
-          console.log("[useScannerDevice] تم العثور على محتوى:", result.content);
-          onSuccess(result.content);
+        if (barcode && barcode.barcodes.length > 0) {
+          // تم العثور على باركود صالح
+          onSuccess(barcode.barcodes[0].rawValue);
           return true;
         } else {
-          console.log("[useScannerDevice] لم يتم العثور على محتوى");
+          console.log("[useScannerDevice] لم يتم العثور على باركود");
           toast({
             title: "لم يتم العثور على باركود",
-            description: "حاول مرة أخرى مع توجيه الكاميرا بشكل أفضل",
-            variant: "default"
+            description: "يرجى المحاولة مرة أخرى",
           });
           return false;
         }
-      } catch (scanError) {
-        console.error("[useScannerDevice] خطأ أثناء المسح:", scanError);
-        cleanupScannerBackground();
+      } catch (error) {
+        console.error("[useScannerDevice] خطأ في MLKit:", error);
         
-        toast({
-          title: "خطأ في المسح",
-          description: "حدث خطأ أثناء محاولة المسح، جاري تشغيل وضع المحاكاة",
-          variant: "default"
-        });
-        
-        startMockScan(onSuccess);
-        return true;
+        // محاولة استخدام BarcodeScanner كحل احتياطي
+        try {
+          const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+          
+          // التحقق من الأذونات
+          const permissionStatus = await BarcodeScanner.checkPermission({ force: true });
+          
+          if (!permissionStatus.granted) {
+            console.log("[useScannerDevice] إذن الكاميرا غير ممنوح:", permissionStatus);
+            toast({
+              title: "تم رفض الإذن",
+              description: "يجب منح إذن الكاميرا لاستخدام الماسح الضوئي",
+              variant: "destructive"
+            });
+            return false;
+          }
+
+          // إعداد واجهة المسح
+          await setupScannerBackground();
+          await BarcodeScanner.hideBackground();
+          
+          // تجهيز الماسح
+          await BarcodeScanner.prepare();
+          
+          // بدء المسح
+          const result = await BarcodeScanner.startScan({ 
+            targetedFormats: ['QR_CODE', 'EAN_13', 'CODE_128'] 
+          });
+          
+          // تنظيف الواجهة
+          cleanupScannerBackground();
+          await BarcodeScanner.showBackground();
+          
+          // معالجة النتيجة
+          if (result.hasContent) {
+            onSuccess(result.content);
+            return true;
+          } else {
+            toast({
+              title: "لم يتم العثور على باركود",
+              description: "حاول مرة أخرى",
+              variant: "default"
+            });
+            return false;
+          }
+        } catch (fallbackError) {
+          console.error("[useScannerDevice] فشل الحل الاحتياطي:", fallbackError);
+          cleanupScannerBackground();
+          
+          // استخدام المحاكاة كملاذ أخير
+          toast({
+            title: "تعذر استخدام الكاميرا",
+            description: "جاري تفعيل وضع الإدخال اليدوي",
+            variant: "default"
+          });
+          
+          startMockScan(onSuccess);
+          return true;
+        }
       }
     } catch (error) {
-      console.error("[useScannerDevice] خطأ في بدء عملية المسح:", error);
+      console.error("[useScannerDevice] خطأ غير متوقع:", error);
       cleanupScannerBackground();
       
       toast({
         title: "خطأ في المسح",
-        description: "حدث خطأ أثناء محاولة بدء المسح، جاري تشغيل وضع المحاكاة",
-        variant: "default"
+        description: "حدث خطأ أثناء محاولة بدء المسح",
+        variant: "destructive"
       });
       
       startMockScan(onSuccess);
-      return true; // نعيد true لأننا انتقلنا إلى وضع المحاكاة
+      return true;
     }
   };
   
   const stopDeviceScan = async () => {
     try {
-      console.log("[useScannerDevice] إيقاف عملية المسح");
-      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-        const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
-        
-        // Make sure to stop scanning
+      console.log("[useScannerDevice] إيقاف المسح");
+      
+      // محاولة تنظيف MLKit أولاً
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          await BarcodeScanner.stopScan();
-        } catch (stopError) {
-          console.error("[useScannerDevice] خطأ في إيقاف المسح:", stopError);
+          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+          console.log("[useScannerDevice] تنظيف MLKit BarcodeScanner");
+          // لا حاجة لفعل شيء خاص هنا، MLKit يقوم بتنظيف الموارد تلقائياً
+        } catch (e) {
+          console.warn("[useScannerDevice] خطأ في تنظيف MLKit:", e);
         }
-        
-        try {
-          await BarcodeScanner.showBackground();
-        } catch (bgError) {
-          console.error("[useScannerDevice] خطأ في إظهار الخلفية:", bgError);
-        }
-        
-        cleanupScannerBackground();
       }
+      
+      // محاولة تنظيف BarcodeScanner التقليدي
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+        try {
+          const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+          console.log("[useScannerDevice] تنظيف BarcodeScanner التقليدي");
+          
+          await BarcodeScanner.showBackground().catch(e => 
+            console.warn("[useScannerDevice] خطأ في إظهار الخلفية:", e)
+          );
+          
+          await BarcodeScanner.stopScan().catch(e => 
+            console.warn("[useScannerDevice] خطأ في إيقاف المسح:", e)
+          );
+        } catch (e) {
+          console.warn("[useScannerDevice] خطأ في تحميل BarcodeScanner للتنظيف:", e);
+        }
+      }
+      
+      // تنظيف واجهة المسح في جميع الحالات
+      cleanupScannerBackground();
     } catch (error) {
       console.error("[useScannerDevice] خطأ في إيقاف المسح:", error);
+      // محاولة تنظيف الواجهة على الأقل
+      cleanupScannerBackground();
     }
   };
   

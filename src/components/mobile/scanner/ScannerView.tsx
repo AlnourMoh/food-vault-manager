@@ -25,34 +25,18 @@ export const ScannerView = ({
 
   useEffect(() => {
     console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
+    
     const setupScannerUI = async () => {
       if (!hasPermissionError) {
         try {
           console.log("Setting up scanner UI");
           scannerActive.current = true;
           
-          // Making sure the UI is ready before activating the scanner
-          setTimeout(() => {
-            document.body.style.visibility = 'visible';
-            document.body.classList.add('barcode-scanner-active');
-            document.body.classList.add('scanner-transparent-background');
-            document.body.style.background = 'transparent';
-            
-            // Check if BarcodeScanner plugin is available before calling
-            if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-              try {
-                console.log("Preparing BarcodeScanner...");
-                // Dynamically import to avoid errors in web environment
-                import('@capacitor-community/barcode-scanner').then(({ BarcodeScanner }) => {
-                  BarcodeScanner.prepare();
-                }).catch(err => {
-                  console.error('Error loading BarcodeScanner:', err);
-                });
-              } catch (e) {
-                console.error('Error preparing BarcodeScanner:', e);
-              }
-            }
-          }, 100);
+          // تأكد من أن واجهة العرض جاهزة قبل تفعيل الماسح
+          document.body.style.visibility = 'visible';
+          document.body.classList.add('barcode-scanner-active');
+          document.body.classList.add('scanner-transparent-background');
+          document.body.style.background = 'transparent';
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
         }
@@ -61,24 +45,15 @@ export const ScannerView = ({
     
     setupScannerUI();
     
+    // تنظيف عند إزالة المكون
     return () => {
+      console.log("ScannerView unmounting - cleaning up UI");
       try {
-        console.log("ScannerView unmounting - cleaning up UI");
         scannerActive.current = false;
         document.body.style.visibility = 'visible';
         document.body.classList.remove('barcode-scanner-active');
         document.body.classList.remove('scanner-transparent-background');
         document.body.style.background = '';
-        
-        // Clean up the BarcodeScanner
-        if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-          import('@capacitor-community/barcode-scanner').then(({ BarcodeScanner }) => {
-            BarcodeScanner.showBackground().catch(e => console.error('Error showing background:', e));
-            BarcodeScanner.stopScan().catch(e => console.error('Error stopping scan:', e));
-          }).catch(err => {
-            console.error('Error loading BarcodeScanner for cleanup:', err);
-          });
-        }
       } catch (e) {
         console.error('Error restoring UI on unmount:', e);
       }
@@ -86,16 +61,31 @@ export const ScannerView = ({
   }, [hasPermissionError]);
 
   const toggleFlashlight = async () => {
-    if (!window.Capacitor || !window.Capacitor.isPluginAvailable('BarcodeScanner')) return;
-    
     try {
       console.log(`Toggling flashlight`);
-      import('@capacitor-community/barcode-scanner').then(({ BarcodeScanner }) => {
-        BarcodeScanner.toggleTorch();
+      
+      // محاولة استخدام MLKit أولاً
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+          // فحص ما إذا كان دعم الفلاش متاح
+          const available = await BarcodeScanner.isSupported();
+          if (available) {
+            await BarcodeScanner.toggleTorch();
+            flashOn.current = !flashOn.current;
+            return;
+          }
+        } catch (error) {
+          console.error('Error toggling MLKit flashlight:', error);
+        }
+      }
+      
+      // محاولة استخدام BarcodeScanner التقليدي كخيار احتياطي
+      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+        await BarcodeScanner.toggleTorch();
         flashOn.current = !flashOn.current;
-      }).catch(err => {
-        console.error('Error loading BarcodeScanner for flashlight:', err);
-      });
+      }
     } catch (error) {
       console.error('Error toggling flashlight:', error);
     }

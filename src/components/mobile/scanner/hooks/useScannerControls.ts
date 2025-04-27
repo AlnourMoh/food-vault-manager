@@ -30,34 +30,29 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     cancelMockScan
   } = useMockScanner();
 
-  // Auto-start scanner if permission is available and no errors
+  // تنظيف أي حالة نشطة عند إلغاء تحميل المكون
   useEffect(() => {
-    if (!isLoading && hasPermission === true && !hasScannerError && !isScanningActive && !isManualEntry) {
-      console.log('[useScannerControls] بدء المسح تلقائيًا بعد التحقق من الأذونات');
-      const timeout = setTimeout(() => {
-        try {
-          startScan().catch(error => {
-            console.error('[useScannerControls] خطأ في بدء المسح التلقائي:', error);
-            toast({
-              title: "تعذر استخدام الكاميرا",
-              description: "سيتم تفعيل وضع الإدخال اليدوي",
-              variant: "default"
-            });
-            handleManualEntry();
-          });
-        } catch (error) {
-          console.error('[useScannerControls] استثناء غير متوقع:', error);
-          handleManualEntry();
-        }
-      }, 500);
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading, hasPermission, hasScannerError, isScanningActive, isManualEntry]);
+    return () => {
+      console.log('[useScannerControls] تنظيف الموارد عند إلغاء التحميل');
+      try {
+        stopScan();
+        cancelMockScan();
+      } catch (error) {
+        console.error('[useScannerControls] خطأ أثناء تنظيف الموارد:', error);
+      }
+    };
+  }, []);
 
+  // تجنب تشغيل المسح التلقائي، دع المستخدم يبدأ المسح يدوياً
+  // للتأكد من أن الأذونات وتهيئة العرض تتم بشكل صحيح
+  
   const handleManualEntry = () => {
     console.log('[Scanner] التحويل إلى إدخال الكود يدويًا');
-    stopScan();
+    try {
+      stopScan();
+    } catch (error) {
+      console.error('[Scanner] خطأ عند إيقاف المسح:', error);
+    }
     setIsManualEntry(true);
     startMockScan(onScan);
   };
@@ -71,13 +66,19 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const handleRetry = () => {
     console.log('[Scanner] إعادة المحاولة بعد خطأ');
     setHasScannerError(false);
-    // Attempt to start scanning again after a short delay
+    // إنتظر لحظة قبل إعادة المحاولة
     setTimeout(() => {
-      startScan().catch(error => {
-        console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
+      try {
+        startScan().catch(error => {
+          console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
+          setHasScannerError(true);
+          handleManualEntry();
+        });
+      } catch (error) {
+        console.error('[useScannerControls] خطأ غير متوقع عند إعادة المحاولة:', error);
         setHasScannerError(true);
         handleManualEntry();
-      });
+      }
     }, 500);
   };
 

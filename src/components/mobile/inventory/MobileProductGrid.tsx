@@ -19,31 +19,31 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
   const [productToRemove, setProductToRemove] = useState<Product | null>(null);
   const { toast } = useToast();
 
-  // Sort products by expiry status
+  // ترتيب المنتجات حسب حالة انتهاء الصلاحية
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
       const daysUntilExpiryA = differenceInDays(new Date(a.expiryDate), new Date());
       const daysUntilExpiryB = differenceInDays(new Date(b.expiryDate), new Date());
       
-      // If both products are expired, sort by most recently expired
+      // إذا كان كلا المنتجين منتهيي الصلاحية، رتب حسب الأحدث انتهاءً
       if (daysUntilExpiryA < 0 && daysUntilExpiryB < 0) {
         return daysUntilExpiryA - daysUntilExpiryB;
       }
       
-      // If both products are near expiry (within 30 days), sort by closest to expiry
+      // إذا كان كلا المنتجين قريبين من انتهاء الصلاحية (خلال 30 يومًا)، رتب حسب الأقرب للانتهاء
       if (daysUntilExpiryA <= 30 && daysUntilExpiryB <= 30) {
         return daysUntilExpiryA - daysUntilExpiryB;
       }
       
-      // If one is expired and one isn't, expired goes first
+      // إذا كان أحدهما منتهي الصلاحية والآخر ليس كذلك، المنتهي يأتي أولاً
       if (daysUntilExpiryA < 0) return -1;
       if (daysUntilExpiryB < 0) return 1;
       
-      // If one is near expiry and one isn't, near expiry goes first
+      // إذا كان أحدهما قريبًا من انتهاء الصلاحية والآخر ليس كذلك، القريب يأتي أولاً
       if (daysUntilExpiryA <= 30) return -1;
       if (daysUntilExpiryB <= 30) return 1;
       
-      // For all other products, sort by expiry date
+      // بالنسبة لجميع المنتجات الأخرى، رتب حسب تاريخ انتهاء الصلاحية
       return daysUntilExpiryA - daysUntilExpiryB;
     });
   }, [products]);
@@ -54,26 +54,30 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
   };
 
   const handleRemoveProduct = (product: Product) => {
+    console.log('تحضير لمسح منتج:', product.name);
     setProductToRemove(product);
-    setIsScannerOpen(true);
+    
+    // تأخير قصير قبل فتح الماسح لضمان تنظيف أي موارد سابقة
+    setTimeout(() => {
+      console.log('فتح الماسح لمنتج:', product.name);
+      setIsScannerOpen(true);
+    }, 100);
   };
 
   const handleScanComplete = async (code: string) => {
     try {
-      // Here you would implement the logic to validate the scanned code
-      // and process the product removal
-      console.log('Scanned code:', code, 'Product to remove:', productToRemove?.name);
+      // معالجة نتيجة المسح
+      console.log('تم المسح بنجاح:', code, 'للمنتج:', productToRemove?.name);
       
       toast({
         title: "تم المسح بنجاح",
         description: `تم مسح الباركود: ${code}`,
       });
       
-      // Always ensure we close the scanner and clean up state
-      setIsScannerOpen(false);
-      setProductToRemove(null);
+      // إغلاق الماسح وتنظيف الحالة
+      handleScannerClose();
       
-      // Trigger product list refresh
+      // إخطار الواجهة العليا بالتحديث
       onProductUpdate();
     } catch (error) {
       console.error('Error processing scan:', error);
@@ -83,16 +87,19 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
         variant: "destructive"
       });
       
-      // Still ensure we clean up properly on error
-      setIsScannerOpen(false);
-      setProductToRemove(null);
+      // تنظيف حالة التطبيق في حالة الخطأ أيضًا
+      handleScannerClose();
     }
   };
 
   const handleScannerClose = () => {
-    console.log('Scanner closed manually');
-    setIsScannerOpen(false);
-    setProductToRemove(null);
+    console.log('إغلاق الماسح');
+    
+    // استخدام timeout قصير جدًا لتجنب مشاكل التزامن مع إغلاق الماسح وإعادة تهيئة الحالة
+    setTimeout(() => {
+      setIsScannerOpen(false);
+      setProductToRemove(null);
+    }, 10);
   };
 
   return (
