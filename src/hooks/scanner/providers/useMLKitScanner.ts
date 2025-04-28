@@ -50,7 +50,7 @@ export const useMLKitScanner = () => {
       // تحديث التهيئة لضمان عرض الكاميرا
       try {
         console.log("[useMLKitScanner] تفعيل وضع عرض الكاميرا قبل المسح");
-        await BarcodeScanner.startScanning(
+        await BarcodeScanner.startScan(
           {
             formats: [
               BarcodeFormat.QrCode,
@@ -64,7 +64,7 @@ export const useMLKitScanner = () => {
           },
           (result) => {
             console.log("[useMLKitScanner] تم العثور على باركود من المسح المستمر:", result.rawValue);
-            BarcodeScanner.stopScanning();
+            BarcodeScanner.stopScan();
             cleanupScannerBackground();
             onSuccess(result.rawValue);
           }
