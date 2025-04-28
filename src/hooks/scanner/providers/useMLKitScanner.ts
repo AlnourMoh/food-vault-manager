@@ -30,12 +30,13 @@ export const useMLKitScanner = () => {
       try {
         console.log("[useMLKitScanner] إعداد عرض الكاميرا بشكل صحيح");
         await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()
-          .then(result => {
+          .then((result) => {
             if (!result.available) {
               console.log("[useMLKitScanner] تثبيت وحدة Google Barcode Scanner");
               return BarcodeScanner.installGoogleBarcodeScannerModule();
             }
-            return { update: false };
+            // Return a Promise<void> instead of an object
+            return Promise.resolve();
           })
           .catch(error => {
             console.log("[useMLKitScanner] خطأ في التحقق من وحدة Barcode Scanner:", error);
@@ -46,7 +47,7 @@ export const useMLKitScanner = () => {
       
       console.log("[useMLKitScanner] بدء المسح فوراً");
       
-      // محاولة المسح بأقصى وضوح وجودة
+      // محاولة المسح بأقصى وضوح وجودة - fix the ScanOptions properties
       const barcode = await BarcodeScanner.scan({
         formats: [
           BarcodeFormat.QrCode,
@@ -57,7 +58,8 @@ export const useMLKitScanner = () => {
           BarcodeFormat.UpcA,
           BarcodeFormat.UpcE
         ],
-        lensFacing: 'back',
+        // Remove the unsupported 'lensFacing' property
+        // lensFacing: 'back',
         detectionMode: 'continuous'
       });
       

@@ -1,4 +1,3 @@
-
 import styles from '@/components/mobile/scanner/scanner.module.css';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
@@ -21,10 +20,9 @@ export const useScannerUI = () => {
         // محاولة تعيين الوضع الشفاف
         await BarcodeScanner.enableTorch().catch(() => {});
         
-        // تعيين الواجهة المناسبة للماسح
-        await BarcodeScanner.setUIOptions({
-          controlsVisibility: 'hidden'
-        }).catch((e) => console.log("[useScannerUI] لا يمكن تعيين خيارات الواجهة:", e));
+        // Remove the unsupported setUIOptions method call
+        // Just log that we're using default UI options
+        console.log("[useScannerUI] استخدام إعدادات الواجهة الافتراضية للماسح");
       }
       
       // 4. إذا كان ماسح BarcodeScanner التقليدي متاحًا أيضًا
