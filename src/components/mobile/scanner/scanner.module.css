@@ -1,4 +1,3 @@
-
 /* Core scanner styles */
 .scannerActive {
   background: transparent !important;
@@ -26,6 +25,7 @@
   pointer-events: auto;
   height: 100vh;
   width: 100vw;
+  overflow: hidden;
 }
 
 .scannerContainer {
@@ -97,7 +97,7 @@
   width: 100vw;
   height: 100vh;
   z-index: 1;
-  background: transparent;
+  background: transparent !important;
   background-color: transparent !important;
 }
 
