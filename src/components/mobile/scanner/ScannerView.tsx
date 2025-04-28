@@ -33,12 +33,30 @@ export const ScannerView = ({
         try {
           console.log("Setting up scanner UI");
           scannerActive.current = true;
+          
+          // تهيئة الكاميرا والشفافية بشكل كامل
           await setupScannerBackground();
           
-          // تطبيق الأنماط المطلوبة للكاميرا
-          document.documentElement.style.background = 'transparent';
-          document.body.style.background = 'transparent';
-          document.body.classList.add('scanner-active');
+          // تطبيق الأنماط الإضافية للشفافية
+          document.documentElement.classList.add('transparent-bg');
+          document.body.classList.add('transparent-bg', 'scanner-active');
+          
+          // إنشاء عنصر الكاميرا الخاص
+          const cameraElement = document.createElement('div');
+          cameraElement.id = 'camera-fullscreen-element';
+          cameraElement.style.position = 'fixed';
+          cameraElement.style.inset = '0';
+          cameraElement.style.zIndex = '-1';
+          cameraElement.style.background = 'transparent';
+          cameraElement.style.width = '100vw';
+          cameraElement.style.height = '100vh';
+          document.body.appendChild(cameraElement);
+          
+          // إضافة خصائص meta للويب فيو
+          const viewportMeta = document.querySelector('meta[name="viewport"]');
+          if (viewportMeta) {
+            viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
+          }
         } catch (e) {
           console.error('Error setting up scanner:', e);
         }
@@ -50,10 +68,19 @@ export const ScannerView = ({
     return () => {
       console.log("ScannerView unmounting");
       scannerActive.current = false;
+      
+      // تنظيف الموارد
       cleanupScannerBackground();
+      
+      // إزالة العناصر المضافة
+      const cameraElement = document.getElementById('camera-fullscreen-element');
+      if (cameraElement) {
+        cameraElement.remove();
+      }
+      
       document.body.classList.remove('scanner-active');
-      document.documentElement.style.background = '';
-      document.body.style.background = '';
+      document.documentElement.classList.remove('transparent-bg');
+      document.body.classList.remove('transparent-bg');
     };
   }, [hasPermissionError]);
 

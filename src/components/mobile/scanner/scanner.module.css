@@ -40,6 +40,7 @@
   justify-content: center;
   background: transparent;
   z-index: 9999;
+  --background: transparent !important;
 }
 
 .statusIndicator {
@@ -102,6 +103,8 @@
   z-index: 1;
   background: transparent !important;
   background-color: transparent !important;
+  --background: transparent !important;
+  pointer-events: none;
 }
 
 /* Animations */
@@ -114,4 +117,22 @@
   0% { top: 0; opacity: 0.8; }
   50% { opacity: 1; }
   100% { top: 100%; opacity: 0.8; }
+}
+
+/* Estilos adicionales para garantizar la transparencia */
+:global(.scanner-active) {
+  background: transparent !important;
+  background-color: transparent !important;
+  --background: transparent !important;
+}
+
+:global(.transparent-bg) {
+  background: transparent !important;
+  --background: transparent !important;
+  background-color: transparent !important;
+}
+
+:global(.camera-active) {
+  z-index: 9999;
+  position: relative;
 }

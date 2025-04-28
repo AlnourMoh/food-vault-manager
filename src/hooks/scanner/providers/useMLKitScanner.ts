@@ -20,19 +20,49 @@ export const useMLKitScanner = () => {
       // تحقق من أذونات الكاميرا وطلبها إذا لزم الأمر
       const { camera } = await BarcodeScanner.checkPermissions();
       if (camera !== 'granted') {
+        // طلب الإذن بشكل صريح
         const result = await BarcodeScanner.requestPermissions();
+        console.log("[useMLKitScanner] نتيجة طلب الأذونات:", result);
+        
         if (result.camera !== 'granted') {
           throw new Error("لم يتم منح إذن الكاميرا");
         }
       }
       
-      // هذا الأمر ضروري لإظهار الكاميرا خلف عناصر التطبيق
-      // يجب إضافته قبل بدء المسح لضمان ظهور الكاميرا
-      await BarcodeScanner.enableTorch();  // Removed the incorrect boolean parameter
+      console.log("[useMLKitScanner] الأذونات متاحة، تهيئة الماسح...");
+
+      // استخدم أسلوب تعديل الـ DOM مباشرة لتحسين الشفافية
+      document.documentElement.style.background = 'transparent';
+      document.documentElement.style.backgroundColor = 'transparent';
+      document.body.style.background = 'transparent';
+      document.body.style.backgroundColor = 'transparent';
+
+      try {
+        // تجربة تعيين عرض الكاميرا مباشرة قبل المسح
+        const { IsSupported } = await BarcodeScanner.isSupported();
+        console.log("[useMLKitScanner] هل الماسح مدعوم:", IsSupported);
+
+        // اختبار ما إذا كان الجهاز يدعم خاصية الفلاش
+        const { hasFlash } = await BarcodeScanner.isTorchAvailable();
+        console.log("[useMLKitScanner] هل يدعم الفلاش:", hasFlash);
+
+        // محاولة تفعيل عرض الكاميرا قبل المسح
+        console.log("[useMLKitScanner] محاولة تفعيل الفلاش للمساعدة في تهيئة الكاميرا...");
+        await BarcodeScanner.enableTorch();
+        console.log("[useMLKitScanner] تم تفعيل الفلاش بنجاح");
+      } catch (e) {
+        console.log("[useMLKitScanner] خطأ في تهيئة الماسح، نتابع المحاولة:", e);
+      }
+      
+      console.log("[useMLKitScanner] بدء المسح...");
       
       // بدء المسح باستخدام واجهة البرمجة الجديدة
-      // Remove the cameraDirection property which doesn't exist in ScanOptions
-      const result = await BarcodeScanner.scan();
+      const result = await BarcodeScanner.scan({
+        lensFacing: 'back', // استخدام الكاميرا الخلفية
+        formats: undefined // مسح جميع أنواع الباركود
+      });
+      
+      console.log("[useMLKitScanner] نتيجة المسح:", result);
       
       // معالجة النتيجة إذا تم العثور على باركود
       if (result.barcodes && result.barcodes.length > 0) {

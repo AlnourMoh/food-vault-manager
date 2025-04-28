@@ -4,6 +4,7 @@ import { useScannerInitialization } from './scanner/hooks/useScannerInitializati
 import { useScannerControls } from './scanner/hooks/useScannerControls';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { useScannerUI } from '@/hooks/scanner/useScannerUI';
+import { BarcodeScanner as MLKitBarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -58,22 +59,23 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         // استخدام الوظيفة المساعدة لإعداد الخلفية
         await setupScannerBackground();
         
+        // طلب أذونات الكاميرا مباشرة
+        if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+          try {
+            console.log('[BarcodeScanner] طلب أذونات MLKit...');
+            await MLKitBarcodeScanner.requestPermissions();
+          } catch (e) {
+            console.warn('[BarcodeScanner] خطأ في طلب أذونات MLKit:', e);
+          }
+        }
+
         // بدء المسح تلقائيًا
         console.log('[BarcodeScanner] بدء المسح فورًا...');
         await startScan();
 
-        // هنا نتأكد من أن المسح بدأ ونضيف سمات إضافية للتأكد من ظهور الكاميرا
-        if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-          try {
-            console.log('[BarcodeScanner] تهيئة إضافية لـ MLKit...');
-            const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-            
-            // محاولة تفعيل وضع الكاميرا بشكل كامل - removing the incorrect boolean parameter
-            await BarcodeScanner.enableTorch();
-          } catch (e) {
-            console.error('[BarcodeScanner] خطأ في تهيئة MLKit:', e);
-          }
-        }
+        // تأكيد إضافي على مظهر الكاميرا
+        document.documentElement.classList.add('transparent-bg');
+        document.body.classList.add('transparent-bg');
       } catch (error) {
         console.error('[BarcodeScanner] خطأ في تهيئة الماسح:', error);
       }
@@ -93,12 +95,21 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         
         // إزالة الفئات والأنماط المضافة
         document.body.classList.remove('scanner-active');
+        document.documentElement.classList.remove('transparent-bg');
+        document.body.classList.remove('transparent-bg');
         document.documentElement.style.background = '';
         document.documentElement.style.backgroundColor = '';
         document.documentElement.style.removeProperty('--background');
         document.body.style.background = '';
         document.body.style.backgroundColor = '';
         document.body.style.removeProperty('--background');
+        
+        // تنظيف أي موارد كاميرا متبقية
+        if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+          MLKitBarcodeScanner.stopScan().catch(e => 
+            console.warn('[BarcodeScanner] خطأ عند إيقاف المسح في التنظيف:', e)
+          );
+        }
       } catch (error) {
         console.error('[BarcodeScanner] خطأ أثناء التنظيف:', error);
       }
