@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -5,6 +6,7 @@ import { ScannerControls } from './components/ScannerControls';
 import { ScannerFrame } from './components/ScannerFrame';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
 import { PermissionErrorView } from './components/PermissionErrorView';
+import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 import styles from './scanner.module.css';
 
 interface ScannerViewProps {
@@ -22,6 +24,7 @@ export const ScannerView = ({
 }: ScannerViewProps) => {
   const scannerActive = useRef(false);
   const flashOn = useRef(false);
+  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
 
   useEffect(() => {
     console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
@@ -32,13 +35,8 @@ export const ScannerView = ({
           console.log("Setting up scanner UI");
           scannerActive.current = true;
           
-          // تحسين طريقة تطبيق الأنماط لتجنب مشكلة الشاشة السوداء
-          setTimeout(() => {
-            document.body.style.visibility = 'visible';
-            document.body.classList.add('barcode-scanner-active');
-            document.body.classList.add('scanner-transparent-background');
-            document.body.style.background = 'transparent';
-          }, 100);
+          // استدعاء الوظيفة من useScannerUI بدلاً من تعديل الأنماط مباشرة
+          setupScannerBackground();
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
         }
@@ -47,24 +45,17 @@ export const ScannerView = ({
     
     setupScannerUI();
     
-    // تنظيف عند إزالة المكون - تحسين آلية التنظيف
+    // تنظيف عند إزالة المكون - استخدام الوظيفة من useScannerUI
     return () => {
       console.log("ScannerView unmounting - cleaning up UI");
       try {
         scannerActive.current = false;
-        
-        // إعادة الخصائص إلى قيمها الافتراضية
-        setTimeout(() => {
-          document.body.style.visibility = '';
-          document.body.classList.remove('barcode-scanner-active');
-          document.body.classList.remove('scanner-transparent-background');
-          document.body.style.background = '';
-        }, 10);
+        cleanupScannerBackground();
       } catch (e) {
         console.error('Error restoring UI on unmount:', e);
       }
     };
-  }, [hasPermissionError]);
+  }, [hasPermissionError, setupScannerBackground, cleanupScannerBackground]);
 
   const toggleFlashlight = async () => {
     try {
