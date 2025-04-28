@@ -50,25 +50,30 @@ export const useMLKitScanner = () => {
       // تحديث التهيئة لضمان عرض الكاميرا
       try {
         console.log("[useMLKitScanner] تفعيل وضع عرض الكاميرا قبل المسح");
-        await BarcodeScanner.startScan(
-          {
-            formats: [
-              BarcodeFormat.QrCode,
-              BarcodeFormat.Code128,
-              BarcodeFormat.Code39,
-              BarcodeFormat.Ean13,
-              BarcodeFormat.Ean8,
-              BarcodeFormat.UpcA,
-              BarcodeFormat.UpcE
-            ]
-          },
-          (result) => {
-            console.log("[useMLKitScanner] تم العثور على باركود من المسح المستمر:", result.rawValue);
-            BarcodeScanner.stopScan();
-            cleanupScannerBackground();
-            onSuccess(result.rawValue);
-          }
-        );
+        
+        // استخدم الأسلوب الصحيح لبدء المسح - MLKit يتوقع إما مصفوفة خيارات فقط أو لا شيء
+        const scanOptions = {
+          formats: [
+            BarcodeFormat.QrCode,
+            BarcodeFormat.Code128,
+            BarcodeFormat.Code39,
+            BarcodeFormat.Ean13,
+            BarcodeFormat.Ean8,
+            BarcodeFormat.UpcA,
+            BarcodeFormat.UpcE
+          ]
+        };
+        
+        // بدء المسح باستخدام الخيارات فقط
+        const result = await BarcodeScanner.scan(scanOptions);
+        
+        // معالجة النتيجة يدويًا
+        if (result && result.barcodes && result.barcodes.length > 0) {
+          console.log("[useMLKitScanner] تم العثور على باركود:", result.barcodes[0].rawValue);
+          cleanupScannerBackground();
+          onSuccess(result.barcodes[0].rawValue);
+          return true;
+        }
         
         // انتظار مدة للعارض للتهيئة - يساعد في عرض الكاميرا
         await new Promise(resolve => setTimeout(resolve, 1000));

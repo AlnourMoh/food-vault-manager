@@ -72,7 +72,7 @@ export const useScannerUI = () => {
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-          await BarcodeScanner.stopScanning();
+          await BarcodeScanner.stopScan();
         } catch (e) {
           console.warn("[useScannerUI] خطأ عند إيقاف مسح MLKit:", e);
         }
