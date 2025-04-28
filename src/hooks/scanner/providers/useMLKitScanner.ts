@@ -40,7 +40,7 @@ export const useMLKitScanner = () => {
       try {
         // تجربة تعيين عرض الكاميرا مباشرة قبل المسح
         const supportResult = await BarcodeScanner.isSupported();
-        console.log("[useMLKitScanner] هل الماسح مدعوم:", supportResult.isSupported);
+        console.log("[useMLKitScanner] هل الماسح مدعوم:", supportResult.supported);
 
         // اختبار ما إذا كان الجهاز يدعم خاصية الفلاش
         const torchResult = await BarcodeScanner.isTorchAvailable();

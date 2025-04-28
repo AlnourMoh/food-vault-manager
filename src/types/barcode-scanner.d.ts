@@ -1,4 +1,3 @@
-
 import { Plugin } from '@capacitor/core';
 
 declare global {
@@ -31,9 +30,9 @@ export interface ScanOptions {
   formats?: SupportedFormat[];
 }
 
-// Add result interfaces for MLKit scanner
+// Updated property name to match MLKit API
 export interface IsSupportedResult {
-  isSupported: boolean;
+  supported: boolean;
 }
 
 export interface IsTorchAvailableResult {
@@ -55,7 +54,7 @@ export interface BarcodeScannerPlugin extends Plugin {
   requestPermission(): Promise<{ granted: boolean }>;
   openSettings(): Promise<void>;
   toggleTorch(): Promise<void>;
-  enableTorch(): Promise<void>;  // Updated to match the API
+  enableTorch(): Promise<void>;
   disableTorch(): Promise<void>;
   prepare(): Promise<void>;
   showBackground(): Promise<void>;
