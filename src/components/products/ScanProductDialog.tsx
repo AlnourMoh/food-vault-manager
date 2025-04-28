@@ -17,14 +17,26 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
-  // Reset state when dialog opens/closes
+  // استخدام تأخير بسيط لتهيئة الماسح لتجنب المشاكل
   useEffect(() => {
-    if (!open) {
-      console.log('Scanner dialog closed');
-      setIsProcessing(false);
+    let timer: number;
+    
+    if (open) {
+      // تأخير بسيط لضمان تهيئة العناصر
+      timer = window.setTimeout(() => {
+        setShowScanner(true);
+      }, 300);
+    } else {
+      setShowScanner(false);
       setHasScannerError(false);
+      setIsProcessing(false);
     }
+    
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [open]);
 
   const handleScanResult = async (code: string) => {
@@ -32,7 +44,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
       console.log('Scanned code:', code);
       setIsProcessing(true);
       
-      // First verify if this code exists and is not used
+      // تحقق أولاً مما إذا كان هذا الرمز موجودًا وغير مستخدم
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
         .select('product_id, is_used')
@@ -58,13 +70,13 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         return;
       }
 
-      // Get the restaurant ID from localStorage
+      // احصل على معرف المطعم من التخزين المحلي
       const restaurantId = localStorage.getItem('restaurantId');
       if (!restaurantId) {
         throw new Error('معرف المطعم غير موجود');
       }
 
-      // Update the product code to mark it as used
+      // تحديث رمز المنتج لوضع علامة عليه كمستخدم
       const { error: updateError } = await supabase
         .from('product_codes')
         .update({ 
@@ -84,8 +96,11 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         description: "تم إضافة المنتج إلى المخزون",
       });
 
-      onOpenChange(false);
-      onProductAdded();
+      // استخدم تأخيرًا صغيرًا لضمان إغلاق مربع الحوار وتنظيف الموارد
+      setTimeout(() => {
+        onOpenChange(false);
+        onProductAdded();
+      }, 200);
 
     } catch (error: any) {
       console.error('Error processing product:', error);
@@ -100,40 +115,51 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     }
   };
 
+  const handleScanClose = () => {
+    onOpenChange(false);
+  };
+
   const handleRetry = () => {
     setHasScannerError(false);
+    setShowScanner(true);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      // تأكد من تنظيف الموارد عند الإغلاق
+      if (!newOpen) {
+        setShowScanner(false);
+      }
+      onOpenChange(newOpen);
+    }}>
       <DialogContent className="sm:max-w-lg">
         <DialogTitle className="text-center">مسح باركود المنتج</DialogTitle>
         <div className="h-[450px] relative flex items-center justify-center">
-          {open ? (
-            hasScannerError ? (
-              <div className="flex flex-col items-center justify-center space-y-4 p-4">
-                <div className="p-3 bg-red-100 text-red-600 rounded-full">
-                  <ScanBarcode className="h-8 w-8" />
-                </div>
-                <h3 className="text-lg font-bold">حدث خطأ في الماسح الضوئي</h3>
-                <p className="text-center text-muted-foreground">
-                  لم نتمكن من الوصول إلى الكاميرا أو حدث خطأ أثناء محاولة مسح الباركود
-                </p>
-                <Button onClick={handleRetry} className="mt-4">
-                  إعادة المحاولة
-                </Button>
+          {hasScannerError ? (
+            <div className="flex flex-col items-center justify-center space-y-4 p-4">
+              <div className="p-3 bg-red-100 text-red-600 rounded-full">
+                <ScanBarcode className="h-8 w-8" />
               </div>
-            ) : (
+              <h3 className="text-lg font-bold">حدث خطأ في الماسح الضوئي</h3>
+              <p className="text-center text-muted-foreground">
+                لم نتمكن من الوصول إلى الكاميرا أو حدث خطأ أثناء محاولة مسح الباركود
+              </p>
+              <Button onClick={handleRetry} className="mt-4">
+                إعادة المحاولة
+              </Button>
+            </div>
+          ) : (
+            showScanner ? (
               <BarcodeScanner
                 onScan={handleScanResult}
-                onClose={() => onOpenChange(false)}
+                onClose={handleScanClose}
               />
+            ) : (
+              <div className="flex flex-col items-center">
+                <ScanBarcode className="h-16 w-16 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">جاري تحميل الماسح...</p>
+              </div>
             )
-          ) : (
-            <div className="flex flex-col items-center">
-              <ScanBarcode className="h-16 w-16 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">جاري تحميل الماسح...</p>
-            </div>
           )}
         </div>
       </DialogContent>

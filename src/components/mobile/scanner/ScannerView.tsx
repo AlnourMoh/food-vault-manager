@@ -32,11 +32,13 @@ export const ScannerView = ({
           console.log("Setting up scanner UI");
           scannerActive.current = true;
           
-          // تأكد من أن واجهة العرض جاهزة قبل تفعيل الماسح
-          document.body.style.visibility = 'visible';
-          document.body.classList.add('barcode-scanner-active');
-          document.body.classList.add('scanner-transparent-background');
-          document.body.style.background = 'transparent';
+          // تحسين طريقة تطبيق الأنماط لتجنب مشكلة الشاشة السوداء
+          setTimeout(() => {
+            document.body.style.visibility = 'visible';
+            document.body.classList.add('barcode-scanner-active');
+            document.body.classList.add('scanner-transparent-background');
+            document.body.style.background = 'transparent';
+          }, 100);
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
         }
@@ -45,15 +47,19 @@ export const ScannerView = ({
     
     setupScannerUI();
     
-    // تنظيف عند إزالة المكون
+    // تنظيف عند إزالة المكون - تحسين آلية التنظيف
     return () => {
       console.log("ScannerView unmounting - cleaning up UI");
       try {
         scannerActive.current = false;
-        document.body.style.visibility = 'visible';
-        document.body.classList.remove('barcode-scanner-active');
-        document.body.classList.remove('scanner-transparent-background');
-        document.body.style.background = '';
+        
+        // إعادة الخصائص إلى قيمها الافتراضية
+        setTimeout(() => {
+          document.body.style.visibility = '';
+          document.body.classList.remove('barcode-scanner-active');
+          document.body.classList.remove('scanner-transparent-background');
+          document.body.style.background = '';
+        }, 10);
       } catch (e) {
         console.error('Error restoring UI on unmount:', e);
       }
@@ -68,13 +74,9 @@ export const ScannerView = ({
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-          // فحص ما إذا كان دعم الفلاش متاح
-          const available = await BarcodeScanner.isSupported();
-          if (available) {
-            await BarcodeScanner.toggleTorch();
-            flashOn.current = !flashOn.current;
-            return;
-          }
+          await BarcodeScanner.toggleTorch();
+          flashOn.current = !flashOn.current;
+          return;
         } catch (error) {
           console.error('Error toggling MLKit flashlight:', error);
         }
@@ -102,7 +104,7 @@ export const ScannerView = ({
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center bg-black bg-opacity-50">
+    <div className="absolute inset-0 flex flex-col items-center bg-black bg-opacity-50 z-[1000]">
       <ScannerStatusIndicator />
       
       <div className="flex-1 w-full relative flex items-center justify-center">

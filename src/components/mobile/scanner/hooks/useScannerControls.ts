@@ -19,9 +19,12 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     hasPermission,
     isScanningActive,
     lastScannedCode,
-    startScan,
-    stopScan
-  } = useScannerState({ onScan, onClose });
+    startScan: _startScan,
+    stopScan: _stopScan
+  } = useScannerState({ 
+    onScan, 
+    onClose 
+  });
 
   const {
     startMockScan,
@@ -30,29 +33,61 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     cancelMockScan
   } = useMockScanner();
 
+  // تخزين مرجع للماسح النشط
+  const [isActive, setIsActive] = useState(false);
+
   // تنظيف أي حالة نشطة عند إلغاء تحميل المكون
   useEffect(() => {
     return () => {
       console.log('[useScannerControls] تنظيف الموارد عند إلغاء التحميل');
-      try {
+      
+      if (isActive) {
         stopScan();
+      }
+      
+      if (isManualEntry) {
         cancelMockScan();
-      } catch (error) {
-        console.error('[useScannerControls] خطأ أثناء تنظيف الموارد:', error);
       }
     };
-  }, []);
+  }, [isActive, isManualEntry]);
 
-  // تجنب تشغيل المسح التلقائي، دع المستخدم يبدأ المسح يدوياً
-  // للتأكد من أن الأذونات وتهيئة العرض تتم بشكل صحيح
-  
+  // وظيفة بدء المسح مع تحسين إدارة الحالة
+  const startScan = async () => {
+    try {
+      console.log('[useScannerControls] بدء المسح');
+      setIsActive(true);
+      return await _startScan();
+    } catch (error) {
+      console.error('[useScannerControls] خطأ عند بدء المسح:', error);
+      setHasScannerError(true);
+      setIsActive(false);
+      return false;
+    }
+  };
+
+  // وظيفة إيقاف المسح مع تحسين إدارة الحالة
+  const stopScan = async () => {
+    try {
+      console.log('[useScannerControls] إيقاف المسح');
+      setIsActive(false);
+      return await _stopScan();
+    } catch (error) {
+      console.error('[useScannerControls] خطأ عند إيقاف المسح:', error);
+      return false;
+    }
+  };
+
   const handleManualEntry = () => {
     console.log('[Scanner] التحويل إلى إدخال الكود يدويًا');
     try {
-      stopScan();
+      // إيقاف المسح الحالي أولاً إذا كان نشطًا
+      if (isActive) {
+        stopScan();
+      }
     } catch (error) {
       console.error('[Scanner] خطأ عند إيقاف المسح:', error);
     }
+    
     setIsManualEntry(true);
     startMockScan(onScan);
   };
@@ -66,12 +101,14 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const handleRetry = () => {
     console.log('[Scanner] إعادة المحاولة بعد خطأ');
     setHasScannerError(false);
-    // إنتظر لحظة قبل إعادة المحاولة
+    
+    // إنتظار لحظة قبل إعادة المحاولة
     setTimeout(() => {
       try {
         startScan().catch(error => {
           console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
           setHasScannerError(true);
+          // في حالة فشل المحاولة مجددًا، انتقل إلى الإدخال اليدوي مباشرة
           handleManualEntry();
         });
       } catch (error) {

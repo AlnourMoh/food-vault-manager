@@ -44,19 +44,20 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       console.log('[BarcodeScanner] تنظيف المكون عند الإلغاء');
       try {
         stopScan();
-        
-        // تنظيف إضافي للخلفية والأنماط
+      } catch (error) {
+        console.error('[BarcodeScanner] خطأ أثناء التنظيف:', error);
+      } finally {
+        // تأكد من تنظيف نمط الخلفية في جميع الحالات
         document.body.style.background = '';
         document.body.classList.remove('barcode-scanner-active');
         document.body.classList.remove('scanner-transparent-background');
-      } catch (error) {
-        console.error('[BarcodeScanner] خطأ أثناء التنظيف:', error);
       }
     };
   }, []);
   
   // لا نعرض شيئًا أثناء التهيئة
   if (isInitializing) {
+    console.log('[BarcodeScanner] ما زال في مرحلة التهيئة');
     return null;
   }
 

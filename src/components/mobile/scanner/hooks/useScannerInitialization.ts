@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 
 export const useScannerInitialization = () => {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -10,49 +9,70 @@ export const useScannerInitialization = () => {
       try {
         console.log("[useScannerInitialization] تهيئة الماسح الضوئي...");
         
-        // Check if running in Capacitor environment
+        // فحص ما إذا كان يعمل في بيئة Capacitor
         if (window.Capacitor) {
           try {
-            // Check if the BarcodeScanner plugin is available
-            const isPluginAvailable = window.Capacitor.isPluginAvailable('BarcodeScanner');
-            console.log("[useScannerInitialization] هل ماسح الباركود متاح:", isPluginAvailable);
+            // تحقق مما إذا كانت طرق المسح متاحة
+            let isPluginAvailable = false;
             
-            if (isPluginAvailable) {
-              // Check permission
-              const permission = await BarcodeScanner.checkPermission({ force: false });
-              console.log("[useScannerInitialization] حالة الإذن:", permission.granted);
+            // فحص MLKit أولاً
+            if (window.Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+              console.log("[useScannerInitialization] ماسح MLKit متاح");
+              isPluginAvailable = true;
               
-              // Prepare the scanner in advance
+              // استدعاء الوحدة للتحضير
               try {
-                await BarcodeScanner.prepare();
-                console.log("[useScannerInitialization] تم تجهيز الماسح");
-              } catch (prepareError) {
-                console.warn("[useScannerInitialization] خطأ في تجهيز الماسح:", prepareError);
+                const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+                console.log("[useScannerInitialization] تم تحميل وحدة ماسح MLKit");
+              } catch (mlkitError) {
+                console.warn("[useScannerInitialization] خطأ في تحميل ماسح MLKit:", mlkitError);
               }
+            }
+            
+            // فحص BarcodeScanner التقليدي إذا لم يكن MLKit متاحًا
+            if (!isPluginAvailable && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+              console.log("[useScannerInitialization] ماسح الباركود التقليدي متاح");
+              isPluginAvailable = true;
+              
+              // تحميل الوحدة للتحضير
+              try {
+                const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+                console.log("[useScannerInitialization] تم تحميل وحدة الماسح التقليدي");
+                
+                // التحقق من الإذن مسبقًا
+                const permission = await BarcodeScanner.checkPermission({ force: false });
+                console.log("[useScannerInitialization] حالة إذن الماسح:", permission);
+              } catch (bsError) {
+                console.warn("[useScannerInitialization] خطأ في تحميل الماسح التقليدي:", bsError);
+              }
+            }
+            
+            if (!isPluginAvailable) {
+              console.log("[useScannerInitialization] لا يوجد ماسح متاح على هذا الجهاز");
             }
           } catch (supportError) {
             console.warn("[useScannerInitialization] خطأ في فحص دعم الماسح:", supportError);
           }
+        } else {
+          console.log("[useScannerInitialization] ليست بيئة Capacitor، سيتم استخدام وضع المحاكاة");
         }
         
         console.log("[useScannerInitialization] اكتملت تهيئة الماسح");
       } catch (error) {
         console.error("[useScannerInitialization] خطأ في تهيئة الماسح:", error);
       } finally {
+        // تنتهي التهيئة حتى في حالة الخطأ لتجنب التوقف
         setIsInitializing(false);
       }
     };
     
+    // بدء عملية التهيئة
     initializeScanner();
     
+    // تنظيف عند إزالة المكون
     return () => {
-      // Cleanup on component unmount
-      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
-        console.log("[useScannerInitialization] تنظيف موارد الماسح عند إلغاء التحميل");
-        BarcodeScanner.hideBackground().catch(error => {
-          console.warn("[useScannerInitialization] خطأ في إخفاء خلفية الماسح:", error);
-        });
-      }
+      console.log("[useScannerInitialization] تنظيف موارد الماسح عند إلغاء التحميل");
+      // التنظيف الأساسي فقط هنا، بقية التنظيف في المكونات الأخرى
     };
   }, []);
   
