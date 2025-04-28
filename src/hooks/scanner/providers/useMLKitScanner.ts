@@ -28,12 +28,11 @@ export const useMLKitScanner = () => {
       
       // هذا الأمر ضروري لإظهار الكاميرا خلف عناصر التطبيق
       // يجب إضافته قبل بدء المسح لضمان ظهور الكاميرا
-      await BarcodeScanner.enableTorch(false);
+      await BarcodeScanner.enableTorch();  // Removed the incorrect boolean parameter
       
       // بدء المسح باستخدام واجهة البرمجة الجديدة
-      const result = await BarcodeScanner.scan({
-        cameraDirection: "back"  // استخدام الكاميرا الخلفية دائما للمسح
-      });
+      // Remove the cameraDirection property which doesn't exist in ScanOptions
+      const result = await BarcodeScanner.scan();
       
       // معالجة النتيجة إذا تم العثور على باركود
       if (result.barcodes && result.barcodes.length > 0) {

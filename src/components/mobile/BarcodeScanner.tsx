@@ -68,8 +68,8 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
             console.log('[BarcodeScanner] تهيئة إضافية لـ MLKit...');
             const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
             
-            // محاولة تفعيل وضع الكاميرا بشكل كامل
-            await BarcodeScanner.enableTorch(false);
+            // محاولة تفعيل وضع الكاميرا بشكل كامل - removing the incorrect boolean parameter
+            await BarcodeScanner.enableTorch();
           } catch (e) {
             console.error('[BarcodeScanner] خطأ في تهيئة MLKit:', e);
           }

@@ -26,13 +26,11 @@ export enum SupportedFormat {
   PDF_417 = "PDF_417"
 }
 
+// Updated ScanOptions to match the library API
 export interface ScanOptions {
-  targetedFormats?: SupportedFormat[];
-  cameraDirection?: CameraDirection;
-  showTorchButton?: boolean;
-  showFlipCameraButton?: boolean;
-  prompt?: string;
-  formats?: string;
+  formats?: SupportedFormat[];
+  lensFacing?: 'front' | 'back';
+  detectionMode?: 'single' | 'continuous'; 
 }
 
 export interface ScanResult {
@@ -50,6 +48,8 @@ export interface BarcodeScannerPlugin extends Plugin {
   requestPermission(): Promise<{ granted: boolean }>;
   openSettings(): Promise<void>;
   toggleTorch(): Promise<void>;
+  enableTorch(): Promise<void>;  // Updated to match the API
+  disableTorch(): Promise<void>;
   prepare(): Promise<void>;
   showBackground(): Promise<void>;
   hideBackground(): Promise<void>;
