@@ -42,49 +42,78 @@
   color: #888;
 }
 
-/* إصلاحات عامة للشفافية غير المرغوب فيها */
+/* تعزيز الأنماط للعناصر الرئيسية في التطبيق */
+/* استخدام !important بحذر ومع انتقائيات أكثر تحديدًا */
 :root {
   --background-override: white !important;
 }
 
-/* تطبيق أنماط قوية على عناصر الواجهة الرئيسية */
-header, 
-.app-header {
+/* تطبيق أنماط قوية على عناصر الواجهة الرئيسية بخصوصية أعلى وأكثر تحديدًا */
+.app-header, 
+header.app-header,
+div.app-header,
+#root .app-header,
+body .app-header {
   background: white !important;
   background-color: white !important;
   visibility: visible !important;
   opacity: 1 !important;
-  z-index: 1000;
+  z-index: 1001 !important; /* زيادة z-index لضمان الظهور فوق العناصر الأخرى */
+  position: relative !important;
+  display: flex !important;
 }
 
-footer, 
-nav.bottom-nav, 
-.app-footer {
+.app-footer, 
+footer.app-footer,
+nav.app-footer,
+div.app-footer,
+#root .app-footer,
+body .app-footer,
+.bottom-nav {
   background: white !important;
   background-color: white !important;
   visibility: visible !important;
   opacity: 1 !important;
-  z-index: 1000;
-}
-
-/* إعادة تعيين الشفافية بعد الماسح */
-.scanner-cleanup-active body,
-.scanner-cleanup-active html {
-  background: white !important;
-  background-color: white !important;
+  z-index: 1001 !important; /* زيادة z-index لضمان الظهور فوق العناصر الأخرى */
+  position: relative !important;
 }
 
 /* ضمان وضوح نص الهيدر والفوتر والأزرار */
-header *, .app-header *,
-footer *, .app-footer * {
-  color: inherit;
+.app-header *, 
+header.app-header *,
+div.app-header * {
+  color: inherit !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.app-footer *, 
+footer.app-footer *,
+nav.app-footer *,
+div.app-footer * {
+  color: inherit !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
 
 /* منع تطبيق الشفافية على عناصر المحتوى الرئيسية */
-.content-container:not(.scanner-container) {
+.content-container {
   background: white !important;
   background-color: white !important;
   --background: white !important;
+  position: relative !important;
+}
+
+/* تضمين قواعد خاصة للصفحات المحددة التي تواجه مشاكل */
+.admin-dashboard-page header,
+.admin-dashboard-page .app-header,
+.admin-dashboard-page .top-nav {
+  background: white !important;
+  background-color: white !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1010 !important;
+  position: relative !important;
+  display: flex !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
 }

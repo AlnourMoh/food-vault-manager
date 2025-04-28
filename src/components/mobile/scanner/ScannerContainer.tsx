@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScannerLoading } from './ScannerLoading';
 import { NoPermissionView } from './NoPermissionView';
 import { ScannerView } from './ScannerView';
@@ -39,6 +39,31 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   handleRequestPermission,
   handleRetry
 }) => {
+  // ضمان أن عناصر الهيدر والفوتر محمية أثناء عمل الماسح
+  useEffect(() => {
+    // تطبيق فئات حماية على الهيدر والفوتر
+    document.querySelectorAll('header, footer, nav').forEach(element => {
+      if (element instanceof HTMLElement) {
+        element.classList.add('app-header');
+      }
+    });
+    
+    // تنظيف عند إلغاء المكون
+    return () => {
+      // إعادة تعيين أنماط الهيدر والفوتر بشكل قسري
+      setTimeout(() => {
+        document.querySelectorAll('header, .app-header').forEach(el => {
+          if (el instanceof HTMLElement) {
+            el.style.background = 'white';
+            el.style.backgroundColor = 'white';
+            el.style.opacity = '1';
+            el.style.visibility = 'visible';
+          }
+        });
+      }, 300);
+    };
+  }, []);
+  
   if (isManualEntry) {
     return (
       <DigitalCodeInput 
@@ -53,7 +78,7 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-transparent">
+    <div className="fixed inset-0 z-50">
       {isScanningActive ? (
         <ScannerView 
           onStop={stopScan} 

@@ -120,9 +120,16 @@
   100% { top: 100%; opacity: 0.8; }
 }
 
-/* تقليل نطاق الأنماط العامة وحصرها فقط داخل عناصر الماسح */
-/* بدلاً من استخدام global، نستخدم فئات محددة */
-.scannerRoot :global(html), .scannerRoot :global(body) {
+/* تحسين الانتقائيات - حصرها فقط داخل العناصر المطلوبة */
+/* استخدام نطاق محدود بدلاً من global */
+.scannerRoot {
+  position: relative;
+  z-index: 9999;
+}
+
+/* استخدام انتقائيات أكثر تحديدًا بدلاً من global */
+.scannerRoot body,
+.scannerRoot html {
   background: transparent !important;
   background-color: transparent !important;
   --background: transparent !important;
@@ -138,29 +145,15 @@
   background: transparent;
 }
 
-/* تحسين وضوح عناصر الواجهة الأساسية في الصفحة أثناء المسح */
-:global(.app-header) {
-  background-color: white !important;
-  background: white !important;
-  --background: white !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  z-index: 1000 !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* إزالة الانتقائيات العامة واستبدالها بانتقائيات محددة لمنع التأثير على الأجزاء الأخرى من التطبيق */
+/* هذه القواعد ستطبق فقط على أقرب عنصر يحتوي على الفئات المحددة */
+.scannerDialog {
+  background-color: transparent !important;
+  background: transparent !important;
+  --background: transparent !important;
 }
 
-:global(.app-footer), :global(.bottom-nav) {
-  background-color: white !important;
-  background: white !important;
-  --background: white !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  z-index: 1000 !important;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* إزالة أنماط الشفافية العالمية واستبدالها بأنماط محددة */
-/* مهم: استخدام فئات محددة بدلاً من تغيير أنماط المستند بالكامل */
+/* حل مشكلة عدم ظهور الهيدر والفوتر - تطبيق قواعد محددة لهما داخل سياق الماسح */
 .scannerActive.dialog-only {
   position: relative;
   z-index: 9999;

@@ -26,28 +26,38 @@ export const ScannerView = ({
   const scannerActive = useRef(false);
   const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
   const cameraViewportRef = useRef<HTMLDivElement | null>(null);
+  const addedElements = useRef<HTMLElement[]>([]);
 
+  // تحسين آلية الشفافية مع عزل آثارها عن بقية التطبيق
   useEffect(() => {
     console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
+    
+    // تأكد من عدم تداخل عمليات التهيئة
+    if (scannerActive.current) {
+      console.log("ScannerView: المكون نشط بالفعل، تخطي التهيئة المضاعفة");
+      return;
+    }
+    
+    scannerActive.current = true;
     
     const setupScanner = async () => {
       if (!hasPermissionError) {
         try {
           console.log("Setting up scanner UI");
-          scannerActive.current = true;
-
-          // تطبيق الشفافية على منطقة الماسح فقط
+          
+          // 1. تطبيق الشفافية على منطقة الماسح فقط من خلال حاوية مخصصة
           await setupScannerBackground();
           
-          // إنشاء عنصر محدد للكاميرا
+          // 2. إنشاء عنصر محدد للكاميرا
           if (!cameraViewportRef.current) {
             cameraViewportRef.current = document.createElement('div');
             cameraViewportRef.current.id = 'camera-viewport';
             cameraViewportRef.current.className = `${styles.cameraViewport} camera-active`;
             document.body.appendChild(cameraViewportRef.current);
+            addedElements.current.push(cameraViewportRef.current);
           }
           
-          // محاولة تنشيط الكاميرا باستخدام الفلاش
+          // 3. تنشيط الكاميرا عن طريق MLKit
           if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
             try {
               const torchResult = await BarcodeScanner.isTorchAvailable();
@@ -59,8 +69,22 @@ export const ScannerView = ({
                   } catch (e) {}
                 }, 300);
               }
-            } catch (e) {}
+            } catch (e) {
+              console.warn("Error checking torch availability:", e);
+            }
           }
+          
+          // 4. تأكيد تخصيص فئات للهيدر والفوتر لحمايتهما
+          document.querySelectorAll('header, footer, nav').forEach(element => {
+            if (element instanceof HTMLElement) {
+              element.classList.add('app-header');
+              // تطبيق أنماط إضافية إذا كانت ضمن صفحة معينة مثل لوحة التحكم
+              if (window.location.pathname.includes('/admin/')) {
+                element.classList.add('admin-header');
+              }
+            }
+          });
+          
         } catch (e) {
           console.error('Error setting up scanner:', e);
         }
@@ -70,17 +94,46 @@ export const ScannerView = ({
     setupScanner();
     
     return () => {
-      console.log("ScannerView unmounting");
+      console.log("ScannerView unmounting, cleaning up...");
       scannerActive.current = false;
       
-      // تنظيف موارد الماسح
-      cleanupScannerBackground();
+      // 1. تنظيف موارد الماسح
+      cleanupScannerBackground(true);
       
-      // إزالة عنصر الكاميرا
+      // 2. إزالة عنصر الكاميرا
       if (cameraViewportRef.current) {
         cameraViewportRef.current.remove();
         cameraViewportRef.current = null;
       }
+      
+      // 3. إزالة العناصر المضافة
+      for (const element of addedElements.current) {
+        if (element && element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      }
+      addedElements.current = [];
+      
+      // 4. إعادة تعيين أنماط الهيدر والفوتر بشكل قسري
+      setTimeout(() => {
+        document.querySelectorAll('header, .app-header').forEach(el => {
+          if (el instanceof HTMLElement) {
+            el.style.background = 'white';
+            el.style.backgroundColor = 'white';
+            el.style.opacity = '1';
+            el.style.visibility = 'visible';
+          }
+        });
+        
+        document.querySelectorAll('footer, nav, .app-footer').forEach(el => {
+          if (el instanceof HTMLElement) {
+            el.style.background = 'white';
+            el.style.backgroundColor = 'white';
+            el.style.opacity = '1';
+            el.style.visibility = 'visible';
+          }
+        });
+      }, 300);
     };
   }, [hasPermissionError]);
 

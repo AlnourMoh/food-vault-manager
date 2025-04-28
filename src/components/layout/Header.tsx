@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   DropdownMenu,
@@ -20,7 +20,38 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ className }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  
+  // تحسين ظهور الهيدر ضمن واجهة المستخدم
+  useEffect(() => {
+    // تطبيق فئات واضحة على العنصر الحالي
+    const headerElement = document.querySelector('header');
+    if (headerElement) {
+      headerElement.classList.add('app-header');
+      
+      // إضافة فئات خاصة حسب المسار
+      if (location.pathname.includes('/admin/')) {
+        headerElement.classList.add('admin-header');
+        headerElement.setAttribute('style', `
+          background: white !important;
+          background-color: white !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          z-index: 1010 !important;
+          position: relative !important;
+          display: flex !important;
+        `);
+      }
+    }
+    
+    return () => {
+      // إزالة الفئات الخاصة بالمسار عند الخروج
+      if (headerElement) {
+        headerElement.classList.remove('admin-header');
+      }
+    };
+  }, [location.pathname]);
   
   const handleLogout = () => {
     console.log('تنفيذ تسجيل الخروج...');
@@ -35,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ className }) => {
   };
   
   return (
-    <header className={cn("rtl sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6", className)}>
+    <header className={cn("rtl sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6 app-header", className)}>
       <div className="flex flex-1 items-center justify-end">
         <div className="flex items-center gap-4">
           <ThemeToggle />

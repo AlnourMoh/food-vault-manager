@@ -24,12 +24,18 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     if (open) {
       console.log('ScanProductDialog: تم فتح الحوار، جاري فتح الماسح...');
       
-      // تطبيق الشفافية على الحوار فقط بدلاً من كامل المستند
+      // تأخير عرض الماسح لضمان تهيئة الحوار أولاً
       const setupDialog = () => {
-        // تطبيق فئات خاصة للشفافية على الحوار فقط
+        // تجنب الاعتماد على الفئات العامة، استخدام فئات محددة للحوار فقط
         document.querySelectorAll('[role="dialog"]').forEach(element => {
           if (element instanceof HTMLElement) {
             element.classList.add('scanner-dialog-container');
+            // التأكد من عدم تأثير الماسح على الهيدر والفوتر
+            element.querySelectorAll('header, footer, nav').forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.classList.add('app-header');
+              }
+            });
           }
         });
         
@@ -54,6 +60,19 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
           element.classList.remove('scanner-dialog-container');
         }
       });
+      
+      // تأكيد إرجاع أنماط الهيدر والفوتر
+      setTimeout(() => {
+        document.querySelectorAll('header, .app-header').forEach(el => {
+          if (el instanceof HTMLElement) {
+            el.style.background = 'white';
+            el.style.backgroundColor = 'white';
+            el.style.visibility = 'visible';
+            el.style.opacity = '1';
+            el.style.zIndex = '1001';
+          }
+        });
+      }, 200);
     }
     
     // تنظيف عند إزالة المكون
@@ -64,6 +83,16 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
       document.querySelectorAll('.scanner-dialog-container').forEach(element => {
         if (element instanceof HTMLElement) {
           element.classList.remove('scanner-dialog-container');
+        }
+      });
+      
+      // تأكيد آخر على إرجاع أنماط الهيدر والفوتر
+      document.querySelectorAll('header, .app-header').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.background = 'white';
+          el.style.backgroundColor = 'white';
+          el.style.visibility = 'visible';
+          el.style.opacity = '1';
         }
       });
     };
@@ -153,10 +182,10 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     <Dialog 
       open={open} 
       onOpenChange={onOpenChange}
-      modal={false} // هذا مهم لضمان عدم حجب الكاميرا
+      modal={false} // مهم لضمان عدم حجب الكاميرا
     >
       <DialogContent 
-        className="bg-white p-0 border shadow-lg rounded-lg scanner-dialog" 
+        className="bg-white p-0 border shadow-lg rounded-lg" 
         style={{
           maxWidth: '100vw',
           width: '100%',
@@ -166,7 +195,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
           overflow: 'hidden'
         }}
       >
-        <div className="text-center p-4 bg-primary/10 text-primary font-bold z-10 rounded-t-lg">مسح باركود المنتج</div>
+        <div className="text-center p-4 bg-primary/10 text-primary font-bold z-10 rounded-t-lg app-header">مسح باركود المنتج</div>
         <div className="h-[calc(100vh-120px)] relative flex items-center justify-center overflow-hidden"
           style={{
             position: 'relative'

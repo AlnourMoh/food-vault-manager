@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MainSidebar from './MainSidebar';
 import Header from './Header';
@@ -13,6 +13,26 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // تحسين ظهور العناصر الرئيسية بإضافة فئة app-header و app-footer
+  useEffect(() => {
+    const isAdminRoute = location.pathname.includes('/admin/');
+    const routeClass = isAdminRoute ? 'admin-dashboard-page' : '';
+    
+    // إضافة فئة خاصة للجسم وفقًا لنوع المسار لمساعدة CSS على تحديد أنماط محددة
+    document.body.classList.add(routeClass);
+    
+    // تعريف العناصر الرئيسية عند التحميل
+    const header = document.querySelector('header');
+    if (header) header.classList.add('app-header');
+    
+    const footer = document.querySelector('footer');
+    if (footer) footer.classList.add('app-footer');
+    
+    return () => {
+      document.body.classList.remove(routeClass);
+    };
+  }, [location.pathname]);
   
   const handleBack = () => {
     navigate(-1);
@@ -30,7 +50,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <div className="app-header bg-white border-b shadow-sm">
           <Header />
         </div>
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 content-container">
           {!isHomePage && (
             <div className="mb-4">
               <Button 

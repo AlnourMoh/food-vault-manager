@@ -15,6 +15,8 @@ interface BarcodeScannerProps {
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
   const scannerContainerRef = useRef<HTMLDivElement>(null);
+  const addedElements = useRef<HTMLElement[]>([]);
+  const isActive = useRef(false);
   
   const {
     isManualEntry,
@@ -40,79 +42,135 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     } 
   });
 
-  // تهيئة وتنظيف المكون بنهج أكثر احتواءً
+  // تحسين تهيئة وتنظيف المكون بنهج أكثر احتواءً
   useEffect(() => {
     console.log('[BarcodeScanner] تهيئة المكون وفتح الكاميرا...');
     
-    // إضافة الفئات للجسم مع نطاق محدود
-    const appHeader = document.querySelector('header');
-    if (appHeader) appHeader.classList.add('app-header');
+    if (isActive.current) {
+      console.log('[BarcodeScanner] المكون نشط بالفعل، تخطي التهيئة');
+      return;
+    }
     
-    const appFooter = document.querySelector('footer, nav');
-    if (appFooter) appFooter.classList.add('app-footer');
+    isActive.current = true;
     
-    // إعداد البوابة المحتواة للماسح
+    // إضافة فئات محددة للهيدر والفوتر لحمايتها
+    const addClassToElements = (selector: string, className: string) => {
+      document.querySelectorAll(selector).forEach(element => {
+        if (element instanceof HTMLElement) {
+          element.classList.add(className);
+          addedElements.current.push(element);
+        }
+      });
+    };
+    
+    // تصنيف عناصر التنقل والهيدر والفوتر بشكل صحيح
+    addClassToElements('header', 'app-header');
+    addClassToElements('nav', 'app-footer');
+    addClassToElements('footer', 'app-footer');
+    
+    // أسلوب محسّن للاحتواء - عزل عناصر الماسح
     const scannerRoot = document.createElement('div');
     scannerRoot.id = 'scanner-root';
     scannerRoot.className = styles.scannerRoot;
     document.body.appendChild(scannerRoot);
+    addedElements.current.push(scannerRoot);
     
-    if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-      // تهيئة MLKit بشكل أكثر احتواءً
-      MLKitBarcodeScanner.isSupported()
-        .then(result => {
-          if (result.supported) {
-            MLKitBarcodeScanner.requestPermissions()
-              .then(result => {
-                if (result.camera === 'granted') {
-                  setupScannerBackground().then(() => {
-                    startScan();
-                  });
-                }
-              }).catch(error => {
-                console.error('[BarcodeScanner] خطأ في طلب الأذونات:', error);
-                handleRetry();
-              });
+    // تنشيط الماسح وفتح الكاميرا
+    const initScanner = async () => {
+      // 1. أولاً، إعداد خلفية العرض
+      await setupScannerBackground();
+      
+      // 2. ثم تهيئة كاميرا MLKit
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          const { supported } = await MLKitBarcodeScanner.isSupported();
+          console.log('[BarcodeScanner] هل MLKit مدعوم؟', supported);
+          
+          if (supported) {
+            const { camera } = await MLKitBarcodeScanner.requestPermissions();
+            console.log('[BarcodeScanner] نتيجة إذن الكاميرا:', camera);
+            
+            if (camera === 'granted') {
+              // بدء المسح بعد الحصول على الإذن
+              startScan();
+            } else {
+              console.warn('[BarcodeScanner] لم يتم منح إذن الكاميرا');
+              handleRetry();
+            }
+          } else {
+            // تشغيل الماسح حتى لو لم يكن MLKit مدعوماً
+            startScan();
           }
-        }).catch(error => {
+        } catch (error) {
           console.error('[BarcodeScanner] خطأ في التحقق من دعم MLKit:', error);
-          handleRetry();
-        });
-    } else {
-      setupScannerBackground().then(() => {
+          startScan(); // محاولة بدء المسح على أي حال
+        }
+      } else {
+        console.log('[BarcodeScanner] MLKit غير متاح، استخدام آلية بديلة');
         startScan();
-      });
-    }
+      }
+    };
+    
+    initScanner();
     
     // التنظيف عند إلغاء المكون - تحسين عملية التنظيف
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون...');
+      isActive.current = false;
       
       try {
-        // إيقاف المسح وإعادة ضبط الخلفية
+        // 1. إيقاف المسح أولاً
         stopScan();
+        
+        // 2. تنظيف الخلفية والأنماط
         cleanupScannerBackground();
         
-        // إزالة الفئات المضافة للهيدر والفوتر
-        const appHeader = document.querySelector('.app-header');
-        if (appHeader) appHeader.classList.remove('app-header');
+        // 3. إزالة العناصر المضافة
+        for (const element of addedElements.current) {
+          if (element && element.parentNode) {
+            if (element.classList.contains('app-header') || 
+                element.classList.contains('app-footer')) {
+              // للهيدر والفوتر نحتفظ بالعناصر ولكن نزيل الفئة فقط
+              element.classList.remove('scanner-active', 'scanner-cleanup-active');
+            } else {
+              // للعناصر الأخرى المرتبطة بالماسح نزيلها تماماً
+              element.parentNode.removeChild(element);
+            }
+          }
+        }
+        addedElements.current = [];
         
-        const appFooter = document.querySelector('.app-footer');
-        if (appFooter) appFooter.classList.remove('app-footer');
-        
-        // إزالة جذر الماسح
-        const scannerRoot = document.getElementById('scanner-root');
-        if (scannerRoot) scannerRoot.remove();
-        
-        // محاولة إيقاف MLKit إذا كان متاحًا
+        // 4. محاولة إيقاف MLKit بشكل صريح
         if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
           MLKitBarcodeScanner.stopScan().catch(e => 
             console.warn('[BarcodeScanner] خطأ عند إيقاف المسح في التنظيف:', e)
           );
         }
         
-        // محاولة نهائية للتأكد من تنظيف كل شيء
+        // 5. محاولة نهائية لإصلاح الهيدر والفوتر بشكل قسري
         setTimeout(() => {
+          document.querySelectorAll('.app-header, header').forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.background = 'white';
+              el.style.backgroundColor = 'white';
+              el.style.visibility = 'visible';
+              el.style.opacity = '1';
+              el.style.zIndex = '1000';
+              el.style.position = 'relative';
+              el.style.display = 'flex';
+            }
+          });
+          
+          document.querySelectorAll('.app-footer, footer, nav').forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.background = 'white';
+              el.style.backgroundColor = 'white';
+              el.style.visibility = 'visible';
+              el.style.opacity = '1';
+              el.style.zIndex = '1000';
+            }
+          });
+          
           document.body.classList.remove(styles.scannerActive, 'scanner-mode');
         }, 500);
       } catch (error) {
