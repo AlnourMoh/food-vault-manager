@@ -56,7 +56,7 @@ export const useMLKitScanner = () => {
       
       console.log("[useMLKitScanner] بدء المسح...");
       
-      // بدء المسح باستخدام واجهة البرمجة الجديدة
+      // بدء المسح باستخدام واجهة البرمجة
       const result = await BarcodeScanner.scan({
         formats: undefined // مسح جميع أنواع الباركود
       });

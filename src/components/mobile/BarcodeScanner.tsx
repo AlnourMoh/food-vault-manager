@@ -47,7 +47,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
       try {
         console.log('[BarcodeScanner] إعداد خلفية شفافة وتهيئة الكاميرا...');
         
-        // التأكد من إزالة جميع العناصر التي قد تمنع ظهور الكاميرا
+        // تهيئة واجهة المستخدم للشفافية
         document.documentElement.style.background = 'transparent';
         document.documentElement.style.backgroundColor = 'transparent';
         document.documentElement.style.setProperty('--background', 'transparent', 'important');
@@ -59,16 +59,24 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         // استخدام الوظيفة المساعدة لإعداد الخلفية
         await setupScannerBackground();
         
-        // طلب أذونات الكاميرا مباشرة
+        // تهيئة مكتبة MLKit
         if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
           try {
-            console.log('[BarcodeScanner] طلب أذونات MLKit...');
-            await MLKitBarcodeScanner.requestPermissions();
+            console.log('[BarcodeScanner] تهيئة MLKit وطلب الأذونات...');
+            // التحقق مما إذا كان MLKit مدعوم
+            const { supported } = await MLKitBarcodeScanner.isSupported();
+            console.log('[BarcodeScanner] دعم MLKit:', supported);
+            
+            if (supported) {
+              // طلب أذونات الكاميرا
+              const permissions = await MLKitBarcodeScanner.requestPermissions();
+              console.log('[BarcodeScanner] نتيجة طلب الأذونات:', permissions);
+            }
           } catch (e) {
-            console.warn('[BarcodeScanner] خطأ في طلب أذونات MLKit:', e);
+            console.warn('[BarcodeScanner] خطأ في تهيئة MLKit:', e);
           }
         }
-
+        
         // بدء المسح تلقائيًا
         console.log('[BarcodeScanner] بدء المسح فورًا...');
         await startScan();

@@ -37,26 +37,37 @@ export const ScannerView = ({
           // تهيئة الكاميرا والشفافية بشكل كامل
           await setupScannerBackground();
           
-          // تطبيق الأنماط الإضافية للشفافية
+          // تحسين الشفافية وعرض الكاميرا
           document.documentElement.classList.add('transparent-bg');
           document.body.classList.add('transparent-bg', 'scanner-active');
           
-          // إنشاء عنصر الكاميرا الخاص
+          // إنشاء عنصر مخصص لعرض الكاميرا
           const cameraElement = document.createElement('div');
           cameraElement.id = 'camera-fullscreen-element';
+          cameraElement.className = styles.cameraViewport;
           cameraElement.style.position = 'fixed';
           cameraElement.style.inset = '0';
-          cameraElement.style.zIndex = '-1';
+          cameraElement.style.zIndex = '1';
           cameraElement.style.background = 'transparent';
           cameraElement.style.width = '100vw';
           cameraElement.style.height = '100vh';
           document.body.appendChild(cameraElement);
           
-          // إضافة خصائص meta للويب فيو
+          // تحسين خصائص meta للويب فيو
           const viewportMeta = document.querySelector('meta[name="viewport"]');
           if (viewportMeta) {
             viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
           }
+          
+          // إزالة أي عناصر قد تمنع ظهور الكاميرا
+          const dialogs = document.querySelectorAll('[role="dialog"], [class*="DialogOverlay"], [class*="DialogContent"]');
+          dialogs.forEach(dialog => {
+            if (dialog instanceof HTMLElement) {
+              dialog.style.background = 'transparent';
+              dialog.style.backgroundColor = 'transparent';
+              dialog.style.setProperty('--background', 'transparent', 'important');
+            }
+          });
         } catch (e) {
           console.error('Error setting up scanner:', e);
         }

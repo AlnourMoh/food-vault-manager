@@ -26,7 +26,7 @@ export const useScannerUI = () => {
       document.body.style.visibility = 'visible';
       document.body.style.opacity = '1';
       
-      // إزالة أي عناصر قد تتداخل
+      // إزالة أي عناصر قد تتداخل مع عرض الكاميرا
       const appRoot = document.getElementById('root');
       if (appRoot) {
         appRoot.style.background = 'transparent';
@@ -34,58 +34,70 @@ export const useScannerUI = () => {
         appRoot.style.setProperty('--background', 'transparent', 'important');
       }
       
-      // تأكيد على الشفافية لجميع العناصر الرئيسية
-      const allElements = document.querySelectorAll('div, main, section, nav, header, footer, ion-content, .main, .main-content');
-      allElements.forEach(elem => {
+      // معالجة خاصة للحوار الذي يعرض الماسح
+      const dialogs = document.querySelectorAll('[role="dialog"], .DialogOverlay, .DialogContent');
+      dialogs.forEach(dialog => {
+        if (dialog instanceof HTMLElement) {
+          dialog.style.background = 'transparent';
+          dialog.style.backgroundColor = 'transparent';
+          dialog.style.setProperty('--background', 'transparent', 'important');
+        }
+      });
+      
+      // التأكد من تطبيق الأنماط على أي عنصر قد يمنع الشفافية
+      // نستهدف العناصر الأساسية والحاويات
+      const mainElements = document.querySelectorAll('main, section, div.container, div[class*="content"]');
+      mainElements.forEach(elem => {
         if (elem instanceof HTMLElement) {
-          elem.style.setProperty('--background', 'transparent', 'important');
           elem.style.background = 'transparent';
           elem.style.backgroundColor = 'transparent';
-          elem.style.opacity = '1';
+          elem.style.setProperty('--background', 'transparent', 'important');
         }
       });
       
-      // تطبيق الأنماط الضرورية لعرض الكاميرا
-      const viewportMeta = document.querySelector('meta[name="viewport"]');
-      if (!viewportMeta) {
-        // إذا لم يكن موجودًا، نقوم بإنشائه
-        const meta = document.createElement('meta');
-        meta.setAttribute('name', 'viewport');
-        meta.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
-        document.head.appendChild(meta);
-      } else {
-        // تحديث العنصر الموجود
-        viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
-      }
-      
-      // التأكد من أن الحاوي الرئيسي عريض بما فيه الكفاية
-      const scannerContainers = document.querySelectorAll(`.${styles.scannerContainer}`);
-      scannerContainers.forEach(container => {
-        if (container instanceof HTMLElement) {
-          container.style.width = '100vw';
-          container.style.height = '100vh';
-          container.style.position = 'fixed';
-          container.style.top = '0';
-          container.style.left = '0';
-          container.style.zIndex = '9999';
-          container.style.background = 'transparent';
+      // تطبيق أنماط خاصة لعناصر واجهة المستخدم
+      const modals = document.querySelectorAll('.modal, .dialog, .popup, .overlay');
+      modals.forEach(modal => {
+        if (modal instanceof HTMLElement) {
+          modal.style.background = 'transparent';
+          modal.style.backgroundColor = 'transparent';
+          modal.style.setProperty('--background', 'transparent', 'important');
         }
       });
-
-      // إنشاء عنصر ملء يساعد في تهيئة الكاميرا
-      const fillElement = document.querySelector('.camera-fill-element');
-      if (!fillElement) {
-        const fill = document.createElement('div');
-        fill.className = 'camera-fill-element';
-        fill.style.position = 'fixed';
-        fill.style.top = '0';
-        fill.style.left = '0';
-        fill.style.width = '100vw';
-        fill.style.height = '100vh';
-        fill.style.zIndex = '-1';
-        fill.style.background = 'transparent';
-        fill.style.pointerEvents = 'none';
-        document.body.appendChild(fill);
+      
+      // إضافة عنصر لتحسين عرض الكاميرا
+      const scannerViewportElement = document.createElement('div');
+      scannerViewportElement.className = 'scanner-viewport-element';
+      scannerViewportElement.style.position = 'fixed';
+      scannerViewportElement.style.top = '0';
+      scannerViewportElement.style.left = '0';
+      scannerViewportElement.style.width = '100vw';
+      scannerViewportElement.style.height = '100vh';
+      scannerViewportElement.style.zIndex = '1';
+      scannerViewportElement.style.background = 'transparent';
+      scannerViewportElement.style.pointerEvents = 'none';
+      document.body.appendChild(scannerViewportElement);
+      
+      // تهيئة عناصر الماسح الضوئي
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+          // تهيئة الماسح الضوئي مسبقًا
+          const { supported } = await BarcodeScanner.isSupported();
+          console.log('[useScannerUI] دعم الماسح الضوئي:', supported);
+          
+          // اختبار وتهيئة الفلاش
+          try {
+            await BarcodeScanner.enableTorch();
+            setTimeout(() => {
+              BarcodeScanner.disableTorch().catch(() => {});
+            }, 500);
+          } catch (e) {
+            console.log('[useScannerUI] غير قادر على تمكين الفلاش:', e);
+          }
+        } catch (e) {
+          console.warn('[useScannerUI] خطأ في تهيئة الماسح الضوئي:', e);
+        }
       }
     } catch (error) {
       console.error("[useScannerUI] خطأ في إعداد خلفية الماسح:", error);
@@ -96,10 +108,10 @@ export const useScannerUI = () => {
     console.log("[useScannerUI] تنظيف خلفية الماسح الضوئي");
     
     try {
-      // إزالة العناصر الإضافية
-      const fillElement = document.querySelector('.camera-fill-element');
-      if (fillElement) {
-        fillElement.remove();
+      // إزالة العناصر المضافة
+      const scannerViewportElement = document.querySelector('.scanner-viewport-element');
+      if (scannerViewportElement) {
+        scannerViewportElement.remove();
       }
       
       // إزالة الفئات المضافة
@@ -128,14 +140,18 @@ export const useScannerUI = () => {
         appRoot.style.removeProperty('--background');
       }
       
-      // إعادة ضبط الأنماط لجميع العناصر
-      const allElements = document.querySelectorAll('div, main, section, nav, header, footer, ion-content, .main, .main-content');
+      // إعادة ضبط أي عناصر تمت معالجتها
+      const allElements = [
+        ...Array.from(document.querySelectorAll('main, section, div.container, div[class*="content"]')),
+        ...Array.from(document.querySelectorAll('.modal, .dialog, .popup, .overlay')),
+        ...Array.from(document.querySelectorAll('[role="dialog"], .DialogOverlay, .DialogContent'))
+      ];
+      
       allElements.forEach(elem => {
         if (elem instanceof HTMLElement) {
-          elem.style.removeProperty('--background');
           elem.style.background = '';
           elem.style.backgroundColor = '';
-          elem.style.opacity = '';
+          elem.style.removeProperty('--background');
         }
       });
       

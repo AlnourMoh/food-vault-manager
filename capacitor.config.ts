@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     // استخدام التطبيق بدون الاعتماد على خادم خارجي
-    // url: 'https://b3b6b969-583d-416c-9d8b-788fa375abca.lovableproject.com?forceHideBadge=true',
+    url: 'https://b3b6b969-583d-416c-9d8b-788fa375abca.lovableproject.com?forceHideBadge=true',
     cleartext: true,
     // Allow app to run in offline mode with cached content
     allowNavigation: ['*'],
@@ -30,11 +30,9 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true
     },
-    // إضافة إعدادات ماسح الباركود MLKit
+    // إعدادات ماسح الباركود MLKit
     MLKitBarcodeScanning: {
-      keys: {
-        // يمكن إضافة مفاتيح API خاصة بـ Google Cloud إذا كان ذلك مطلوبًا
-      }
+      keys: {}
     }
   },
   android: {
@@ -52,7 +50,7 @@ const config: CapacitorConfig = {
       "android.permission.CAMERA",
       "android.permission.ACCESS_NETWORK_STATE",
       "android.permission.INTERNET",
-      "android.permission.FLASHLIGHT" // إضافة إذن للفلاش
+      "android.permission.FLASHLIGHT" // إذن للفلاش
     ]
   },
   ios: {

@@ -105,6 +105,7 @@
   background-color: transparent !important;
   --background: transparent !important;
   pointer-events: none;
+  overflow: hidden;
 }
 
 /* Animations */
@@ -119,7 +120,19 @@
   100% { top: 100%; opacity: 0.8; }
 }
 
-/* Estilos adicionales para garantizar la transparencia */
+/* أنماط خاصة لضمان الشفافية والظهور الصحيح للكاميرا */
+:global(html), :global(body) {
+  background: transparent !important;
+  background-color: transparent !important;
+  --background: transparent !important;
+}
+
+:global(#root) {
+  background: transparent !important;
+  background-color: transparent !important;
+  --background: transparent !important;
+}
+
 :global(.scanner-active) {
   background: transparent !important;
   background-color: transparent !important;
@@ -130,9 +143,23 @@
   background: transparent !important;
   --background: transparent !important;
   background-color: transparent !important;
+  overflow: visible !important;
 }
 
 :global(.camera-active) {
   z-index: 9999;
   position: relative;
+}
+
+:global([role="dialog"]), :global(.DialogOverlay), :global(.DialogContent) {
+  background: transparent !important;
+  background-color: transparent !important;
+  --background: transparent !important;
+}
+
+:global(.dialog-background), :global(.dialog-inner-content), :global(.dialog-container) {
+  background: transparent !important;
+  background-color: transparent !important;
+  --background: transparent !important;
+  box-shadow: none !important;
 }
