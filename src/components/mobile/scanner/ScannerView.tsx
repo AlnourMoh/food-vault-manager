@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -6,6 +5,7 @@ import { ScannerControls } from './components/ScannerControls';
 import { ScannerFrame } from './components/ScannerFrame';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
 import { PermissionErrorView } from './components/PermissionErrorView';
+import styles from './scanner.module.css';
 
 interface ScannerViewProps {
   onStop: () => void;
@@ -104,10 +104,10 @@ export const ScannerView = ({
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center bg-black bg-opacity-50 z-[1000]">
+    <div className={styles.scannerLayout}>
       <ScannerStatusIndicator />
       
-      <div className="flex-1 w-full relative flex items-center justify-center">
+      <div className={styles.scannerContainer}>
         <ScannerFrame />
         
         <ScannerControls
@@ -129,4 +129,3 @@ export const ScannerView = ({
     </div>
   );
 };
-

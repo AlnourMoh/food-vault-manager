@@ -1,5 +1,6 @@
 
 import React from 'react';
+import styles from '../scanner.module.css';
 
 interface ScannerFrameProps {
   children?: React.ReactNode;
@@ -7,8 +8,9 @@ interface ScannerFrameProps {
 
 export const ScannerFrame = ({ children }: ScannerFrameProps) => {
   return (
-    <div className="w-72 h-72 border-4 border-primary rounded-lg scanner-target-frame flex items-center justify-center">
-      <div className="text-white text-center px-4">
+    <div className={styles.targetFrame}>
+      <div className={styles.scanLine} />
+      <div className={styles.guideText}>
         <p className="mb-2 font-bold">قم بتوجيه الكاميرا نحو الباركود</p>
         <p className="text-sm opacity-80">يتم المسح تلقائيًا عند اكتشاف رمز</p>
       </div>
@@ -16,4 +18,3 @@ export const ScannerFrame = ({ children }: ScannerFrameProps) => {
     </div>
   );
 };
-
