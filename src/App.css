@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +40,51 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* إصلاحات عامة للشفافية غير المرغوب فيها */
+:root {
+  --background-override: white !important;
+}
+
+/* تطبيق أنماط قوية على عناصر الواجهة الرئيسية */
+header, 
+.app-header {
+  background: white !important;
+  background-color: white !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1000;
+}
+
+footer, 
+nav.bottom-nav, 
+.app-footer {
+  background: white !important;
+  background-color: white !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1000;
+}
+
+/* إعادة تعيين الشفافية بعد الماسح */
+.scanner-cleanup-active body,
+.scanner-cleanup-active html {
+  background: white !important;
+  background-color: white !important;
+}
+
+/* ضمان وضوح نص الهيدر والفوتر والأزرار */
+header *, .app-header *,
+footer *, .app-footer * {
+  color: inherit;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* منع تطبيق الشفافية على عناصر المحتوى الرئيسية */
+.content-container:not(.scanner-container) {
+  background: white !important;
+  background-color: white !important;
+  --background: white !important;
 }

@@ -25,6 +25,7 @@ export const ScannerView = ({
 }: ScannerViewProps) => {
   const scannerActive = useRef(false);
   const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
+  const cameraViewportRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
@@ -34,27 +35,22 @@ export const ScannerView = ({
         try {
           console.log("Setting up scanner UI");
           scannerActive.current = true;
-          
-          // تطبيق خصائص خاصة للشفافية والكاميرا
-          document.documentElement.classList.add('transparent-bg');
-          document.body.classList.add('transparent-bg', 'scanner-active');
-          document.documentElement.style.background = 'transparent';
-          document.documentElement.style.backgroundColor = 'transparent';
-          document.documentElement.style.setProperty('--background', 'transparent', 'important');
-          document.body.style.background = 'transparent';
-          document.body.style.backgroundColor = 'transparent';
-          document.body.style.setProperty('--background', 'transparent', 'important');
-          
-          // تهيئة الكاميرا والشفافية بشكل كامل
+
+          // تطبيق الشفافية على منطقة الماسح فقط
           await setupScannerBackground();
           
-          // محاولة مباشرة لإيقاف وإعادة تشغيل الفلاش لتنشيط الكاميرا
+          // إنشاء عنصر محدد للكاميرا
+          if (!cameraViewportRef.current) {
+            cameraViewportRef.current = document.createElement('div');
+            cameraViewportRef.current.id = 'camera-viewport';
+            cameraViewportRef.current.className = `${styles.cameraViewport} camera-active`;
+            document.body.appendChild(cameraViewportRef.current);
+          }
+          
+          // محاولة تنشيط الكاميرا باستخدام الفلاش
           if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
             try {
-              // التحقق من توفر الفلاش وتفعيله لتنشيط الكاميرا
               const torchResult = await BarcodeScanner.isTorchAvailable();
-              console.log("[ScannerView] هل يتوفر الفلاش:", torchResult.available);
-              
               if (torchResult.available) {
                 await BarcodeScanner.enableTorch();
                 setTimeout(async () => {
@@ -65,23 +61,6 @@ export const ScannerView = ({
               }
             } catch (e) {}
           }
-          
-          // إنشاء عنصر مخصص لعرض الكاميرا بشكل أفضل
-          const cameraElement = document.createElement('div');
-          cameraElement.id = 'camera-fullscreen-element';
-          cameraElement.className = styles.cameraViewport;
-          document.body.appendChild(cameraElement);
-          
-          // تعديل الحوار ليكون شفافًا تمامًا
-          const dialogs = document.querySelectorAll('[role="dialog"], [class*="DialogOverlay"], [class*="DialogContent"]');
-          dialogs.forEach(dialog => {
-            if (dialog instanceof HTMLElement) {
-              dialog.style.background = 'transparent';
-              dialog.style.backgroundColor = 'transparent';
-              dialog.style.boxShadow = 'none';
-              dialog.style.setProperty('--background', 'transparent', 'important');
-            }
-          });
         } catch (e) {
           console.error('Error setting up scanner:', e);
         }
@@ -94,25 +73,14 @@ export const ScannerView = ({
       console.log("ScannerView unmounting");
       scannerActive.current = false;
       
-      // تنظيف الموارد
+      // تنظيف موارد الماسح
       cleanupScannerBackground();
       
-      // إزالة العناصر المضافة
-      const cameraElement = document.getElementById('camera-fullscreen-element');
-      if (cameraElement) {
-        cameraElement.remove();
+      // إزالة عنصر الكاميرا
+      if (cameraViewportRef.current) {
+        cameraViewportRef.current.remove();
+        cameraViewportRef.current = null;
       }
-      
-      document.body.classList.remove('scanner-active');
-      document.documentElement.classList.remove('transparent-bg');
-      document.body.classList.remove('transparent-bg');
-      
-      document.documentElement.style.background = '';
-      document.documentElement.style.backgroundColor = '';
-      document.documentElement.style.removeProperty('--background');
-      document.body.style.background = '';
-      document.body.style.backgroundColor = '';
-      document.body.style.removeProperty('--background');
     };
   }, [hasPermissionError]);
 

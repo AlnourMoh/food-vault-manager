@@ -120,66 +120,48 @@
   100% { top: 100%; opacity: 0.8; }
 }
 
-/* أنماط خاصة لضمان الشفافية والظهور الصحيح للكاميرا */
-:global(html), :global(body) {
+/* تقليل نطاق الأنماط العامة وحصرها فقط داخل عناصر الماسح */
+/* بدلاً من استخدام global، نستخدم فئات محددة */
+.scannerRoot :global(html), .scannerRoot :global(body) {
   background: transparent !important;
   background-color: transparent !important;
   --background: transparent !important;
 }
 
-:global(#root) {
-  background: transparent !important;
-  background-color: transparent !important;
-  --background: transparent !important;
+.scannerPortal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9995;
+  background: transparent;
 }
 
-:global(.scanner-active) {
-  background: transparent !important;
-  background-color: transparent !important;
-  --background: transparent !important;
-}
-
-:global(.transparent-bg) {
-  background: transparent !important;
-  --background: transparent !important;
-  background-color: transparent !important;
-  overflow: visible !important;
-}
-
-:global(.camera-active) {
-  z-index: 9999;
-  position: relative;
-}
-
-:global([role="dialog"]), :global(.DialogOverlay), :global(.DialogContent) {
-  background: transparent !important;
-  background-color: transparent !important;
-  --background: transparent !important;
-  box-shadow: none !important;
-}
-
-:global(.dialog-background), :global(.dialog-inner-content), :global(.dialog-container) {
-  background: transparent !important;
-  background-color: transparent !important;
-  --background: transparent !important;
-  box-shadow: none !important;
-}
-
-/* إصلاح مشكلة الكاميرا في تطبيقات Capacitor - إضافة جديدة */
-:global(capacitor-mlkit-barcodescanner-frame) {
-  visibility: visible !important;
+/* تحسين وضوح عناصر الواجهة الأساسية في الصفحة أثناء المسح */
+:global(.app-header) {
+  background-color: white !important;
+  background: white !important;
+  --background: white !important;
   opacity: 1 !important;
-  z-index: 9999 !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  visibility: visible !important;
+  z-index: 1000 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* إزالة أي حاويات قد تتداخل مع عرض الكاميرا */
-:global(.ion-page), :global(ion-content), :global(.content-container) {
-  --background: transparent !important;
-  background: transparent !important;
-  background-color: transparent !important;
+:global(.app-footer), :global(.bottom-nav) {
+  background-color: white !important;
+  background: white !important;
+  --background: white !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 1000 !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* إزالة أنماط الشفافية العالمية واستبدالها بأنماط محددة */
+/* مهم: استخدام فئات محددة بدلاً من تغيير أنماط المستند بالكامل */
+.scannerActive.dialog-only {
+  position: relative;
+  z-index: 9999;
 }

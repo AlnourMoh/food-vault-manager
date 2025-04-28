@@ -23,9 +23,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-fvm-secondary/30">
-      <MainSidebar />
+      <div className="app-header">
+        <MainSidebar />
+      </div>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header />
+        <div className="app-header bg-white border-b shadow-sm">
+          <Header />
+        </div>
         <main className="flex-1 overflow-auto p-6">
           {!isHomePage && (
             <div className="mb-4">
@@ -42,6 +46,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           )}
           {children}
         </main>
+        <div className="app-footer bg-white border-t shadow-sm">
+          {/* تضمين أي محتوى فوتر إذا كان موجودًا */}
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useScannerControls } from './scanner/hooks/useScannerControls';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 import { BarcodeScanner as MLKitBarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import styles from './scanner/scanner.module.css';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -39,58 +40,51 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     } 
   });
 
-  // تهيئة وتنظيف المكون
+  // تهيئة وتنظيف المكون بنهج أكثر احتواءً
   useEffect(() => {
     console.log('[BarcodeScanner] تهيئة المكون وفتح الكاميرا...');
     
-    // إضافة الفئات للجسم لتعزيز الشفافية
-    document.body.classList.add('scanner-active', 'transparent-bg');
-    document.documentElement.classList.add('transparent-bg');
+    // إضافة الفئات للجسم مع نطاق محدود
+    const appHeader = document.querySelector('header');
+    if (appHeader) appHeader.classList.add('app-header');
+    
+    const appFooter = document.querySelector('footer, nav');
+    if (appFooter) appFooter.classList.add('app-footer');
+    
+    // إعداد البوابة المحتواة للماسح
+    const scannerRoot = document.createElement('div');
+    scannerRoot.id = 'scanner-root';
+    scannerRoot.className = styles.scannerRoot;
+    document.body.appendChild(scannerRoot);
     
     if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-      // تجهيز فئة الشفافية للمستند بأكمله
-      document.documentElement.style.setProperty('--ion-background-color', 'transparent', 'important');
-      document.documentElement.style.setProperty('background', 'transparent', 'important');
-      document.documentElement.style.setProperty('background-color', 'transparent', 'important');
-      
-      // تطبيق نفس الخصائص على العناصر الرئيسية
-      document.body.style.setProperty('--ion-background-color', 'transparent', 'important');
-      document.body.style.setProperty('background', 'transparent', 'important');
-      document.body.style.setProperty('background-color', 'transparent', 'important');
-      
-      // جعل جميع الحاويات شفافة
-      document.querySelectorAll('.ion-page, ion-content, .content-container').forEach(elem => {
-        if (elem instanceof HTMLElement) {
-          elem.style.setProperty('--background', 'transparent', 'important');
-          elem.style.background = 'transparent';
-          elem.style.backgroundColor = 'transparent';
-        }
-      });
-      
-      // تهيئة MLKit أولاً
+      // تهيئة MLKit بشكل أكثر احتواءً
       MLKitBarcodeScanner.isSupported()
         .then(result => {
           if (result.supported) {
-            // طلب الأذونات قبل بدء المسح
             MLKitBarcodeScanner.requestPermissions()
               .then(result => {
                 if (result.camera === 'granted') {
-                  // إعداد الكاميرا وبدء المسح
                   setupScannerBackground().then(() => {
                     startScan();
                   });
                 }
-              }).catch(console.error);
+              }).catch(error => {
+                console.error('[BarcodeScanner] خطأ في طلب الأذونات:', error);
+                handleRetry();
+              });
           }
-        }).catch(console.error);
+        }).catch(error => {
+          console.error('[BarcodeScanner] خطأ في التحقق من دعم MLKit:', error);
+          handleRetry();
+        });
     } else {
-      // إعداد الشفافية وبدء المسح مباشرة (للويب/محاكاة)
       setupScannerBackground().then(() => {
         startScan();
       });
     }
     
-    // التنظيف عند إلغاء المكون
+    // التنظيف عند إلغاء المكون - تحسين عملية التنظيف
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون...');
       
@@ -99,15 +93,16 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         stopScan();
         cleanupScannerBackground();
         
-        // إزالة الفئات المضافة للشفافية
-        document.body.classList.remove('scanner-active', 'transparent-bg');
-        document.documentElement.classList.remove('transparent-bg');
-        document.documentElement.style.removeProperty('--ion-background-color');
-        document.documentElement.style.removeProperty('background');
-        document.documentElement.style.removeProperty('background-color');
-        document.body.style.removeProperty('--ion-background-color');
-        document.body.style.removeProperty('background');
-        document.body.style.removeProperty('background-color');
+        // إزالة الفئات المضافة للهيدر والفوتر
+        const appHeader = document.querySelector('.app-header');
+        if (appHeader) appHeader.classList.remove('app-header');
+        
+        const appFooter = document.querySelector('.app-footer');
+        if (appFooter) appFooter.classList.remove('app-footer');
+        
+        // إزالة جذر الماسح
+        const scannerRoot = document.getElementById('scanner-root');
+        if (scannerRoot) scannerRoot.remove();
         
         // محاولة إيقاف MLKit إذا كان متاحًا
         if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
@@ -115,6 +110,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
             console.warn('[BarcodeScanner] خطأ عند إيقاف المسح في التنظيف:', e)
           );
         }
+        
+        // محاولة نهائية للتأكد من تنظيف كل شيء
+        setTimeout(() => {
+          document.body.classList.remove(styles.scannerActive, 'scanner-mode');
+        }, 500);
       } catch (error) {
         console.error('[BarcodeScanner] خطأ أثناء التنظيف:', error);
       }
@@ -124,7 +124,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   return (
     <div 
       ref={scannerContainerRef}
-      className="fixed inset-0 z-[9999]" 
+      className="fixed inset-0 z-[9999] scanner-container" 
       style={{
         background: 'transparent',
         backgroundColor: 'transparent',
