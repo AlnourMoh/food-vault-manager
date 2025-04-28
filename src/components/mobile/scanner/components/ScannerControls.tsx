@@ -36,3 +36,4 @@ export const ScannerControls = ({ onToggleFlash, onManualEntry }: ScannerControl
     </>
   );
 };
+

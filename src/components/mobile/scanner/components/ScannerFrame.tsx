@@ -16,3 +16,4 @@ export const ScannerFrame = ({ children }: ScannerFrameProps) => {
     </div>
   );
 };
+
