@@ -10,7 +10,7 @@ export const useMLKitScanner = () => {
     try {
       console.log("[useMLKitScanner] بدء استخدام MLKit فوراً");
       
-      // إعداد خلفية الماسح - مهم جدا لتفعيل الكاميرا بشكل صحيح
+      // إعداد خلفية شفافة للكاميرا - مهم جدا لتفعيل الكاميرا بشكل صحيح
       await setupScannerBackground();
       
       // استيراد مكتبة MLKit
@@ -26,8 +26,14 @@ export const useMLKitScanner = () => {
         }
       }
       
+      // هذا الأمر ضروري لإظهار الكاميرا خلف عناصر التطبيق
+      // يجب إضافته قبل بدء المسح لضمان ظهور الكاميرا
+      await BarcodeScanner.enableTorch(false);
+      
       // بدء المسح باستخدام واجهة البرمجة الجديدة
-      const result = await BarcodeScanner.scan();
+      const result = await BarcodeScanner.scan({
+        cameraDirection: "back"  // استخدام الكاميرا الخلفية دائما للمسح
+      });
       
       // معالجة النتيجة إذا تم العثور على باركود
       if (result.barcodes && result.barcodes.length > 0) {

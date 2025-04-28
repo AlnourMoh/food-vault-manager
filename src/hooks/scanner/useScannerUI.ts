@@ -1,6 +1,5 @@
 
 import styles from '@/components/mobile/scanner/scanner.module.css';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useScannerUI = () => {
   const setupScannerBackground = async () => {
@@ -11,7 +10,7 @@ export const useScannerUI = () => {
       document.body.classList.add(styles.scannerActive);
       document.body.classList.add(styles.transparentBackground);
       
-      // تطبيق أنماط مباشرة لضمان الشفافية
+      // تطبيق أنماط مباشرة لضمان الشفافية التامة
       document.documentElement.style.background = 'transparent';
       document.documentElement.style.backgroundColor = 'transparent';
       document.body.style.background = 'transparent';
@@ -27,20 +26,31 @@ export const useScannerUI = () => {
       }
       
       // تأكيد على الشفافية لجميع العناصر الرئيسية
-      const mainElements = document.querySelectorAll('main, div.main, .main-content');
+      const mainElements = document.querySelectorAll('main, div.main, .main-content, ion-content');
       mainElements.forEach(elem => {
         if (elem instanceof HTMLElement) {
           elem.style.background = 'transparent';
           elem.style.backgroundColor = 'transparent';
+          elem.style.setProperty('--background', 'transparent', 'important');
         }
       });
       
       // تطبيق الأنماط على الحاويات التي قد تتداخل مع رؤية الكاميرا
-      const containers = document.querySelectorAll('.container, .content');
+      const containers = document.querySelectorAll('.container, .content, ion-app');
       containers.forEach(container => {
         if (container instanceof HTMLElement) {
           container.style.background = 'transparent';
           container.style.backgroundColor = 'transparent';
+          container.style.setProperty('--background', 'transparent', 'important');
+        }
+      });
+      
+      // التأكد من أن الحاوي الرئيسي عريض بما فيه الكفاية
+      const scannerContainers = document.querySelectorAll(`.${styles.scannerContainer}`);
+      scannerContainers.forEach(container => {
+        if (container instanceof HTMLElement) {
+          container.style.width = '100vw';
+          container.style.height = '100vh';
         }
       });
     } catch (error) {
@@ -72,20 +82,22 @@ export const useScannerUI = () => {
       }
       
       // إعادة ضبط الأنماط لجميع العناصر الرئيسية
-      const mainElements = document.querySelectorAll('main, div.main, .main-content');
+      const mainElements = document.querySelectorAll('main, div.main, .main-content, ion-content');
       mainElements.forEach(elem => {
         if (elem instanceof HTMLElement) {
           elem.style.background = '';
           elem.style.backgroundColor = '';
+          elem.style.removeProperty('--background');
         }
       });
       
       // إعادة ضبط الأنماط للحاويات
-      const containers = document.querySelectorAll('.container, .content');
+      const containers = document.querySelectorAll('.container, .content, ion-app');
       containers.forEach(container => {
         if (container instanceof HTMLElement) {
           container.style.background = '';
           container.style.backgroundColor = '';
+          container.style.removeProperty('--background');
         }
       });
       

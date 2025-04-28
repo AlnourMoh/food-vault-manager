@@ -23,18 +23,20 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     if (open) {
       console.log('ScanProductDialog: تم فتح الحوار، جاري فتح الماسح...');
       
-      // تأكد من تهيئة الحوار بشكل صحيح
+      // تأكد من تهيئة الحوار بشكل صحيح للكاميرا
       const setupDialog = () => {
         // جعل خلفية الحوار شفافة تماماً
         const dialogElement = document.querySelector('[role="dialog"]');
         if (dialogElement instanceof HTMLElement) {
           dialogElement.style.background = 'transparent';
           dialogElement.style.backgroundColor = 'transparent';
+          dialogElement.style.setProperty('--background', 'transparent', 'important');
           
           // جعل أب العنصر dialog شفافاً أيضاً
           if (dialogElement.parentElement instanceof HTMLElement) {
             dialogElement.parentElement.style.background = 'transparent';
             dialogElement.parentElement.style.backgroundColor = 'transparent';
+            dialogElement.parentElement.style.setProperty('--background', 'transparent', 'important');
           }
           
           // مسح أي خلفيات للعناصر الداخلية
@@ -42,6 +44,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
           if (dialogContent instanceof HTMLElement) {
             dialogContent.style.background = 'transparent';
             dialogContent.style.backgroundColor = 'transparent';
+            dialogContent.style.setProperty('--background', 'transparent', 'important');
             dialogContent.style.boxShadow = 'none';
           }
         }
@@ -52,6 +55,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
           if (overlay instanceof HTMLElement) {
             overlay.style.background = 'transparent';
             overlay.style.backgroundColor = 'transparent';
+            overlay.style.setProperty('--background', 'transparent', 'important');
           }
         });
         
@@ -80,6 +84,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         if (element instanceof HTMLElement) {
           element.style.background = '';
           element.style.backgroundColor = '';
+          element.style.removeProperty('--background');
           element.style.boxShadow = '';
         }
       });
@@ -167,10 +172,27 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-transparent p-0" style={{backgroundColor: 'transparent', background: 'transparent', boxShadow: 'none'}}>
-        <div className="text-center p-4 bg-background z-10 rounded-t-lg">مسح باركود المنتج</div>
-        <div className="h-[450px] relative flex items-center justify-center bg-transparent overflow-hidden">
+    <Dialog 
+      open={open} 
+      onOpenChange={onOpenChange}
+      modal={false} // هذا مهم لضمان عدم حجب الكاميرا
+    >
+      <DialogContent 
+        className="bg-transparent p-0 border-0" 
+        style={{
+          backgroundColor: 'transparent',
+          background: 'transparent', 
+          boxShadow: 'none',
+          maxWidth: '100vw',
+          width: '100%',
+          height: '100vh',
+          margin: '0',
+          padding: '0',
+          overflow: 'hidden'
+        }}
+      >
+        <div className="text-center p-4 bg-black/70 text-white z-10 rounded-t-lg">مسح باركود المنتج</div>
+        <div className="h-[calc(100vh-120px)] relative flex items-center justify-center bg-transparent overflow-hidden">
           {hasScannerError ? (
             <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-background rounded-lg">
               <div className="p-3 bg-red-100 text-red-600 rounded-full">
