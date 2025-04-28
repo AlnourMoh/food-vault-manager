@@ -3,7 +3,7 @@
 <html dir="rtl" lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>خطأ في الاتصال</title>
   <style>
     body {
@@ -23,6 +23,7 @@
     .container {
       max-width: 500px;
       margin: 0 auto;
+      animation: fadeIn 0.5s ease-in-out;
     }
     .icon-circle {
       background-color: #f3f4f6;
@@ -46,10 +47,23 @@
       background-color: #2E7D32;
       color: white;
       border: none;
-      padding: 10px 16px;
+      padding: 12px 20px;
       border-radius: 8px;
       font-weight: 500;
       cursor: pointer;
+      margin-bottom: 12px;
+      width: 100%;
+      transition: background-color 0.2s;
+    }
+    .button:hover {
+      background-color: #1b5e20;
+    }
+    .button.secondary {
+      background-color: #e5e7eb;
+      color: #1f2937;
+    }
+    .button.secondary:hover {
+      background-color: #d1d5db;
     }
     .error-box {
       background-color: #fee2e2;
@@ -64,6 +78,62 @@
       overflow: auto;
       max-height: 120px;
     }
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-right: 5px;
+    }
+    .status-badge.online {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .status-badge.offline {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background-color: #e5e7eb;
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background-color: #2E7D32;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
     @media (prefers-color-scheme: dark) {
       body {
         background-color: #1a1a1a;
@@ -75,8 +145,12 @@
       .icon-circle {
         background-color: #2a2a2a;
       }
-      .button {
-        background-color: #16a34a;
+      .button.secondary {
+        background-color: #374151;
+        color: #e5e7eb;
+      }
+      .button.secondary:hover {
+        background-color: #4b5563;
       }
       .error-box {
         background-color: #471819;
@@ -101,12 +175,35 @@
     
     <p>يبدو أن هناك مشكلة في الاتصال بالإنترنت أو أن الخادم غير متاح حاليًا. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.</p>
     
-    <button class="button" onclick="window.location.reload()">إعادة المحاولة</button>
+    <div class="button-group">
+      <button id="retry-btn" class="button">
+        <span id="spinner" class="spinner" style="display: none;"></span>
+        إعادة المحاولة
+      </button>
+      <button id="clear-cache-btn" class="button secondary">مسح ذاكرة التخزين المؤقت</button>
+    </div>
+    
+    <div id="progress" class="progress-bar" style="display: none;">
+      <div id="progress-inner" class="progress-bar-inner"></div>
+    </div>
     
     <div id="offline-status"></div>
     
     <div id="error-details" class="error-box" style="display: none">
       <!-- Error details will be shown here -->
+    </div>
+
+    <div id="troubleshooting" style="margin-top: 20px; text-align: right;">
+      <details>
+        <summary style="cursor: pointer; color: #2E7D32; margin-bottom: 10px;">خطوات استكشاف الأخطاء وإصلاحها</summary>
+        <ol style="text-align: right; padding-right: 20px;">
+          <li>تأكد من اتصالك بالإنترنت وجرب فتح موقع آخر</li>
+          <li>قم بتمكين البيانات الخلوية إذا كنت تستخدم WiFi أو العكس</li>
+          <li>أعد تشغيل التطبيق</li>
+          <li>افتح إعدادات الجهاز وامنح التطبيق أذونات الإنترنت</li>
+          <li>إذا استمرت المشكلة، جرب إعادة تثبيت التطبيق</li>
+        </ol>
+      </details>
     </div>
   </div>
   
@@ -115,9 +212,9 @@
     function updateStatus() {
       const statusElement = document.getElementById('offline-status');
       if (!navigator.onLine) {
-        statusElement.innerHTML = '<p style="color: #ef4444;">أنت غير متصل بالإنترنت</p>';
+        statusElement.innerHTML = '<p><span class="status-badge offline">غير متصل</span> أنت غير متصل بالإنترنت حاليًا</p>';
       } else {
-        statusElement.innerHTML = '<p>أنت متصل بالإنترنت، لكن يبدو أن هناك مشكلة في الوصول إلى الخادم</p>';
+        statusElement.innerHTML = '<p><span class="status-badge online">متصل</span> أنت متصل بالإنترنت، لكن يبدو أن هناك مشكلة في الوصول إلى الخادم</p>';
       }
     }
     
@@ -133,6 +230,61 @@
         errorElement.textContent = `${errorCode ? 'Error: ' + errorCode : ''} ${errorMessage || ''}`.trim();
       }
     }
+    
+    // Handle retry button
+    document.getElementById('retry-btn').addEventListener('click', function() {
+      const spinner = document.getElementById('spinner');
+      const progress = document.getElementById('progress');
+      const progressInner = document.getElementById('progress-inner');
+      
+      // Show spinner and progress
+      spinner.style.display = 'inline-block';
+      progress.style.display = 'block';
+      this.disabled = true;
+      
+      // Animate progress
+      let width = 0;
+      const interval = setInterval(() => {
+        if (width >= 100) {
+          clearInterval(interval);
+          window.location.reload();
+        } else {
+          width += 2;
+          progressInner.style.width = width + '%';
+        }
+      }, 50);
+    });
+    
+    // Handle clear cache button
+    document.getElementById('clear-cache-btn').addEventListener('click', function() {
+      // Clear localStorage
+      localStorage.clear();
+      
+      // Clear service worker caches if present
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          names.forEach(function(name) {
+            caches.delete(name);
+          });
+        });
+      }
+      
+      // Clear service worker registrations
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      
+      alert('تم مسح ذاكرة التخزين المؤقت. سيتم إعادة تحميل الصفحة.');
+      
+      // Reload after a short delay
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+    });
     
     // Initialize page
     window.addEventListener('load', function() {

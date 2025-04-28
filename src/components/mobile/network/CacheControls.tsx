@@ -1,31 +1,61 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { RotateCcw, RefreshCw } from 'lucide-react';
 
 interface CacheControlsProps {
   onForceReload: () => void;
   onClearCache: () => void;
 }
 
-const CacheControls = ({ onForceReload, onClearCache }: CacheControlsProps) => {
+const CacheControls: React.FC<CacheControlsProps> = ({
+  onForceReload,
+  onClearCache
+}) => {
+  const [isClearing, setIsClearing] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+  
+  const handleClearCache = async () => {
+    setIsClearing(true);
+    await onClearCache();
+    setTimeout(() => setIsClearing(false), 2000);
+  };
+  
+  const handleForceReload = () => {
+    setIsReloading(true);
+    onForceReload();
+  };
+
   return (
     <div className="grid grid-cols-2 gap-3">
-      <Button variant="outline" onClick={onForceReload} className="flex items-center justify-center py-5">
-        <RefreshCw className="w-4 h-4 ml-1" />
-        <div className="flex flex-col items-start">
-          <span>إعادة تحميل</span>
-          <span className="text-[10px] opacity-70">تحديث الصفحة</span>
-        </div>
-      </Button>
+      <button
+        className="py-2 px-3 bg-muted hover:bg-muted/80 rounded-md flex items-center justify-center text-sm"
+        onClick={handleForceReload}
+        disabled={isReloading}
+      >
+        {isReloading ? (
+          <span className="animate-spin mr-1">
+            <RefreshCw size={14} />
+          </span>
+        ) : (
+          <RefreshCw size={14} className="mr-1" />
+        )}
+        إعادة التحميل
+      </button>
       
-      <Button variant="outline" onClick={onClearCache} className="flex items-center justify-center py-5">
-        <Trash2 className="w-4 h-4 ml-1" />
-        <div className="flex flex-col items-start">
-          <span>مسح الذاكرة</span>
-          <span className="text-[10px] opacity-70">حل مشاكل التطبيق</span>
-        </div>
-      </Button>
+      <button
+        className="py-2 px-3 bg-muted hover:bg-muted/80 rounded-md flex items-center justify-center text-sm"
+        onClick={handleClearCache}
+        disabled={isClearing}
+      >
+        {isClearing ? (
+          <span className="animate-spin mr-1">
+            <RotateCcw size={14} />
+          </span>
+        ) : (
+          <RotateCcw size={14} className="mr-1" />
+        )}
+        مسح الذاكرة المؤقتة
+      </button>
     </div>
   );
 };

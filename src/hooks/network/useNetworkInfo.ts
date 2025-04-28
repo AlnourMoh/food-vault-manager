@@ -1,87 +1,77 @@
 
 import { useState, useEffect } from 'react';
 
-export const useNetworkInfo = () => {
-  const [networkInfo, setNetworkInfo] = useState<string>('');
-  
+interface NetworkInfoResult {
+  connectionType: string | null;
+  effectiveType: string | null;
+  downlink: number | null;
+  rtt: number | null;
+  online: boolean;
+  lastUpdate: Date;
+}
+
+export const useNetworkInfo = (): NetworkInfoResult => {
+  const [networkInfo, setNetworkInfo] = useState<NetworkInfoResult>({
+    connectionType: null,
+    effectiveType: null,
+    downlink: null,
+    rtt: null,
+    online: navigator.onLine,
+    lastUpdate: new Date()
+  });
+
   useEffect(() => {
-    const gatherNetworkInfo = () => {
-      const info = [];
+    // Function to update network information
+    const updateNetworkInfo = () => {
+      let connectionInfo: Partial<NetworkInfoResult> = {
+        online: navigator.onLine,
+        lastUpdate: new Date()
+      };
       
-      // Basic connection status
-      info.push(`حالة الاتصال: ${navigator.onLine ? 'متصل ✓' : 'غير متصل ✗'}`);
-      info.push(`وقت الفحص: ${new Date().toLocaleTimeString()}`);
-      
-      // Page URL information
-      info.push(`عنوان URL: ${window.location.href}`);
-      info.push(`اسم المضيف: ${window.location.hostname}`);
-      
-      // Network information if available
+      // Getting connection type if available
       if ('connection' in navigator && navigator.connection) {
         const conn = navigator.connection as any;
-        info.push('--- معلومات الشبكة ---');
-        
-        if (conn.effectiveType) {
-          info.push(`نوع الاتصال: ${conn.effectiveType.toUpperCase()}`);
-        }
-        
-        if (conn.downlink) {
-          info.push(`سرعة التحميل: ${conn.downlink} Mbps`);
-        }
-        
-        if (conn.rtt) {
-          info.push(`وقت الاستجابة: ${conn.rtt} ms`);
-        }
-        
-        if (typeof conn.saveData !== 'undefined') {
-          info.push(`وضع توفير البيانات: ${conn.saveData ? 'مفعل' : 'غير مفعل'}`);
-        }
-        
-        if (typeof conn.type !== 'undefined') {
-          const connectionTypes: Record<string, string> = {
-            'bluetooth': 'بلوتوث',
-            'cellular': 'شبكة الجوال',
-            'ethernet': 'إيثرنت',
-            'wifi': 'واي فاي',
-            'wimax': 'واي ماكس',
-            'none': 'لا يوجد اتصال',
-            'other': 'نوع آخر',
-            'unknown': 'غير معروف'
-          };
-          info.push(`نوع الاتصال: ${connectionTypes[conn.type] || conn.type}`);
-        }
+        connectionInfo = {
+          ...connectionInfo,
+          connectionType: conn.type || null,
+          effectiveType: conn.effectiveType || null,
+          downlink: typeof conn.downlink === 'number' ? conn.downlink : null,
+          rtt: typeof conn.rtt === 'number' ? conn.rtt : null
+        };
       }
       
-      // Current API server
-      try {
-        const apiUrl = localStorage.getItem('apiUrl') || 'الافتراضي';
-        info.push(`عنوان API: ${apiUrl}`);
-      } catch (e) {
-        info.push('تعذر قراءة عنوان API');
-      }
-      
-      // App version if available
-      try {
-        const appVersion = localStorage.getItem('appVersion') || 'غير معروف';
-        info.push(`إصدار التطبيق: ${appVersion}`);
-      } catch (e) {
-        // Ignore errors
-      }
-      
-      setNetworkInfo(info.join('\n'));
+      setNetworkInfo((prev) => ({
+        ...prev,
+        ...connectionInfo
+      }));
     };
     
-    gatherNetworkInfo();
+    // Setup event listeners for network changes
+    const setupListeners = () => {
+      window.addEventListener('online', updateNetworkInfo);
+      window.addEventListener('offline', updateNetworkInfo);
+      
+      if ('connection' in navigator && navigator.connection) {
+        (navigator.connection as any).addEventListener('change', updateNetworkInfo);
+      }
+    };
     
-    window.addEventListener('online', gatherNetworkInfo);
-    window.addEventListener('offline', gatherNetworkInfo);
+    // Initial update
+    updateNetworkInfo();
+    setupListeners();
     
-    // Refresh network info every 10 seconds
-    const intervalId = setInterval(gatherNetworkInfo, 10000);
+    // Update network info periodically (every 30 seconds)
+    const intervalId = setInterval(updateNetworkInfo, 30000);
     
+    // Clean up
     return () => {
-      window.removeEventListener('online', gatherNetworkInfo);
-      window.removeEventListener('offline', gatherNetworkInfo);
+      window.removeEventListener('online', updateNetworkInfo);
+      window.removeEventListener('offline', updateNetworkInfo);
+      
+      if ('connection' in navigator && navigator.connection) {
+        (navigator.connection as any).removeEventListener('change', updateNetworkInfo);
+      }
+      
       clearInterval(intervalId);
     };
   }, []);

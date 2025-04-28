@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNetworkRetry } from '@/hooks/network/useNetworkRetry';
 import { useNetworkInfo } from '@/hooks/network/useNetworkInfo';
 import { useDebugInfo } from '@/hooks/network/useDebugInfo';
@@ -33,6 +33,7 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({
     handleClearCache
   } = useNetworkRetry({ onRetry });
   
+  const [showDetails, setShowDetails] = useState(false);
   const networkInfo = useNetworkInfo();
   const { showDebugInfo, setShowDebugInfo } = useDebugInfo();
 
@@ -66,6 +67,26 @@ const NetworkErrorView: React.FC<NetworkErrorViewProps> = ({
           showDebugInfo={showDebugInfo}
           setShowDebugInfo={setShowDebugInfo}
         />
+
+        <div className="mt-8 text-xs text-muted-foreground">
+          <button 
+            className="text-primary hover:underline" 
+            onClick={() => setShowDetails(!showDetails)}
+          >
+            {showDetails ? 'إخفاء التفاصيل التقنية' : 'عرض التفاصيل التقنية'}
+          </button>
+          
+          {showDetails && (
+            <div className="mt-2 bg-muted p-2 rounded text-left font-mono text-xs overflow-x-auto">
+              <p>User Agent: {navigator.userAgent}</p>
+              <p>App Version: FoodVaultManager/1.0.0</p>
+              <p>URL: {url || window.location.href}</p>
+              <p>Error Code: {errorCode || 'Unknown'}</p>
+              <p>Connection Type: {networkInfo.connectionType || 'Unknown'}</p>
+              <p>Retry Count: {retryCount}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

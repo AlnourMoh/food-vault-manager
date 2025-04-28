@@ -1,35 +1,31 @@
 
-import React from 'react';
-import { ExternalLink, WifiOff, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
-const TroubleshootingSteps = () => {
+const TroubleshootingSteps: React.FC = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
-    <div className="text-xs text-muted-foreground mt-6 mb-2">
-      <p className="font-medium mb-2">خطوات استكشاف الأخطاء وإصلاحها:</p>
-      <ul className="text-right list-disc list-inside space-y-2">
-        <li className="flex items-start">
-          <WifiOff className="w-3 h-3 mt-1 ml-1 flex-shrink-0" />
-          <span>تأكد من اتصالك بالإنترنت (WiFi أو بيانات الجوال)</span>
-        </li>
-        <li className="flex items-start">
-          <RefreshCw className="w-3 h-3 mt-1 ml-1 flex-shrink-0" />
-          <span>أعد تشغيل التطبيق بالكامل</span>
-        </li>
-        <li>تحقق من وضع الطيران وتأكد من إيقاف تشغيله</li>
-        <li>إذا كنت تستخدم شبكة WiFi، حاول الاتصال بشبكة مختلفة</li>
-        <li>قم بإعادة تشغيل جهاز التوجيه (الراوتر)</li>
-        <li>قم بمسح ذاكرة التخزين المؤقت للتطبيق</li>
-        <li className="flex items-start">
-          <ExternalLink className="w-3 h-3 mt-1 ml-1 flex-shrink-0" />
-          <span>تحقق من كتابة العنوان URL بشكل صحيح إذا كنت تستخدم متصفح الويب</span>
-        </li>
-      </ul>
-
-      <p className="mt-4 font-medium">إذا استمرت المشكلة:</p>
-      <ul className="text-right list-disc list-inside">
-        <li>اتصل بمسؤول النظام</li>
-        <li>تحقق من حالة الخادم عبر لوحة التحكم</li>
-      </ul>
+    <div className="bg-muted/50 rounded-lg p-4 text-right">
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center justify-between text-primary font-medium"
+      >
+        <span>{isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
+        <span>خطوات استكشاف الأخطاء وإصلاحها</span>
+      </button>
+      
+      {isExpanded && (
+        <ol className="mt-3 space-y-2 text-sm list-decimal pr-5">
+          <li>تأكد من أن جهازك متصل بالإنترنت عبر WiFi أو البيانات الخلوية.</li>
+          <li>قم بإيقاف تشغيل وإعادة تشغيل WiFi أو البيانات الخلوية.</li>
+          <li>إذا كنت تستخدم WiFi، حاول التبديل إلى البيانات الخلوية والعكس.</li>
+          <li>أغلق التطبيق وأعد فتحه.</li>
+          <li>تحقق من وجود تحديثات للتطبيق وقم بتحديثه إن وجدت.</li>
+          <li>أعد تشغيل الجهاز.</li>
+          <li>إذا استمرت المشكلة، حاول مسح ذاكرة التخزين المؤقت للتطبيق.</li>
+        </ol>
+      )}
     </div>
   );
 };

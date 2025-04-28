@@ -4,9 +4,10 @@ import { toast } from '@/hooks/use-toast';
 
 interface UseNetworkRetryProps {
   onRetry?: () => void;
+  maxRetries?: number;
 }
 
-export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
+export const useNetworkRetry = ({ onRetry, maxRetries = 3 }: UseNetworkRetryProps) => {
   const [isChecking, setIsChecking] = useState(false);
   const [progress, setProgress] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
@@ -17,7 +18,7 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
   useEffect(() => {
     let retryTimer: number | undefined;
     
-    if (autoRetryEnabled && !isChecking && navigator.onLine) {
+    if (autoRetryEnabled && !isChecking && navigator.onLine && retryCount < maxRetries) {
       // Calculate delay based on retry count (exponential backoff)
       const now = Date.now();
       const timeSinceLastRetry = now - lastRetryTime;
@@ -25,21 +26,23 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
       
       if (lastRetryTime === 0 || timeSinceLastRetry > minRetryInterval) {
         // Auto retry after calculated delay
+        console.log(`[useNetworkRetry] Scheduling auto-retry #${retryCount + 1} in ${minRetryInterval}ms`);
+        
         retryTimer = window.setTimeout(() => {
-          console.log(`Auto retry attempt #${retryCount + 1}`);
+          console.log(`[useNetworkRetry] Auto retry attempt #${retryCount + 1}`);
           handleRetry();
-        }, 5000); // Initial delay of 5 seconds for first retry
+        }, minRetryInterval);
       }
     }
     
     return () => {
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [autoRetryEnabled, isChecking, retryCount, lastRetryTime]);
+  }, [autoRetryEnabled, isChecking, retryCount, lastRetryTime, maxRetries]);
 
   const handleRetry = () => {
     if (isChecking) {
-      console.log('Already checking, ignoring retry request');
+      console.log('[useNetworkRetry] Already checking, ignoring retry request');
       return;
     }
     
@@ -48,8 +51,8 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
     setRetryCount(prev => prev + 1);
     setLastRetryTime(Date.now());
     
-    console.log('NetworkErrorView: Checking connection...');
-    console.log('NetworkErrorView: Current online status:', navigator.onLine);
+    console.log('[useNetworkRetry] Checking connection...');
+    console.log('[useNetworkRetry] Current online status:', navigator.onLine);
     
     toast({
       title: "جاري التحقق من الاتصال",
@@ -72,10 +75,12 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
         setTimeout(() => {
           setIsChecking(false);
         }, 1500);
+        clearInterval(interval);
       }, 800);
     } else {
       setTimeout(() => {
         setIsChecking(false);
+        clearInterval(interval);
         
         // Provide user feedback based on online status
         if (navigator.onLine) {
@@ -95,7 +100,7 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
   };
 
   const handleForceReload = () => {
-    console.log('NetworkErrorView: Force reloading the application');
+    console.log('[useNetworkRetry] Force reloading the application');
     toast({
       title: "جاري إعادة تحميل التطبيق",
       description: "يرجى الانتظار...",
@@ -104,7 +109,7 @@ export const useNetworkRetry = ({ onRetry }: UseNetworkRetryProps) => {
   };
 
   const handleClearCache = () => {
-    console.log('NetworkErrorView: Clearing cache and reloading');
+    console.log('[useNetworkRetry] Clearing cache and reloading');
     toast({
       title: "جاري مسح ذاكرة التخزين المؤقت",
       description: "يرجى الانتظار...",
