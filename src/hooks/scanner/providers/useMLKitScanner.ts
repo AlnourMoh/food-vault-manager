@@ -1,6 +1,7 @@
 
 import { useToast } from '@/hooks/use-toast';
 import { useScannerUI } from '../useScannerUI';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useMLKitScanner = () => {
   const { toast } = useToast();
@@ -13,9 +14,13 @@ export const useMLKitScanner = () => {
       // إعداد خلفية شفافة للكاميرا - مهم جدا لتفعيل الكاميرا بشكل صحيح
       await setupScannerBackground();
       
-      // استيراد مكتبة MLKit
-      const MLKitModule = await import('@capacitor-mlkit/barcode-scanning');
-      const { BarcodeScanner } = MLKitModule;
+      // تحقق من أن MLKit مدعوم
+      const supportResult = await BarcodeScanner.isSupported();
+      console.log("[useMLKitScanner] هل الماسح مدعوم:", supportResult.supported);
+      
+      if (!supportResult.supported) {
+        throw new Error("ماسح الباركود غير مدعوم على هذا الجهاز");
+      }
       
       // تحقق من أذونات الكاميرا وطلبها إذا لزم الأمر
       const { camera } = await BarcodeScanner.checkPermissions();
@@ -31,30 +36,41 @@ export const useMLKitScanner = () => {
       
       console.log("[useMLKitScanner] الأذونات متاحة، تهيئة الماسح...");
 
-      // استخدم أسلوب تعديل الـ DOM مباشرة لتحسين الشفافية
+      // تعزيز الشفافية للصفحة بأكملها
       document.documentElement.style.background = 'transparent';
       document.documentElement.style.backgroundColor = 'transparent';
+      document.documentElement.style.setProperty('--background', 'transparent', 'important');
       document.body.style.background = 'transparent';
       document.body.style.backgroundColor = 'transparent';
+      document.body.style.setProperty('--background', 'transparent', 'important');
+      
+      // إعداد واجهة المستخدم للشفافية - حيوي لتشغيل الكاميرا
+      document.documentElement.classList.add('transparent-bg');
+      document.body.classList.add('transparent-bg', 'scanner-active');
 
       try {
-        // تجربة تعيين عرض الكاميرا مباشرة قبل المسح
-        const supportResult = await BarcodeScanner.isSupported();
-        console.log("[useMLKitScanner] هل الماسح مدعوم:", supportResult.supported);
-
         // اختبار ما إذا كان الجهاز يدعم خاصية الفلاش
         const torchResult = await BarcodeScanner.isTorchAvailable();
         console.log("[useMLKitScanner] هل يدعم الفلاش:", torchResult.available);
 
-        // محاولة تفعيل عرض الكاميرا قبل المسح
-        console.log("[useMLKitScanner] محاولة تفعيل الفلاش للمساعدة في تهيئة الكاميرا...");
-        await BarcodeScanner.enableTorch();
-        console.log("[useMLKitScanner] تم تفعيل الفلاش بنجاح");
+        // محاولة تفعيل وإيقاف الفلاش لمساعدة تنشيط الكاميرا
+        if (torchResult.available) {
+          console.log("[useMLKitScanner] تفعيل الفلاش لتنشيط الكاميرا...");
+          await BarcodeScanner.enableTorch();
+          setTimeout(async () => {
+            try {
+              await BarcodeScanner.disableTorch();
+            } catch (e) {}
+          }, 300);
+        }
       } catch (e) {
-        console.log("[useMLKitScanner] خطأ في تهيئة الماسح، نتابع المحاولة:", e);
+        console.log("[useMLKitScanner] خطأ في إعداد الفلاش، نتابع:", e);
       }
       
       console.log("[useMLKitScanner] بدء المسح...");
+      
+      // تأخير قصير قبل بدء المسح للسماح بتهيئة الكاميرا
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // بدء المسح باستخدام واجهة البرمجة
       const result = await BarcodeScanner.scan({

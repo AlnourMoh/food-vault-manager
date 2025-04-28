@@ -8,6 +8,7 @@ import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
 import { PermissionErrorView } from './components/PermissionErrorView';
 import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 import styles from './scanner.module.css';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface ScannerViewProps {
   onStop: () => void;
@@ -34,37 +35,50 @@ export const ScannerView = ({
           console.log("Setting up scanner UI");
           scannerActive.current = true;
           
+          // تطبيق خصائص خاصة للشفافية والكاميرا
+          document.documentElement.classList.add('transparent-bg');
+          document.body.classList.add('transparent-bg', 'scanner-active');
+          document.documentElement.style.background = 'transparent';
+          document.documentElement.style.backgroundColor = 'transparent';
+          document.documentElement.style.setProperty('--background', 'transparent', 'important');
+          document.body.style.background = 'transparent';
+          document.body.style.backgroundColor = 'transparent';
+          document.body.style.setProperty('--background', 'transparent', 'important');
+          
           // تهيئة الكاميرا والشفافية بشكل كامل
           await setupScannerBackground();
           
-          // تحسين الشفافية وعرض الكاميرا
-          document.documentElement.classList.add('transparent-bg');
-          document.body.classList.add('transparent-bg', 'scanner-active');
+          // محاولة مباشرة لإيقاف وإعادة تشغيل الفلاش لتنشيط الكاميرا
+          if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+            try {
+              // التحقق من توفر الفلاش وتفعيله لتنشيط الكاميرا
+              const torchResult = await BarcodeScanner.isTorchAvailable();
+              console.log("[ScannerView] هل يتوفر الفلاش:", torchResult.available);
+              
+              if (torchResult.available) {
+                await BarcodeScanner.enableTorch();
+                setTimeout(async () => {
+                  try {
+                    await BarcodeScanner.disableTorch();
+                  } catch (e) {}
+                }, 300);
+              }
+            } catch (e) {}
+          }
           
-          // إنشاء عنصر مخصص لعرض الكاميرا
+          // إنشاء عنصر مخصص لعرض الكاميرا بشكل أفضل
           const cameraElement = document.createElement('div');
           cameraElement.id = 'camera-fullscreen-element';
           cameraElement.className = styles.cameraViewport;
-          cameraElement.style.position = 'fixed';
-          cameraElement.style.inset = '0';
-          cameraElement.style.zIndex = '1';
-          cameraElement.style.background = 'transparent';
-          cameraElement.style.width = '100vw';
-          cameraElement.style.height = '100vh';
           document.body.appendChild(cameraElement);
           
-          // تحسين خصائص meta للويب فيو
-          const viewportMeta = document.querySelector('meta[name="viewport"]');
-          if (viewportMeta) {
-            viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
-          }
-          
-          // إزالة أي عناصر قد تمنع ظهور الكاميرا
+          // تعديل الحوار ليكون شفافًا تمامًا
           const dialogs = document.querySelectorAll('[role="dialog"], [class*="DialogOverlay"], [class*="DialogContent"]');
           dialogs.forEach(dialog => {
             if (dialog instanceof HTMLElement) {
               dialog.style.background = 'transparent';
               dialog.style.backgroundColor = 'transparent';
+              dialog.style.boxShadow = 'none';
               dialog.style.setProperty('--background', 'transparent', 'important');
             }
           });
@@ -92,6 +106,13 @@ export const ScannerView = ({
       document.body.classList.remove('scanner-active');
       document.documentElement.classList.remove('transparent-bg');
       document.body.classList.remove('transparent-bg');
+      
+      document.documentElement.style.background = '';
+      document.documentElement.style.backgroundColor = '';
+      document.documentElement.style.removeProperty('--background');
+      document.body.style.background = '';
+      document.body.style.backgroundColor = '';
+      document.body.style.removeProperty('--background');
     };
   }, [hasPermissionError]);
 

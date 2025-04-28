@@ -30,9 +30,10 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true
     },
-    // إعدادات ماسح الباركود MLKit
+    // إعدادات ماسح الباركود MLKit - تكوين مهم
     MLKitBarcodeScanning: {
-      keys: {}
+      keys: {},
+      formats: ["QR_CODE", "UPC_E", "UPC_A", "EAN_8", "EAN_13", "CODE_39", "CODE_93", "CODE_128", "ITF", "CODABAR"]
     }
   },
   android: {

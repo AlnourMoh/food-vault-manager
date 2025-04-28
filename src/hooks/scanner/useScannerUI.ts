@@ -1,5 +1,6 @@
 
 import styles from '@/components/mobile/scanner/scanner.module.css';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useScannerUI = () => {
   const setupScannerBackground = async () => {
@@ -40,12 +41,12 @@ export const useScannerUI = () => {
         if (dialog instanceof HTMLElement) {
           dialog.style.background = 'transparent';
           dialog.style.backgroundColor = 'transparent';
+          dialog.style.boxShadow = 'none';
           dialog.style.setProperty('--background', 'transparent', 'important');
         }
       });
       
       // التأكد من تطبيق الأنماط على أي عنصر قد يمنع الشفافية
-      // نستهدف العناصر الأساسية والحاويات
       const mainElements = document.querySelectorAll('main, section, div.container, div[class*="content"]');
       mainElements.forEach(elem => {
         if (elem instanceof HTMLElement) {
@@ -61,13 +62,14 @@ export const useScannerUI = () => {
         if (modal instanceof HTMLElement) {
           modal.style.background = 'transparent';
           modal.style.backgroundColor = 'transparent';
+          modal.style.boxShadow = 'none';
           modal.style.setProperty('--background', 'transparent', 'important');
         }
       });
       
       // إضافة عنصر لتحسين عرض الكاميرا
       const scannerViewportElement = document.createElement('div');
-      scannerViewportElement.className = 'scanner-viewport-element';
+      scannerViewportElement.className = 'scanner-viewport-element ' + styles.cameraViewport;
       scannerViewportElement.style.position = 'fixed';
       scannerViewportElement.style.top = '0';
       scannerViewportElement.style.left = '0';
@@ -75,23 +77,30 @@ export const useScannerUI = () => {
       scannerViewportElement.style.height = '100vh';
       scannerViewportElement.style.zIndex = '1';
       scannerViewportElement.style.background = 'transparent';
-      scannerViewportElement.style.pointerEvents = 'none';
       document.body.appendChild(scannerViewportElement);
       
       // تهيئة عناصر الماسح الضوئي
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
           // تهيئة الماسح الضوئي مسبقًا
           const { supported } = await BarcodeScanner.isSupported();
           console.log('[useScannerUI] دعم الماسح الضوئي:', supported);
           
+          // تفعيل الأذونات
+          const permResult = await BarcodeScanner.requestPermissions();
+          console.log('[useScannerUI] نتيجة طلب الأذونات:', permResult);
+          
           // اختبار وتهيئة الفلاش
           try {
-            await BarcodeScanner.enableTorch();
-            setTimeout(() => {
-              BarcodeScanner.disableTorch().catch(() => {});
-            }, 500);
+            const torchResult = await BarcodeScanner.isTorchAvailable();
+            if (torchResult.available) {
+              await BarcodeScanner.enableTorch();
+              setTimeout(async () => {
+                try {
+                  await BarcodeScanner.disableTorch();
+                } catch (e) {}
+              }, 300);
+            }
           } catch (e) {
             console.log('[useScannerUI] غير قادر على تمكين الفلاش:', e);
           }
@@ -151,6 +160,7 @@ export const useScannerUI = () => {
         if (elem instanceof HTMLElement) {
           elem.style.background = '';
           elem.style.backgroundColor = '';
+          elem.style.boxShadow = '';
           elem.style.removeProperty('--background');
         }
       });
@@ -158,9 +168,8 @@ export const useScannerUI = () => {
       // إيقاف المسح إذا كان MLKit متاحًا
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-          await BarcodeScanner.disableTorch();
-          await BarcodeScanner.stopScan();
+          await BarcodeScanner.disableTorch().catch(() => {});
+          await BarcodeScanner.stopScan().catch(() => {});
         } catch (e) {
           console.warn("[useScannerUI] خطأ عند إيقاف مسح MLKit:", e);
         }
