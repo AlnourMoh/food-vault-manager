@@ -35,8 +35,15 @@ export const ScannerView = ({
           console.log("Setting up scanner UI");
           scannerActive.current = true;
           
-          // استدعاء تهيئة الماسح وإعداد الكاميرا فوراً عند تحميل المكون
+          // تهيئة الخلفية للكاميرا - مهم للعرض الصحيح
           await setupScannerBackground();
+          
+          // تأكد من تطبيق الشفافية على كل العناصر
+          document.documentElement.style.background = 'transparent';
+          document.body.style.background = 'transparent';
+          
+          // إضافة فئة خاصة لواجهة المستخدم أثناء المسح
+          document.body.classList.add('scanner-active');
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
         }
@@ -51,6 +58,11 @@ export const ScannerView = ({
       try {
         scannerActive.current = false;
         cleanupScannerBackground();
+        
+        // إزالة الفئات والأنماط
+        document.body.classList.remove('scanner-active');
+        document.documentElement.style.background = '';
+        document.body.style.background = '';
       } catch (e) {
         console.error('Error restoring UI on unmount:', e);
       }
@@ -100,10 +112,19 @@ export const ScannerView = ({
 
   return (
     <div className={styles.scannerLayout}>
+      {/* إضافة عنصر لمنطقة الكاميرا للمساعدة في تصحيح الخلفية */}
+      <div className={styles.cameraViewport} id="camera-viewport" />
+      
       <ScannerStatusIndicator />
       
       <div className={styles.scannerContainer}>
-        <ScannerFrame />
+        <ScannerFrame>
+          {/* يمكننا إضافة مؤشر بصري هنا للتأكيد على وضعية المسح */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-full h-px bg-white/70 animate-pulse" />
+            <div className="h-full w-px bg-white/70 animate-pulse" />
+          </div>
+        </ScannerFrame>
         
         <ScannerControls
           onToggleFlash={toggleFlashlight}

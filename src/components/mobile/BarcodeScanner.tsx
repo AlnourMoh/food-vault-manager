@@ -11,7 +11,6 @@ interface BarcodeScannerProps {
 }
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
-  const { isInitializing } = useScannerInitialization();
   const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
   
   const {
@@ -42,29 +41,38 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   useEffect(() => {
     console.log('[BarcodeScanner] تهيئة المكون وبدء المسح فوراً...');
     
-    // إعداد خلفية الماسح فوراً، مهم لتفعيل الكاميرا
-    setupScannerBackground().catch(e => 
-      console.error('[BarcodeScanner] خطأ في إعداد خلفية الماسح:', e)
-    );
+    const initializeScanner = async () => {
+      try {
+        // تطبيق الأنماط الضرورية لظهور الكاميرا
+        document.documentElement.style.background = 'transparent';
+        document.body.style.background = 'transparent';
+        document.body.classList.add('scanner-active');
+        
+        // إعداد خلفية شفافة للكاميرا
+        await setupScannerBackground();
+        
+        // تفعيل المسح بعد تجهيز الخلفية
+        await startScan();
+      } catch (error) {
+        console.error('[BarcodeScanner] خطأ في تهيئة الماسح:', error);
+      }
+    };
     
-    // بدء المسح فوراً
-    startScan().catch(e => 
-      console.error('[BarcodeScanner] خطأ في البدء الفوري للمسح:', e)
-    );
+    // تنفيذ التهيئة فوراً
+    initializeScanner();
     
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون عند الإلغاء');
       try {
         stopScan();
         cleanupScannerBackground();
+        
+        // إزالة الفئات والأنماط
+        document.body.classList.remove('scanner-active');
+        document.documentElement.style.background = '';
+        document.body.style.background = '';
       } catch (error) {
         console.error('[BarcodeScanner] خطأ أثناء التنظيف:', error);
-      } finally {
-        // تأكد من تنظيف نمط الخلفية في جميع الحالات
-        document.body.style.background = '';
-        document.body.style.opacity = '';
-        document.body.classList.remove('barcode-scanner-active');
-        document.body.classList.remove('scanner-transparent-background');
       }
     };
   }, []);

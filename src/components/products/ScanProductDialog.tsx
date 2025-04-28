@@ -23,8 +23,22 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   useEffect(() => {
     if (open) {
       console.log('ScanProductDialog: تم فتح الحوار، سيتم فتح الماسح فوراً');
-      // تفعيل الماسح مباشرة
-      setShowScanner(true);
+      
+      // تعيين سمات CSS للحوار ليكون شفافاً
+      setTimeout(() => {
+        const dialogElement = document.querySelector('[role="dialog"]');
+        if (dialogElement) {
+          dialogElement.setAttribute('style', 'background: transparent !important; --tw-bg-opacity: 0 !important;');
+          
+          const dialogContent = dialogElement.querySelector('[class*="DialogContent"]');
+          if (dialogContent) {
+            dialogContent.setAttribute('style', 'background: transparent !important; --tw-bg-opacity: 0 !important;');
+          }
+        }
+        
+        // تفعيل الماسح بعد تجهيز الحوار
+        setShowScanner(true);
+      }, 100);
       
       // تهيئة الحالة بشكل صحيح
       setHasScannerError(false);
@@ -117,11 +131,11 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0"> {/* أزلنا الهوامش للسماح للكاميرا بالعرض الكامل */}
+      <DialogContent className="bg-transparent p-0"> {/* جعل الخلفية شفافة */}
         <DialogTitle className="text-center p-4 bg-background z-10">مسح باركود المنتج</DialogTitle>
         <div className="h-[450px] relative flex items-center justify-center bg-transparent overflow-hidden">
           {hasScannerError ? (
-            <div className="flex flex-col items-center justify-center space-y-4 p-4">
+            <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-background rounded-lg">
               <div className="p-3 bg-red-100 text-red-600 rounded-full">
                 <ScanBarcode className="h-8 w-8" />
               </div>
