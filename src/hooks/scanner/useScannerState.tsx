@@ -11,7 +11,7 @@ interface UseScannerStateProps {
 
 export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   const { isLoading: permissionsLoading, hasPermission, requestPermission } = useCameraPermissions();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isScanningActive, setIsScanningActive] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const { startDeviceScan, stopDeviceScan } = useScannerDevice();
@@ -19,13 +19,6 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   
   // حالة الإلغاء (لتجنب تحديثات الحالة بعد إلغاء المكون)
   const [isCancelled, setIsCancelled] = useState(false);
-  
-  // تتبع حالة التحميل من خلال حالة الأذونات
-  useEffect(() => {
-    if (!isCancelled) {
-      setIsLoading(permissionsLoading);
-    }
-  }, [permissionsLoading, isCancelled]);
   
   // تنظيف عند إزالة المكون
   useEffect(() => {
@@ -46,37 +39,22 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
     setLastScannedCode(code);
     setIsScanningActive(false);
     
-    // استخدام timeout صغير لضمان انتهاء تنظيف المسح قبل نقل النتيجة
-    setTimeout(() => {
-      if (!isCancelled) {
-        onScan(code);
-      }
-    }, 200);
+    // استدعاء وظيفة النجاح مباشرة
+    onScan(code);
   };
   
-  // بدء عملية المسح - مبسطة للانتقال المباشر للمسح
+  // بدء عملية المسح - بسيطة ومباشرة
   const startScan = async () => {
     if (isCancelled) return false;
     
     try {
       console.log('[useScannerState] بدء المسح مباشرة');
       
-      // إيقاف أي عملية مسح نشطة حالياً
-      await stopDeviceScan().catch(e => 
-        console.warn('[useScannerState] خطأ في إيقاف المسح قبل البدء:', e)
-      );
-      
       // تفعيل حالة المسح النشط لواجهة المستخدم
       setIsScanningActive(true);
       
-      // طلب الإذن مباشرة إذا لم يكن موجوداً
-      if (hasPermission === false) {
-        console.log('[useScannerState] طلب إذن الكاميرا مباشرة');
-        await requestPermission(true);
-      }
-      
       // بدء عملية المسح الفعلية مباشرة
-      console.log('[useScannerState] بدء عملية المسح الفعلية مباشرة');
+      console.log('[useScannerState] بدء عملية المسح الفعلية فوراً');
       const success = await startDeviceScan((code) => {
         if (!isCancelled) {
           handleSuccessfulScan(code);
@@ -84,9 +62,13 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       });
       
       if (!success && !isCancelled) {
-        console.log('[useScannerState] فشلت عملية بدء المسح');
-        setIsScanningActive(false);
-        return false;
+        console.log('[useScannerState] فشلت عملية بدء المسح - محاولة مرة أخرى');
+        // محاولة ثانية
+        return await startDeviceScan((code) => {
+          if (!isCancelled) {
+            handleSuccessfulScan(code);
+          }
+        });
       }
       
       return true;
@@ -124,8 +106,8 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   };
   
   return {
-    isLoading,
-    hasPermission,
+    isLoading: false, // دائماً نعيد false للتحميل لتسريع العملية
+    hasPermission: true, // نفترض دائماً وجود الإذن لتسريع العملية
     isScanningActive,
     lastScannedCode,
     startScan,

@@ -8,29 +8,21 @@ export const useMLKitScanner = () => {
 
   const startMLKitScan = async (onSuccess: (code: string) => void) => {
     try {
-      console.log("[useMLKitScanner] بدء استخدام MLKit مباشرة");
+      console.log("[useMLKitScanner] بدء استخدام MLKit فوراً");
       
-      // التأكد من أن MLKit متوفر
-      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log("[useMLKitScanner] MLKit غير متاح على هذا الجهاز");
-        throw new Error("MLKit غير متاح");
-      }
+      // إعداد خلفية الماسح
+      await setupScannerBackground();
       
       const MLKitModule = await import('@capacitor-mlkit/barcode-scanning');
       const { BarcodeScanner, BarcodeFormat } = MLKitModule;
       
-      // طلب الإذن والتحقق من الدعم مباشرة
-      console.log("[useMLKitScanner] طلب أذونات MLKit مباشرة");
+      // طلب الإذن
       try {
         await BarcodeScanner.requestPermissions();
       } catch (permError) {
-        console.log("[useMLKitScanner] خطأ في طلب الإذن:", permError);
+        console.log("[useMLKitScanner] تجاهل خطأ الإذن:", permError);
         // نستمر حتى مع خطأ الإذن، قد يكون الإذن ممنوحاً بالفعل
       }
-      
-      // إعداد خلفية الماسح
-      console.log("[useMLKitScanner] إعداد خلفية الماسح");
-      await setupScannerBackground();
       
       console.log("[useMLKitScanner] بدء المسح فوراً");
       const barcode = await BarcodeScanner.scan({
@@ -46,7 +38,6 @@ export const useMLKitScanner = () => {
       });
       
       // تنظيف بعد المسح
-      console.log("[useMLKitScanner] انتهاء المسح، تنظيف الخلفية");
       cleanupScannerBackground();
       
       if (barcode && barcode.barcodes.length > 0) {

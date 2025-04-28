@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
@@ -18,10 +19,13 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   const [hasScannerError, setHasScannerError] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
+  // عندما يفتح الحوار، نفتح الماسح فوراً
   useEffect(() => {
     if (open) {
+      console.log('ScanProductDialog: تم فتح الحوار، سيتم فتح الماسح فوراً');
       setShowScanner(true);
     } else {
+      console.log('ScanProductDialog: تم إغلاق الحوار');
       setShowScanner(false);
       setHasScannerError(false);
       setIsProcessing(false);
@@ -30,7 +34,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
 
   const handleScanResult = async (code: string) => {
     try {
-      console.log('Scanned code:', code);
+      console.log('ScanProductDialog: تم مسح الرمز:', code);
       setIsProcessing(true);
       
       const { data: productCode, error: codeError } = await supabase
@@ -82,10 +86,9 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         description: "تم إضافة المنتج إلى المخزون",
       });
 
-      setTimeout(() => {
-        onOpenChange(false);
-        onProductAdded();
-      }, 200);
+      // إغلاق الحوار فوراً بعد إضافة المنتج بنجاح
+      onOpenChange(false);
+      onProductAdded();
 
     } catch (error: any) {
       console.error('Error processing product:', error);
@@ -110,12 +113,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) {
-        setShowScanner(false);
-      }
-      onOpenChange(newOpen);
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogTitle className="text-center">مسح باركود المنتج</DialogTitle>
         <div className="h-[450px] relative flex items-center justify-center">

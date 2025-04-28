@@ -2,29 +2,17 @@
 import { useState, useEffect } from 'react';
 
 export const useScannerInitialization = () => {
-  const [isInitializing, setIsInitializing] = useState(false); // بدء بـ false لتسريع التحميل
+  const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
-    const initializeScanner = async () => {
-      try {
-        console.log("[useScannerInitialization] تهيئة سريعة للماسح الضوئي...");
-        
-        // تنتهي التهيئة على الفور تقريبًا للوصول إلى الكاميرا بشكل أسرع
-        setIsInitializing(false);
-      } catch (error) {
-        console.error("[useScannerInitialization] خطأ في تهيئة الماسح:", error);
-      } finally {
-        // تنتهي التهيئة حتى في حالة الخطأ لتجنب التوقف
-        setIsInitializing(false);
-      }
-    };
+    // تبسيط كامل للتهيئة - لا نريد أي تأخير في بدء الماسح
+    console.log("[useScannerInitialization] تهيئة فورية للماسح الضوئي");
     
-    // بدء عملية التهيئة
-    initializeScanner();
+    // نبدأ بدون حالة تحميل لتسريع عملية الفتح
+    setIsInitializing(false);
     
-    // تنظيف عند إزالة المكون
     return () => {
-      console.log("[useScannerInitialization] تنظيف موارد الماسح عند إلغاء التحميل");
+      console.log("[useScannerInitialization] تنظيف موارد الماسح عند الإغلاق");
     };
   }, []);
   

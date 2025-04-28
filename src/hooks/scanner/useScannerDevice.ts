@@ -14,32 +14,24 @@ export const useScannerDevice = () => {
 
   const startDeviceScan = async (onSuccess: (code: string) => void) => {
     try {
-      console.log("[useScannerDevice] بدء عملية المسح مباشرة");
-      const { isSupported, isCapacitor } = await checkDeviceSupport();
+      console.log("[useScannerDevice] بدء عملية المسح فوراً");
       
-      // إذا كان الجهاز لا يدعم المسح، نستخدم المحاكاة فوراً
-      if (!isCapacitor || !isSupported) {
-        console.log("[useScannerDevice] استخدام وضع المحاكاة للمسح");
-        startMockScan(onSuccess);
-        return true;
-      }
-      
-      // محاولة استخدام MLKit أولاً (الأفضل أداءً) - مباشرة دون تحققات إضافية
+      // محاولة استخدام MLKit أولاً مباشرة
       try {
-        console.log("[useScannerDevice] محاولة استخدام MLKit للمسح مباشرة");
+        console.log("[useScannerDevice] محاولة استخدام MLKit للمسح فوراً");
         return await startMLKitScan(onSuccess);
       } catch (mlkitError) {
         console.warn("[useScannerDevice] خطأ في استخدام MLKit:", mlkitError);
         
-        // محاولة استخدام الماسح التقليدي كاحتياطي - مباشرة
+        // محاولة استخدام الماسح التقليدي كاحتياطي
         try {
-          console.log("[useScannerDevice] محاولة استخدام الماسح التقليدي مباشرة");
+          console.log("[useScannerDevice] محاولة استخدام الماسح التقليدي");
           return await startTraditionalScan(onSuccess);
         } catch (bsError) {
           console.error("[useScannerDevice] فشل المسح التقليدي:", bsError);
           
           // في حالة فشل كل المحاولات، نستخدم وضع المحاكاة
-          console.log("[useScannerDevice] استخدام وضع المحاكاة كحل بديل نهائي");
+          console.log("[useScannerDevice] استخدام وضع المحاكاة كحل نهائي");
           startMockScan(onSuccess);
           return true;
         }

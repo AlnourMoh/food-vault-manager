@@ -42,7 +42,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
       console.log('[useScannerControls] تنظيف الموارد عند إلغاء التحميل');
       
       if (isActive) {
-        stopScan();
+        stopScan().catch(e => console.error('[useScannerControls] خطأ في إيقاف المسح عند التنظيف:', e));
       }
       
       if (isManualEntry) {
@@ -51,23 +51,30 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     };
   }, [isActive, isManualEntry]);
 
-  // وظيفة بدء المسح بشكل مباشر
+  // وظيفة بدء المسح بشكل مباشر ودون انتظار
   const startScan = async () => {
     try {
-      console.log('[useScannerControls] بدء المسح مباشرة');
+      console.log('[useScannerControls] بدء المسح فوراً');
       setIsActive(true);
+      
       // محاولة البدء المباشر للمسح
       return await _startScan();
     } catch (error) {
       console.error('[useScannerControls] خطأ عند بدء المسح:', error);
       
-      // في حالة الخطأ، تحويل إلى الإدخال اليدوي تلقائياً
-      setHasScannerError(true);
-      setIsActive(false);
-      
-      // إذا فشل المسح، يمكن التحويل إلى الإدخال اليدوي تلقائيًا
-      handleManualEntry();
-      return false;
+      // في حالة الخطأ، نحاول مرة أخرى
+      try {
+        console.log('[useScannerControls] محاولة ثانية للمسح بعد خطأ');
+        return await _startScan();
+      } catch (secondError) {
+        console.error('[useScannerControls] فشل المحاولة الثانية:', secondError);
+        
+        // في حالة فشل كل المحاولات، نتحول إلى الإدخال اليدوي
+        setHasScannerError(true);
+        setIsActive(false);
+        handleManualEntry();
+        return false;
+      }
     }
   };
 
@@ -88,7 +95,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     try {
       // إيقاف المسح الحالي أولاً إذا كان نشطًا
       if (isActive) {
-        stopScan();
+        stopScan().catch(error => console.error('[Scanner] خطأ عند إيقاف المسح:', error));
       }
     } catch (error) {
       console.error('[Scanner] خطأ عند إيقاف المسح:', error);
