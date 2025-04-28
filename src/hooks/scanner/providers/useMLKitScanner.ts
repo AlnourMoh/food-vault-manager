@@ -39,12 +39,12 @@ export const useMLKitScanner = () => {
 
       try {
         // تجربة تعيين عرض الكاميرا مباشرة قبل المسح
-        const { IsSupported } = await BarcodeScanner.isSupported();
-        console.log("[useMLKitScanner] هل الماسح مدعوم:", IsSupported);
+        const supportResult = await BarcodeScanner.isSupported();
+        console.log("[useMLKitScanner] هل الماسح مدعوم:", supportResult.isSupported);
 
         // اختبار ما إذا كان الجهاز يدعم خاصية الفلاش
-        const { hasFlash } = await BarcodeScanner.isTorchAvailable();
-        console.log("[useMLKitScanner] هل يدعم الفلاش:", hasFlash);
+        const torchResult = await BarcodeScanner.isTorchAvailable();
+        console.log("[useMLKitScanner] هل يدعم الفلاش:", torchResult.available);
 
         // محاولة تفعيل عرض الكاميرا قبل المسح
         console.log("[useMLKitScanner] محاولة تفعيل الفلاش للمساعدة في تهيئة الكاميرا...");
@@ -58,7 +58,6 @@ export const useMLKitScanner = () => {
       
       // بدء المسح باستخدام واجهة البرمجة الجديدة
       const result = await BarcodeScanner.scan({
-        lensFacing: 'back', // استخدام الكاميرا الخلفية
         formats: undefined // مسح جميع أنواع الباركود
       });
       

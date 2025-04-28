@@ -29,8 +29,15 @@ export enum SupportedFormat {
 // Updated ScanOptions to match the library API
 export interface ScanOptions {
   formats?: SupportedFormat[];
-  lensFacing?: 'front' | 'back';
-  detectionMode?: 'single' | 'continuous'; 
+}
+
+// Add result interfaces for MLKit scanner
+export interface IsSupportedResult {
+  isSupported: boolean;
+}
+
+export interface IsTorchAvailableResult {
+  available: boolean;
 }
 
 export interface ScanResult {
@@ -53,4 +60,6 @@ export interface BarcodeScannerPlugin extends Plugin {
   prepare(): Promise<void>;
   showBackground(): Promise<void>;
   hideBackground(): Promise<void>;
+  isSupported(): Promise<IsSupportedResult>;
+  isTorchAvailable(): Promise<IsTorchAvailableResult>;
 }
