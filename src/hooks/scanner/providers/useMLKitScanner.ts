@@ -57,10 +57,10 @@ export const useMLKitScanner = () => {
           BarcodeFormat.Ean8,
           BarcodeFormat.UpcA,
           BarcodeFormat.UpcE
-        ],
-        // Remove the unsupported 'lensFacing' property
+        ]
+        // Remove both unsupported properties
         // lensFacing: 'back',
-        detectionMode: 'continuous'
+        // detectionMode: 'continuous'
       });
       
       // تنظيف بعد المسح
