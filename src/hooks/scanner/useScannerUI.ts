@@ -7,40 +7,42 @@ export const useScannerUI = () => {
     console.log("[useScannerUI] إعداد خلفية الماسح الضوئي والكاميرا");
     
     try {
-      // 1. تطبيق الأنماط على العناصر في الصفحة
-      document.querySelector('body')?.classList.add(styles.scannerActive);
-      document.querySelector('body')?.classList.add(styles.transparentBackground);
+      // إضافة الفئات الضرورية إلى body
+      document.body.classList.add(styles.scannerActive);
+      document.body.classList.add(styles.transparentBackground);
       
-      // 2. تطبيق أنماط CSS مباشرة لضمان شفافية الخلفية
+      // تطبيق أنماط مباشرة لضمان الشفافية
+      document.documentElement.style.background = 'transparent';
+      document.documentElement.style.backgroundColor = 'transparent';
       document.body.style.background = 'transparent';
+      document.body.style.backgroundColor = 'transparent';
       document.body.style.visibility = 'visible';
       document.body.style.opacity = '1';
       
-      // إزالة أي عناصر تتداخل مع عرض الكاميرا
+      // إزالة أي عناصر قد تتداخل
       const appRoot = document.getElementById('root');
       if (appRoot) {
         appRoot.style.background = 'transparent';
+        appRoot.style.backgroundColor = 'transparent';
       }
       
-      // 3. تفعيل وضع الشفافية في MLKit
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log("[useScannerUI] تفعيل وضع الشفافية لـ MLKit");
-        // مسح أي خلفيات قد تمنع عرض الكاميرا
-        document.documentElement.style.background = 'transparent';
-        document.body.style.background = 'transparent';
-      }
-      
-      // 4. تهيئة BarcodeScanner التقليدي إذا كان متاحًا
-      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
-        const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
-        try {
-          console.log("[useScannerUI] إخفاء الخلفية للماسح التقليدي");
-          await BarcodeScanner.hideBackground();
-        } catch (error) {
-          console.warn("[useScannerUI] خطأ في إخفاء الخلفية:", error);
+      // تأكيد على الشفافية لجميع العناصر الرئيسية
+      const mainElements = document.querySelectorAll('main, div.main, .main-content');
+      mainElements.forEach(elem => {
+        if (elem instanceof HTMLElement) {
+          elem.style.background = 'transparent';
+          elem.style.backgroundColor = 'transparent';
         }
-      }
+      });
       
+      // تطبيق الأنماط على الحاويات التي قد تتداخل مع رؤية الكاميرا
+      const containers = document.querySelectorAll('.container, .content');
+      containers.forEach(container => {
+        if (container instanceof HTMLElement) {
+          container.style.background = 'transparent';
+          container.style.backgroundColor = 'transparent';
+        }
+      });
     } catch (error) {
       console.error("[useScannerUI] خطأ في إعداد خلفية الماسح:", error);
     }
@@ -50,12 +52,15 @@ export const useScannerUI = () => {
     console.log("[useScannerUI] تنظيف خلفية الماسح الضوئي");
     
     try {
-      // 1. إزالة جميع الأنماط التي تمت إضافتها
-      document.querySelector('body')?.classList.remove(styles.scannerActive);
-      document.querySelector('body')?.classList.remove(styles.transparentBackground);
+      // إزالة الفئات المضافة
+      document.body.classList.remove(styles.scannerActive);
+      document.body.classList.remove(styles.transparentBackground);
       
-      // 2. إعادة ضبط النمط المباشر
+      // إعادة ضبط الأنماط المباشرة
+      document.documentElement.style.background = '';
+      document.documentElement.style.backgroundColor = '';
       document.body.style.background = '';
+      document.body.style.backgroundColor = '';
       document.body.style.visibility = '';
       document.body.style.opacity = '';
       
@@ -63,12 +68,28 @@ export const useScannerUI = () => {
       const appRoot = document.getElementById('root');
       if (appRoot) {
         appRoot.style.background = '';
+        appRoot.style.backgroundColor = '';
       }
       
-      // إعادة ضبط نمط عنصر html
-      document.documentElement.style.background = '';
+      // إعادة ضبط الأنماط لجميع العناصر الرئيسية
+      const mainElements = document.querySelectorAll('main, div.main, .main-content');
+      mainElements.forEach(elem => {
+        if (elem instanceof HTMLElement) {
+          elem.style.background = '';
+          elem.style.backgroundColor = '';
+        }
+      });
       
-      // 3. تنظيف MLKit BarcodeScanner إذا كان مستخدمًا
+      // إعادة ضبط الأنماط للحاويات
+      const containers = document.querySelectorAll('.container, .content');
+      containers.forEach(container => {
+        if (container instanceof HTMLElement) {
+          container.style.background = '';
+          container.style.backgroundColor = '';
+        }
+      });
+      
+      // إيقاف المسح إذا كان MLKit متاحًا
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
@@ -78,7 +99,7 @@ export const useScannerUI = () => {
         }
       }
       
-      // 4. تنظيف BarcodeScanner التقليدي إذا كان مستخدمًا
+      // إيقاف BarcodeScanner التقليدي إذا كان متاحًا
       if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
         try {
           const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');

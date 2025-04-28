@@ -17,94 +17,56 @@ export const useMLKitScanner = () => {
       const MLKitModule = await import('@capacitor-mlkit/barcode-scanning');
       const { BarcodeScanner, BarcodeFormat } = MLKitModule;
       
-      // طلب الإذن مع تجاهل الأخطاء - نفترض أن الإذن ممنوح بالفعل
-      try {
-        console.log("[useMLKitScanner] محاولة طلب أذونات MLKit");
-        await BarcodeScanner.requestPermissions();
-        console.log("[useMLKitScanner] تم الحصول على الأذونات أو تجاهل الخطأ");
-      } catch (permError) {
-        console.log("[useMLKitScanner] تجاهل خطأ الإذن:", permError);
-      }
+      // تحقق إذا كان هناك أذونات للكاميرا أولاً
+      const { camera } = await BarcodeScanner.checkPermissions();
       
-      // تهيئة عرض الكاميرا
-      try {
-        console.log("[useMLKitScanner] إعداد عرض الكاميرا بشكل صحيح");
-        await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()
-          .then((result) => {
-            if (!result.available) {
-              console.log("[useMLKitScanner] تثبيت وحدة Google Barcode Scanner");
-              return BarcodeScanner.installGoogleBarcodeScannerModule();
-            }
-            // Return a Promise<void> instead of an object
-            return Promise.resolve();
-          })
-          .catch(error => {
-            console.log("[useMLKitScanner] خطأ في التحقق من وحدة Barcode Scanner:", error);
-          });
-      } catch (moduleError) {
-        console.log("[useMLKitScanner] تجاهل خطأ الوحدة:", moduleError);
-      }
-      
-      console.log("[useMLKitScanner] بدء المسح فوراً");
-      
-      // تحديث التهيئة لضمان عرض الكاميرا
-      try {
-        console.log("[useMLKitScanner] تفعيل وضع عرض الكاميرا قبل المسح");
-        
-        // استخدم الأسلوب الصحيح لبدء المسح - MLKit يتوقع إما مصفوفة خيارات فقط أو لا شيء
-        const scanOptions = {
-          formats: [
-            BarcodeFormat.QrCode,
-            BarcodeFormat.Code128,
-            BarcodeFormat.Code39,
-            BarcodeFormat.Ean13,
-            BarcodeFormat.Ean8,
-            BarcodeFormat.UpcA,
-            BarcodeFormat.UpcE
-          ]
-        };
-        
-        // بدء المسح باستخدام الخيارات فقط
-        const result = await BarcodeScanner.scan(scanOptions);
-        
-        // معالجة النتيجة يدويًا
-        if (result && result.barcodes && result.barcodes.length > 0) {
-          console.log("[useMLKitScanner] تم العثور على باركود:", result.barcodes[0].rawValue);
-          cleanupScannerBackground();
-          onSuccess(result.barcodes[0].rawValue);
-          return true;
+      // إذا لم يكن هناك إذن، اطلبه
+      if (camera !== 'granted') {
+        console.log("[useMLKitScanner] طلب أذونات الكاميرا");
+        const result = await BarcodeScanner.requestPermissions();
+        if (result.camera !== 'granted') {
+          console.error("[useMLKitScanner] لم يتم منح إذن الكاميرا");
+          throw new Error("لم يتم منح إذن الكاميرا");
         }
-        
-        // انتظار مدة للعارض للتهيئة - يساعد في عرض الكاميرا
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (startError) {
-        console.log("[useMLKitScanner] محاولة استخدام طريقة المسح العادية بعد فشل المسح المستمر:", startError);
-        
-        // المحاولة بالطريقة العادية للمسح
-        const barcode = await BarcodeScanner.scan({
-          formats: [
-            BarcodeFormat.QrCode,
-            BarcodeFormat.Code128,
-            BarcodeFormat.Code39,
-            BarcodeFormat.Ean13,
-            BarcodeFormat.Ean8,
-            BarcodeFormat.UpcA,
-            BarcodeFormat.UpcE
-          ]
-        });
-        
-        // تنظيف بعد المسح
+      }
+      
+      // تأكد من تثبيت وحدة Google Barcode Scanner
+      const moduleResult = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+      if (!moduleResult.available) {
+        console.log("[useMLKitScanner] تثبيت وحدة Google Barcode Scanner");
+        await BarcodeScanner.installGoogleBarcodeScannerModule();
+      }
+      
+      console.log("[useMLKitScanner] بدء المسح الفعلي");
+      
+      // تهيئة خيارات المسح
+      const scanOptions = {
+        formats: [
+          BarcodeFormat.QrCode,
+          BarcodeFormat.Code128,
+          BarcodeFormat.Code39,
+          BarcodeFormat.Ean13,
+          BarcodeFormat.Ean8,
+          BarcodeFormat.UpcA,
+          BarcodeFormat.UpcE
+        ]
+      };
+      
+      // استخدام API scan بدلاً من startScan (حيث أن API قد تغير)
+      const result = await BarcodeScanner.scan(scanOptions);
+      
+      // معالجة النتيجة
+      if (result && result.barcodes && result.barcodes.length > 0) {
+        console.log("[useMLKitScanner] تم العثور على باركود:", result.barcodes[0].rawValue);
         cleanupScannerBackground();
-        
-        if (barcode && barcode.barcodes.length > 0) {
-          console.log("[useMLKitScanner] تم العثور على باركود:", barcode.barcodes[0].rawValue);
-          onSuccess(barcode.barcodes[0].rawValue);
-          return true;
-        }
+        onSuccess(result.barcodes[0].rawValue);
+        return true;
       }
       
-      console.log("[useMLKitScanner] انتهى المسح بدون نتائج");
+      console.log("[useMLKitScanner] لم يتم العثور على باركود");
+      cleanupScannerBackground();
       return false;
+      
     } catch (error) {
       console.error("[useMLKitScanner] خطأ في عملية المسح:", error);
       cleanupScannerBackground();

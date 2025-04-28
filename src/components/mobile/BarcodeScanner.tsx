@@ -37,21 +37,27 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     } 
   });
 
-  // بدء المسح فوراً عند تحميل المكون - بدون تأخير
+  // تهيئة وتنظيف المكون
   useEffect(() => {
-    console.log('[BarcodeScanner] تهيئة المكون وبدء المسح فوراً...');
+    console.log('[BarcodeScanner] تهيئة المكون...');
     
+    // فوراً نقوم بإعداد خلفية شفافة للكاميرا
     const initializeScanner = async () => {
       try {
-        // تطبيق الأنماط الضرورية لظهور الكاميرا
+        console.log('[BarcodeScanner] إعداد خلفية شفافة وتهيئة الكاميرا...');
+        
+        // إزالة أي أنماط قد تمنع ظهور الكاميرا
         document.documentElement.style.background = 'transparent';
+        document.documentElement.style.backgroundColor = 'transparent';
         document.body.style.background = 'transparent';
+        document.body.style.backgroundColor = 'transparent';
         document.body.classList.add('scanner-active');
         
-        // إعداد خلفية شفافة للكاميرا
+        // استخدام الوظيفة المساعدة لإعداد الخلفية
         await setupScannerBackground();
         
-        // تفعيل المسح بعد تجهيز الخلفية
+        // بدء المسح تلقائيًا
+        console.log('[BarcodeScanner] بدء المسح فورًا...');
         await startScan();
       } catch (error) {
         console.error('[BarcodeScanner] خطأ في تهيئة الماسح:', error);
@@ -61,39 +67,59 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     // تنفيذ التهيئة فوراً
     initializeScanner();
     
+    // التنظيف عند إلغاء المكون
     return () => {
-      console.log('[BarcodeScanner] تنظيف المكون عند الإلغاء');
+      console.log('[BarcodeScanner] تنظيف المكون...');
+      
       try {
+        // إيقاف المسح وإعادة ضبط الخلفية
         stopScan();
         cleanupScannerBackground();
         
-        // إزالة الفئات والأنماط
+        // إزالة الفئات والأنماط المضافة
         document.body.classList.remove('scanner-active');
         document.documentElement.style.background = '';
+        document.documentElement.style.backgroundColor = '';
         document.body.style.background = '';
+        document.body.style.backgroundColor = '';
       } catch (error) {
         console.error('[BarcodeScanner] خطأ أثناء التنظيف:', error);
       }
     };
   }, []);
 
+  // تهيئة إضافية عندما يتغير وضع المسح النشط
+  useEffect(() => {
+    console.log('[BarcodeScanner] تغيير وضع المسح النشط:', isScanningActive);
+    
+    if (isScanningActive) {
+      // إعادة تطبيق الشفافية عند تفعيل المسح
+      document.documentElement.style.background = 'transparent';
+      document.documentElement.style.backgroundColor = 'transparent';
+      document.body.style.background = 'transparent';
+      document.body.style.backgroundColor = 'transparent';
+    }
+  }, [isScanningActive]);
+
   return (
-    <ScannerContainer
-      isManualEntry={isManualEntry}
-      hasScannerError={hasScannerError}
-      isLoading={false} // دائما نعيد false للتحميل لتسريع تفعيل الكاميرا
-      hasPermission={true} // نفترض دائما وجود الإذن لتفعيل الكاميرا
-      isScanningActive={true} // دائما نعتبر المسح نشط ليتم عرض الكاميرا مباشرة
-      lastScannedCode={lastScannedCode}
-      onScan={onScan}
-      onClose={onClose}
-      startScan={startScan}
-      stopScan={stopScan}
-      handleManualEntry={handleManualEntry}
-      handleManualCancel={handleManualCancel}
-      handleRequestPermission={startScan}
-      handleRetry={handleRetry}
-    />
+    <div className="fixed inset-0 z-[9999] bg-transparent">
+      <ScannerContainer
+        isManualEntry={isManualEntry}
+        hasScannerError={hasScannerError}
+        isLoading={false}
+        hasPermission={true}
+        isScanningActive={true}
+        lastScannedCode={lastScannedCode}
+        onScan={onScan}
+        onClose={onClose}
+        startScan={startScan}
+        stopScan={stopScan}
+        handleManualEntry={handleManualEntry}
+        handleManualCancel={handleManualCancel}
+        handleRequestPermission={startScan}
+        handleRetry={handleRetry}
+      />
+    </div>
   );
 };
 

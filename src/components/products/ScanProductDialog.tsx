@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,34 +19,71 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   const [hasScannerError, setHasScannerError] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
-  // عندما يفتح الحوار، نفتح الماسح فوراً
   useEffect(() => {
     if (open) {
-      console.log('ScanProductDialog: تم فتح الحوار، سيتم فتح الماسح فوراً');
+      console.log('ScanProductDialog: تم فتح الحوار، جاري فتح الماسح...');
       
-      // تعيين سمات CSS للحوار ليكون شفافاً
-      setTimeout(() => {
+      // تأكد من تهيئة الحوار بشكل صحيح
+      const setupDialog = () => {
+        // جعل خلفية الحوار شفافة تماماً
         const dialogElement = document.querySelector('[role="dialog"]');
-        if (dialogElement) {
-          dialogElement.setAttribute('style', 'background: transparent !important; --tw-bg-opacity: 0 !important;');
+        if (dialogElement instanceof HTMLElement) {
+          dialogElement.style.background = 'transparent';
+          dialogElement.style.backgroundColor = 'transparent';
           
+          // جعل أب العنصر dialog شفافاً أيضاً
+          if (dialogElement.parentElement instanceof HTMLElement) {
+            dialogElement.parentElement.style.background = 'transparent';
+            dialogElement.parentElement.style.backgroundColor = 'transparent';
+          }
+          
+          // مسح أي خلفيات للعناصر الداخلية
           const dialogContent = dialogElement.querySelector('[class*="DialogContent"]');
-          if (dialogContent) {
-            dialogContent.setAttribute('style', 'background: transparent !important; --tw-bg-opacity: 0 !important;');
+          if (dialogContent instanceof HTMLElement) {
+            dialogContent.style.background = 'transparent';
+            dialogContent.style.backgroundColor = 'transparent';
+            dialogContent.style.boxShadow = 'none';
           }
         }
         
-        // تفعيل الماسح بعد تجهيز الحوار
+        // تطبيق الشفافية على جميع العناصر الأب
+        const dialogOverlay = document.querySelectorAll('[class*="DialogOverlay"]');
+        dialogOverlay.forEach(overlay => {
+          if (overlay instanceof HTMLElement) {
+            overlay.style.background = 'transparent';
+            overlay.style.backgroundColor = 'transparent';
+          }
+        });
+        
+        // تفعيل الماسح بعد تهيئة الحوار
         setShowScanner(true);
-      }, 100);
+      };
       
-      // تهيئة الحالة بشكل صحيح
+      // استخدام setTimeout لضمان تهيئة DOM قبل محاولة تعديله
+      setTimeout(setupDialog, 100);
+      
+      // إعادة تعيين حالة الماسح
       setHasScannerError(false);
       setIsProcessing(false);
     } else {
       console.log('ScanProductDialog: تم إغلاق الحوار');
       setShowScanner(false);
     }
+    
+    // تنظيف عند إزالة المكون
+    return () => {
+      console.log('ScanProductDialog: تنظيف الموارد');
+      
+      // إعادة تعيين الأنماط للحوارات إذا كانت موجودة
+      const dialogElements = document.querySelectorAll('[role="dialog"], [class*="DialogContent"], [class*="DialogOverlay"]');
+      dialogElements.forEach(element => {
+        if (element instanceof HTMLElement) {
+          element.style.background = '';
+          element.style.backgroundColor = '';
+          element.style.boxShadow = '';
+        }
+      });
+    };
   }, [open]);
 
   const handleScanResult = async (code: string) => {
@@ -131,8 +168,8 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-transparent p-0"> {/* جعل الخلفية شفافة */}
-        <DialogTitle className="text-center p-4 bg-background z-10">مسح باركود المنتج</DialogTitle>
+      <DialogContent className="bg-transparent p-0" style={{backgroundColor: 'transparent', background: 'transparent', boxShadow: 'none'}}>
+        <div className="text-center p-4 bg-background z-10 rounded-t-lg">مسح باركود المنتج</div>
         <div className="h-[450px] relative flex items-center justify-center bg-transparent overflow-hidden">
           {hasScannerError ? (
             <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-background rounded-lg">

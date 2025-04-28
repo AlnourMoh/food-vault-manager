@@ -20,7 +20,7 @@ interface ScannerContainerProps {
   handleManualEntry: () => void;
   handleManualCancel: () => void;
   handleRequestPermission: () => void;
-  handleRetry: () => void; // Added this missing prop
+  handleRetry: () => void;
 }
 
 export const ScannerContainer: React.FC<ScannerContainerProps> = ({
@@ -37,7 +37,7 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   handleManualEntry,
   handleManualCancel,
   handleRequestPermission,
-  handleRetry // Added this prop parameter
+  handleRetry
 }) => {
   if (isManualEntry) {
     return (
@@ -53,7 +53,7 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   }
 
   return (
-    <div className={`fixed inset-0 z-50 ${isScanningActive ? 'scanning-active' : ''}`}>
+    <div className="fixed inset-0 z-50 bg-transparent">
       {isScanningActive ? (
         <ScannerView 
           onStop={stopScan} 
