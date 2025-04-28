@@ -57,8 +57,18 @@ export const useScannerDevice = () => {
         
         // بدء المسح
         console.log("[useScannerDevice] بدء مسح MLKit");
+        // استخدام BarcodeFormat enum من الوحدة مباشرة
+        const { BarcodeFormat } = MLKitModule;
         const barcode = await BarcodeScanner.scan({
-          formats: ["QR_CODE", "CODE_128", "CODE_39", "EAN_13", "EAN_8", "UPC_A", "UPC_E"]
+          formats: [
+            BarcodeFormat.QrCode,
+            BarcodeFormat.Code128,
+            BarcodeFormat.Code39,
+            BarcodeFormat.Ean13,
+            BarcodeFormat.Ean8,
+            BarcodeFormat.UpcA,
+            BarcodeFormat.UpcE
+          ]
         });
         
         console.log("[useScannerDevice] نتيجة مسح MLKit:", barcode);
@@ -107,8 +117,9 @@ export const useScannerDevice = () => {
           // تجهيز الماسح
           await BarcodeScanner.prepare();
           
-          // بدء المسح
+          // بدء المسح - استخدام الصيغ المناسبة للماسح التقليدي
           console.log("[useScannerDevice] بدء المسح التقليدي");
+          // الماسح التقليدي يستخدم الصيغ كسلاسل نصية
           const result = await BarcodeScanner.startScan({ 
             targetedFormats: ['QR_CODE', 'EAN_13', 'CODE_128'] 
           });
