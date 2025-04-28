@@ -51,21 +51,27 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     };
   }, [isActive, isManualEntry]);
 
-  // وظيفة بدء المسح مع تحسين إدارة الحالة
+  // وظيفة بدء المسح بشكل مباشر
   const startScan = async () => {
     try {
-      console.log('[useScannerControls] بدء المسح');
+      console.log('[useScannerControls] بدء المسح مباشرة');
       setIsActive(true);
+      // محاولة البدء المباشر للمسح
       return await _startScan();
     } catch (error) {
       console.error('[useScannerControls] خطأ عند بدء المسح:', error);
+      
+      // في حالة الخطأ، تحويل إلى الإدخال اليدوي تلقائياً
       setHasScannerError(true);
       setIsActive(false);
+      
+      // إذا فشل المسح، يمكن التحويل إلى الإدخال اليدوي تلقائيًا
+      handleManualEntry();
       return false;
     }
   };
 
-  // وظيفة إيقاف المسح مع تحسين إدارة الحالة
+  // وظيفة إيقاف المسح
   const stopScan = async () => {
     try {
       console.log('[useScannerControls] إيقاف المسح');
@@ -102,21 +108,13 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     console.log('[Scanner] إعادة المحاولة بعد خطأ');
     setHasScannerError(false);
     
-    // إنتظار لحظة قبل إعادة المحاولة
-    setTimeout(() => {
-      try {
-        startScan().catch(error => {
-          console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
-          setHasScannerError(true);
-          // في حالة فشل المحاولة مجددًا، انتقل إلى الإدخال اليدوي مباشرة
-          handleManualEntry();
-        });
-      } catch (error) {
-        console.error('[useScannerControls] خطأ غير متوقع عند إعادة المحاولة:', error);
-        setHasScannerError(true);
-        handleManualEntry();
-      }
-    }, 500);
+    // محاولة إعادة المسح مباشرة
+    startScan().catch(error => {
+      console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
+      setHasScannerError(true);
+      // في حالة فشل المحاولة مجددًا، انتقل إلى الإدخال اليدوي مباشرة
+      handleManualEntry();
+    });
   };
 
   return {

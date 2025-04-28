@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
@@ -19,24 +18,14 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   const [hasScannerError, setHasScannerError] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
-  // استخدام تأخير بسيط لتهيئة الماسح لتجنب المشاكل
   useEffect(() => {
-    let timer: number;
-    
     if (open) {
-      // تأخير بسيط لضمان تهيئة العناصر
-      timer = window.setTimeout(() => {
-        setShowScanner(true);
-      }, 300);
+      setShowScanner(true);
     } else {
       setShowScanner(false);
       setHasScannerError(false);
       setIsProcessing(false);
     }
-    
-    return () => {
-      window.clearTimeout(timer);
-    };
   }, [open]);
 
   const handleScanResult = async (code: string) => {
@@ -44,7 +33,6 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
       console.log('Scanned code:', code);
       setIsProcessing(true);
       
-      // تحقق أولاً مما إذا كان هذا الرمز موجودًا وغير مستخدم
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
         .select('product_id, is_used')
@@ -70,13 +58,11 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         return;
       }
 
-      // احصل على معرف المطعم من التخزين المحلي
       const restaurantId = localStorage.getItem('restaurantId');
       if (!restaurantId) {
         throw new Error('معرف المطعم غير موجود');
       }
 
-      // تحديث رمز المنتج لوضع علامة عليه كمستخدم
       const { error: updateError } = await supabase
         .from('product_codes')
         .update({ 
@@ -96,7 +82,6 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         description: "تم إضافة المنتج إلى المخزون",
       });
 
-      // استخدم تأخيرًا صغيرًا لضمان إغلاق مربع الحوار وتنظيف الموارد
       setTimeout(() => {
         onOpenChange(false);
         onProductAdded();
@@ -126,7 +111,6 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
-      // تأكد من تنظيف الموارد عند الإغلاق
       if (!newOpen) {
         setShowScanner(false);
       }

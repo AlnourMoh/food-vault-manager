@@ -54,12 +54,12 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
     }, 200);
   };
   
-  // بدء عملية المسح
+  // بدء عملية المسح - مبسطة للانتقال المباشر للمسح
   const startScan = async () => {
     if (isCancelled) return false;
     
     try {
-      console.log('[useScannerState] بدء المسح');
+      console.log('[useScannerState] بدء المسح مباشرة');
       
       // إيقاف أي عملية مسح نشطة حالياً
       await stopDeviceScan().catch(e => 
@@ -69,30 +69,14 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       // تفعيل حالة المسح النشط لواجهة المستخدم
       setIsScanningActive(true);
       
-      // التحقق من الأذونات
+      // طلب الإذن مباشرة إذا لم يكن موجوداً
       if (hasPermission === false) {
-        console.log('[useScannerState] طلب إذن الكاميرا');
-        const granted = await requestPermission();
-        console.log('[useScannerState] نتيجة طلب الإذن:', granted);
-        
-        if (!granted) {
-          console.log('[useScannerState] لم يتم منح الإذن');
-          
-          if (!isCancelled) {
-            toast({
-              title: "إذن الكاميرا مطلوب",
-              description: "يجب تفعيل إذن الكاميرا في إعدادات التطبيق للاستمرار.",
-              variant: "destructive"
-            });
-            
-            setIsScanningActive(false);
-          }
-          return false;
-        }
+        console.log('[useScannerState] طلب إذن الكاميرا مباشرة');
+        await requestPermission(true);
       }
       
-      // بدء عملية المسح الفعلية بعد التأكد من الأذونات
-      console.log('[useScannerState] بدء عملية المسح الفعلية');
+      // بدء عملية المسح الفعلية مباشرة
+      console.log('[useScannerState] بدء عملية المسح الفعلية مباشرة');
       const success = await startDeviceScan((code) => {
         if (!isCancelled) {
           handleSuccessfulScan(code);
@@ -113,7 +97,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       
       toast({
         title: "خطأ في المسح",
-        description: "حدث خطأ أثناء محاولة بدء المسح. حاول مرة أخرى أو استخدم الإدخال اليدوي.",
+        description: "حدث خطأ أثناء محاولة بدء المسح. حاول مرة أخرى.",
         variant: "destructive"
       });
       

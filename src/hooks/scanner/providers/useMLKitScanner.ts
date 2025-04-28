@@ -8,7 +8,7 @@ export const useMLKitScanner = () => {
 
   const startMLKitScan = async (onSuccess: (code: string) => void) => {
     try {
-      console.log("[useMLKitScanner] محاولة استخدام MLKit");
+      console.log("[useMLKitScanner] بدء استخدام MLKit مباشرة");
       
       // التأكد من أن MLKit متوفر
       if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
@@ -19,32 +19,20 @@ export const useMLKitScanner = () => {
       const MLKitModule = await import('@capacitor-mlkit/barcode-scanning');
       const { BarcodeScanner, BarcodeFormat } = MLKitModule;
       
-      // التحقق من الدعم
-      const available = await BarcodeScanner.isSupported();
-      if (!available) {
-        console.log("[useMLKitScanner] MLKit غير مدعوم على هذا الجهاز");
-        throw new Error("MLKit غير مدعوم");
-      }
-      
-      // التحقق من الأذونات
-      const status = await BarcodeScanner.checkPermissions();
-      console.log("[useMLKitScanner] حالة أذونات MLKit:", status);
-      
-      if (status.camera !== 'granted') {
-        console.log("[useMLKitScanner] طلب إذن الكاميرا");
-        const result = await BarcodeScanner.requestPermissions();
-        console.log("[useMLKitScanner] نتيجة طلب إذن الكاميرا:", result);
-        
-        if (result.camera !== 'granted') {
-          throw new Error("تم رفض إذن الكاميرا");
-        }
+      // طلب الإذن والتحقق من الدعم مباشرة
+      console.log("[useMLKitScanner] طلب أذونات MLKit مباشرة");
+      try {
+        await BarcodeScanner.requestPermissions();
+      } catch (permError) {
+        console.log("[useMLKitScanner] خطأ في طلب الإذن:", permError);
+        // نستمر حتى مع خطأ الإذن، قد يكون الإذن ممنوحاً بالفعل
       }
       
       // إعداد خلفية الماسح
       console.log("[useMLKitScanner] إعداد خلفية الماسح");
       await setupScannerBackground();
       
-      console.log("[useMLKitScanner] بدء المسح");
+      console.log("[useMLKitScanner] بدء المسح فوراً");
       const barcode = await BarcodeScanner.scan({
         formats: [
           BarcodeFormat.QrCode,

@@ -12,62 +12,35 @@ export const useCameraPermissions = () => {
   const { requestPermission } = usePermissionRequest();
   const { toast } = useToast();
 
+  // فحص الأذونات المبدئي وتبسيطه
   useEffect(() => {
     const checkPermissions = async () => {
       try {
-        console.log('[useCameraPermissions] فحص أذونات الكاميرا...');
+        console.log('[useCameraPermissions] فحص أولي سريع للأذونات...');
         setIsLoading(true);
-
-        // Check if MLKit is available
+        
+        // افتراض أن الإذن موجود حتى نتأكد من العكس
+        setHasPermission(true);
+        
         if (window.Capacitor) {
-          console.log('[useCameraPermissions] Checking MLKit availability...');
-          
+          // محاولة استخدام MLKit أولاً للتحقق من الإذن
           try {
-            const available = await BarcodeScanner.isSupported();
-            console.log('[useCameraPermissions] MLKit available:', available);
-            
-            if (available) {
-              const status = await BarcodeScanner.checkPermissions();
-              console.log('[useCameraPermissions] MLKit permission status:', status);
-              
-              if (status.camera === 'granted') {
-                setHasPermission(true);
-                setIsLoading(false);
-                return;
-              } else if (status.camera === 'denied') {
-                setHasPermission(false);
-                setIsLoading(false);
-                return;
-              }
-              // If status is prompt, we'll fall through to other permission checks
+            const status = await BarcodeScanner.checkPermissions();
+            if (status.camera === 'denied') {
+              // إذا كان الإذن مرفوضاً بوضوح، نعلم المستخدم
+              setHasPermission(false);
             }
           } catch (error) {
-            console.error('[useCameraPermissions] Error checking MLKit permissions:', error);
-          }
-
-          // Try using the camera plugin permissions
-          console.log('[useCameraPermissions] Trying camera plugin permissions');
-          const cameraStatus = await checkCameraPermission();
-          if (cameraStatus) {
-            console.log('[useCameraPermissions] Camera plugin permission status:', cameraStatus);
-            setHasPermission(cameraStatus.granted);
-            setIsLoading(false);
-            return;
+            // تجاهل الأخطاء في فحص الإذن، وافتراض أن الإذن سيتم طلبه لاحقاً
+            console.warn('خطأ في فحص إذن MLKit:', error);
           }
         }
-
-        // For web testing, assume permission is granted
-        console.log('[useCameraPermissions] Assuming permission for web environment');
-        setHasPermission(true);
+        
         setIsLoading(false);
       } catch (error) {
-        console.error('[useCameraPermissions] Error checking permissions:', error);
-        toast({
-          title: "خطأ في الأذونات",
-          description: "حدث خطأ أثناء التحقق من أذونات الكاميرا",
-          variant: "destructive"
-        });
-        setHasPermission(false);
+        console.error('خطأ في الفحص الأولي للأذونات:', error);
+        // افتراض الإذن حتى عند حدوث خطأ، سيتم التعامل مع هذا عند فتح الكاميرا
+        setHasPermission(true);
         setIsLoading(false);
       }
     };
@@ -75,52 +48,36 @@ export const useCameraPermissions = () => {
     checkPermissions();
   }, []);
 
+  // وظيفة طلب الإذن مبسطة - تطلب الإذن مباشرة
   const requestCameraPermission = async (force = true) => {
     try {
-      console.log(`[useCameraPermissions] Requesting camera permission with force=${force}...`);
+      console.log(`[useCameraPermissions] طلب إذن الكاميرا مباشرة...`);
       setIsLoading(true);
       
-      // Try MLKit permissions first
-      if (window.Capacitor) {
-        try {
-          console.log('[useCameraPermissions] Requesting MLKit permissions');
-          const permission = await BarcodeScanner.requestPermissions();
-          console.log('[useCameraPermissions] MLKit permission result:', permission);
-          
-          if (permission.camera === 'granted') {
-            console.log('[useCameraPermissions] MLKit permission granted');
-            setHasPermission(true);
-            setIsLoading(false);
-            return true;
-          } else if (permission.camera === 'denied') {
-            console.log('[useCameraPermissions] MLKit permission denied');
-            setHasPermission(false);
-            setIsLoading(false);
-            return false;
-          }
-          // If status is prompt, we'll fall through to other permission checks
-        } catch (error) {
-          console.error('[useCameraPermissions] Error requesting MLKit permissions:', error);
+      // محاولة مباشرة لطلب الإذن
+      try {
+        const permission = await BarcodeScanner.requestPermissions();
+        if (permission.camera === 'granted') {
+          setHasPermission(true);
+          setIsLoading(false);
+          return true;
         }
+      } catch (mlkitError) {
+        console.warn('خطأ في طلب إذن MLKit:', mlkitError);
       }
-      
-      // Fall back to general permission request
-      console.log('[useCameraPermissions] Using general permission request');
+
+      // استخدام طلب الإذن العام كاحتياطي
       const result = await requestPermission(force);
-      console.log('[useCameraPermissions] General permission result:', result);
-      
       setHasPermission(result);
       setIsLoading(false);
       return result;
     } catch (error) {
-      console.error('[useCameraPermissions] Error requesting permission:', error);
+      console.error('خطأ في طلب إذن الكاميرا:', error);
       setIsLoading(false);
-      toast({
-        title: "خطأ في طلب الإذن",
-        description: "حدث خطأ أثناء محاولة طلب إذن الكاميرا",
-        variant: "destructive"
-      });
-      return false;
+      
+      // حتى مع حدوث خطأ، نحاول فتح الكاميرا
+      setHasPermission(true);
+      return true;
     }
   };
 

@@ -36,12 +36,19 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     } 
   });
 
-  // تنظيف الموارد عند إلغاء تحميل المكون
+  // بدء المسح تلقائيًا عند تحميل المكون
   useEffect(() => {
-    console.log('[BarcodeScanner] تهيئة المكون');
+    console.log('[BarcodeScanner] تهيئة المكون وبدء المسح تلقائيًا');
+    
+    // تأخير قصير للسماح للمكون بالتحميل الكامل
+    const timer = setTimeout(() => {
+      console.log('[BarcodeScanner] بدء المسح تلقائيًا بعد التحميل');
+      startScan().catch(e => console.error('[BarcodeScanner] خطأ في البدء التلقائي للمسح:', e));
+    }, 300);
     
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون عند الإلغاء');
+      clearTimeout(timer);
       try {
         stopScan();
       } catch (error) {
@@ -55,7 +62,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     };
   }, []);
   
-  // لا نعرض شيئًا أثناء التهيئة
+  // لا نعرض شيئًا أثناء التهيئة - لكنها الآن سريعة جداً
   if (isInitializing) {
     console.log('[BarcodeScanner] ما زال في مرحلة التهيئة');
     return null;
