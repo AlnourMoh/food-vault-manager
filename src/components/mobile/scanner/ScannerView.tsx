@@ -35,8 +35,8 @@ export const ScannerView = ({
           console.log("Setting up scanner UI");
           scannerActive.current = true;
           
-          // استدعاء الوظيفة من useScannerUI بدلاً من تعديل الأنماط مباشرة
-          setupScannerBackground();
+          // استدعاء تهيئة الماسح وإعداد الكاميرا فوراً عند تحميل المكون
+          await setupScannerBackground();
         } catch (e) {
           console.error('Error setting up scanner UI:', e);
         }
@@ -45,7 +45,7 @@ export const ScannerView = ({
     
     setupScannerUI();
     
-    // تنظيف عند إزالة المكون - استخدام الوظيفة من useScannerUI
+    // تنظيف عند إزالة المكون
     return () => {
       console.log("ScannerView unmounting - cleaning up UI");
       try {
@@ -65,7 +65,11 @@ export const ScannerView = ({
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-          await BarcodeScanner.toggleTorch();
+          if (flashOn.current) {
+            await BarcodeScanner.disableTorch();
+          } else {
+            await BarcodeScanner.enableTorch();
+          }
           flashOn.current = !flashOn.current;
           return;
         } catch (error) {
@@ -106,7 +110,7 @@ export const ScannerView = ({
           onManualEntry={onManualEntry || (() => {})}
         />
         
-        <div className="absolute bottom-8 inset-x-0 flex justify-center">
+        <div className="absolute bottom-8 inset-x-0 flex justify-center z-[1000]">
           <Button 
             variant="destructive" 
             size="lg" 

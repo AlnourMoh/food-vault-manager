@@ -10,21 +10,43 @@ export const useMLKitScanner = () => {
     try {
       console.log("[useMLKitScanner] بدء استخدام MLKit فوراً");
       
-      // إعداد خلفية الماسح
+      // إعداد خلفية الماسح - مهم جدا لتفعيل الكاميرا بشكل صحيح
       await setupScannerBackground();
       
+      // استيراد مكتبة MLKit
       const MLKitModule = await import('@capacitor-mlkit/barcode-scanning');
       const { BarcodeScanner, BarcodeFormat } = MLKitModule;
       
-      // طلب الإذن
+      // طلب الإذن مع تجاهل الأخطاء - نفترض أن الإذن ممنوح بالفعل
       try {
+        console.log("[useMLKitScanner] محاولة طلب أذونات MLKit");
         await BarcodeScanner.requestPermissions();
+        console.log("[useMLKitScanner] تم الحصول على الأذونات أو تجاهل الخطأ");
       } catch (permError) {
         console.log("[useMLKitScanner] تجاهل خطأ الإذن:", permError);
-        // نستمر حتى مع خطأ الإذن، قد يكون الإذن ممنوحاً بالفعل
+      }
+      
+      // تهيئة عرض الكاميرا
+      try {
+        console.log("[useMLKitScanner] إعداد عرض الكاميرا بشكل صحيح");
+        await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()
+          .then(result => {
+            if (!result.available) {
+              console.log("[useMLKitScanner] تثبيت وحدة Google Barcode Scanner");
+              return BarcodeScanner.installGoogleBarcodeScannerModule();
+            }
+            return { update: false };
+          })
+          .catch(error => {
+            console.log("[useMLKitScanner] خطأ في التحقق من وحدة Barcode Scanner:", error);
+          });
+      } catch (moduleError) {
+        console.log("[useMLKitScanner] تجاهل خطأ الوحدة:", moduleError);
       }
       
       console.log("[useMLKitScanner] بدء المسح فوراً");
+      
+      // محاولة المسح بأقصى وضوح وجودة
       const barcode = await BarcodeScanner.scan({
         formats: [
           BarcodeFormat.QrCode,
@@ -34,7 +56,9 @@ export const useMLKitScanner = () => {
           BarcodeFormat.Ean8,
           BarcodeFormat.UpcA,
           BarcodeFormat.UpcE
-        ]
+        ],
+        lensFacing: 'back',
+        detectionMode: 'continuous'
       });
       
       // تنظيف بعد المسح

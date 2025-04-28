@@ -23,12 +23,15 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   useEffect(() => {
     if (open) {
       console.log('ScanProductDialog: تم فتح الحوار، سيتم فتح الماسح فوراً');
+      // تفعيل الماسح مباشرة
       setShowScanner(true);
+      
+      // تهيئة الحالة بشكل صحيح
+      setHasScannerError(false);
+      setIsProcessing(false);
     } else {
       console.log('ScanProductDialog: تم إغلاق الحوار');
       setShowScanner(false);
-      setHasScannerError(false);
-      setIsProcessing(false);
     }
   }, [open]);
 
@@ -114,9 +117,9 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogTitle className="text-center">مسح باركود المنتج</DialogTitle>
-        <div className="h-[450px] relative flex items-center justify-center">
+      <DialogContent className="sm:max-w-lg p-0"> {/* أزلنا الهوامش للسماح للكاميرا بالعرض الكامل */}
+        <DialogTitle className="text-center p-4 bg-background z-10">مسح باركود المنتج</DialogTitle>
+        <div className="h-[450px] relative flex items-center justify-center bg-transparent overflow-hidden">
           {hasScannerError ? (
             <div className="flex flex-col items-center justify-center space-y-4 p-4">
               <div className="p-3 bg-red-100 text-red-600 rounded-full">
@@ -131,16 +134,11 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
               </Button>
             </div>
           ) : (
-            showScanner ? (
+            showScanner && (
               <BarcodeScanner
                 onScan={handleScanResult}
                 onClose={handleScanClose}
               />
-            ) : (
-              <div className="flex flex-col items-center">
-                <ScanBarcode className="h-16 w-16 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">جاري تحميل الماسح...</p>
-              </div>
             )
           )}
         </div>
