@@ -6,9 +6,7 @@ import { ScannerControls } from './components/ScannerControls';
 import { ScannerFrame } from './components/ScannerFrame';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
 import { PermissionErrorView } from './components/PermissionErrorView';
-import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 import styles from './scanner.module.css';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface ScannerViewProps {
   onStop: () => void;
@@ -23,99 +21,40 @@ export const ScannerView = ({
   onRequestPermission,
   onManualEntry
 }: ScannerViewProps) => {
-  const scannerActive = useRef(false);
-  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
-  const cameraViewportRef = useRef<HTMLDivElement | null>(null);
-  const addedElements = useRef<HTMLElement[]>([]);
-
-  // تحسين آلية الشفافية مع عزل آثارها عن بقية التطبيق
+  const isActive = useRef(false);
+  
+  // تحسين آلية إعداد الماسح والتعامل مع الشفافية
   useEffect(() => {
-    console.log("ScannerView mounted, hasPermissionError:", hasPermissionError);
+    console.log("ScannerView mounted");
     
-    // تأكد من عدم تداخل عمليات التهيئة
-    if (scannerActive.current) {
-      console.log("ScannerView: المكون نشط بالفعل، تخطي التهيئة المضاعفة");
+    if (isActive.current) {
+      console.log("ScannerView: المكون نشط بالفعل");
       return;
     }
     
-    scannerActive.current = true;
+    isActive.current = true;
     
-    const setupScanner = async () => {
-      if (!hasPermissionError) {
-        try {
-          console.log("Setting up scanner UI");
-          
-          // 1. تطبيق الشفافية على منطقة الماسح فقط من خلال حاوية مخصصة
-          await setupScannerBackground();
-          
-          // 2. إنشاء عنصر محدد للكاميرا
-          if (!cameraViewportRef.current) {
-            cameraViewportRef.current = document.createElement('div');
-            cameraViewportRef.current.id = 'camera-viewport';
-            cameraViewportRef.current.className = `${styles.cameraViewport} camera-active`;
-            document.body.appendChild(cameraViewportRef.current);
-            addedElements.current.push(cameraViewportRef.current);
-          }
-          
-          // 3. تنشيط الكاميرا عن طريق MLKit
-          if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-            try {
-              const torchResult = await BarcodeScanner.isTorchAvailable();
-              if (torchResult.available) {
-                await BarcodeScanner.enableTorch();
-                setTimeout(async () => {
-                  try {
-                    await BarcodeScanner.disableTorch();
-                  } catch (e) {}
-                }, 300);
-              }
-            } catch (e) {
-              console.warn("Error checking torch availability:", e);
-            }
-          }
-          
-          // 4. تأكيد تخصيص فئات للهيدر والفوتر لحمايتهما
-          document.querySelectorAll('header, footer, nav').forEach(element => {
-            if (element instanceof HTMLElement) {
-              element.classList.add('app-header');
-              // تطبيق أنماط إضافية إذا كانت ضمن صفحة معينة مثل لوحة التحكم
-              if (window.location.pathname.includes('/admin/')) {
-                element.classList.add('admin-header');
-              }
-            }
-          });
-          
-        } catch (e) {
-          console.error('Error setting up scanner:', e);
-        }
-      }
-    };
+    // تطبيق فئة "scanner-viewport" على الجسم للإشارة إلى أن الماسح نشط
+    document.body.classList.add('scanner-viewport');
     
-    setupScanner();
+    // تعيين الخلفية إلى شفافة للجسم
+    document.body.style.background = 'transparent';
+    document.body.style.backgroundColor = 'transparent';
     
     return () => {
-      console.log("ScannerView unmounting, cleaning up...");
-      scannerActive.current = false;
+      console.log("ScannerView unmounting");
+      isActive.current = false;
       
-      // 1. تنظيف موارد الماسح
-      cleanupScannerBackground(true);
+      // إزالة فئة الماسح النشط من الجسم
+      document.body.classList.remove('scanner-viewport');
       
-      // 2. إزالة عنصر الكاميرا
-      if (cameraViewportRef.current) {
-        cameraViewportRef.current.remove();
-        cameraViewportRef.current = null;
-      }
-      
-      // 3. إزالة العناصر المضافة
-      for (const element of addedElements.current) {
-        if (element && element.parentNode) {
-          element.parentNode.removeChild(element);
-        }
-      }
-      addedElements.current = [];
-      
-      // 4. إعادة تعيين أنماط الهيدر والفوتر بشكل قسري
+      // تطبيق تأخير صغير لضمان عودة العناصر إلى حالتها الطبيعية
       setTimeout(() => {
+        // إعادة تعيين خلفية الجسم
+        document.body.style.background = '';
+        document.body.style.backgroundColor = '';
+        
+        // التأكد من إظهار الهيدر والفوتر
         document.querySelectorAll('header, .app-header').forEach(el => {
           if (el instanceof HTMLElement) {
             el.style.background = 'white';
@@ -135,7 +74,7 @@ export const ScannerView = ({
         });
       }, 300);
     };
-  }, [hasPermissionError]);
+  }, []);
 
   if (hasPermissionError) {
     return <PermissionErrorView

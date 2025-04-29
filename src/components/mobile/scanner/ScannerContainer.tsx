@@ -39,25 +39,34 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   handleRequestPermission,
   handleRetry
 }) => {
-  // ضمان أن عناصر الهيدر والفوتر محمية أثناء عمل الماسح
+  // تطبيق حماية على عناصر الواجهة أثناء تشغيل الماسح
   useEffect(() => {
-    // تطبيق فئات حماية على الهيدر والفوتر
-    document.querySelectorAll('header, footer, nav').forEach(element => {
+    // تسجيل العناصر التي نحتاج إلى حمايتها
+    const elementsToProtect = document.querySelectorAll('header, footer, nav');
+    
+    // تطبيق فئات حماية على جميع العناصر المطلوبة
+    elementsToProtect.forEach(element => {
       if (element instanceof HTMLElement) {
         element.classList.add('app-header');
+        // تخزين الأنماط الأصلية لاستعادتها لاحقًا
+        element.dataset.originalBg = element.style.background;
+        element.dataset.originalOpacity = element.style.opacity;
       }
     });
     
-    // تنظيف عند إلغاء المكون
+    // تنظيف عند إلغاء تحميل المكون
     return () => {
-      // إعادة تعيين أنماط الهيدر والفوتر بشكل قسري
+      // استعادة الأنماط الأصلية بشكل تدريجي
       setTimeout(() => {
-        document.querySelectorAll('header, .app-header').forEach(el => {
+        document.querySelectorAll('.app-header').forEach(el => {
           if (el instanceof HTMLElement) {
+            // استعادة الأنماط الأصلية إن وجدت، أو تعيين القيم الافتراضية
             el.style.background = 'white';
             el.style.backgroundColor = 'white';
             el.style.opacity = '1';
             el.style.visibility = 'visible';
+            // إزالة فئة الحماية
+            el.classList.remove('app-header');
           }
         });
       }, 300);

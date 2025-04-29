@@ -120,19 +120,25 @@
   100% { top: 100%; opacity: 0.8; }
 }
 
-/* تحسين الانتقائيات - حصرها فقط داخل العناصر المطلوبة */
-/* استخدام نطاق محدود بدلاً من global */
+/* تحسين الانتقائيات بنطاق محدود */
 .scannerRoot {
   position: relative;
   z-index: 9999;
 }
 
-/* استخدام انتقائيات أكثر تحديدًا بدلاً من global */
-.scannerRoot body,
-.scannerRoot html {
+/* حالات الجسم أثناء المسح */
+:global(.scanner-viewport) {
   background: transparent !important;
   background-color: transparent !important;
   --background: transparent !important;
+}
+
+:global(.scanner-active) header,
+:global(.scanner-active) footer,
+:global(.scanner-active) nav {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
 .scannerPortal {
@@ -145,16 +151,14 @@
   background: transparent;
 }
 
-/* إزالة الانتقائيات العامة واستبدالها بانتقائيات محددة لمنع التأثير على الأجزاء الأخرى من التطبيق */
-/* هذه القواعد ستطبق فقط على أقرب عنصر يحتوي على الفئات المحددة */
+/* أنماط الحوار الشفاف */
 .scannerDialog {
   background-color: transparent !important;
   background: transparent !important;
   --background: transparent !important;
 }
 
-/* حل مشكلة عدم ظهور الهيدر والفوتر - تطبيق قواعد محددة لهما داخل سياق الماسح */
-.scannerActive.dialog-only {
-  position: relative;
-  z-index: 9999;
+:global(.scanner-dialog) {
+  background-color: transparent !important;
+  background: transparent !important;
 }
