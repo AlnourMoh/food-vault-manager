@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { barcodeScannerService } from '@/services/BarcodeScannerService';
 import { useToast } from '@/hooks/use-toast';
+import { App } from '@capacitor/app';
+import { Toast } from '@capacitor/toast';
 
 interface UseMLKitScannerProps {
   onScan: (code: string) => void;
@@ -36,10 +38,21 @@ export const useMLKitScanner = ({ onScan, onClose }: UseMLKitScannerProps) => {
     const checkPermissions = async () => {
       try {
         setIsLoading(true);
+        console.log('[useMLKitScanner] التحقق من إذن الكاميرا...');
+        
+        // محاولة التحقق من الإذن باستخدام MLKit مباشرة
         const hasPermission = await barcodeScannerService.checkPermission();
+        console.log('[useMLKitScanner] نتيجة فحص الإذن:', hasPermission);
         setHasPermission(hasPermission);
+        
+        // إذا لم يكن هناك إذن، نحاول طلبه تلقائيًا
+        if (!hasPermission) {
+          console.log('[useMLKitScanner] لا يوجد إذن، جاري الطلب...');
+          await requestPermission();
+        }
       } catch (error) {
         console.error('[useMLKitScanner] خطأ في التحقق من الأذونات:', error);
+        // حتى في حالة الخطأ، نفترض أن الإذن غير موجود
         setHasPermission(false);
       } finally {
         setIsLoading(false);
@@ -49,24 +62,56 @@ export const useMLKitScanner = ({ onScan, onClose }: UseMLKitScannerProps) => {
     checkPermissions();
   }, []);
   
-  // وظيفة طلب إذن الكاميرا
+  // وظيفة طلب إذن الكاميرا - محسنة لضمان الوضوح
   const requestPermission = async () => {
     try {
       setIsLoading(true);
+      console.log('[useMLKitScanner] محاولة طلب إذن الكاميرا...');
+      
+      // محاولة طلب الإذن باستخدام MLKit مباشرة
       const granted = await barcodeScannerService.requestPermission();
+      console.log('[useMLKitScanner] نتيجة طلب الإذن:', granted);
+      
       setHasPermission(granted);
       
+      // عرض رسالة للمستخدم بناءً على نتيجة طلب الإذن
       if (granted) {
+        console.log('[useMLKitScanner] تم منح الإذن بنجاح');
         toast({
           title: "تم منح الإذن",
           description: "يمكنك الآن استخدام الماسح الضوئي",
         });
       } else {
-        toast({
-          title: "تم رفض الإذن",
-          description: "يرجى تمكين إذن الكاميرا في إعدادات جهازك",
-          variant: "destructive"
-        });
+        console.log('[useMLKitScanner] تم رفض الإذن');
+        // استخدام طرق مختلفة لإظهار الرسالة
+        try {
+          if (window.Capacitor) {
+            await Toast.show({
+              text: 'يرجى تمكين إذن الكاميرا من إعدادات الجهاز',
+              duration: 'long'
+            });
+          } else {
+            toast({
+              title: "تم رفض الإذن",
+              description: "يرجى تمكين إذن الكاميرا في إعدادات جهازك",
+              variant: "destructive"
+            });
+          }
+        } catch (e) {
+          console.error('[useMLKitScanner] خطأ في عرض الرسالة للمستخدم:', e);
+        }
+        
+        // محاولة فتح إعدادات التطبيق
+        try {
+          if (window.Capacitor?.getPlatform() === 'android') {
+            const openSettings = window.confirm('هل تريد فتح إعدادات التطبيق لتمكين الكاميرا؟');
+            if (openSettings) {
+              await barcodeScannerService.openAppSettings();
+            }
+          }
+        } catch (e) {
+          console.error('[useMLKitScanner] خطأ في فتح الإعدادات:', e);
+        }
       }
       
       return granted;
@@ -116,6 +161,7 @@ export const useMLKitScanner = ({ onScan, onClose }: UseMLKitScannerProps) => {
       
       // تعيين حالة المسح إلى نشط
       setIsScanningActive(true);
+      setHasScannerError(false);
       
       // بدء عملية المسح الفعلية
       const success = await barcodeScannerService.startScan(handleSuccessfulScan);

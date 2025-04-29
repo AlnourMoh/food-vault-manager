@@ -1,6 +1,7 @@
 
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { useToast } from '@/hooks/use-toast';
+import { Toast } from '@capacitor/toast';
+import { App } from '@capacitor/app';
 
 export class BarcodeScannerService {
   private static instance: BarcodeScannerService;
@@ -14,6 +15,44 @@ export class BarcodeScannerService {
       BarcodeScannerService.instance = new BarcodeScannerService();
     }
     return BarcodeScannerService.instance;
+  }
+  
+  /**
+   * فتح إعدادات التطبيق
+   */
+  public async openAppSettings(): Promise<void> {
+    try {
+      console.log('[BarcodeScannerService] محاولة فتح إعدادات التطبيق...');
+      
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('[BarcodeScannerService] فتح الإعدادات باستخدام MLKit...');
+        await BarcodeScanner.openSettings();
+        return;
+      }
+      
+      // الطريقة البديلة هي إغلاق التطبيق لإظهار الرسالة عند إعادة فتحه (لنظام iOS)
+      if (window.Capacitor?.getPlatform() === 'ios') {
+        console.log('[BarcodeScannerService] استخدام طريقة الخروج لـ iOS...');
+        await App.exitApp();
+        return;
+      }
+      
+      console.warn('[BarcodeScannerService] لا يمكن فتح الإعدادات تلقائيًا');
+      await Toast.show({
+        text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
+        duration: 'long'
+      });
+    } catch (error) {
+      console.error('[BarcodeScannerService] خطأ في فتح الإعدادات:', error);
+      try {
+        await Toast.show({
+          text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
+          duration: 'long'
+        });
+      } catch (e) {
+        console.error('[BarcodeScannerService] خطأ في عرض الرسالة:', e);
+      }
+    }
   }
   
   /**
@@ -39,10 +78,14 @@ export class BarcodeScannerService {
   public async requestPermission(): Promise<boolean> {
     try {
       if (!await this.isSupported()) {
+        console.log('[BarcodeScannerService] الماسح غير مدعوم');
         return false;
       }
       
+      console.log('[BarcodeScannerService] طلب إذن الكاميرا من MLKit...');
       const { camera } = await BarcodeScanner.requestPermissions();
+      console.log('[BarcodeScannerService] نتيجة طلب الإذن:', camera);
+      
       return camera === 'granted';
     } catch (error) {
       console.error('[BarcodeScannerService] خطأ في طلب إذن الكاميرا:', error);
@@ -55,11 +98,15 @@ export class BarcodeScannerService {
    */
   public async checkPermission(): Promise<boolean> {
     try {
-      if (!await this.isSupported()) {
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('[BarcodeScannerService] MLKit غير متوفر');
         return false;
       }
       
+      console.log('[BarcodeScannerService] فحص حالة إذن الكاميرا...');
       const { camera } = await BarcodeScanner.checkPermissions();
+      console.log('[BarcodeScannerService] نتيجة فحص الإذن:', camera);
+      
       return camera === 'granted';
     } catch (error) {
       console.error('[BarcodeScannerService] خطأ في التحقق من إذن الكاميرا:', error);

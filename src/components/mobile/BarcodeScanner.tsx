@@ -2,6 +2,8 @@
 import React, { useEffect, useRef } from 'react';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { useMLKitScanner } from '@/hooks/scanner/useMLKitScanner';
+import { App } from '@capacitor/app';
+import { Toast } from '@capacitor/toast';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -12,7 +14,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const isActive = useRef(false);
   
-  // استخدام الـ hook الجديد للماسح الضوئي
+  // استخدام الـ hook للماسح الضوئي
   const {
     isLoading,
     hasPermission,
@@ -45,12 +47,35 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     
     isActive.current = true;
     
-    // بدء المسح تلقائيًا عند تحميل المكون
-    if (!isScanningActive) {
-      startScan().catch(e => 
-        console.error('[BarcodeScanner] خطأ في بدء المسح التلقائي:', e)
-      );
-    }
+    // طلب الإذن تلقائيًا عند تحميل المكون
+    const checkAndRequestPermission = async () => {
+      try {
+        // التحقق من حالة الإذن وطلبه إذا لم يكن موجودًا
+        if (hasPermission === false) {
+          console.log('[BarcodeScanner] لا يوجد إذن، جاري الطلب...');
+          await requestPermission();
+        } else {
+          // إذا كان الإذن موجودًا أو غير معروف (null)، نحاول المسح
+          console.log('[BarcodeScanner] جاري بدء المسح...');
+          startScan().catch(e => 
+            console.error('[BarcodeScanner] خطأ في بدء المسح:', e)
+          );
+        }
+      } catch (error) {
+        console.error('[BarcodeScanner] خطأ في التحقق من الإذن أو طلبه:', error);
+        
+        // محاولة إظهار رسالة للمستخدم
+        if (window.Capacitor) {
+          Toast.show({
+            text: 'يرجى تمكين إذن الكاميرا من إعدادات الجهاز',
+            duration: 'long'
+          }).catch(() => {});
+        }
+      }
+    };
+    
+    // تنفيذ التحقق وطلب الإذن
+    checkAndRequestPermission();
     
     // التنظيف عند إلغاء المكون
     return () => {
@@ -62,7 +87,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         console.error('[BarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e)
       );
     };
-  }, []);
+  }, [hasPermission, requestPermission, startScan, stopScan]);
 
   return (
     <div 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, Keyboard, Settings } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { App } from '@capacitor/app';
+import { barcodeScannerService } from '@/services/BarcodeScannerService';
 
 interface NoPermissionViewProps {
   onClose: () => void;
@@ -21,34 +22,18 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
   };
 
   const openAppSettings = async () => {
-    console.log('Opening app settings if available');
+    console.log('Opening app settings for camera permission');
     try {
-      if (window.Capacitor) {
-        const platform = window.Capacitor.getPlatform();
-        
-        // For iOS, exiting the app will prompt to open settings on restart
-        if (platform === 'ios') {
-          console.log('iOS detected - exiting app to prompt settings');
-          const confirmed = window.confirm('هل تريد فتح إعدادات التطبيق لتمكين الكاميرا؟ سيتم إغلاق التطبيق وعند إعادة فتحه ستظهر رسالة لفتح الإعدادات.');
-          if (confirmed) {
-            await App.exitApp();
-          }
-        } 
-        // For Android, show detailed instructions
-        else if (platform === 'android') {
-          console.log('Android detected - showing instructions');
-          alert('لتمكين إذن الكاميرا، يرجى اتباع الخطوات التالية:\n\n1. افتح إعدادات جهازك\n2. انتقل إلى "التطبيقات" أو "مدير التطبيقات"\n3. ابحث عن تطبيق "مخزن الطعام"\n4. اضغط على "الأذونات"\n5. اضغط على "الكاميرا"\n6. اختر "السماح"');
-        } else {
-          console.log('Platform not supported for direct settings access');
-          alert('يرجى فتح إعدادات جهازك يدويًا وتمكين إذن الكاميرا للتطبيق');
-        }
-      } else {
-        console.log('Capacitor not available');
-        alert('يرجى فتح إعدادات متصفحك لتمكين إذن الكاميرا');
-      }
+      await barcodeScannerService.openAppSettings();
     } catch (error) {
-      console.error('Error while trying to open settings:', error);
-      alert('حدث خطأ أثناء محاولة فتح الإعدادات. يرجى فتح إعدادات جهازك يدويًا وتمكين إذن الكاميرا للتطبيق');
+      console.error('Error opening settings:', error);
+      
+      // إظهار تعليمات يدوية للمستخدم
+      const platformText = window.Capacitor?.getPlatform() === 'ios'
+        ? 'افتح إعدادات جهازك، ثم الخصوصية > الكاميرا، وابحث عن تطبيق "مخزن الطعام" وقم بتمكينه'
+        : 'افتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات > الكاميرا وقم بتمكينها';
+      
+      alert('لتمكين الكاميرا يدويًا: ' + platformText);
     }
   };
 
@@ -63,7 +48,9 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
         
         <Alert variant="destructive" className="border-red-200 bg-red-50">
           <AlertDescription>
-            يرجى منح تصريح الوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي. قد تحتاج إلى فتح إعدادات التطبيق يدويًا إذا كنت قد رفضت الإذن سابقًا.
+            يرجى منح تصريح الوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي.
+            <br />
+            <strong>هذا التطبيق بحاجة للكاميرا فقط لمسح الباركود</strong>
           </AlertDescription>
         </Alert>
         
