@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { barcodeScannerService } from '@/services/BarcodeScannerService';
 import { useToast } from '@/hooks/use-toast';
@@ -68,62 +67,77 @@ export const useMLKitScanner = ({ onScan, onClose }: UseMLKitScannerProps) => {
       setIsLoading(true);
       console.log('[useMLKitScanner] محاولة طلب إذن الكاميرا...');
       
-      // محاولة طلب الإذن باستخدام MLKit مباشرة
-      const granted = await barcodeScannerService.requestPermission();
-      console.log('[useMLKitScanner] نتيجة طلب الإذن:', granted);
-      
-      setHasPermission(granted);
-      
-      // عرض رسالة للمستخدم بناءً على نتيجة طلب الإذن
-      if (granted) {
-        console.log('[useMLKitScanner] تم منح الإذن بنجاح');
-        toast({
-          title: "تم منح الإذن",
-          description: "يمكنك الآن استخدام الماسح الضوئي",
-        });
-      } else {
-        console.log('[useMLKitScanner] تم رفض الإذن');
-        // استخدام طرق مختلفة لإظهار الرسالة
-        try {
-          if (window.Capacitor) {
-            await Toast.show({
-              text: 'يرجى تمكين إذن الكاميرا من إعدادات الجهاز',
-              duration: 'long'
-            });
-          } else {
-            toast({
-              title: "تم رفض الإذن",
-              description: "يرجى تمكين إذن الكاميرا في إعدادات جهازك",
-              variant: "destructive"
-            });
+      // محاولة طلب الإذن بشكل مباشر باستخدام MLKit
+      try {
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        const { camera } = await BarcodeScanner.requestPermissions();
+        
+        console.log('[useMLKitScanner] نتيجة طلب الإذن:', camera);
+        const granted = camera === 'granted';
+        
+        setHasPermission(granted);
+        
+        // عرض رسالة للمستخدم بناءً على نتيجة طلب الإذن
+        const { Toast } = await import('@capacitor/toast');
+        
+        if (granted) {
+          console.log('[useMLKitScanner] تم منح الإذن بنجاح');
+          await Toast.show({
+            text: "تم منح الإذن. يمكنك الآن استخدام الماسح الضوئي",
+            duration: "short"
+          });
+        } else {
+          console.log('[useMLKitScanner] تم رفض الإذن');
+          await Toast.show({
+            text: "تم رفض إذن الكاميرا. يرجى تمكينه من إعدادات الجهاز",
+            duration: "long"
+          });
+          
+          // محاولة فتح إعدادات التطبيق
+          try {
+            if (window.Capacitor?.getPlatform() === 'android') {
+              const openSettings = window.confirm('هل تريد فتح إعدادات التطبيق لتمكين الكاميرا؟');
+              if (openSettings) {
+                await barcodeScannerService.openAppSettings();
+              }
+            }
+          } catch (e) {
+            console.error('[useMLKitScanner] خطأ في فتح الإعدادات:', e);
           }
-        } catch (e) {
-          console.error('[useMLKitScanner] خطأ في عرض الرسالة للمستخدم:', e);
         }
         
-        // محاولة فتح إعدادات التطبيق
-        try {
-          if (window.Capacitor?.getPlatform() === 'android') {
-            const openSettings = window.confirm('هل تريد فتح إعدادات التطبيق لتمكين الكاميرا؟');
-            if (openSettings) {
-              await barcodeScannerService.openAppSettings();
-            }
-          }
-        } catch (e) {
-          console.error('[useMLKitScanner] خطأ في فتح الإعدادات:', e);
+        return granted;
+      } catch (error) {
+        console.error('[useMLKitScanner] خطأ في استخدام BarcodeScanner:', error);
+        
+        // محاولة بديلة باستخدام barcodeScannerService
+        const granted = await barcodeScannerService.requestPermission();
+        setHasPermission(granted);
+        
+        if (!granted) {
+          const { Toast } = await import('@capacitor/toast');
+          await Toast.show({
+            text: "تعذر الوصول للكاميرا. يرجى تمكين الإذن من إعدادات التطبيق",
+            duration: "long"
+          });
         }
+        
+        return granted;
       }
-      
-      return granted;
     } catch (error) {
       console.error('[useMLKitScanner] خطأ في طلب الإذن:', error);
       setHasPermission(false);
       
-      toast({
-        title: "خطأ في طلب الإذن",
-        description: "حدث خطأ أثناء محاولة طلب إذن الكاميرا",
-        variant: "destructive"
-      });
+      // رسالة خطأ للمستخدم في حال فشل كل المحاولات
+      try {
+        const { Toast } = await import('@capacitor/toast');
+        await Toast.show({
+          text: "حدث خ��أ أثناء محاولة طلب إذن الكاميرا",
+          duration: "long"
+        });
+      } catch (e) {
+        alert("حدث خطأ أثناء محاولة طلب إذن الكاميرا");
+      }
       
       return false;
     } finally {

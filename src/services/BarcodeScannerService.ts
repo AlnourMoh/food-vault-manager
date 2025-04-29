@@ -1,4 +1,3 @@
-
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
@@ -26,18 +25,39 @@ export class BarcodeScannerService {
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[BarcodeScannerService] فتح الإعدادات باستخدام MLKit...');
+        
+        // استخدام مكتبة BarcodeScanner لفتح إعدادات التطبيق
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         await BarcodeScanner.openSettings();
         return;
       }
       
-      // الطريقة البديلة هي إغلاق التطبيق لإظهار الرسالة عند إعادة فتحه (لنظام iOS)
+      // الطريقة البديلة لفتح الإعدادات على نظام Android
+      if (window.Capacitor?.getPlatform() === 'android') {
+        console.log('[BarcodeScannerService] محاولة فتح إعدادات Android...');
+        
+        try {
+          // استخدام App لفتح الإعدادات على Android
+          const { App } = await import('@capacitor/app');
+          await App.openUrl({
+            url: 'package:' + window.Capacitor.getPlatform() === 'android' ? 'app.lovable.foodvault.manager' : 'appflavor'
+          });
+          return;
+        } catch (e) {
+          console.error('[BarcodeScannerService] خطأ في فتح إعدادات Android:', e);
+        }
+      }
+      
+      // الطريقة البديلة لنظام iOS هي إغلاق التطبيق لإظهار الرسالة عند إعادة فتحه
       if (window.Capacitor?.getPlatform() === 'ios') {
         console.log('[BarcodeScannerService] استخدام طريقة الخروج لـ iOS...');
+        const { App } = await import('@capacitor/app');
         await App.exitApp();
         return;
       }
       
       console.warn('[BarcodeScannerService] لا يمكن فتح الإعدادات تلقائيًا');
+      const { Toast } = await import('@capacitor/toast');
       await Toast.show({
         text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
         duration: 'long'
@@ -45,12 +65,14 @@ export class BarcodeScannerService {
     } catch (error) {
       console.error('[BarcodeScannerService] خطأ في فتح الإعدادات:', error);
       try {
+        const { Toast } = await import('@capacitor/toast');
         await Toast.show({
           text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
           duration: 'long'
         });
       } catch (e) {
         console.error('[BarcodeScannerService] خطأ في عرض الرسالة:', e);
+        alert('يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا');
       }
     }
   }

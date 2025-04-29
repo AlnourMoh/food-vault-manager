@@ -35,7 +35,7 @@ const config: CapacitorConfig = {
       keys: {},
       formats: ["QR_CODE", "UPC_E", "UPC_A", "EAN_8", "EAN_13", "CODE_39", "CODE_93", "CODE_128", "ITF", "CODABAR"],
       scanMode: "CONTINUOUS",
-      detectorSize: 0.5
+      detectorSize: 0.5,
     }
   },
   android: {

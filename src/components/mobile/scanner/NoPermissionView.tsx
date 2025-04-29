@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, Keyboard, Settings } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { App } from '@capacitor/app';
+import { Toast } from '@capacitor/toast';
 import { barcodeScannerService } from '@/services/BarcodeScannerService';
 
 interface NoPermissionViewProps {
@@ -14,16 +14,37 @@ interface NoPermissionViewProps {
 }
 
 export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }: NoPermissionViewProps) => {
-  const handleRequestPermission = () => {
-    console.log('Request permission button clicked in NoPermissionView - triggering permission request');
-    if (onRequestPermission) {
-      onRequestPermission();
+  const handleRequestPermission = async () => {
+    console.log('Request permission button clicked - triggering permission request');
+    try {
+      // عرض رسالة توضح للمستخدم أنك تحاول طلب الإذن
+      await Toast.show({
+        text: 'جاري محاولة طلب إذن الكاميرا...',
+        duration: 'short'
+      });
+
+      // استدعاء وظيفة طلب الإذن
+      if (onRequestPermission) {
+        onRequestPermission();
+      }
+    } catch (error) {
+      console.error('Error showing toast or requesting permission:', error);
+      
+      // رسالة تأكيد بسيطة في حالة فشل Toast
+      alert('جاري محاولة طلب إذن الكاميرا...');
     }
   };
 
   const openAppSettings = async () => {
     console.log('Opening app settings for camera permission');
     try {
+      // عرض رسالة توضح للمستخدم أنك تحاول فتح الإعدادات
+      await Toast.show({
+        text: 'جاري فتح إعدادات التطبيق...',
+        duration: 'short'
+      });
+      
+      // محاولة فتح إعدادات التطبيق
       await barcodeScannerService.openAppSettings();
     } catch (error) {
       console.error('Error opening settings:', error);
