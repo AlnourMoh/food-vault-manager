@@ -4,12 +4,12 @@ apply plugin: 'kotlin-android'
 
 android {
     namespace "app.lovable.foodvault.manager"
-    compileSdkVersion 34
+    compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
         applicationId "app.lovable.foodvault.manager"
-        minSdkVersion 21
-        targetSdkVersion 34
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -38,33 +38,37 @@ android {
 }
 
 repositories {
-    maven {
-        url '../../node_modules/@capacitor/android/capacitor/build/outputs/aar'
-    }
-    maven {
-        url '../capacitor-cordova-android-plugins/src/main/libs'
-    }
-    maven {
-        url 'libs'
-    }
     google()
     mavenCentral()
+    maven {
+        url "https://plugins.gradle.org/m2/"
+    }
+    // Correctly structured repositories
+    flatDir {
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
-    implementation "androidx.core:core-splashscreen:1.0.1"
-    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.appcompat:appcompat:${rootProject.ext.androidxAppCompatVersion}"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:${rootProject.ext.androidxCoordinatorLayoutVersion}"
+    implementation "androidx.core:core-splashscreen:${rootProject.ext.coreSplashScreenVersion}"
+    implementation "androidx.core:core-ktx:${rootProject.ext.androidxCoreVersion}"
     implementation project(':capacitor-android')
+    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+    
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 
-    testImplementation "junit:junit:4.13.2"
-    androidTestImplementation "androidx.test.ext:junit:1.1.5"
+    // Capacitor plugins
+    implementation project(':capacitor-app')
+    implementation project(':capacitor-camera')
+    implementation project(':capacitor-mlkit-barcode-scanning')
+    implementation project(':capacitor-toast')
 }
 
-apply from: 'capacitor_build.gradle'
+apply from: 'capacitor.build.gradle'
 
 afterEvaluate {
     def servicesJSON = file('google-services.json')
@@ -72,14 +76,5 @@ afterEvaluate {
         apply plugin: 'com.google.gms.google-services'
     } else {
         logger.info("google-services.json not found, google-services plugin not applied.")
-    }
-}
-
-configurations.all {
-    resolutionStrategy {
-        force 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
-        force 'androidx.appcompat:appcompat:1.6.1'
-        force 'androidx.core:core-ktx:1.12.0'
-        force 'androidx.fragment:fragment:1.6.1'
     }
 }
