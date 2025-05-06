@@ -2,6 +2,7 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { barcodeScannerService } from '@/services/scanner/BarcodeScannerService';
 
 export const useScanOperations = () => {
   const { toast } = useToast();
@@ -36,18 +37,14 @@ export const useScanOperations = () => {
         }
       }
       
-      // بدء المسح باستخدام MLKit
-      console.log("[useScanOperations] بدء المسح باستخدام MLKit");
-      const result = await BarcodeScanner.scan(getScanOptions());
+      // بدء المسح باستخدام الخدمة الجديدة
+      let scannedCode: string | null = null;
       
-      if (result.barcodes && result.barcodes.length > 0) {
-        const barcode = result.barcodes[0];
-        console.log("[useScanOperations] تم العثور على محتوى:", barcode.rawValue);
-        return barcode.rawValue;
-      }
+      await barcodeScannerService.startScan((code) => {
+        scannedCode = code;
+      });
       
-      console.log("[useScanOperations] لم يتم العثور على محتوى");
-      return null;
+      return scannedCode;
     } catch (error) {
       console.error("[useScanOperations] فشل المسح البسيط:", error);
       // إظهار رسالة للمستخدم عن الخطأ
