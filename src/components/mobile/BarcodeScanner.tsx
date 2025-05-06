@@ -3,7 +3,10 @@ import React, { useEffect, useRef } from 'react';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { App } from '@capacitor/app';
 import { Toast } from '@capacitor/toast';
+import { useCameraPermissions } from '@/hooks/useCameraPermissions';
 import { useMLKitScanner } from '@/hooks/scanner/providers/useMLKitScanner';
+import { useScannerUI } from '@/hooks/scanner/useScannerUI';
+import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -15,28 +18,96 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const isActive = useRef(false);
   const scanAttempted = useRef(false);
   
-  // استخدام MLKit للماسح الضوئي
-  const {
-    isLoading,
-    hasPermission,
-    isScanningActive,
-    lastScannedCode,
-    isManualEntry,
-    hasScannerError,
-    startScan,
-    stopScan,
-    requestPermission,
-    handleManualEntry,
-    handleManualCancel,
-    handleRetry
-  } = useMLKitScanner({ 
-    onScan: (code) => {
-      console.log('[BarcodeScanner] تم المسح بنجاح:', code);
-      scanAttempted.current = true;
-      onScan(code);
-    }, 
-    onClose 
-  });
+  // استخدام hooks اللازمة
+  const { isLoading, hasPermission, requestPermission } = useCameraPermissions();
+  const { startMLKitScan, isScanning } = useMLKitScanner();
+  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
+  const { 
+    startMockScan, 
+    isMockScanActive, 
+    handleManualInput, 
+    cancelMockScan 
+  } = useMockScanner();
+  
+  // حالة المكون الداخلية
+  const [isScanningActive, setIsScanningActive] = React.useState(false);
+  const [lastScannedCode, setLastScannedCode] = React.useState<string | null>(null);
+  const [isManualEntry, setIsManualEntry] = React.useState(false);
+  const [hasScannerError, setHasScannerError] = React.useState(false);
+
+  // وظائف المسح
+  const startScan = async () => {
+    try {
+      console.log('[BarcodeScanner] بدء المسح...');
+      
+      if (isScanningActive) {
+        console.log('[BarcodeScanner] المسح نشط بالفعل');
+        return true;
+      }
+      
+      // التحقق من الأذونات وطلبها إذا لزم الأمر
+      if (hasPermission === false) {
+        const granted = await requestPermission();
+        if (!granted) {
+          console.log('[BarcodeScanner] لم يتم منح إذن الكاميرا');
+          return false;
+        }
+      }
+      
+      // إعداد الواجهة للمسح
+      await setupScannerBackground();
+      setIsScanningActive(true);
+      
+      // بدء المسح
+      const success = await startMLKitScan((code) => {
+        console.log('[BarcodeScanner] تم المسح بنجاح:', code);
+        scanAttempted.current = true;
+        setLastScannedCode(code);
+        onScan(code);
+      });
+      
+      if (!success) {
+        console.log('[BarcodeScanner] فشل المسح');
+        stopScan();
+        setHasScannerError(true);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('[BarcodeScanner] خطأ في بدء المسح:', error);
+      stopScan();
+      setHasScannerError(true);
+      return false;
+    }
+  };
+
+  const stopScan = async () => {
+    try {
+      console.log('[BarcodeScanner] إيقاف المسح...');
+      setIsScanningActive(false);
+      await cleanupScannerBackground();
+      return true;
+    } catch (error) {
+      console.error('[BarcodeScanner] خطأ في إيقاف المسح:', error);
+      return false;
+    }
+  };
+
+  const handleManualEntry = () => {
+    setIsManualEntry(true);
+    stopScan();
+    startMockScan(onScan);
+  };
+
+  const handleManualCancel = () => {
+    setIsManualEntry(false);
+    cancelMockScan();
+  };
+
+  const handleRetry = () => {
+    setHasScannerError(false);
+    startScan();
+  };
 
   // تهيئة وتنظيف المكون
   useEffect(() => {
@@ -111,7 +182,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         console.error('[BarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e)
       );
     };
-  }, [hasPermission, requestPermission, startScan, stopScan]);
+  }, [hasPermission, requestPermission]);
 
   return (
     <div 

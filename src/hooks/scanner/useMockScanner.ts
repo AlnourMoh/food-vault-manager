@@ -1,72 +1,58 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-interface UseMockScannerResult {
-  startMockScan: (onSuccess: (code: string) => void) => void;
-  isMockScanActive: boolean;
-  handleManualInput: (code: string) => void;
-  cancelMockScan: () => void;
-}
-
-export const useMockScanner = (): UseMockScannerResult => {
-  const { toast } = useToast();
+/**
+ * Hook لإدارة عملية المسح الوهمية للإدخال اليدوي
+ */
+export const useMockScanner = () => {
   const [isMockScanActive, setIsMockScanActive] = useState(false);
-  const [currentCallback, setCurrentCallback] = useState<((code: string) => void) | null>(null);
+  const { toast } = useToast();
+  const [onSuccessCallback, setOnSuccessCallback] = useState<((code: string) => void) | null>(null);
 
-  const startMockScan = (onSuccess: (code: string) => void) => {
-    console.log("[useMockScanner] بدء وضع المحاكاة");
+  /**
+   * بدء عملية المسح الوهمية
+   */
+  const startMockScan = useCallback((onSuccess: (code: string) => void) => {
+    console.log('[useMockScanner] بدء المسح الوهمي');
     setIsMockScanActive(true);
-    setCurrentCallback(() => onSuccess);
-    
-    toast({
-      title: "وضع المحاكاة",
-      description: "يتم استخدام محاكاة للماسح الضوئي، يمكنك إدخال الرمز يدويًا",
-      variant: "default"
-    });
-  };
+    setOnSuccessCallback(() => onSuccess);
+  }, []);
 
-  const handleManualInput = (code: string) => {
-    if (!code || code.trim() === "") {
-      console.log("[useMockScanner] تم إدخال رمز فارغ");
+  /**
+   * معالجة الإدخال اليدوي للكود
+   */
+  const handleManualInput = useCallback((code: string) => {
+    console.log('[useMockScanner] تم إدخال الكود يدوياً:', code);
+    
+    if (!code || !code.trim()) {
       toast({
-        title: "خطأ في الإدخال",
-        description: "الرجاء إدخال رمز صحيح",
+        title: "الكود غير صالح",
+        description: "يرجى إدخال كود صالح",
         variant: "destructive"
       });
       return;
     }
-
-    try {
-      const processedCode = code.trim();
-      console.log("[useMockScanner] تم إدخال الرمز يدويًا:", processedCode);
-      
-      if (currentCallback) {
-        currentCallback(processedCode);
-      }
-      
+    
+    if (onSuccessCallback) {
+      onSuccessCallback(code.trim());
       setIsMockScanActive(false);
-      setCurrentCallback(null);
-      
-    } catch (error) {
-      console.error("[useMockScanner] خطأ في معالجة الرمز المدخل:", error);
-      toast({
-        title: "خطأ في المعالجة",
-        description: "حدث خطأ أثناء معالجة الرمز المدخل",
-        variant: "destructive"
-      });
+      setOnSuccessCallback(null);
     }
-  };
+  }, [toast, onSuccessCallback]);
 
-  const cancelMockScan = () => {
-    console.log("[useMockScanner] تم إلغاء المسح المحاكى");
+  /**
+   * إلغاء عملية المسح الوهمية
+   */
+  const cancelMockScan = useCallback(() => {
+    console.log('[useMockScanner] إلغاء المسح الوهمي');
     setIsMockScanActive(false);
-    setCurrentCallback(null);
-  };
+    setOnSuccessCallback(null);
+  }, []);
 
   return {
-    startMockScan,
     isMockScanActive,
+    startMockScan,
     handleManualInput,
     cancelMockScan
   };
