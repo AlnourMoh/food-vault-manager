@@ -37,21 +37,20 @@ export class BarcodeScannerService {
         console.log('[BarcodeScannerService] محاولة فتح إعدادات Android...');
         
         try {
-          // استخدام App لفتح الإعدادات على Android
-          const { App } = await import('@capacitor/app');
-          await App.openUrl({
-            url: 'package:' + window.Capacitor.getPlatform() === 'android' ? 'app.lovable.foodvault.manager' : 'appflavor'
-          });
+          // استخدام App لفتح إعدادات التطبيق على Android
+          const appId = 'app.lovable.foodvault.manager';
+          const settingsUrl = `package:${appId}`;
+          await App.canOpenUrl({ url: settingsUrl }); // Check if URL can be opened
+          await App.openUrl({ url: settingsUrl });
           return;
         } catch (e) {
           console.error('[BarcodeScannerService] خطأ في فتح إعدادات Android:', e);
         }
       }
       
-      // الطريقة البديلة لنظام iOS هي إغلاق التطبيق لإظهار الرسالة عند إعادة فتحه
+      // الطريقة البديلة لنظام iOS
       if (window.Capacitor?.getPlatform() === 'ios') {
         console.log('[BarcodeScannerService] استخدام طريقة الخروج لـ iOS...');
-        const { App } = await import('@capacitor/app');
         await App.exitApp();
         return;
       }
@@ -89,7 +88,7 @@ export class BarcodeScannerService {
       const result = await BarcodeScanner.isSupported();
       return result.supported;
     } catch (error) {
-      console.error('[BarcodeScannerService] خطأ في التحقق من دعم الماسح:', error);
+      console.error('[BarcodeScannerService] خطأ في التحقق من دعم ال��اسح:', error);
       return false;
     }
   }
