@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, Keyboard, Settings } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Toast } from '@capacitor/toast';
-import { barcodeScannerService } from '@/services/BarcodeScannerService';
+import { barcodeScannerService } from '@/services/scanner/BarcodeScannerService';
 
 interface NoPermissionViewProps {
   onClose: () => void;
