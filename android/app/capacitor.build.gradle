@@ -16,7 +16,7 @@ dependencies {
     implementation project(':capacitor-mlkit-barcode-scanning')
     implementation project(':capacitor-toast')
 
-    // Fix compatibility issues
+    // تصحيح مشاكل التوافق
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
     implementation 'androidx.core:core-ktx:1.12.0'

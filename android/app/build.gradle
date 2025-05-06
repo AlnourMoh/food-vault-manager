@@ -47,7 +47,7 @@ repositories {
     maven {
         url "https://plugins.gradle.org/m2/"
     }
-    // Correctly structured repositories
+    // تصحيح بنية المستودعات
     flatDir {
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
@@ -65,7 +65,7 @@ dependencies {
     
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 
-    // Capacitor plugins
+    // مكتبات Capacitor
     implementation project(':capacitor-app')
     implementation project(':capacitor-camera')
     implementation project(':capacitor-mlkit-barcode-scanning')
