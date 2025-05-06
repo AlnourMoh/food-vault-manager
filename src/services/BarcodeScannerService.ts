@@ -37,11 +37,22 @@ export class BarcodeScannerService {
         console.log('[BarcodeScannerService] محاولة فتح إعدادات Android...');
         
         try {
-          // استخدام App لفتح إعدادات التطبيق على Android
+          // استخدام intent مباشر لفتح إعدادات التطبيق
           const appId = 'app.lovable.foodvault.manager';
-          const settingsUrl = `package:${appId}`;
-          await App.canOpenUrl({ url: settingsUrl }); // Check if URL can be opened
-          await App.openUrl({ url: settingsUrl });
+          
+          // في Capacitor, نحتاج إلى فتح URL خاص لإعدادات التطبيق
+          // ولكن App.openUrl و App.canOpenUrl غير متاح، لذا نستخدم Capacitor Browser إذا كان متاحًا
+          if (window.Capacitor?.isPluginAvailable('Browser')) {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ url: `package:${appId}` });
+          } else {
+            // إذا لم يكن Browser متاحًا، نستخدم طريقة exitApp ثم نعرض رسالة للمستخدم
+            await Toast.show({
+              text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا للتطبيق يدويًا',
+              duration: 'long'
+            });
+            setTimeout(() => App.exitApp(), 3000);
+          }
           return;
         } catch (e) {
           console.error('[BarcodeScannerService] خطأ في فتح إعدادات Android:', e);
@@ -51,12 +62,15 @@ export class BarcodeScannerService {
       // الطريقة البديلة لنظام iOS
       if (window.Capacitor?.getPlatform() === 'ios') {
         console.log('[BarcodeScannerService] استخدام طريقة الخروج لـ iOS...');
-        await App.exitApp();
+        await Toast.show({
+          text: 'سيتم إغلاق التطبيق، يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا ثم إعادة فتح التطبيق',
+          duration: 'long'
+        });
+        setTimeout(() => App.exitApp(), 3000);
         return;
       }
       
       console.warn('[BarcodeScannerService] لا يمكن فتح الإعدادات تلقائيًا');
-      const { Toast } = await import('@capacitor/toast');
       await Toast.show({
         text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
         duration: 'long'
@@ -64,7 +78,6 @@ export class BarcodeScannerService {
     } catch (error) {
       console.error('[BarcodeScannerService] خطأ في فتح الإعدادات:', error);
       try {
-        const { Toast } = await import('@capacitor/toast');
         await Toast.show({
           text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
           duration: 'long'
@@ -143,6 +156,11 @@ export class BarcodeScannerService {
     const isSupported = await this.isSupported();
     if (!isSupported) {
       console.log('[BarcodeScannerService] الماسح غير مدعوم على هذا الجهاز');
+      // عرض رسالة للمستخدم أن الجهاز لا يدعم ماسح الباركود
+      await Toast.show({
+        text: 'هذا الجهاز لا يدعم ماسح الباركود',
+        duration: 'long'
+      });
       return false;
     }
     
@@ -150,17 +168,33 @@ export class BarcodeScannerService {
     const hasPermission = await this.checkPermission();
     if (!hasPermission) {
       console.log('[BarcodeScannerService] لا يوجد إذن للكاميرا، محاولة طلبه...');
+      
+      // عرض رسالة توضيحية قبل طلب الإذن
+      await Toast.show({
+        text: 'التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود',
+        duration: 'short'
+      });
+      
+      // طلب الإذن بعد ظهور الرسالة
       const permissionGranted = await this.requestPermission();
       if (!permissionGranted) {
         console.log('[BarcodeScannerService] تم رفض إذن الكاميرا');
+        
+        // عرض رسالة للمستخدم بعد رفض الإذن
+        await Toast.show({
+          text: 'تم رفض إذن الكاميرا. لا يمكن استخدام الماسح الضوئي بدون هذا الإذن.',
+          duration: 'long'
+        });
         return false;
       }
     }
     
-    // تهيئة المسح - محاولة تنشيط الكاميرا باستخدام الفلاش
+    // محاولة تهيئة الكاميرا باستخدام مصباح الفلاش
     try {
+      console.log('[BarcodeScannerService] تهيئة الكاميرا...');
       const torchResult = await BarcodeScanner.isTorchAvailable();
       if (torchResult.available) {
+        // تشغيل وإيقاف الفلاش سريعاً لتنشيط الكاميرا
         await BarcodeScanner.enableTorch();
         setTimeout(async () => {
           try {
@@ -168,6 +202,12 @@ export class BarcodeScannerService {
           } catch (e) {}
         }, 300);
       }
+      
+      // إخبار المستخدم أن الماسح جاهز
+      await Toast.show({
+        text: 'الماسح الضوئي جاهز للاستخدام',
+        duration: 'short'
+      });
     } catch (e) {
       console.log('[BarcodeScannerService] خطأ في التحقق من توفر الفلاش:', e);
     }
@@ -176,7 +216,7 @@ export class BarcodeScannerService {
   }
   
   /**
-   * بدء عملية المسح
+   * بدء عملية المسح - تحسين مع المزيد من المحاولات
    */
   public async startScan(onSuccess: (code: string) => void): Promise<boolean> {
     try {
@@ -185,6 +225,12 @@ export class BarcodeScannerService {
         return true;
       }
       
+      // عرض رسالة أن المسح سيبدأ
+      await Toast.show({
+        text: 'جاري تشغيل الماسح الضوئي... وجه الكاميرا إلى الباركود',
+        duration: 'short'
+      });
+      
       // التأكد من جاهزية الماسح
       const isReady = await this.prepareScanner();
       if (!isReady) {
@@ -192,36 +238,80 @@ export class BarcodeScannerService {
         return false;
       }
       
-      console.log('[BarcodeScannerService] بدء عملية المسح...');
-      
       // تعيين حالة المسح إلى نشط
       this.isScanning = true;
       
-      // إعداد الواجهة للمسح (الشفافية والتنسيق)
+      // إعداد الواجهة للمسح
       this.setupUIForScanning();
       
-      // بدء المسح الفعلي
-      const result = await BarcodeScanner.scan();
-      
-      // معالجة النتيجة
-      if (result.barcodes && result.barcodes.length > 0) {
-        const code = result.barcodes[0].rawValue;
-        console.log('[BarcodeScannerService] تم العثور على باركود:', code);
-        
-        // تنظيف الواجهة وإيقاف المسح
-        await this.stopScan();
-        
-        // استدعاء دالة النجاح مع الرمز
-        onSuccess(code);
-        return true;
-      } else {
-        console.log('[BarcodeScannerService] لم يتم العثور على باركود');
-        await this.stopScan();
-        return false;
+      // بدء المسح الفعلي مع محاولات متعددة
+      const MAX_RETRIES = 3;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          console.log(`[BarcodeScannerService] محاولة المسح ${attempt}/${MAX_RETRIES}...`);
+          
+          // بدء المسح مباشرة
+          const result = await BarcodeScanner.scan({
+            formats: ["QR_CODE", "UPC_E", "UPC_A", "EAN_8", "EAN_13", "CODE_39", "CODE_93", "CODE_128", "ITF", "CODABAR"]
+          });
+          
+          // معالجة النتيجة
+          if (result.barcodes && result.barcodes.length > 0) {
+            const code = result.barcodes[0].rawValue || '';
+            console.log(`[BarcodeScannerService] تم العثور على باركود: ${code}`);
+            
+            // تنظيف الواجهة وإيقاف المسح
+            await this.stopScan();
+            
+            // استدعاء دالة النجاح مع الرمز
+            onSuccess(code);
+            return true;
+          } else {
+            console.log('[BarcodeScannerService] لم يتم العثور على باركود في هذه المحاولة');
+            
+            // إذا كانت هذه المحاولة الأخيرة، نتوقف
+            if (attempt === MAX_RETRIES) {
+              console.log('[BarcodeScannerService] استنفذت جميع المحاولات');
+              break;
+            }
+            
+            // إلا نستمر في المحاولة التالية
+            await new Promise(resolve => setTimeout(resolve, 500)); // انتظار نصف ثانية قبل المحاولة التالية
+          }
+        } catch (error) {
+          console.error(`[BarcodeScannerService] خطأ في محاولة المسح ${attempt}:`, error);
+          
+          // إذا كانت هذه المحاولة الأخيرة، نتوقف
+          if (attempt === MAX_RETRIES) {
+            console.log('[BarcodeScannerService] استنفذت جميع المحاولات');
+            break;
+          }
+          
+          // إلا نستمر في المحاولة التالية بعد انتظار قصير
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
+      
+      // إذا وصلنا إلى هنا، فهذا يعني أن جميع المحاولات فشلت
+      await this.stopScan();
+      
+      // إظهار رسالة للمستخدم
+      await Toast.show({
+        text: 'لم يتم العثور على باركود. يرجى المحاولة مرة أخرى.',
+        duration: 'long'
+      });
+      
+      return false;
     } catch (error) {
       console.error('[BarcodeScannerService] خطأ في بدء المسح:', error);
       await this.stopScan();
+      
+      // إظهار رسالة خطأ للمستخدم
+      await Toast.show({
+        text: 'حدث خطأ أثناء المسح. يرجى المحاولة مرة أخرى.',
+        duration: 'long'
+      });
+      
       return false;
     }
   }

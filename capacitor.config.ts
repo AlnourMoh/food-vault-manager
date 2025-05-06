@@ -30,12 +30,19 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true
     },
-    // إعدادات ماسح الباركود MLKit مع إضافة خيار التشغيل المعزز
+    // إعدادات ماسح الباركود MLKit مع تحسينات إضافية
     MLKitBarcodeScanning: {
       keys: {},
       formats: ["QR_CODE", "UPC_E", "UPC_A", "EAN_8", "EAN_13", "CODE_39", "CODE_93", "CODE_128", "ITF", "CODABAR"],
       scanMode: "CONTINUOUS",
-      detectorSize: 0.5,
+      detectorSize: 0.7, // زيادة حجم كاشف الباركود
+      cameraFacing: "back",
+      flashButtonVisible: true,
+      timeout: 10000, // وقت انتظار أطول (10 ثواني)
+    },
+    Toast: {
+      style: "center",
+      duration: "short", // الإعداد الافتراضي
     }
   },
   android: {
@@ -53,7 +60,8 @@ const config: CapacitorConfig = {
       "android.permission.CAMERA",
       "android.permission.ACCESS_NETWORK_STATE",
       "android.permission.INTERNET",
-      "android.permission.FLASHLIGHT" // إذن للفلاش
+      "android.permission.FLASHLIGHT", // إذن للفلاش
+      "android.permission.VIBRATE" // إذن للاهتزاز عند المسح
     ]
   },
   ios: {

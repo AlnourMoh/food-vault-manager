@@ -15,30 +15,44 @@ interface NoPermissionViewProps {
 
 export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }: NoPermissionViewProps) => {
   const handleRequestPermission = async () => {
-    console.log('Request permission button clicked - triggering permission request');
+    console.log('تم الضغط على زر طلب الإذن - جاري طلب الإذن');
     try {
-      // عرض رسالة توضح للمستخدم أنك تحاول طلب الإذن
+      // عرض رسالة توضيحية للمستخدم
       await Toast.show({
-        text: 'جاري محاولة طلب إذن الكاميرا...',
+        text: 'جاري طلب إذن الكاميرا...',
         duration: 'short'
       });
 
       // استدعاء وظيفة طلب الإذن
       if (onRequestPermission) {
         onRequestPermission();
+      } else {
+        // في حالة عدم توفر الوظيفة في الـprops، استخدم الخدمة مباشرة
+        const granted = await barcodeScannerService.requestPermission();
+        if (granted) {
+          await Toast.show({
+            text: 'تم منح إذن الكاميرا بنجاح! يمكنك الآن استخدام الماسح الضوئي.',
+            duration: 'short'
+          });
+        } else {
+          await Toast.show({
+            text: 'لم يتم منح إذن الكاميرا. يرجى تمكينه من إعدادات جهازك.',
+            duration: 'long'
+          });
+        }
       }
     } catch (error) {
-      console.error('Error showing toast or requesting permission:', error);
+      console.error('خطأ في عرض رسالة أو طلب الإذن:', error);
       
-      // رسالة تأكيد بسيطة في حالة فشل Toast
+      // محاولة استخدام alert في حالة فشل Toast
       alert('جاري محاولة طلب إذن الكاميرا...');
     }
   };
 
   const openAppSettings = async () => {
-    console.log('Opening app settings for camera permission');
+    console.log('فتح إعدادات التطبيق للوصول لإذن الكاميرا');
     try {
-      // عرض رسالة توضح للمستخدم أنك تحاول فتح الإعدادات
+      // عرض رسالة توضيحية للمستخدم
       await Toast.show({
         text: 'جاري فتح إعدادات التطبيق...',
         duration: 'short'
@@ -47,14 +61,17 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
       // محاولة فتح إعدادات التطبيق
       await barcodeScannerService.openAppSettings();
     } catch (error) {
-      console.error('Error opening settings:', error);
+      console.error('خطأ في فتح الإعدادات:', error);
       
-      // إظهار تعليمات يدوية للمستخدم
+      // إظهار تعليمات يدوية للمستخدم في حالة فشل فتح الإعدادات
       const platformText = window.Capacitor?.getPlatform() === 'ios'
         ? 'افتح إعدادات جهازك، ثم الخصوصية > الكاميرا، وابحث عن تطبيق "مخزن الطعام" وقم بتمكينه'
         : 'افتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات > الكاميرا وقم بتمكينها';
       
-      alert('لتمكين الكاميرا يدويًا: ' + platformText);
+      await Toast.show({
+        text: 'لتمكين الكاميرا يدويًا: ' + platformText,
+        duration: 'long'
+      });
     }
   };
 
@@ -117,3 +134,4 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
     </Card>
   );
 };
+
