@@ -30,13 +30,18 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true
     },
-    // تبسيط إعدادات الماسح لتجنب التضارب
+    // إعدادات محسنة للماسح
     MLKitBarcodeScanning: {
       formats: ["QR_CODE", "EAN_13", "CODE_128"],
-      scanMode: "SINGLE",
-      detectorSize: 0.7,
+      scanMode: "CONTINUOUS",
+      detectorSize: 0.8,
       cameraFacing: "back",
+      lensFacing: "back",
       flashButtonVisible: true,
+      cancelButtonVisible: true,
+      beepOnSuccess: true,
+      vibrateOnSuccess: true,
+      detectionSpeed: "fast",
       timeout: 10000
     },
     Toast: {

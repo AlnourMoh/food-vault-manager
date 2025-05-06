@@ -1,102 +1,94 @@
 
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useScannerUI } from '../useScannerUI';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
 export const useMLKitScanner = () => {
+  const [isScanning, setIsScanning] = useState(false);
   const { toast } = useToast();
   const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
 
   const startMLKitScan = async (onSuccess: (code: string) => void) => {
     try {
-      console.log("[useMLKitScanner] بدء استخدام MLKit فوراً");
+      if (isScanning) {
+        console.log("[useMLKitScanner] المسح نشط بالفعل، تجاهل الطلب");
+        return true;
+      }
+
+      setIsScanning(true);
+      console.log("[useMLKitScanner] بدء استخدام MLKit");
       
-      // إعداد خلفية شفافة للكاميرا - مهم جدا لتفعيل الكاميرا بشكل صحيح
-      await setupScannerBackground();
-      
-      // تحقق من أن MLKit مدعوم
+      // التحقق من دعم MLKit
       const supportResult = await BarcodeScanner.isSupported();
       console.log("[useMLKitScanner] هل الماسح مدعوم:", supportResult.supported);
       
       if (!supportResult.supported) {
-        throw new Error("ماسح الباركود غير مدعوم على هذا الجهاز");
+        setIsScanning(false);
+        toast({
+          title: "غير مدعوم",
+          description: "جهازك لا يدعم ماسح الباركود",
+          variant: "destructive"
+        });
+        return false;
       }
+      
+      // إعداد خلفية شفافة للكاميرا
+      await setupScannerBackground();
       
       // تحقق من أذونات الكاميرا وطلبها إذا لزم الأمر
       const { camera } = await BarcodeScanner.checkPermissions();
       if (camera !== 'granted') {
-        // طلب الإذن بشكل صريح
+        console.log("[useMLKitScanner] طلب إذن الكاميرا");
         const result = await BarcodeScanner.requestPermissions();
-        console.log("[useMLKitScanner] نتيجة طلب الأذونات:", result);
         
         if (result.camera !== 'granted') {
-          throw new Error("لم يتم منح إذن الكاميرا");
+          cleanupScannerBackground();
+          setIsScanning(false);
+          toast({
+            title: "تم رفض الإذن",
+            description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك",
+            variant: "destructive"
+          });
+          return false;
         }
       }
       
-      console.log("[useMLKitScanner] الأذونات متاحة، تهيئة الماسح...");
-
-      // تعزيز الشفافية للصفحة بأكملها
-      document.documentElement.style.background = 'transparent';
-      document.documentElement.style.backgroundColor = 'transparent';
-      document.documentElement.style.setProperty('--background', 'transparent', 'important');
-      document.body.style.background = 'transparent';
-      document.body.style.backgroundColor = 'transparent';
-      document.body.style.setProperty('--background', 'transparent', 'important');
-      
-      // إعداد واجهة المستخدم للشفافية - حيوي لتشغيل الكاميرا
-      document.documentElement.classList.add('transparent-bg');
-      document.body.classList.add('transparent-bg', 'scanner-active');
-
-      try {
-        // اختبار ما إذا كان الجهاز يدعم خاصية الفلاش
-        const torchResult = await BarcodeScanner.isTorchAvailable();
-        console.log("[useMLKitScanner] هل يدعم الفلاش:", torchResult.available);
-
-        // محاولة تفعيل وإيقاف الفلاش لمساعدة تنشيط الكاميرا
-        if (torchResult.available) {
-          console.log("[useMLKitScanner] تفعيل الفلاش لتنشيط الكاميرا...");
-          await BarcodeScanner.enableTorch();
-          setTimeout(async () => {
-            try {
-              await BarcodeScanner.disableTorch();
-            } catch (e) {}
-          }, 300);
-        }
-      } catch (e) {
-        console.log("[useMLKitScanner] خطأ في إعداد الفلاش، نتابع:", e);
-      }
-      
-      console.log("[useMLKitScanner] بدء المسح...");
-      
-      // تأخير قصير قبل بدء المسح للسماح بتهيئة الكاميرا
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // بدء المسح باستخدام واجهة البرمجة
+      // بدء المسح
+      console.log("[useMLKitScanner] بدء عملية المسح...");
       const result = await BarcodeScanner.scan({
-        formats: undefined // مسح جميع أنواع الباركود
+        formats: [
+          BarcodeFormat.QrCode,
+          BarcodeFormat.Ean13,
+          BarcodeFormat.Code128
+        ]
       });
       
-      console.log("[useMLKitScanner] نتيجة المسح:", result);
+      // تنظيف بعد المسح
+      cleanupScannerBackground();
+      setIsScanning(false);
       
-      // معالجة النتيجة إذا تم العثور على باركود
+      // معالجة النتيجة
       if (result.barcodes && result.barcodes.length > 0) {
         console.log("[useMLKitScanner] تم العثور على باركود:", result.barcodes[0].rawValue);
-        cleanupScannerBackground();
-        onSuccess(result.barcodes[0].rawValue);
+        onSuccess(result.barcodes[0].rawValue || '');
         return true;
       }
       
       console.log("[useMLKitScanner] لم يتم العثور على باركود");
-      cleanupScannerBackground();
       return false;
-      
     } catch (error) {
       console.error("[useMLKitScanner] خطأ في عملية المسح:", error);
       cleanupScannerBackground();
-      throw error;
+      setIsScanning(false);
+      toast({
+        title: "خطأ في المسح",
+        description: "حدث خطأ أثناء محاولة مسح الباركود",
+        variant: "destructive"
+      });
+      return false;
     }
   };
 
-  return { startMLKitScan };
+  return { startMLKitScan, isScanning };
 };

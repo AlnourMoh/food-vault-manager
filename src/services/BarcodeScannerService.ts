@@ -1,3 +1,4 @@
+
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
@@ -205,13 +206,13 @@ export class BarcodeScannerService {
       this.setupUIForScanning();
       
       // بدء المسح الفعلي مع محاولات متعددة
-      const MAX_RETRIES = 2;  // تقليل عدد المحاولات لتجنب الضغط على الذاكرة
+      const MAX_RETRIES = 2;
       
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
           console.log(`[BarcodeScannerService] محاولة المسح ${attempt}/${MAX_RETRIES}...`);
           
-          // استخدام قيم enum بدلاً من السلاسل النصية
+          // استخدام قيم enum للتنسيقات
           const result = await BarcodeScanner.scan({
             formats: [
               BarcodeFormat.QrCode,
