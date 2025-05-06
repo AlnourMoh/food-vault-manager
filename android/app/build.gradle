@@ -13,6 +13,9 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // تحسين الاستقرار في حالة الذاكرة المنخفضة
+        multiDexEnabled true
     }
 
     aaptOptions {
@@ -39,6 +42,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    
+    // إضافة دعم للتطبيقات متعددة الحزم
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0', 'META-INF/*.kotlin_module']
+        }
+    }
 }
 
 repositories {
@@ -62,6 +72,9 @@ dependencies {
     implementation project(':capacitor-android')
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+    
+    // تحسين التعامل مع الذاكرة وحل مشاكل التطبيقات الكبيرة
+    implementation 'androidx.multidex:multidex:2.0.1'
     
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 

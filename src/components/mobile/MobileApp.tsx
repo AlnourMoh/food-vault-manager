@@ -39,27 +39,43 @@ const MobileApp = () => {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [lastNetworkEvent, setLastNetworkEvent] = useState<Date | null>(null);
 
-  // Function to check connection status more comprehensively
+  // Function to check connection status more comprehensively - with added error handling
   const checkConnection = async () => {
     try {
-      // Changing this to use Capacitor Network API for more reliable results
+      // ادخال معالجة أخطاء أفضل للتحقق من الاتصال
+      console.log('Checking connection...');
+      
       if (window.Capacitor) {
-        const networkStatus = await Network.getStatus();
-        console.log('Network status from Capacitor:', networkStatus);
-        
-        if (!networkStatus.connected) {
-          setNetworkError({
-            show: true,
-            errorCode: "net::ERR_INTERNET_DISCONNECTED",
-            additionalInfo: "لا يوجد اتصال بالإنترنت - تم اكتشافه بواسطة Capacitor Network"
-          });
-          return;
+        try {
+          const networkStatus = await Network.getStatus();
+          console.log('Network status from Capacitor:', networkStatus);
+          
+          if (!networkStatus.connected) {
+            setNetworkError({
+              show: true,
+              errorCode: "net::ERR_INTERNET_DISCONNECTED",
+              additionalInfo: "لا يوجد اتصال بالإنترنت - تم اكتشافه بواسطة Capacitor Network"
+            });
+            return;
+          }
+        } catch (networkError) {
+          console.error("Error checking network via Capacitor:", networkError);
+          // استمر بالمحاولة عبر طرق أخرى
         }
       }
       
-      // If online according to Capacitor, check server connection
-      if (isOnline) {
-        await checkServerConnection();
+      // If online according to any method, check server connection
+      if (navigator.onLine) {
+        try {
+          await checkServerConnection();
+        } catch (serverError) {
+          console.error("Error checking server connection:", serverError);
+          setNetworkError({
+            show: true,
+            errorCode: "net::ERR_SERVER_UNREACHABLE",
+            additionalInfo: "تعذر الاتصال بالخادم"
+          });
+        }
       } else {
         setNetworkError({
           show: true,
@@ -68,7 +84,7 @@ const MobileApp = () => {
         });
       }
     } catch (error) {
-      console.error("Error checking connection:", error);
+      console.error("Error in checkConnection:", error);
       setNetworkError({
         show: true,
         errorCode: "net::ERR_CONNECTION_CHECK_FAILED",
@@ -77,160 +93,213 @@ const MobileApp = () => {
     }
   };
 
-  // Use effect to monitor changes in online status
+  // استخدام useEffect لمراقبة التغييرات في حالة الاتصال مع تحسين معالجة الأخطاء
   useEffect(() => {
     const setupNetworkListeners = async () => {
-      if (window.Capacitor) {
-        // Use Capacitor's Network API for more reliable network status
-        await Network.addListener('networkStatusChange', status => {
-          console.log('Network status changed:', status);
-          setLastNetworkEvent(new Date());
-          
-          if (status.connected) {
-            toast({
-              title: "تم استعادة الاتصال",
-              description: "جاري التحقق من الاتصال بالخادم...",
+      try {
+        console.log("Setting up network listeners");
+        
+        if (window.Capacitor) {
+          try {
+            // استخدام أسلوب أكثر أمانًا للتسجيل على أحداث الشبكة
+            await Network.addListener('networkStatusChange', status => {
+              console.log('Network status changed:', status);
+              setLastNetworkEvent(new Date());
+              
+              if (status.connected) {
+                toast({
+                  title: "تم استعادة الاتصال",
+                  description: "جاري التحقق من الاتصال بالخادم...",
+                });
+                
+                // تأخير صغير للسماح للشبكة بالاستقرار
+                setTimeout(() => {
+                  checkConnection();
+                }, 1500);
+              } else {
+                setNetworkError({
+                  show: true,
+                  errorCode: "net::ERR_INTERNET_DISCONNECTED",
+                  additionalInfo: "انقطع الاتصال بالإنترنت"
+                });
+                
+                toast({
+                  variant: "destructive",
+                  title: "انقطع الاتصال",
+                  description: "لا يوجد اتصال بالإنترنت",
+                });
+              }
             });
             
-            // Small delay to allow network to stabilize
-            setTimeout(() => {
-              checkConnection();
-            }, 1500);
-          } else {
-            setNetworkError({
-              show: true,
-              errorCode: "net::ERR_INTERNET_DISCONNECTED",
-              additionalInfo: "انقطع الاتصال بالإنترنت"
-            });
+            // فحص أولي
+            const initialStatus = await Network.getStatus();
+            console.log('Initial network status:', initialStatus);
             
-            toast({
-              variant: "destructive",
-              title: "انقطع الاتصال",
-              description: "لا يوجد اتصال بالإنترنت",
-            });
+            if (!initialStatus.connected) {
+              setNetworkError({
+                show: true,
+                errorCode: "net::ERR_INTERNET_DISCONNECTED",
+                additionalInfo: "جهازك غير متصل بالإنترنت"
+              });
+            } else {
+              checkServerConnection().catch(err => {
+                console.error("Initial server connection check failed:", err);
+              });
+            }
+          } catch (capacitorError) {
+            console.error("Error with Capacitor network setup:", capacitorError);
+            // استخدم طرق بديلة في حال فشل Capacitor
+            setupBrowserFallback();
           }
+        } else {
+          // استخدام واجهات المتصفح في حالة عدم توفر Capacitor
+          setupBrowserFallback();
+        }
+      } catch (setupError) {
+        console.error("Critical error in network setup:", setupError);
+        // حاول استخدام واجهات المتصفح في حالة الفشل
+        setupBrowserFallback();
+      }
+    };
+    
+    // استخدام واجهات برمجة المتصفح كخطة بديلة
+    const setupBrowserFallback = () => {
+      window.addEventListener('online', () => {
+        toast({
+          title: "تم استعادة الاتصال",
+          description: "جاري التحقق من الاتصال بالخادم...",
         });
         
-        // Initial check
-        const initialStatus = await Network.getStatus();
-        console.log('Initial network status:', initialStatus);
+        setLastNetworkEvent(new Date());
+        checkConnection();
+      });
+      
+      window.addEventListener('offline', () => {
+        setLastNetworkEvent(new Date());
+        setNetworkError({
+          show: true,
+          errorCode: "net::ERR_INTERNET_DISCONNECTED",
+          additionalInfo: "انقطع الاتصال بالإنترنت"
+        });
         
-        if (!initialStatus.connected) {
-          setNetworkError({
-            show: true,
-            errorCode: "net::ERR_INTERNET_DISCONNECTED",
-            additionalInfo: "جهازك غير متصل بالإنترنت"
-          });
-        } else {
-          checkServerConnection();
-        }
+        toast({
+          variant: "destructive",
+          title: "انقطع الاتصال",
+          description: "لا يوجد اتصال بالإنترنت",
+        });
+      });
+      
+      // فحص أولي باستخدام واجهة برمجة المتصفح
+      if (!navigator.onLine) {
+        setNetworkError({
+          show: true,
+          errorCode: "net::ERR_INTERNET_DISCONNECTED",
+          additionalInfo: "جهازك غير متصل بالإنترنت"
+        });
       } else {
-        // Fallback to browser APIs if Capacitor is not available
-        window.addEventListener('online', () => {
-          toast({
-            title: "تم استعادة الاتصال",
-            description: "جاري التحقق من الاتصال بالخادم...",
-          });
-          
-          setLastNetworkEvent(new Date());
-          checkConnection();
+        checkServerConnection().catch(err => {
+          console.error("Initial server connection check failed:", err);
         });
-        
-        window.addEventListener('offline', () => {
-          setLastNetworkEvent(new Date());
-          setNetworkError({
-            show: true,
-            errorCode: "net::ERR_INTERNET_DISCONNECTED",
-            additionalInfo: "انقطع الاتصال بالإنترنت"
-          });
-          
-          toast({
-            variant: "destructive",
-            title: "انقطع الاتصال",
-            description: "لا يوجد اتصال بالإنترنت",
-          });
-        });
-        
-        // Initial check using browser API
-        if (!navigator.onLine) {
-          setNetworkError({
-            show: true,
-            errorCode: "net::ERR_INTERNET_DISCONNECTED",
-            additionalInfo: "جهازك غير متصل بالإنترنت"
-          });
-        } else {
-          checkServerConnection();
-        }
       }
     };
     
     setupNetworkListeners();
     
     return () => {
-      if (window.Capacitor) {
-        Network.removeAllListeners();
-      } else {
-        window.removeEventListener('online', () => {});
-        window.removeEventListener('offline', () => {});
+      // تنظيف المستمعين
+      try {
+        if (window.Capacitor) {
+          Network.removeAllListeners();
+        } else {
+          window.removeEventListener('online', () => {});
+          window.removeEventListener('offline', () => {});
+        }
+      } catch (cleanupError) {
+        console.error("Error during network listeners cleanup:", cleanupError);
       }
     };
   }, []);
 
-  // Update network error state based on server connection
+  // تحديث حالة خطأ الشبكة بناءً على الاتصال بالخادم
   useEffect(() => {
-    if (!isConnectedToServer && isOnline && !isChecking) {
-      setNetworkError({
-        show: true,
-        errorCode: "net::ERR_HTTP_RESPONSE_CODE_FAILURE",
-        additionalInfo: errorInfo,
-        url: window.location.href
-      });
-    } else if (isConnectedToServer) {
-      setNetworkError({ show: false });
+    try {
+      if (!isConnectedToServer && isOnline && !isChecking) {
+        setNetworkError({
+          show: true,
+          errorCode: "net::ERR_HTTP_RESPONSE_CODE_FAILURE",
+          additionalInfo: errorInfo,
+          url: window.location.href
+        });
+      } else if (isConnectedToServer) {
+        setNetworkError({ show: false });
+      }
+    } catch (stateUpdateError) {
+      console.error("Error updating network error state:", stateUpdateError);
     }
   }, [isConnectedToServer, errorInfo, isOnline, isChecking]);
 
+  // تحسين إعداد Capacitor مع معالجة أخطاء محسنة
   useEffect(() => {
     const setupCapacitor = async () => {
-      if (window.Capacitor) {
-        console.log('Capacitor is available, setting up listeners');
-        CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-          console.log('Back button pressed, canGoBack:', canGoBack);
+      try {
+        if (window.Capacitor) {
+          console.log('Capacitor is available, setting up listeners');
           
-          const currentTime = Date.now();
-          
-          if (canGoBack) {
-            window.history.back();
-          } else {
-            // Check if this is a double press
-            if (currentTime - lastBackPress <= DOUBLE_PRESS_DELAY) {
-              // Double press detected - minimize the app
-              CapacitorApp.minimizeApp();
-            } else {
-              // First press - update timestamp
-              setLastBackPress(currentTime);
+          // استخدام نهج أكثر أمانًا للتسجيل على أحداث زر الرجوع
+          await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+            console.log('Back button pressed, canGoBack:', canGoBack);
+            
+            try {
+              const currentTime = Date.now();
               
-              // Show a toast indicating that a second press will minimize the app
-              toast({
-                title: "اضغط مرة أخرى للخروج",
-                duration: 2000,
-              });
+              if (canGoBack) {
+                window.history.back();
+              } else {
+                // فحص ما إذا كان هذا ضغطة مزدوجة
+                if (currentTime - lastBackPress <= DOUBLE_PRESS_DELAY) {
+                  // تم اكتشاف ضغطة مزدوجة - تصغير التطبيق
+                  CapacitorApp.minimizeApp();
+                } else {
+                  // الضغطة الأولى - تحديث الطابع الزمني
+                  setLastBackPress(currentTime);
+                  
+                  // عرض إشعار يشير إلى أن ضغطة ثانية ستقوم بتصغير التطبيق
+                  toast({
+                    title: "اضغط مرة أخرى للخروج",
+                    duration: 2000,
+                  });
+                }
+              }
+            } catch (backButtonError) {
+              console.error("Error handling back button:", backButtonError);
+              // محاولة الرجوع كخطة احتياطية
+              try {
+                window.history.back();
+              } catch (navigateError) {
+                console.error("Error navigating back:", navigateError);
+              }
             }
-          }
-        });
+          });
+        }
+      } catch (setupError) {
+        console.error("Error setting up Capacitor:", setupError);
       }
     };
     
     setupCapacitor();
     
     return () => {
-      if (window.Capacitor) {
-        CapacitorApp.removeAllListeners();
+      try {
+        if (window.Capacitor) {
+          CapacitorApp.removeAllListeners();
+        }
+      } catch (cleanupError) {
+        console.error("Error during Capacitor listeners cleanup:", cleanupError);
       }
     };
   }, [lastBackPress]);
 
-  // Function to retry connection
+  // وظيفة لإعادة محاولة الاتصال مع معالجة أخطاء محسنة
   const handleRetryConnection = async () => {
     setRetryAttempt(prev => prev + 1);
     
@@ -265,10 +334,10 @@ const MobileApp = () => {
     }
   };
 
-  // Check authentication status
+  // التحقق من حالة المصادقة
   const isRestaurantLoggedIn = localStorage.getItem('isRestaurantLogin') === 'true';
   
-  // If there's a network error, show the network error view
+  // إذا كان هناك خطأ في الشبكة، عرض واجهة خطأ الشبكة
   if (networkError.show) {
     return (
       <NetworkErrorView 
@@ -280,7 +349,7 @@ const MobileApp = () => {
     );
   }
   
-  // Force login page when not authenticated
+  // فرض صفحة تسجيل الدخول عندما لا تكون مصادقًا
   if (!isRestaurantLoggedIn) {
     return (
       <Routes>
@@ -290,7 +359,7 @@ const MobileApp = () => {
     );
   }
   
-  // If authenticated and no network error, show the full app
+  // إذا كنت مصادقًا ولا يوجد خطأ في الشبكة، عرض التطبيق الكامل
   return (
     <Routes>
       <Route path="/login" element={<Navigate to="/mobile/inventory" replace />} />
@@ -335,7 +404,7 @@ const MobileApp = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="*" element={<Navigate to="/inventory" replace />} />
+      <Route path="*" element={<Navigate to="/mobile/inventory" replace />} />
     </Routes>
   );
 };
