@@ -10,16 +10,14 @@ declare global {
   }
 }
 
-// We now use the BarcodeFormat enum directly from @capacitor-mlkit/barcode-scanning
-// instead of our own SupportedFormat enum
+// استخدام BarcodeFormat مباشرة من مكتبة MLKit
 import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
-// Updated ScanOptions to match the library API
+// تحديث ScanOptions ليتوافق مع واجهة التطبيق
 export interface ScanOptions {
   formats?: BarcodeFormat[];
 }
 
-// Updated property name to match MLKit API
 export interface IsSupportedResult {
   supported: boolean;
 }

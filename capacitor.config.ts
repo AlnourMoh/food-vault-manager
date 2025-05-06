@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
     // استخدام التطبيق بدون الاعتماد على خادم خارجي
     url: 'https://b3b6b969-583d-416c-9d8b-788fa375abca.lovableproject.com?forceHideBadge=true',
     cleartext: true,
-    // Allow app to run in offline mode with cached content
+    // السماح بتشغيل التطبيق في وضع عدم الاتصال مع المحتوى المخزن مؤقتًا
     allowNavigation: ['*'],
     errorPath: 'error.html'
   },
@@ -30,19 +30,18 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true
     },
-    // إعدادات ماسح الباركود MLKit مع تحسينات إضافية - استخدام أسماء الشكل الصحيحة
+    // تبسيط إعدادات الماسح لتجنب التضارب
     MLKitBarcodeScanning: {
-      keys: {},
-      formats: ["QR_CODE", "UPC_E", "UPC_A", "EAN_8", "EAN_13", "CODE_39", "CODE_93", "CODE_128", "ITF", "CODABAR"],
-      scanMode: "CONTINUOUS",
-      detectorSize: 0.8, // زيادة حجم كاشف الباركود للحصول على مساحة أكبر للمسح
+      formats: ["QR_CODE", "EAN_13", "CODE_128"],
+      scanMode: "SINGLE",
+      detectorSize: 0.7,
       cameraFacing: "back",
       flashButtonVisible: true,
-      timeout: 15000, // وقت انتظار أطول (15 ثواني)
+      timeout: 10000
     },
     Toast: {
       style: "center",
-      duration: "short", // الإعداد الافتراضي
+      duration: "short"
     }
   },
   android: {
@@ -60,8 +59,8 @@ const config: CapacitorConfig = {
       "android.permission.CAMERA",
       "android.permission.ACCESS_NETWORK_STATE",
       "android.permission.INTERNET",
-      "android.permission.FLASHLIGHT", // إذن للفلاش
-      "android.permission.VIBRATE" // إذن للاهتزاز عند المسح
+      "android.permission.FLASHLIGHT",
+      "android.permission.VIBRATE"
     ]
   },
   ios: {

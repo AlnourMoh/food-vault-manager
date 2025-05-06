@@ -1,4 +1,3 @@
-
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
@@ -26,9 +25,6 @@ export class BarcodeScannerService {
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[BarcodeScannerService] فتح الإعدادات باستخدام MLKit...');
-        
-        // استخدام مكتبة BarcodeScanner لفتح إعدادات التطبيق
-        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         await BarcodeScanner.openSettings();
         return;
       }
@@ -37,26 +33,13 @@ export class BarcodeScannerService {
       if (window.Capacitor?.getPlatform() === 'android') {
         console.log('[BarcodeScannerService] محاولة فتح إعدادات Android...');
         
-        try {
-          // استخدام intent مباشر لفتح إعدادات التطبيق
-          const appId = 'app.lovable.foodvault.manager';
-          
-          // استخدام Browser plugin للفتح إذا كان متاحًا
-          if (window.Capacitor?.isPluginAvailable('Browser')) {
-            const { Browser } = await import('@capacitor/browser');
-            await Browser.open({ url: `package:${appId}` });
-          } else {
-            // إذا لم يكن Browser متاحًا، نستخدم طريقة exitApp ثم نعرض رسالة للمستخدم
-            await Toast.show({
-              text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا للتطبيق يدويًا',
-              duration: 'long'
-            });
-            setTimeout(() => App.exitApp(), 3000);
-          }
-          return;
-        } catch (e) {
-          console.error('[BarcodeScannerService] خطأ في فتح إعدادات Android:', e);
-        }
+        await Toast.show({
+          text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا للتطبيق يدويًا',
+          duration: 'long'
+        });
+        
+        setTimeout(() => App.exitApp(), 3000);
+        return;
       }
       
       // الطريقة البديلة لنظام iOS
@@ -101,7 +84,7 @@ export class BarcodeScannerService {
       const result = await BarcodeScanner.isSupported();
       return result.supported;
     } catch (error) {
-      console.error('[BarcodeScannerService] خطأ في التحقق من دعم ال��اسح:', error);
+      console.error('[BarcodeScannerService] خطأ في التحقق من دعم الماسح:', error);
       return false;
     }
   }
@@ -189,29 +172,6 @@ export class BarcodeScannerService {
       }
     }
     
-    // محاولة تهيئة الكاميرا باستخدام مصباح الفلاش
-    try {
-      console.log('[BarcodeScannerService] تهيئة الكاميرا...');
-      const torchResult = await BarcodeScanner.isTorchAvailable();
-      if (torchResult.available) {
-        // تشغيل وإيقاف الفلاش سريعاً لتنشيط الكاميرا
-        await BarcodeScanner.enableTorch();
-        setTimeout(async () => {
-          try {
-            await BarcodeScanner.disableTorch();
-          } catch (e) {}
-        }, 300);
-      }
-      
-      // إخبار المستخدم أن الماسح جاهز
-      await Toast.show({
-        text: 'الماسح الضوئي جاهز للاستخدام',
-        duration: 'short'
-      });
-    } catch (e) {
-      console.log('[BarcodeScannerService] خطأ في التحقق من توفر الفلاش:', e);
-    }
-    
     return true;
   }
   
@@ -245,12 +205,13 @@ export class BarcodeScannerService {
       this.setupUIForScanning();
       
       // بدء المسح الفعلي مع محاولات متعددة
-      const MAX_RETRIES = 3;
+      const MAX_RETRIES = 2;  // تقليل عدد المحاولات لتجنب الضغط على الذاكرة
+      
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
           console.log(`[BarcodeScannerService] محاولة المسح ${attempt}/${MAX_RETRIES}...`);
           
-          // بدء المسح مباشرة - استخدام قيم Enum الصحيحة
+          // استخدام قيم enum بدلاً من السلاسل النصية
           const result = await BarcodeScanner.scan({
             formats: [
               BarcodeFormat.QrCode,
@@ -286,20 +247,17 @@ export class BarcodeScannerService {
               break;
             }
             
-            // إلا نستمر في المحاولة التالية
-            await new Promise(resolve => setTimeout(resolve, 500)); // انتظار نصف ثانية قبل المحاولة التالية
+            // انتظار قصير قبل المحاولة التالية
+            await new Promise(resolve => setTimeout(resolve, 300));
           }
         } catch (error) {
           console.error(`[BarcodeScannerService] خطأ في محاولة المسح ${attempt}:`, error);
           
-          // إذا كانت هذه المحاولة الأخيرة، نتوقف
           if (attempt === MAX_RETRIES) {
-            console.log('[BarcodeScannerService] استنفذت جميع المحاولات');
             break;
           }
           
-          // إلا نستمر في المحاولة التالية بعد انتظار قصير
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
       
