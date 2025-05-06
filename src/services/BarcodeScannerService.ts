@@ -1,4 +1,5 @@
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
 
@@ -40,8 +41,7 @@ export class BarcodeScannerService {
           // استخدام intent مباشر لفتح إعدادات التطبيق
           const appId = 'app.lovable.foodvault.manager';
           
-          // في Capacitor, نحتاج إلى فتح URL خاص لإعدادات التطبيق
-          // ولكن App.openUrl و App.canOpenUrl غير متاح، لذا نستخدم Capacitor Browser إذا كان متاحًا
+          // استخدام Browser plugin للفتح إذا كان متاحًا
           if (window.Capacitor?.isPluginAvailable('Browser')) {
             const { Browser } = await import('@capacitor/browser');
             await Browser.open({ url: `package:${appId}` });
@@ -250,9 +250,20 @@ export class BarcodeScannerService {
         try {
           console.log(`[BarcodeScannerService] محاولة المسح ${attempt}/${MAX_RETRIES}...`);
           
-          // بدء المسح مباشرة
+          // بدء المسح مباشرة - استخدام قيم Enum الصحيحة
           const result = await BarcodeScanner.scan({
-            formats: ["QR_CODE", "UPC_E", "UPC_A", "EAN_8", "EAN_13", "CODE_39", "CODE_93", "CODE_128", "ITF", "CODABAR"]
+            formats: [
+              BarcodeFormat.QrCode,
+              BarcodeFormat.UpcE,
+              BarcodeFormat.UpcA,
+              BarcodeFormat.Ean8,
+              BarcodeFormat.Ean13,
+              BarcodeFormat.Code39,
+              BarcodeFormat.Code93,
+              BarcodeFormat.Code128,
+              BarcodeFormat.Itf,
+              BarcodeFormat.Codabar
+            ]
           });
           
           // معالجة النتيجة

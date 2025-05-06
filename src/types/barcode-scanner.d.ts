@@ -1,3 +1,4 @@
+
 import { Plugin } from '@capacitor/core';
 
 declare global {
@@ -9,25 +10,13 @@ declare global {
   }
 }
 
-export enum SupportedFormat {
-  QR_CODE = "QR_CODE",
-  UPC_E = "UPC_E",
-  UPC_A = "UPC_A",
-  EAN_8 = "EAN_8",
-  EAN_13 = "EAN_13",
-  CODE_39 = "CODE_39",
-  CODE_93 = "CODE_93",
-  CODE_128 = "CODE_128",
-  CODABAR = "CODABAR",
-  ITF = "ITF",
-  AZTEC = "AZTEC",
-  DATA_MATRIX = "DATA_MATRIX",
-  PDF_417 = "PDF_417"
-}
+// We now use the BarcodeFormat enum directly from @capacitor-mlkit/barcode-scanning
+// instead of our own SupportedFormat enum
+import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
 // Updated ScanOptions to match the library API
 export interface ScanOptions {
-  formats?: SupportedFormat[];
+  formats?: BarcodeFormat[];
 }
 
 // Updated property name to match MLKit API
