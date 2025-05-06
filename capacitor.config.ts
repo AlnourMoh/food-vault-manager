@@ -31,22 +31,13 @@ const config: CapacitorConfig = {
       enabled: true
     },
     // إعدادات محسنة للماسح
-    MLKitBarcodeScanning: {
+    BarcodeScanner: {
       formats: ["QR_CODE", "EAN_13", "CODE_128"],
-      scanMode: "CONTINUOUS",
-      detectorSize: 0.8,
-      cameraFacing: "back",
-      lensFacing: "back",
-      flashButtonVisible: true,
-      cancelButtonVisible: true,
-      beepOnSuccess: true,
-      vibrateOnSuccess: true,
-      detectionSpeed: "fast",
-      timeout: 10000
-    },
-    Toast: {
-      style: "center",
-      duration: "short"
+      torchButtonVisible: true,
+      torchButtonPosition: "top-right",
+      beepOnScan: true,
+      vibrateOnScan: true,
+      detectionSpeed: "fast"
     }
   },
   android: {
