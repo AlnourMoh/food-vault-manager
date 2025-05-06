@@ -17,10 +17,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // تحسين ظهور العناصر الرئيسية بإضافة فئة app-header و app-footer
   useEffect(() => {
     const isAdminRoute = location.pathname.includes('/admin/');
-    const routeClass = isAdminRoute ? 'admin-dashboard-page' : '';
-    
-    // إضافة فئة خاصة للجسم وفقًا لنوع المسار لمساعدة CSS على تحديد أنماط محددة
-    document.body.classList.add(routeClass);
+    // Only add the class if it's a non-empty string
+    if (isAdminRoute) {
+      document.body.classList.add('admin-dashboard-page');
+    }
     
     // تعريف العناصر الرئيسية عند التحميل
     const header = document.querySelector('header');
@@ -30,7 +30,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     if (footer) footer.classList.add('app-footer');
     
     return () => {
-      document.body.classList.remove(routeClass);
+      // Only remove if it was actually added
+      if (isAdminRoute) {
+        document.body.classList.remove('admin-dashboard-page');
+      }
     };
   }, [location.pathname]);
   
