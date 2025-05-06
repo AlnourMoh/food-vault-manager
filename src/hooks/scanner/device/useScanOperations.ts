@@ -1,18 +1,18 @@
 
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { useToast } from '@/hooks/use-toast';
-import { SupportedFormat } from '@/types/barcode-scanner';
+import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
 export const useScanOperations = () => {
   const { toast } = useToast();
 
   const getScanOptions = () => ({
     targetedFormats: [
-      SupportedFormat.QR_CODE,
-      SupportedFormat.CODE_128,
-      SupportedFormat.EAN_13,
-      SupportedFormat.EAN_8,
-      SupportedFormat.CODE_39
+      BarcodeFormat.QrCode,
+      BarcodeFormat.Code128,
+      BarcodeFormat.Ean13,
+      BarcodeFormat.Ean8,
+      BarcodeFormat.Code39
     ],
     showTorchButton: true,
     showFlipCameraButton: false,
