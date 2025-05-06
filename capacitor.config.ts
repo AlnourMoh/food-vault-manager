@@ -41,7 +41,6 @@ const config: CapacitorConfig = {
     }
   },
   android: {
-    flavor: "appflavor",
     buildOptions: {
       keystorePath: null,
       keystorePassword: null,
