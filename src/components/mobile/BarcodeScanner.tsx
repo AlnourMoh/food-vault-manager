@@ -1,9 +1,9 @@
 
 import React, { useEffect, useRef } from 'react';
 import { ScannerContainer } from './scanner/ScannerContainer';
-import { useMLKitScanner } from '@/hooks/scanner/useMLKitScanner';
 import { App } from '@capacitor/app';
 import { Toast } from '@capacitor/toast';
+import { useMLKitScanner } from '@/hooks/scanner/providers/useMLKitScanner';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
@@ -13,8 +13,9 @@ interface BarcodeScannerProps {
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const isActive = useRef(false);
+  const scanAttempted = useRef(false);
   
-  // استخدام الـ hook للماسح الضوئي
+  // استخدام MLKit للماسح الضوئي
   const {
     isLoading,
     hasPermission,
@@ -31,6 +32,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   } = useMLKitScanner({ 
     onScan: (code) => {
       console.log('[BarcodeScanner] تم المسح بنجاح:', code);
+      scanAttempted.current = true;
       onScan(code);
     }, 
     onClose 
@@ -54,8 +56,10 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         if (hasPermission === false) {
           console.log('[BarcodeScanner] لا يوجد إذن، جاري الطلب...');
           await requestPermission();
-        } else {
-          // إذا كان الإذن موجودًا أو غير معروف (null)، نحاول المسح
+        }
+        
+        // بدء المسح فورًا عند التهيئة إذا كان الإذن موجودًا
+        if (hasPermission !== false) {
           console.log('[BarcodeScanner] جاري بدء المسح...');
           startScan().catch(e => 
             console.error('[BarcodeScanner] خطأ في بدء المسح:', e)
@@ -77,10 +81,30 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     // تنفيذ التحقق وطلب الإذن
     checkAndRequestPermission();
     
+    // استعادة الماسح عند عودة التطبيق إلى الواجهة
+    const handleAppStateChange = ({ isActive: appIsActive }: { isActive: boolean }) => {
+      if (appIsActive && isActive.current && !scanAttempted.current) {
+        console.log('[BarcodeScanner] عودة التطبيق للواجهة، إعادة تفعيل الماسح');
+        startScan().catch(e => 
+          console.error('[BarcodeScanner] خطأ في إعادة تفعيل الماسح:', e)
+        );
+      }
+    };
+    
+    // إضافة مستمع لحالة التطبيق في الأجهزة المحمولة
+    if (window.Capacitor) {
+      App.addListener('appStateChange', handleAppStateChange);
+    }
+    
     // التنظيف عند إلغاء المكون
     return () => {
       console.log('[BarcodeScanner] تنظيف المكون...');
       isActive.current = false;
+      
+      // إزالة مستمع حالة التطبيق
+      if (window.Capacitor) {
+        App.removeAllListeners();
+      }
       
       // إيقاف المسح
       stopScan().catch(e => 

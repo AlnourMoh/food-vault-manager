@@ -1,54 +1,92 @@
 
 import { useState, useEffect } from 'react';
-import { usePermissionCheck } from './scanner/permissions/usePermissionCheck';
-import { usePermissionRequest } from './scanner/permissions/usePermissionRequest';
-import { useToast } from './use-toast';
+import { Toast } from '@capacitor/toast';
+import { Camera } from '@capacitor/camera';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useCameraPermissions = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(true); // نبدأ بافتراض وجود الإذن
-  const { checkCameraPermission } = usePermissionCheck();
-  const { requestPermission } = usePermissionRequest();
-  const { toast } = useToast();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
-  // تبسيط فحص الأذونات المبدئي
   useEffect(() => {
-    console.log('[useCameraPermissions] تجاوز الفحص الأولي للأذونات لتسريع الفتح...');
-    setIsLoading(false);
+    // فحص الأذونات عند تحميل المكون
+    const checkPermissions = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+          const { camera } = await BarcodeScanner.checkPermissions();
+          setHasPermission(camera === 'granted');
+        } else if (window.Capacitor?.isPluginAvailable('Camera')) {
+          const { camera } = await Camera.checkPermissions();
+          setHasPermission(camera === 'granted');
+        } else {
+          // في حالة التطوير على الويب، نفترض وجود الإذن
+          console.log("تشغيل في بيئة الويب، افتراض وجود الإذن");
+          setHasPermission(true);
+        }
+      } catch (error) {
+        console.error("خطأ في فحص الأذونات:", error);
+        // نفترض وجود الإذن في حالة حدوث خطأ لتجنب منع المستخدم
+        setHasPermission(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkPermissions();
   }, []);
 
-  // وظيفة طلب الإذن مبسطة - تطلب الإذن مباشرة
-  const requestCameraPermission = async (force = true) => {
-    console.log(`[useCameraPermissions] طلب إذن الكاميرا مباشرة`);
-    
+  const requestCameraPermission = async () => {
     try {
-      // محاولة مباشرة لطلب الإذن
+      setIsLoading(true);
+      console.log("طلب إذن الكاميرا");
+      
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          await BarcodeScanner.requestPermissions();
-          setHasPermission(true);
-          return true;
-        } catch (error) {
-          console.warn('خطأ في طلب إذن MLKit:', error);
+        const result = await BarcodeScanner.requestPermissions();
+        const granted = result.camera === 'granted';
+        setHasPermission(granted);
+        
+        if (!granted) {
+          await Toast.show({
+            text: 'الرجاء السماح بالوصول للكاميرا لاستخدام الماسح الضوئي',
+            duration: 'long'
+          });
         }
+        
+        return granted;
+      } else if (window.Capacitor?.isPluginAvailable('Camera')) {
+        const result = await Camera.requestPermissions();
+        const granted = result.camera === 'granted';
+        setHasPermission(granted);
+        
+        if (!granted) {
+          await Toast.show({
+            text: 'الرجاء السماح بالوصول للكاميرا لاستخدام الماسح الضوئي',
+            duration: 'long'
+          });
+        }
+        
+        return granted;
       }
-
-      // حتى مع حدوث خطأ، نحاول فتح الكاميرا
+      
+      // في حالة التطوير على الويب، نفترض وجود الإذن
+      console.log("تشغيل في بيئة الويب، افتراض وجود الإذن");
       setHasPermission(true);
       return true;
     } catch (error) {
-      console.error('خطأ في طلب إذن الكاميرا:', error);
-      
-      // حتى مع حدوث خطأ، نحاول فتح الكاميرا
+      console.error("خطأ في طلب الإذن:", error);
+      // نفترض وجود الإذن في حالة حدوث خطأ
       setHasPermission(true);
       return true;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
-    isLoading: false, // دائمًا نعود بحالة عدم تحميل لتسريع الفتح
-    hasPermission: true, // دائمًا نفترض وجود الإذن ونتعامل مع الأخطاء لاحقًا
+    isLoading,
+    hasPermission,
     requestPermission: requestCameraPermission
   };
 };

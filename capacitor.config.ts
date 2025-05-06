@@ -30,14 +30,11 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true
     },
-    // إعدادات محسنة للماسح
-    BarcodeScanner: {
-      formats: ["QR_CODE", "EAN_13", "CODE_128"],
-      torchButtonVisible: true,
-      torchButtonPosition: "top-right",
-      beepOnScan: true,
-      vibrateOnScan: true,
-      detectionSpeed: "fast"
+    // تحديث إعدادات الماسح الضوئي
+    MLKitBarcodeScanner: {
+      formats: ["QR_CODE", "EAN_13", "CODE_128", "CODE_39", "UPC_A", "UPC_E"],
+      detectionSpeed: "fast",
+      cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود"
     }
   },
   android: {
