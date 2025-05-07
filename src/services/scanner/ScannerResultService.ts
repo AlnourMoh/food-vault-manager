@@ -20,7 +20,7 @@ export class ScannerResultService {
   /**
    * معالجة نتائج المسح الناجح
    */
-  public async processSuccessfulScan(code: string, scanType: string = 'check'): Promise<boolean> {
+  public async processSuccessfulScan(code: string, scanType: "check" | "in" | "out" = "check"): Promise<boolean> {
     try {
       console.log(`[ScannerResultService] معالجة المسح الناجح للرمز: ${code}`);
       
@@ -31,6 +31,7 @@ export class ScannerResultService {
           await supabase
             .from('product_scans')
             .insert({
+              product_id: '', // ملاحظة: يجب تضمين معرف المنتج إذا كان متاحًا
               qr_code: code,
               scan_type: scanType,
               scanned_by: restaurantId

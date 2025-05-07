@@ -4,7 +4,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Button } from '@/components/ui/button';
 import { BarcodeIcon } from 'lucide-react';
-import ScanProductDialog from '@/components/products/ScanProductDialog';
+import ScanProductDialog from '@/components/products/scan/ScanProductDialog';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 

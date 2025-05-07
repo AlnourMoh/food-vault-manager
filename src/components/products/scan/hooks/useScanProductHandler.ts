@@ -1,20 +1,20 @@
 
-import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import BarcodeScanner from '@/components/mobile/BarcodeScanner';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ScanBarcode } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
-interface ScanProductDialogProps {
+interface UseScanProductHandlerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onProductAdded: () => void;
+  toast: any;
 }
 
-const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDialogProps) => {
-  const { toast } = useToast();
+export const useScanProductHandler = ({ 
+  open, 
+  onOpenChange, 
+  onProductAdded,
+  toast
+}: UseScanProductHandlerProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -178,58 +178,13 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     setShowScanner(true);
   };
 
-  return (
-    <Dialog 
-      open={open} 
-      onOpenChange={onOpenChange}
-      modal={false} // مهم لضمان عدم حجب الكاميرا
-    >
-      <DialogContent 
-        className="bg-white p-0 border shadow-lg rounded-lg" 
-        style={{
-          maxWidth: '100vw',
-          width: '100%',
-          height: '100vh',
-          margin: '0',
-          padding: '0',
-          overflow: 'hidden'
-        }}
-      >
-        <div className="text-center p-4 bg-primary/10 text-primary font-bold z-10 rounded-t-lg app-header">مسح باركود المنتج</div>
-        <div className="h-[calc(100vh-120px)] relative flex items-center justify-center overflow-hidden"
-          style={{
-            position: 'relative'
-          }}>
-          {hasScannerError ? (
-            <div className="flex flex-col items-center justify-center space-y-4 p-4 bg-background rounded-lg">
-              <div className="p-3 bg-red-100 text-red-600 rounded-full">
-                <ScanBarcode className="h-8 w-8" />
-              </div>
-              <h3 className="text-lg font-bold">حدث خطأ في الماسح الضوئي</h3>
-              <p className="text-center text-muted-foreground">
-                لم نتمكن من الوصول إلى الكاميرا أو حدث خطأ أثناء محاولة مسح الباركود
-              </p>
-              <Button onClick={handleRetry} className="mt-4">
-                إعادة المحاولة
-              </Button>
-            </div>
-          ) : (
-            showScanner && (
-              <div className="scanner-container" style={{
-                position: 'absolute',
-                inset: 0,
-              }}>
-                <BarcodeScanner
-                  onScan={handleScanResult}
-                  onClose={handleScanClose}
-                />
-              </div>
-            )
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  return {
+    isProcessing,
+    hasScannerError,
+    showScanner,
+    handleScanResult,
+    handleScanClose,
+    handleRetry,
+    setShowScanner
+  };
 };
-
-export default ScanProductDialog;

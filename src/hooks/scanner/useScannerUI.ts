@@ -1,146 +1,122 @@
 
-import { useRef } from 'react';
+import { useCallback } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
+/**
+ * Hook لإدارة واجهة المستخدم للماسح الضوئي
+ */
 export const useScannerUI = () => {
-  // تتبع العناصر المضافة للتمكن من إزالتها
-  const addedElements = useRef<HTMLElement[]>([]);
-  const addedClasses = useRef<{element: HTMLElement, classes: string[]}[]>([]);
-  
-  // تنظيف أي آثار سابقة
-  const ensureCleanStartup = () => {
-    console.log("[useScannerUI] تنظيف آثار الماسح السابقة");
-    cleanupScannerBackground(true);
-  };
-  
-  const setupScannerBackground = async () => {
-    console.log("[useScannerUI] إعداد الخلفية للماسح");
-    
+  /**
+   * تهيئة خلفية الماسح الضوئي
+   */
+  const setupScannerBackground = useCallback(async (): Promise<boolean> => {
     try {
-      // تأكد أولاً من عدم وجود آثار سابقة
-      ensureCleanStartup();
+      console.log('[useScannerUI] تهيئة خلفية الماسح...');
       
-      // إضافة فئة للجسم للإشارة إلى أن الماسح نشط
-      document.body.classList.add('scanner-active');
-      
-      // إخفاء الهيدر والفوتر أثناء المسح
-      document.querySelectorAll('header, footer, nav').forEach(element => {
-        if (element instanceof HTMLElement && !element.classList.contains('scanner-element')) {
-          // تخزين الأنماط الأصلية لاستعادتها لاحقًا
-          const originalDisplay = element.style.display;
-          const originalVisibility = element.style.visibility;
-          const originalOpacity = element.style.opacity;
-          
-          // تطبيق أنماط الإخفاء
-          element.style.display = 'none';
-          element.style.visibility = 'hidden';
-          element.style.opacity = '0';
-          
-          if (element.classList && element.classList.contains) {
-            element.classList.add('hidden-during-scan');
-            
-            // تسجيل العنصر لإزالة الفئة لاحقًا
-            addedClasses.current.push({
-              element,
-              classes: ['hidden-during-scan']
-            });
-          }
-          
-          // تسجيل العنصر لاستعادة الأنماط لاحقًا
-          addedElements.current.push(element);
+      // تحديد العناصر التي نحتاج إلى إخفائها
+      document.querySelectorAll('header, .app-header, footer, nav, .app-footer').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.opacity = '0';
+          el.style.visibility = 'hidden';
         }
       });
       
-      // تعيين الخلفية للجسم والتوثيق بشكل مؤقت للمسح
-      document.body.style.background = 'transparent';
-      document.body.style.backgroundColor = 'transparent';
+      // تعيين خلفية الجسم إلى شفافة لإظهار الكاميرا
+      document.body.classList.add('scanner-active');
       
-      // إظهار خلفية الكاميرا إذا كان MLKit متوفراً
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          await BarcodeScanner.showBackground().catch(e => 
-            console.warn("[useScannerUI] خطأ في عرض خلفية الكاميرا:", e)
-          );
+          // تهيئة وتفعيل الكاميرا
+          await BarcodeScanner.enableCamera();
         } catch (error) {
-          console.warn("[useScannerUI] استثناء في عرض خلفية الكاميرا:", error);
+          console.error('[useScannerUI] خطأ في تفعيل الكاميرا:', error);
+          // نستمر حتى لو فشل هذا الجزء
         }
       }
+      
+      // إضافة حدود للعناصر المهمة التي نريد إظهارها فوق الكاميرا
+      // إضافة فئة لأي عناصر نريد أن تظهر فوق الكاميرا
+      document.querySelectorAll('.scanner-frame, .scanner-overlay, .scanner-controls').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.position = 'relative';
+          el.style.zIndex = '999';
+        }
+      });
+      
+      return true;
     } catch (error) {
-      console.error("[useScannerUI] خطأ في إعداد خلفية الماسح:", error);
+      console.error('[useScannerUI] خطأ في إعداد خلفية الماسح:', error);
+      return false;
     }
-  };
-
-  const cleanupScannerBackground = async (force = false) => {
-    console.log("[useScannerUI] تنظيف خلفية الماسح");
-    
+  }, []);
+  
+  /**
+   * استعادة واجهة المستخدم بعد المسح
+   */
+  const restoreUIAfterScanning = useCallback(async (): Promise<void> => {
     try {
-      // إزالة فئة الماسح النشط من الجسم
+      console.log('[useScannerUI] استعادة واجهة المستخدم بعد المسح...');
+      
+      // إزالة أي قيود على العناصر
       document.body.classList.remove('scanner-active');
       
-      // استعادة الأنماط الأصلية للعناصر
-      for (const element of addedElements.current) {
-        try {
-          if (element) {
-            element.style.display = '';
-            element.style.visibility = 'visible';
-            element.style.opacity = '1';
-          }
-        } catch (e) {
-          console.error("[useScannerUI] خطأ في استعادة الأنماط الأصلية للعنصر:", e);
+      // استعادة العناصر المخفية
+      document.querySelectorAll('header, .app-header, footer, nav, .app-footer').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
         }
-      }
+      });
       
-      // إزالة الفئات المضافة
-      for (const item of addedClasses.current) {
-        try {
-          if (item.element && item.element.classList) {
-            for (const className of item.classes) {
-              if (className) {
-                item.element.classList.remove(className);
-              }
-            }
-          }
-        } catch (e) {
-          console.error("[useScannerUI] خطأ في إزالة الفئات المضافة:", e);
+      // إزالة القيود من العناصر التي أضفناها
+      document.querySelectorAll('.scanner-frame, .scanner-overlay, .scanner-controls').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.position = '';
+          el.style.zIndex = '';
         }
-      }
+      });
       
-      // إعادة تعيين المصفوفات
-      addedElements.current = [];
-      addedClasses.current = [];
-      
-      // استعادة الخلفية الأصلية للجسم
-      document.body.style.background = '';
-      document.body.style.backgroundColor = '';
-      
-      // تأكيد إظهار الهيدر والفوتر
-      setTimeout(() => {
-        document.querySelectorAll('header, footer, nav, .app-header').forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.display = '';
-            el.style.visibility = 'visible';
-            el.style.opacity = '1';
-          }
-        });
-      }, 200);
-      
-      // إخفاء خلفية الكاميرا في MLKit
+      // إيقاف الكاميرا إذا كانت نشطة
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          await BarcodeScanner.hideBackground().catch(() => {});
-          await BarcodeScanner.disableTorch().catch(() => {});
-          await BarcodeScanner.stopScan().catch(() => {});
-        } catch (e) {
-          console.warn("[useScannerUI] خطأ عند إيقاف مسح MLKit:", e);
+          await BarcodeScanner.disableCamera();
+        } catch (error) {
+          console.error('[useScannerUI] خطأ في إيقاف الكاميرا:', error);
+          // نستمر حتى لو فشل هذا الجزء
         }
       }
     } catch (error) {
-      console.error("[useScannerUI] خطأ في تنظيف خلفية الماسح:", error);
+      console.error('[useScannerUI] خطأ في استعادة واجهة المستخدم:', error);
     }
-  };
-
+  }, []);
+  
+  /**
+   * تنظيف أي تغييرات في واجهة المستخدم
+   */
+  const cleanup = useCallback((): void => {
+    try {
+      console.log('[useScannerUI] تنظيف واجهة المستخدم...');
+      
+      // إزالة فئة حالة الماسح
+      document.body.classList.remove('scanner-active');
+      
+      // استعادة جميع العناصر المخفية
+      document.querySelectorAll('header, .app-header, footer, nav, .app-footer').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
+          el.style.background = '';
+          el.style.backgroundColor = '';
+        }
+      });
+    } catch (error) {
+      console.error('[useScannerUI] خطأ في تنظيف واجهة المستخدم:', error);
+    }
+  }, []);
+  
   return {
     setupScannerBackground,
-    cleanupScannerBackground
+    restoreUIAfterScanning,
+    cleanup
   };
 };

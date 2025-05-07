@@ -41,11 +41,17 @@ export class ScannerCameraService {
     try {
       console.log('[ScannerCameraService] تحضير الكاميرا...');
       
-      // إظهار خلفية الكاميرا
-      await BarcodeScanner.showBackground();
-      
-      // تهيئة الكاميرا للمسح
-      await BarcodeScanner.prepare();
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.error('[ScannerCameraService] MLKit غير متوفر على هذا الجهاز');
+        return false;
+      }
+
+      try {
+        // إظهار خلفية الكاميرا - هذه الدالة تمت إضافتها في الإصدارات الحديثة من المكتبة
+        await BarcodeScanner.enableCamera();
+      } catch (error) {
+        console.error('[ScannerCameraService] خطأ في تفعيل الكاميرا:', error);
+      }
       
       return true;
     } catch (error) {
@@ -61,9 +67,19 @@ export class ScannerCameraService {
     try {
       console.log('[ScannerCameraService] تنظيف موارد الكاميرا...');
       
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        return;
+      }
+      
       await BarcodeScanner.disableTorch().catch(() => {});
       await BarcodeScanner.stopScan().catch(() => {});
-      await BarcodeScanner.hideBackground().catch(() => {});
+      
+      try {
+        // إخفاء خلفية الكاميرا - هذه الدالة تمت إضافتها في الإصدارات الحديثة من المكتبة
+        await BarcodeScanner.disableCamera();
+      } catch (error) {
+        console.error('[ScannerCameraService] خطأ في إيقاف الكاميرا:', error);
+      }
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في تنظيف موارد الكاميرا:', error);
     }
