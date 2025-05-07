@@ -25,7 +25,7 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
 
       // استدعاء وظيفة طلب الإذن
       if (onRequestPermission) {
-        onRequestPermission();
+        await onRequestPermission();
       } else {
         // في حالة عدم توفر الوظيفة في الـprops، استخدم الخدمة مباشرة
         const granted = await barcodeScannerService.requestPermission();
@@ -39,6 +39,8 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
             text: 'لم يتم منح إذن الكاميرا. يرجى تمكينه من إعدادات جهازك.',
             duration: 'long'
           });
+          // محاولة فتح الإعدادات بعد فشل طلب الإذن
+          setTimeout(() => openAppSettings(), 1000);
         }
       }
     } catch (error) {
@@ -76,62 +78,63 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
   };
 
   return (
-    <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
-      <div className="flex flex-col items-center justify-center py-6 space-y-4">
-        <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center">
-          <Camera className="h-8 w-8" />
-        </div>
-        
-        <h3 className="text-xl font-bold">لا يوجد إذن للكاميرا</h3>
-        
-        <Alert variant="destructive" className="border-red-200 bg-red-50">
-          <AlertDescription>
-            يرجى منح تصريح الوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي.
-            <br />
-            <strong>هذا التطبيق بحاجة للكاميرا فقط لمسح الباركود</strong>
-          </AlertDescription>
-        </Alert>
-        
-        <div className="flex flex-col w-full space-y-2 mt-4">
-          <Button 
-            onClick={handleRequestPermission}
-            className="w-full"
-            variant="default"
-          >
-            <Camera className="h-4 w-4 ml-2" />
-            طلب الإذن مجددًا
-          </Button>
+    <div className="scanner-permission-overlay">
+      <div className="permission-error-view">
+        <div className="flex flex-col items-center justify-center py-6 space-y-4">
+          <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center">
+            <Camera className="h-8 w-8" />
+          </div>
           
-          <Button 
-            onClick={openAppSettings}
-            className="w-full"
-            variant="secondary"
-          >
-            <Settings className="h-4 w-4 ml-2" />
-            فتح إعدادات التطبيق
-          </Button>
+          <h3 className="text-xl font-bold">لا يوجد إذن للكاميرا</h3>
           
-          {onManualEntry && (
+          <Alert variant="destructive" className="border-red-200 bg-red-50">
+            <AlertDescription>
+              يرجى منح تصريح الوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي.
+              <br />
+              <strong>هذا التطبيق بحاجة للكاميرا فقط لمسح الباركود</strong>
+            </AlertDescription>
+          </Alert>
+          
+          <div className="flex flex-col w-full space-y-2 mt-4">
             <Button 
-              onClick={onManualEntry}
+              onClick={handleRequestPermission}
+              className="w-full"
+              variant="default"
+            >
+              <Camera className="h-4 w-4 ml-2" />
+              طلب الإذن مجددًا
+            </Button>
+            
+            <Button 
+              onClick={openAppSettings}
               className="w-full"
               variant="secondary"
             >
-              <Keyboard className="h-4 w-4 ml-2" />
-              إدخال الكود يدويًا
+              <Settings className="h-4 w-4 ml-2" />
+              فتح إعدادات التطبيق
             </Button>
-          )}
-          
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="w-full"
-          >
-            إغلاق
-          </Button>
+            
+            {onManualEntry && (
+              <Button 
+                onClick={onManualEntry}
+                className="w-full"
+                variant="secondary"
+              >
+                <Keyboard className="h-4 w-4 ml-2" />
+                إدخال الكود يدويًا
+              </Button>
+            )}
+            
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="w-full"
+            >
+              إغلاق
+            </Button>
+          </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
-

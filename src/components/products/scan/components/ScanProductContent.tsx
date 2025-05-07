@@ -4,7 +4,7 @@ import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { ScannerErrorView } from './ScannerErrorView';
 import { useCameraPermissions } from '@/hooks/useCameraPermissions';
 import { Button } from '@/components/ui/button';
-import { Camera, Settings } from 'lucide-react';
+import { Camera, Settings, Keyboard } from 'lucide-react';
 import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { App } from '@capacitor/app';
@@ -27,8 +27,9 @@ export const ScanProductContent = ({
   onClose
 }: ScanProductContentProps) => {
   // استخدام hook للتحقق من أذونات الكاميرا
-  const { hasPermission, requestPermission } = useCameraPermissions();
+  const { hasPermission, requestPermission, openAppSettings } = useCameraPermissions();
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
   // التأكد من وجود إذن الكاميرا قبل عرض الماسح
   useEffect(() => {
@@ -46,11 +47,15 @@ export const ScanProductContent = ({
           if (hasPermission === false) {
             console.log('ScanProductContent: لا يوجد إذن للكاميرا، عرض واجهة طلب الإذن');
             setShowPermissionPrompt(true);
+            setPermissionError("لم يتم منح إذن الكاميرا، يرجى السماح بالوصول للمتابعة");
           } else {
             setShowPermissionPrompt(false);
+            setPermissionError(null);
           }
         } catch (error) {
           console.error('ScanProductContent: خطأ في التحقق من إذن الكاميرا:', error);
+          setPermissionError("حدث خطأ في التحقق من إذن الكاميرا");
+          setShowPermissionPrompt(true);
         }
       };
       
@@ -63,30 +68,82 @@ export const ScanProductContent = ({
   const handleRequestPermission = async () => {
     console.log('ScanProductContent: محاولة طلب إذن الكاميرا...');
     try {
+      // عرض رسالة توضيحية
+      await Toast.show({
+        text: 'جاري طلب إذن الكاميرا...',
+        duration: 'short'
+      });
+      
       const granted = await requestPermission();
+      
       if (granted) {
         console.log('ScanProductContent: تم منح الإذن بنجاح');
         setShowPermissionPrompt(false);
+        setPermissionError(null);
+        
+        // إعلام المستخدم
+        await Toast.show({
+          text: 'تم منح إذن الكاميرا بنجاح!',
+          duration: 'short'
+        });
       } else {
         console.log('ScanProductContent: لم يتم منح الإذن');
+        setPermissionError("تم رفض إذن الكاميرا، يرجى السماح بالوصول من إعدادات جهازك");
+        
+        // تجربة فتح الإعدادات بعد فشل الطلب
         await Toast.show({
-          text: 'لم يتم منح إذن الكاميرا. يرجى تمكينه للاستمرار.',
-          duration: 'long'
+          text: 'لم يتم منح إذن الكاميرا. سيتم توجيهك إلى الإعدادات.',
+          duration: 'short'
         });
+        
+        // تأخير قصير قبل فتح الإعدادات
+        setTimeout(() => handleOpenSettings(), 1000);
       }
     } catch (error) {
       console.error('ScanProductContent: خطأ في طلب إذن الكاميرا:', error);
+      setPermissionError("حدث خطأ أثناء طلب إذن الكاميرا");
+      
+      // محاولة أخيرة للتعامل مع الخطأ
+      try {
+        const platform = window.Capacitor?.getPlatform();
+        const message = platform === 'ios' 
+          ? 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا لتمكين الإذن' 
+          : 'يرجى فتح إعدادات التطبيق > الأذونات لتمكين الكاميرا';
+          
+        await Toast.show({
+          text: message,
+          duration: 'long'
+        });
+      } catch (e) {
+        console.error('ScanProductContent: خطأ في عرض الرسالة:', e);
+        alert('يرجى تمكين إذن الكاميرا يدويًا من إعدادات جهازك');
+      }
     }
   };
   
   const handleOpenSettings = async () => {
     try {
       console.log('ScanProductContent: محاولة فتح إعدادات التطبيق...');
-      await scannerPermissionService.openAppSettings();
+      
+      // محاولة فتح الإعدادات
+      const opened = await openAppSettings();
+      
+      if (!opened) {
+        // إرشاد المستخدم لفتح الإعدادات يدويًا
+        const platform = window.Capacitor?.getPlatform();
+        const message = platform === 'ios' 
+          ? 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا لتمكين الإذن' 
+          : 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات';
+          
+        await Toast.show({
+          text: message,
+          duration: 'long'
+        });
+      }
     } catch (error) {
       console.error('ScanProductContent: خطأ في فتح الإعدادات:', error);
       
-      // إذا فشل فتح الإعدادات، نقدم تعليمات للمستخدم
+      // إرشاد المستخدم لفتح الإعدادات يدويًا مع معلومات تفصيلية
       const platformText = window.Capacitor?.getPlatform() === 'ios' 
         ? 'فتح الإعدادات > الخصوصية > الكاميرا > تطبيق مخزن الطعام' 
         : 'فتح الإعدادات > التطبيقات > مخزن الطعام > الأذونات';
@@ -96,6 +153,11 @@ export const ScanProductContent = ({
         duration: 'long'
       });
     }
+  };
+  
+  const handleManualEntry = () => {
+    // يمكن إضافة وظيفة إدخال الرمز يدويًا هنا
+    console.log('الانتقال إلى الإدخال اليدوي');
   };
 
   return (
@@ -108,34 +170,60 @@ export const ScanProductContent = ({
       {hasScannerError ? (
         <ScannerErrorView onRetry={onRetry} />
       ) : showPermissionPrompt ? (
-        <div className="p-4 bg-white rounded-lg shadow-lg max-w-md text-center space-y-4">
-          <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
-            <Camera className="h-8 w-8" />
-          </div>
-          
-          <h3 className="text-xl font-bold">لا يوجد إذن للكاميرا</h3>
-          <p className="text-muted-foreground">
-            المطلوب إذن الكاميرا لتمكين مسح الباركود. يستخدم التطبيق الكاميرا فقط لقراءة الباركود.
-          </p>
-          
-          <div className="space-y-2">
-            <Button 
-              onClick={handleRequestPermission}
-              className="w-full"
-              variant="default"
-            >
-              <Camera className="h-4 w-4 ml-2" />
-              طلب إذن الكاميرا
-            </Button>
+        <div className="scanner-permission-overlay">
+          <div className="permission-error-view">
+            <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+              <Camera className="h-8 w-8" />
+            </div>
             
-            <Button 
-              onClick={handleOpenSettings}
-              className="w-full"
-              variant="outline"
-            >
-              <Settings className="h-4 w-4 ml-2" />
-              فتح إعدادات التطبيق
-            </Button>
+            <h3 className="text-xl font-bold mt-4">لا يوجد إذن للكاميرا</h3>
+            
+            {permissionError && (
+              <p className="text-sm text-red-600 mt-2 mb-4">
+                {permissionError}
+              </p>
+            )}
+            
+            <p className="text-muted-foreground mb-4">
+              المطلوب إذن الكاميرا لتمكين مسح الباركود. يستخدم التطبيق الكاميرا فقط لقراءة الباركود.
+            </p>
+            
+            <div className="space-y-2 mt-4">
+              <Button 
+                onClick={handleRequestPermission}
+                className="w-full"
+                variant="default"
+              >
+                <Camera className="h-4 w-4 ml-2" />
+                طلب إذن الكاميرا
+              </Button>
+              
+              <Button 
+                onClick={handleOpenSettings}
+                className="w-full"
+                variant="secondary"
+              >
+                <Settings className="h-4 w-4 ml-2" />
+                فتح إعدادات التطبيق
+              </Button>
+              
+              <Button 
+                onClick={handleManualEntry}
+                className="w-full"
+                variant="secondary"
+              >
+                <Keyboard className="h-4 w-4 ml-2" />
+                إدخال الكود يدويًا
+              </Button>
+              
+              <Button 
+                onClick={onClose}
+                className="w-full"
+                variant="outline"
+              >
+                إغلاق
+              </Button>
+            </div>
           </div>
         </div>
       ) : (

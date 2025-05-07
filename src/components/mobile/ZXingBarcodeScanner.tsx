@@ -4,6 +4,8 @@ import { useZXingScanner } from '@/hooks/scanner/useZXingScanner';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import '@/styles/zxing-scanner.css';
+import { App } from '@capacitor/app';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -39,22 +41,65 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
         // طلب الإذن مباشرة عند تحميل المكون
         console.log('[ZXingBarcodeScanner] محاولة طلب إذن الكاميرا...');
         
+        // اختبار إذا كان الإذن موجود مسبقًا
+        const permissionStatus = await scannerPermissionService.checkPermission();
+        
+        if (permissionStatus) {
+          console.log('[ZXingBarcodeScanner] إذن الكاميرا موجود مسبقًا، بدء المسح...');
+          startScan();
+          return;
+        }
+        
         // عرض رسالة توضيحية للمستخدم
         await Toast.show({
           text: 'المطلوب إذن الكاميرا لمسح الباركود',
           duration: 'short'
         });
         
-        // محاولة طلب الإذن مباشرة
+        // محاولة طلب الإذن بأكثر من طريقة
         const granted = await requestPermission();
         
         if (!granted) {
-          console.log('[ZXingBarcodeScanner] لم يتم منح الإذن');
-          return;
+          console.log('[ZXingBarcodeScanner] لم يتم منح الإذن، محاولة مع تفعيل وضع القوة...');
+          
+          // محاولة ثانية مع إظهار رسالة توضيحية إضافية
+          await Toast.show({
+            text: 'يرجى السماح بالوصول للكاميرا لاستخدام الماسح الضوئي',
+            duration: 'long'
+          });
+          
+          // يمكننا محاولة طلب الإذن مباشرةً من الخدمة
+          const serviceGranted = await scannerPermissionService.requestPermission();
+          
+          if (!serviceGranted) {
+            console.log('[ZXingBarcodeScanner] لم يتم منح الإذن حتى بعد المحاولة الثانية');
+            
+            // عرض رسالة توضيحية للمستخدم حول كيفية تمكين الإذن يدويًا
+            const platform = window.Capacitor?.getPlatform();
+            const settingsMessage = platform === 'ios' 
+              ? 'افتح الإعدادات > الخصوصية > الكاميرا وقم بالسماح للتطبيق'
+              : 'افتح الإعدادات > التطبيقات > مخزن الطعام > الأذونات وقم بتمكين الكاميرا';
+              
+            await Toast.show({
+              text: `لم يتم منح إذن الكاميرا. ${settingsMessage}`,
+              duration: 'long'
+            });
+            
+            // محاولة فتح إعدادات التطبيق
+            setTimeout(() => {
+              try {
+                scannerPermissionService.openAppSettings();
+              } catch (e) {
+                console.error('[ZXingBarcodeScanner] خطأ في فتح الإعدادات:', e);
+              }
+            }, 1500);
+            
+            return;
+          }
         }
         
         // بدء المسح إذا كان لدينا إذن
-        console.log('[ZXingBarcodeScanner] محاولة بدء المسح...');
+        console.log('[ZXingBarcodeScanner] تم منح الإذن، محاولة بدء المسح...');
         startScan().catch(e => 
           console.error('[ZXingBarcodeScanner] خطأ في بدء المسح:', e)
         );
