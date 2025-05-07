@@ -86,7 +86,12 @@ export const ScannerView = ({
 
   return (
     <div className={styles.scannerLayout}>
+      {/* عرض الكاميرا سيظهر هنا، الخلفية تكون شفافة لإظهار عرض الكاميرا الحي */}
       <div className={styles.cameraViewport} />
+      
+      <div className={styles.scannerInfoText}>
+        وجّه كاميرا هاتفك نحو الباركود
+      </div>
       
       <ScannerStatusIndicator />
       

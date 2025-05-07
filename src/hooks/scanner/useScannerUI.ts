@@ -54,6 +54,17 @@ export const useScannerUI = () => {
       // تعيين الخلفية للجسم والتوثيق بشكل مؤقت للمسح
       document.body.style.background = 'transparent';
       document.body.style.backgroundColor = 'transparent';
+      
+      // إظهار خلفية الكاميرا إذا كان MLKit متوفراً
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          await BarcodeScanner.showBackground().catch(e => 
+            console.warn("[useScannerUI] خطأ في عرض خلفية الكاميرا:", e)
+          );
+        } catch (error) {
+          console.warn("[useScannerUI] استثناء في عرض خلفية الكاميرا:", error);
+        }
+      }
     } catch (error) {
       console.error("[useScannerUI] خطأ في إعداد خلفية الماسح:", error);
     }
@@ -113,9 +124,10 @@ export const useScannerUI = () => {
         });
       }, 200);
       
-      // إيقاف المسح في MLKit
+      // إخفاء خلفية الكاميرا في MLKit
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
+          await BarcodeScanner.hideBackground().catch(() => {});
           await BarcodeScanner.disableTorch().catch(() => {});
           await BarcodeScanner.stopScan().catch(() => {});
         } catch (e) {

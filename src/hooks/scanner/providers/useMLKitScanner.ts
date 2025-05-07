@@ -1,107 +1,111 @@
 
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useScannerUI } from '../useScannerUI';
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { useState, useCallback } from 'react';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Toast } from '@capacitor/toast';
 
 export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
-  const { toast } = useToast();
-  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
 
-  const startMLKitScan = async (onSuccess: (code: string) => void) => {
+  const startMLKitScan = useCallback(async (onSuccess: (code: string) => void): Promise<boolean> => {
     try {
-      if (isScanning) {
-        console.log("[useMLKitScanner] المسح نشط بالفعل، تجاهل الطلب");
-        return true;
+      console.log('[useMLKitScanner] بدء المسح باستخدام MLKit...');
+      
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.warn('[useMLKitScanner] MLKit غير متوفر على هذا الجهاز');
+        return false;
       }
 
       setIsScanning(true);
-      console.log("[useMLKitScanner] بدء استخدام MLKit");
-      
-      // التحقق من دعم MLKit
-      const supportResult = await BarcodeScanner.isSupported();
-      console.log("[useMLKitScanner] هل الماسح مدعوم:", supportResult.supported);
-      
-      if (!supportResult.supported) {
-        console.log("[useMLKitScanner] الماسح غير مدعوم، سنحاول طريقة أخرى");
-        setIsScanning(false);
-        return false;
-      }
-      
-      // إعداد خلفية شفافة للكاميرا
-      await setupScannerBackground();
-      
-      // تحقق من أذونات الكاميرا وطلبها إذا لزم الأمر
-      const { camera } = await BarcodeScanner.checkPermissions();
-      if (camera !== 'granted') {
-        console.log("[useMLKitScanner] طلب إذن الكاميرا");
-        const result = await BarcodeScanner.requestPermissions();
-        
-        if (result.camera !== 'granted') {
-          console.log("[useMLKitScanner] تم رفض الإذن، إلغاء المسح");
-          cleanupScannerBackground();
-          setIsScanning(false);
-          return false;
-        }
-      }
-      
-      // بدء المسح
-      console.log("[useMLKitScanner] بدء عملية المسح...");
+
+      // عرض معاينة الكاميرا
       try {
-        const result = await BarcodeScanner.scan({
-          formats: [
-            BarcodeFormat.QrCode,
-            BarcodeFormat.Ean13,
-            BarcodeFormat.Code128,
-            BarcodeFormat.Code39,
-            BarcodeFormat.UpcA,
-            BarcodeFormat.UpcE
-          ]
-        });
+        // تهيئة العرض المباشر للكاميرا قبل بدء المسح
+        console.log('[useMLKitScanner] تهيئة عرض الكاميرا...');
         
-        // معالجة النتيجة
-        if (result.barcodes && result.barcodes.length > 0) {
-          console.log("[useMLKitScanner] تم العثور على باركود:", result.barcodes[0].rawValue);
-          onSuccess(result.barcodes[0].rawValue || '');
-          return true;
-        } else {
-          console.log("[useMLKitScanner] لم يتم العثور على باركود");
-          return false;
-        }
-      } catch (scanError) {
-        console.error("[useMLKitScanner] خطأ أثناء المسح:", scanError);
-        // استخدام نمط وهمي في حالة الاختبار أو حدوث خطأ
-        if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-          console.log("[useMLKitScanner] استخدام نمط الاختبار");
-          setTimeout(() => {
-            onSuccess(`TEST-${Math.floor(Math.random() * 1000000)}`);
-          }, 1000);
-          return true;
-        }
-        return false;
-      } finally {
-        // تنظيف بعد المسح
-        cleanupScannerBackground();
-        setIsScanning(false);
+        // إظهار خلفية الكاميرا - ضروري لرؤية الكاميرا
+        await BarcodeScanner.showBackground();
+
+        // إعداد المسح باستخدام الكاميرا
+        await BarcodeScanner.prepare();
+      } catch (e) {
+        console.error('[useMLKitScanner] خطأ في تهيئة الكاميرا:', e);
       }
-    } catch (error) {
-      console.error("[useMLKitScanner] خطأ في عملية المسح:", error);
-      cleanupScannerBackground();
+
+      // بدء المسح الفعلي
+      const result = await BarcodeScanner.scan({
+        formats: [
+          'QR_CODE', 
+          'UPC_A', 
+          'UPC_E', 
+          'EAN_8', 
+          'EAN_13', 
+          'CODE_39',
+          'CODE_128'
+        ]
+      });
+      
+      // تنظيف وإخفاء الكاميرا بعد المسح
+      try {
+        await BarcodeScanner.hideBackground();
+        await BarcodeScanner.disableTorch();
+      } catch (e) {
+        console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا:', e);
+      }
+      
       setIsScanning(false);
       
-      // استخدام نمط وهمي في حالة الاختبار أو حدوث خطأ
-      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-        console.log("[useMLKitScanner] استخدام نمط الاختبار بعد الخطأ");
-        setTimeout(() => {
-          onSuccess(`TEST-${Math.floor(Math.random() * 1000000)}`);
-        }, 1000);
-        return true;
+      // معالجة النتيجة في حالة وجود باركود
+      if (result.barcodes && result.barcodes.length > 0) {
+        const code = result.barcodes[0].rawValue;
+        console.log('[useMLKitScanner] تم العثور على باركود:', code);
+        
+        if (code) {
+          onSuccess(code);
+          return true;
+        }
+      }
+      
+      // في حالة عدم العثور على باركود
+      Toast.show({ text: 'لم يتم العثور على أي باركود. حاول مرة أخرى.' });
+      return false;
+    } catch (error) {
+      console.error('[useMLKitScanner] خطأ في المسح:', error);
+      setIsScanning(false);
+      
+      try {
+        // التأكد من إخفاء الكاميرا في حالة الخطأ
+        await BarcodeScanner.hideBackground();
+        await BarcodeScanner.disableTorch();
+      } catch (e) {
+        console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
       }
       
       return false;
     }
-  };
+  }, []);
 
-  return { startMLKitScan, isScanning };
+  const stopMLKitScan = useCallback(async (): Promise<void> => {
+    try {
+      if (!isScanning) return;
+      
+      console.log('[useMLKitScanner] إيقاف المسح...');
+      
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        await BarcodeScanner.disableTorch().catch(() => {});
+        await BarcodeScanner.stopScan().catch(() => {});
+        await BarcodeScanner.hideBackground().catch(() => {});
+      }
+      
+      setIsScanning(false);
+    } catch (error) {
+      console.error('[useMLKitScanner] خطأ في إيقاف المسح:', error);
+      setIsScanning(false);
+    }
+  }, [isScanning]);
+
+  return {
+    isScanning,
+    startMLKitScan,
+    stopMLKitScan
+  };
 };

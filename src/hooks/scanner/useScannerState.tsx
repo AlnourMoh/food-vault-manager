@@ -18,7 +18,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   const [hasScannerError, setHasScannerError] = useState(false);
   
   const { hasPermission, requestPermission } = useCameraPermissions();
-  const { startMLKitScan } = useMLKitScanner();
+  const { isScanning, startMLKitScan, stopMLKitScan } = useMLKitScanner();
   const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
   
   const { toast } = useToast();
@@ -27,12 +27,14 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   const startScan = useCallback(async () => {
     try {
       console.log('[useScannerState] بدء المسح...');
+      setIsLoading(true);
       
       // التحقق من الأذونات وطلبها إذا لزم الأمر
       if (hasPermission === false) {
         const granted = await requestPermission();
         if (!granted) {
           console.log('[useScannerState] لم يتم منح إذن الكاميرا');
+          setIsLoading(false);
           return false;
         }
       }
@@ -40,6 +42,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       // إعداد الواجهة للمسح
       await setupScannerBackground();
       setIsScanningActive(true);
+      setIsLoading(false);
       
       // بدء المسح
       const success = await startMLKitScan((code) => {
@@ -57,24 +60,31 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       return success;
     } catch (error) {
       console.error('[useScannerState] خطأ في بدء المسح:', error);
+      setIsLoading(false);
       stopScan();
       setHasScannerError(true);
       return false;
     }
-  }, [hasPermission, requestPermission, onScan, setupScannerBackground, startMLKitScan]);
+  }, [hasPermission, requestPermission, onScan, setupScannerBackground, startMLKitScan, stopMLKitScan]);
 
   // إيقاف المسح
   const stopScan = useCallback(async () => {
     try {
       console.log('[useScannerState] إيقاف المسح...');
       setIsScanningActive(false);
+      
+      // إيقاف المسح في MLKit
+      await stopMLKitScan();
+      
+      // تنظيف واجهة المستخدم
       await cleanupScannerBackground();
+      
       return true;
     } catch (error) {
       console.error('[useScannerState] خطأ في إيقاف المسح:', error);
       return false;
     }
-  }, [cleanupScannerBackground]);
+  }, [stopMLKitScan, cleanupScannerBackground]);
 
   // وظيفة للتعامل مع الإدخال اليدوي
   const handleManualEntry = useCallback(() => {

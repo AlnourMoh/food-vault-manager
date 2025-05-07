@@ -59,6 +59,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         // بدء المسح فورًا عند التهيئة إذا كان الإذن موجودًا
         if (hasPermission !== false) {
           console.log('[BarcodeScanner] جاري بدء المسح...');
+          scanAttempted.current = true;
           startScan().catch(e => 
             console.error('[BarcodeScanner] خطأ في بدء المسح:', e)
           );
