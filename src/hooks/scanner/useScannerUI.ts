@@ -114,7 +114,7 @@ export const useScannerUI = () => {
       console.error('[useScannerUI] خطأ في تنظيف واجهة المستخدم:', error);
     }
   }, []);
-
+  
   // إضافة cleanupScannerBackground كاسم بديل لـ restoreUIAfterScanning للتوافق مع الكود القديم
   const cleanupScannerBackground = restoreUIAfterScanning;
   
