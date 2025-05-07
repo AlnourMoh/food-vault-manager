@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import BarcodeScanner from '@/components/mobile/BarcodeScanner';
+import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner'; // استخدام الماسح الضوئي الجديد
 import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScanCard';
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
 import { Product } from '@/types';
@@ -159,7 +159,7 @@ const ProductScan = () => {
       )}
       
       {isScannerOpen && (
-        <BarcodeScanner
+        <ZXingBarcodeScanner
           onScan={handleScanResult}
           onClose={handleCloseScanner}
         />

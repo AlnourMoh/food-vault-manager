@@ -1,6 +1,6 @@
 
 import React from 'react';
-import BarcodeScanner from '@/components/mobile/BarcodeScanner';
+import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { ScannerErrorView } from './ScannerErrorView';
 
 interface ScanProductContentProps {
@@ -35,7 +35,7 @@ export const ScanProductContent = ({
             position: 'absolute',
             inset: 0,
           }}>
-            <BarcodeScanner
+            <ZXingBarcodeScanner
               onScan={onScan}
               onClose={onClose}
             />
