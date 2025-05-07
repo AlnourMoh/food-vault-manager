@@ -1,11 +1,13 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useZXingScanner } from '@/hooks/scanner/useZXingScanner';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import '@/styles/zxing-scanner.css';
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -14,6 +16,7 @@ interface ZXingBarcodeScannerProps {
 
 const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClose }) => {
   const scannerContainerRef = useRef<HTMLDivElement>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   // استخدام hook الماسح الضوئي مع طلب الأذونات المباشر
   const {
@@ -35,18 +38,49 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
   useEffect(() => {
     console.log('[ZXingBarcodeScanner] تهيئة المكون');
     
+    // إضافة التأثير البصري للماسح
+    document.body.classList.add('zxing-scanning');
+    
     // التحقق من الإذن وطلبه إذا لم يكن موجوداً
     const setupScanner = async () => {
       try {
-        // طلب الإذن مباشرة عند تحميل المكون
+        setIsInitializing(true);
+        
+        // طلب الإذن مباشرة عند تحميل المكون بطرق متعددة
         console.log('[ZXingBarcodeScanner] محاولة طلب إذن الكاميرا...');
         
-        // اختبار إذا كان الإذن موجود مسبقًا
+        // التحقق المباشر عبر MLKit
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          const { camera } = await BarcodeScanner.checkPermissions();
+          if (camera === 'granted') {
+            console.log('[ZXingBarcodeScanner] الإذن ممنوح مسبقاً، بدء المسح');
+            startScan();
+            setIsInitializing(false);
+            return;
+          }
+          
+          // طلب الإذن مباشرة من MLKit
+          console.log('[ZXingBarcodeScanner] طلب الإذن مباشرة من MLKit');
+          const permissionResult = await BarcodeScanner.requestPermissions();
+          if (permissionResult.camera === 'granted') {
+            console.log('[ZXingBarcodeScanner] تم منح الإذن من MLKit، بدء المسح');
+            await Toast.show({
+              text: 'تم منح إذن الكاميرا بنجاح! جاري بدء المسح',
+              duration: 'short'
+            });
+            startScan();
+            setIsInitializing(false);
+            return;
+          }
+        }
+        
+        // اختبار إذا كان الإذن موجود مسبقًا عبر الخدمة
         const permissionStatus = await scannerPermissionService.checkPermission();
         
         if (permissionStatus) {
           console.log('[ZXingBarcodeScanner] إذن الكاميرا موجود مسبقًا، بدء المسح...');
           startScan();
+          setIsInitializing(false);
           return;
         }
         
@@ -74,8 +108,14 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
           if (!serviceGranted) {
             console.log('[ZXingBarcodeScanner] لم يتم منح الإذن حتى بعد المحاولة الثانية');
             
+            // بعض الأجهزة تحتاج لإعادة تشغيل التطبيق لتطبيق الإذن
+            await Toast.show({
+              text: 'قد تحتاج إلى إعادة تشغيل التطبيق بعد منح الإذن',
+              duration: 'short'
+            });
+            
             // عرض رسالة توضيحية للمستخدم حول كيفية تمكين الإذن يدويًا
-            const platform = window.Capacitor?.getPlatform();
+            const platform = Capacitor.getPlatform();
             const settingsMessage = platform === 'ios' 
               ? 'افتح الإعدادات > الخصوصية > الكاميرا وقم بالسماح للتطبيق'
               : 'افتح الإعدادات > التطبيقات > مخزن الطعام > الأذونات وقم بتمكين الكاميرا';
@@ -94,6 +134,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
               }
             }, 1500);
             
+            setIsInitializing(false);
             return;
           }
         }
@@ -105,6 +146,8 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
         );
       } catch (error) {
         console.error('[ZXingBarcodeScanner] خطأ في إعداد الماسح:', error);
+      } finally {
+        setIsInitializing(false);
       }
     };
     
@@ -113,6 +156,9 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
     // التنظيف عند إلغاء تحميل المكون
     return () => {
       console.log('[ZXingBarcodeScanner] تنظيف المكون');
+      
+      // إزالة التأثير البصري
+      document.body.classList.remove('zxing-scanning');
       
       stopScan().catch(e => 
         console.error('[ZXingBarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e)
@@ -133,7 +179,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
       <ScannerContainer
         isManualEntry={isManualEntry}
         hasScannerError={hasScannerError}
-        isLoading={isLoading}
+        isLoading={isLoading || isInitializing}
         hasPermission={hasPermission}
         isScanningActive={isScanningActive}
         lastScannedCode={lastScannedCode}
