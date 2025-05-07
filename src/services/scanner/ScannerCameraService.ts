@@ -7,6 +7,7 @@ import { Toast } from '@capacitor/toast';
  */
 export class ScannerCameraService {
   private static instance: ScannerCameraService;
+  private isCameraReady: boolean = false;
   
   private constructor() {}
   
@@ -35,11 +36,16 @@ export class ScannerCameraService {
   }
   
   /**
-   * تحضير وإعداد الكاميرا للمسح
+   * تحضير وإعداد الكاميرا للمسح - تم تحسينها للاستجابة السريعة
    */
   public async prepareCamera(): Promise<boolean> {
     try {
       console.log('[ScannerCameraService] تحضير الكاميرا...');
+      
+      if (this.isCameraReady) {
+        console.log('[ScannerCameraService] الكاميرا جاهزة بالفعل');
+        return true;
+      }
       
       if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         console.error('[ScannerCameraService] MLKit غير متوفر على هذا الجهاز');
@@ -47,13 +53,14 @@ export class ScannerCameraService {
       }
 
       try {
-        // استخدام prepare لتهيئة الكاميرا
+        // تهيئة سريعة للكاميرا بدون انتظار
         await BarcodeScanner.prepare();
+        this.isCameraReady = true;
       } catch (error) {
         console.error('[ScannerCameraService] خطأ في تفعيل الكاميرا:', error);
       }
       
-      return true;
+      return this.isCameraReady;
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في تحضير الكاميرا:', error);
       return false;
@@ -61,7 +68,7 @@ export class ScannerCameraService {
   }
   
   /**
-   * إيقاف الكاميرا وتنظيف الموارد
+   * إيقاف الكاميرا وتنظيف الموارد - تم تحسينها للعمل بشكل أسرع
    */
   public async cleanupCamera(): Promise<void> {
     try {
@@ -71,12 +78,16 @@ export class ScannerCameraService {
         return;
       }
       
-      await BarcodeScanner.disableTorch().catch(() => {});
-      await BarcodeScanner.stopScan().catch(() => {});
+      // إيقاف الكاميرا بشكل سريع بدون انتظار طويل
+      await Promise.all([
+        BarcodeScanner.disableTorch().catch(() => {}),
+        BarcodeScanner.stopScan().catch(() => {})
+      ]);
       
-      // نستخدم stopScan لإيقاف تشغيل الكاميرا
+      this.isCameraReady = false;
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في تنظيف موارد الكاميرا:', error);
+      this.isCameraReady = false;
     }
   }
   
@@ -100,7 +111,7 @@ export class ScannerCameraService {
   }
   
   /**
-   * التبديل بين وضع الإضاءة
+   * التبديل بين وضع الإضاءة بشكل فوري
    */
   public async toggleTorch(): Promise<void> {
     try {

@@ -3,17 +3,17 @@ import { useCallback } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 /**
- * Hook لإدارة واجهة المستخدم للماسح الضوئي
+ * Hook لإدارة واجهة المستخدم للماسح الضوئي - تم تحسينه للاستجابة السريعة
  */
 export const useScannerUI = () => {
   /**
-   * تهيئة خلفية الماسح الضوئي
+   * تهيئة خلفية الماسح الضوئي بشكل فوري
    */
   const setupScannerBackground = useCallback(async (): Promise<boolean> => {
     try {
       console.log('[useScannerUI] تهيئة خلفية الماسح...');
       
-      // تحديد العناصر التي نحتاج إلى إخفائها
+      // تحديد العناصر التي نحتاج إلى إخفائها على الفور
       document.querySelectorAll('header, .app-header, footer, nav, .app-footer').forEach(el => {
         if (el instanceof HTMLElement) {
           el.style.opacity = '0';
@@ -21,14 +21,16 @@ export const useScannerUI = () => {
         }
       });
       
-      // تعيين خلفية الجسم إلى شفافة لإظهار الكاميرا
+      // تعيين خلفية الجسم إلى شفافة لإظهار الكاميرا فورًا
       document.body.classList.add('scanner-active');
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          // تهيئة وتفعيل الكاميرا
+          // تهيئة الكاميرا بشكل متوازي لتسريع العملية
           if (typeof BarcodeScanner.prepare === 'function') {
-            await BarcodeScanner.prepare();
+            BarcodeScanner.prepare().catch(error => {
+              console.error('[useScannerUI] خطأ في تفعيل الكاميرا:', error);
+            });
           }
         } catch (error) {
           console.error('[useScannerUI] خطأ في تفعيل الكاميرا:', error);
@@ -37,7 +39,6 @@ export const useScannerUI = () => {
       }
       
       // إضافة حدود للعناصر المهمة التي نريد إظهارها فوق الكاميرا
-      // إضافة فئة لأي عناصر نريد أن تظهر فوق الكاميرا
       document.querySelectorAll('.scanner-frame, .scanner-overlay, .scanner-controls').forEach(el => {
         if (el instanceof HTMLElement) {
           el.style.position = 'relative';
@@ -81,13 +82,11 @@ export const useScannerUI = () => {
       // إيقاف الكاميرا إذا كانت نشطة
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          // استخدام stopScan لإيقاف الكاميرا
           if (typeof BarcodeScanner.stopScan === 'function') {
-            await BarcodeScanner.stopScan();
+            await BarcodeScanner.stopScan().catch(() => {});
           }
         } catch (error) {
           console.error('[useScannerUI] خطأ في إيقاف الكاميرا:', error);
-          // نستمر حتى لو فشل هذا الجزء
         }
       }
     } catch (error) {

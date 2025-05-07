@@ -1,11 +1,14 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
+import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 
 export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
+  const { setupScannerBackground, restoreUIAfterScanning } = useScannerUI();
 
+  // تحسين الأداء وتقليل التأخير
   const startMLKitScan = useCallback(async (onSuccess: (code: string) => void): Promise<boolean> => {
     try {
       console.log('[useMLKitScanner] بدء المسح باستخدام MLKit...');
@@ -15,64 +18,78 @@ export const useMLKitScanner = () => {
         return false;
       }
 
+      // تعيين حالة المسح إلى نشط قبل أي عملية لتحديث الواجهة فورًا
       setIsScanning(true);
+      
+      // إعداد واجهة المسح أولاً
+      await setupScannerBackground();
 
-      // عرض معاينة الكاميرا
+      // تهيئة الكاميرا وبدء المسح في وقت واحد
       try {
-        // تهيئة العرض المباشر للكاميرا قبل بدء المسح
-        console.log('[useMLKitScanner] تهيئة عرض الكاميرا...');
+        console.log('[useMLKitScanner] تهيئة وبدء المسح...');
         
-        // استخدام prepare لتهيئة الكاميرا
+        // استخدام تهيئة أسرع للكاميرا
         await BarcodeScanner.prepare();
-      } catch (e) {
-        console.error('[useMLKitScanner] خطأ في تهيئة الكاميرا:', e);
-      }
-
-      // بدء المسح الفعلي
-      const result = await BarcodeScanner.scan({
-        formats: [
-          BarcodeFormat.QrCode, 
-          BarcodeFormat.UpcA, 
-          BarcodeFormat.UpcE, 
-          BarcodeFormat.Ean8, 
-          BarcodeFormat.Ean13, 
-          BarcodeFormat.Code39,
-          BarcodeFormat.Code128
-        ]
-      });
-      
-      // تنظيف وإخفاء الكاميرا بعد المسح
-      try {
-        // استخدام stopScan لإيقاف الكاميرا
-        await BarcodeScanner.stopScan().catch(() => {});
-        await BarcodeScanner.disableTorch();
-      } catch (e) {
-        console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا:', e);
-      }
-      
-      setIsScanning(false);
-      
-      // معالجة النتيجة في حالة وجود باركود
-      if (result.barcodes && result.barcodes.length > 0) {
-        const code = result.barcodes[0].rawValue;
-        console.log('[useMLKitScanner] تم العثور على باركود:', code);
         
-        if (code) {
-          onSuccess(code);
-          return true;
+        // بدء المسح الفعلي فورًا
+        const result = await BarcodeScanner.scan({
+          formats: [
+            BarcodeFormat.QrCode, 
+            BarcodeFormat.UpcA, 
+            BarcodeFormat.UpcE, 
+            BarcodeFormat.Ean8, 
+            BarcodeFormat.Ean13, 
+            BarcodeFormat.Code39,
+            BarcodeFormat.Code128
+          ]
+        });
+        
+        // تنظيف وإخفاء الكاميرا بعد المسح
+        try {
+          // استخدام stopScan لإيقاف الكاميرا
+          await BarcodeScanner.stopScan().catch(() => {});
+          await BarcodeScanner.disableTorch();
+        } catch (e) {
+          console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا:', e);
         }
+        
+        setIsScanning(false);
+        
+        // معالجة النتيجة في حالة وجود باركود
+        if (result.barcodes && result.barcodes.length > 0) {
+          const code = result.barcodes[0].rawValue;
+          console.log('[useMLKitScanner] تم العثور على باركود:', code);
+          
+          if (code) {
+            onSuccess(code);
+            return true;
+          }
+        }
+        
+        // في حالة عدم العثور على باركود
+        Toast.show({ text: 'لم يتم العثور على أي باركود. حاول مرة أخرى.' });
+        return false;
+      } catch (error) {
+        console.error('[useMLKitScanner] خطأ في المسح:', error);
+        setIsScanning(false);
+        
+        try {
+          // التأكد من إخفاء الكاميرا في حالة الخطأ
+          await BarcodeScanner.stopScan().catch(() => {});
+          await BarcodeScanner.disableTorch();
+        } catch (e) {
+          console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
+        }
+        
+        return false;
       }
-      
-      // في حالة عدم العثور على باركود
-      Toast.show({ text: 'لم يتم العثور على أي باركود. حاول مرة أخرى.' });
-      return false;
     } catch (error) {
       console.error('[useMLKitScanner] خطأ في المسح:', error);
       setIsScanning(false);
       
       try {
         // التأكد من إخفاء الكاميرا في حالة الخطأ
-        await BarcodeScanner.stopScan();
+        await BarcodeScanner.stopScan().catch(() => {});
         await BarcodeScanner.disableTorch();
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
@@ -80,7 +97,7 @@ export const useMLKitScanner = () => {
       
       return false;
     }
-  }, []);
+  }, [setupScannerBackground]);
 
   const stopMLKitScan = useCallback(async (): Promise<void> => {
     try {
@@ -94,11 +111,13 @@ export const useMLKitScanner = () => {
       }
       
       setIsScanning(false);
+      // استعادة الواجهة الأصلية
+      await restoreUIAfterScanning();
     } catch (error) {
       console.error('[useMLKitScanner] خطأ في إيقاف المسح:', error);
       setIsScanning(false);
     }
-  }, [isScanning]);
+  }, [isScanning, restoreUIAfterScanning]);
 
   return {
     isScanning,
