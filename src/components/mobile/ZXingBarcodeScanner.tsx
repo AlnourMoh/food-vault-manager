@@ -2,6 +2,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useZXingScanner } from '@/hooks/scanner/useZXingScanner';
 import { ScannerContainer } from './scanner/ScannerContainer';
+import { Toast } from '@capacitor/toast';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -11,7 +13,7 @@ interface ZXingBarcodeScannerProps {
 const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClose }) => {
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   
-  // استخدام hook الماسح الضوئي الجديد
+  // استخدام hook الماسح الضوئي مع طلب الأذونات المباشر
   const {
     isLoading,
     hasPermission,
@@ -27,16 +29,43 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
     handleRetry
   } = useZXingScanner({ onScan, onClose });
   
-  // تهيئة المكون
+  // تهيئة المكون مع طلب الأذونات إن لم تكن موجودة
   useEffect(() => {
     console.log('[ZXingBarcodeScanner] تهيئة المكون');
     
-    // التحقق من الإذن وبدء المسح إذا كان موجوداً
-    if (hasPermission !== false) {
-      startScan().catch(e => 
-        console.error('[ZXingBarcodeScanner] خطأ في بدء المسح:', e)
-      );
-    }
+    // التحقق من الإذن وطلبه إذا لم يكن موجوداً
+    const setupScanner = async () => {
+      try {
+        // طلب الإذن مباشرة إذا لم يكن موجوداً
+        if (hasPermission === false) {
+          console.log('[ZXingBarcodeScanner] لا يوجد إذن، محاولة طلبه...');
+          
+          // عرض رسالة توضيحية للمستخدم
+          await Toast.show({
+            text: 'المطلوب إذن الكاميرا لمسح الباركود',
+            duration: 'short'
+          });
+          
+          // طلب الإذن من ScannerPermissionService
+          const granted = await scannerPermissionService.requestPermission();
+          
+          if (!granted) {
+            console.log('[ZXingBarcodeScanner] لم يتم منح الإذن');
+            return;
+          }
+        }
+        
+        // بدء المسح إذا كان لدينا إذن
+        console.log('[ZXingBarcodeScanner] محاولة بدء المسح...');
+        startScan().catch(e => 
+          console.error('[ZXingBarcodeScanner] خطأ في بدء المسح:', e)
+        );
+      } catch (error) {
+        console.error('[ZXingBarcodeScanner] خطأ في إعداد الماسح:', error);
+      }
+    };
+    
+    setupScanner();
     
     // التنظيف عند إلغاء تحميل المكون
     return () => {

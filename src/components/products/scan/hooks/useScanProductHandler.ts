@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 
 interface UseScanProductHandlerProps {
   open: boolean;
@@ -22,30 +23,45 @@ export const useScanProductHandler = ({
   // تحسين آلية إدارة الحوار - حصر الشفافية داخل الحوار فقط
   useEffect(() => {
     if (open) {
-      console.log('ScanProductDialog: تم فتح الحوار، جاري فتح الماسح...');
+      console.log('ScanProductDialog: تم فتح الحوار، جاري التأكد من الأذونات...');
       
-      // تأخير عرض الماسح لضمان تهيئة الحوار أولاً
-      const setupDialog = () => {
-        // تجنب الاعتماد على الفئات العامة، استخدام فئات محددة للحوار فقط
-        document.querySelectorAll('[role="dialog"]').forEach(element => {
-          if (element instanceof HTMLElement) {
-            element.classList.add('scanner-dialog-container');
-            // التأكد من عدم تأثير الماسح على الهيدر والفوتر
-            element.querySelectorAll('header, footer, nav').forEach(el => {
-              if (el instanceof HTMLElement) {
-                el.classList.add('app-header');
-              }
-            });
+      // التحقق من إذن الكاميرا قبل عرض الماسح
+      const checkPermission = async () => {
+        try {
+          const hasPermission = await scannerPermissionService.checkPermission();
+          
+          if (!hasPermission) {
+            console.log('ScanProductDialog: لا يوجد إذن للكاميرا، سنعرض شاشة طلب الإذن');
           }
-        });
-        
-        // تفعيل الماسح بعد تهيئة الحوار
-        setTimeout(() => {
-          setShowScanner(true);
-        }, 100);
+          
+          // تأخير عرض الماسح لضمان تهيئة الحوار أولاً
+          setTimeout(() => {
+            setShowScanner(true);
+          }, 300);
+        } catch (error) {
+          console.error('ScanProductDialog: خطأ في التحقق من إذن الكاميرا:', error);
+          // في حالة حدوث خطأ نعرض الماسح على أي حال
+          setTimeout(() => {
+            setShowScanner(true);
+          }, 300);
+        }
       };
       
-      setupDialog();
+      // تطبيق فئة "scanner-dialog-container" على الحوار للإشارة إلى أن الماسح نشط
+      document.querySelectorAll('[role="dialog"]').forEach(element => {
+        if (element instanceof HTMLElement) {
+          element.classList.add('scanner-dialog-container');
+          // التأكد من عدم تأثير الماسح على الهيدر والفوتر
+          element.querySelectorAll('header, footer, nav').forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.classList.add('app-header');
+            }
+          });
+        }
+      });
+      
+      // التحقق من إذن الكاميرا
+      checkPermission();
       
       // إعادة تعيين حالة الماسح
       setHasScannerError(false);

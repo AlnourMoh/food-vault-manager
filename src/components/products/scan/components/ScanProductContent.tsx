@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { ScannerErrorView } from './ScannerErrorView';
+import { useCameraPermissions } from '@/hooks/useCameraPermissions';
 
 interface ScanProductContentProps {
   hasScannerError: boolean;
@@ -20,6 +21,19 @@ export const ScanProductContent = ({
   onScan,
   onClose
 }: ScanProductContentProps) => {
+  // استخدام hook للتحقق من أذونات الكاميرا
+  const { hasPermission, requestPermission } = useCameraPermissions();
+
+  // التأكد من وجود إذن الكاميرا قبل عرض الماسح
+  useEffect(() => {
+    if (showScanner && hasPermission === false) {
+      console.log('ScanProductContent: لا يوجد إذن للكاميرا، محاولة طلبه...');
+      requestPermission().catch(error => {
+        console.error('ScanProductContent: خطأ في طلب إذن الكاميرا:', error);
+      });
+    }
+  }, [showScanner, hasPermission, requestPermission]);
+
   return (
     <div 
       className="h-[calc(100vh-120px)] relative flex items-center justify-center overflow-hidden"
@@ -34,6 +48,7 @@ export const ScanProductContent = ({
           <div className="scanner-container" style={{
             position: 'absolute',
             inset: 0,
+            zIndex: 1000, // تحديد مستوى z-index أعلى لضمان ظهور الماسح فوق أي عناصر أخرى
           }}>
             <ZXingBarcodeScanner
               onScan={onScan}

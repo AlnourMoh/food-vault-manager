@@ -16,6 +16,11 @@
   background-color: transparent !important;
 }
 
+.scanner-dialog-container {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 #zxing-scanner-video {
   position: absolute;
   top: 0;
