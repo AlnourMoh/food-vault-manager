@@ -8,6 +8,7 @@ import '@/styles/zxing-scanner.css';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { PermissionStatus } from '@capacitor-mlkit/barcode-scanning';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -46,31 +47,104 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
       try {
         setIsInitializing(true);
         
+        // محاولة إعادة تعيين حالة التطبيق المسجلة في Android
+        if (Capacitor.getPlatform() === 'android') {
+          try {
+            await BarcodeScanner.enableTorch(false);
+          } catch (e) {
+            // تجاهل الأخطاء هنا
+          }
+          
+          try {
+            await BarcodeScanner.stopScan();
+          } catch (e) {
+            // تجاهل الأخطاء هنا
+          }
+        }
+        
         // طلب الإذن مباشرة عند تحميل المكون بطرق متعددة
         console.log('[ZXingBarcodeScanner] محاولة طلب إذن الكاميرا...');
         
-        // التحقق المباشر عبر MLKit
+        // التحقق المباشر عبر MLKit مع إظهار شاشة توضيحية
         if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-          const { camera } = await BarcodeScanner.checkPermissions();
-          if (camera === 'granted') {
-            console.log('[ZXingBarcodeScanner] الإذن ممنوح مسبقاً، بدء المسح');
-            startScan();
-            setIsInitializing(false);
-            return;
-          }
+          console.log('[ZXingBarcodeScanner] التحقق من وجود MLKit...');
           
-          // طلب الإذن مباشرة من MLKit
-          console.log('[ZXingBarcodeScanner] طلب الإذن مباشرة من MLKit');
-          const permissionResult = await BarcodeScanner.requestPermissions();
-          if (permissionResult.camera === 'granted') {
-            console.log('[ZXingBarcodeScanner] تم منح الإذن من MLKit، بدء المسح');
-            await Toast.show({
-              text: 'تم منح إذن الكاميرا بنجاح! جاري بدء المسح',
-              duration: 'short'
-            });
-            startScan();
-            setIsInitializing(false);
-            return;
+          // إعادة تعيين حالة الإذن
+          try {
+            // التحقق من حالة الإذن الحالية
+            const { camera } = await BarcodeScanner.checkPermissions();
+            console.log('[ZXingBarcodeScanner] حالة إذن الكاميرا:', camera);
+            
+            if (camera === 'granted') {
+              console.log('[ZXingBarcodeScanner] الإذن ممنوح مسبقاً، بدء المسح');
+              startScan();
+              setIsInitializing(false);
+              return;
+            }
+            
+            if (camera === 'prompt' || camera === 'prompt-with-rationale') {
+              // طلب الإذن مباشرة من MLKit
+              console.log('[ZXingBarcodeScanner] طلب الإذن مباشرة من MLKit');
+              
+              await Toast.show({
+                text: 'التطبيق يحتاج للوصول إلى الكاميرا، الرجاء السماح له',
+                duration: 'long'
+              });
+              
+              setTimeout(async () => {
+                const permissionResult = await BarcodeScanner.requestPermissions();
+                console.log('[ZXingBarcodeScanner] نتيجة طلب الإذن من MLKit:', permissionResult);
+                
+                if (permissionResult.camera === 'granted') {
+                  console.log('[ZXingBarcodeScanner] تم منح الإذن من MLKit، بدء المسح');
+                  await Toast.show({
+                    text: 'تم منح إذن الكاميرا بنجاح! جاري بدء المسح',
+                    duration: 'short'
+                  });
+                  startScan();
+                  setIsInitializing(false);
+                  return;
+                } else {
+                  // طريقة بديلة إذا فشل MLKit
+                  console.log('[ZXingBarcodeScanner] فشل طلب الإذن من MLKit، جاري استخدام الطريقة البديلة');
+                  const granted = await requestPermission();
+                  
+                  if (!granted) {
+                    // محاولة استخدام scannerPermissionService كخيار أخير
+                    const serviceGranted = await scannerPermissionService.requestPermission();
+                    if (!serviceGranted) {
+                      await Toast.show({
+                        text: 'لم يتم منح إذن الكاميرا. برجاء تمكينه من إعدادات الهاتف.',
+                        duration: 'long'
+                      });
+                      
+                      setTimeout(async () => {
+                        await scannerPermissionService.openAppSettings();
+                      }, 1500);
+                    }
+                  }
+                  setIsInitializing(false);
+                }
+              }, 500); // تأخير صغير لضمان ظهور رسالة التوضيح قبل طلب الإذن
+              return;
+            }
+            
+            if (camera === 'denied') {
+              console.log('[ZXingBarcodeScanner] تم رفض الإذن سابقًا، محاولة استخدام الطريقة البديلة');
+              await Toast.show({
+                text: 'تم رفض إذن الكاميرا سابقًا. برجاء تمكينه من إعدادات التطبيق.',
+                duration: 'long'
+              });
+              
+              setTimeout(async () => {
+                await scannerPermissionService.openAppSettings();
+              }, 1500);
+              
+              setIsInitializing(false);
+              return;
+            }
+          } catch (e) {
+            console.error('[ZXingBarcodeScanner] خطأ في التحقق من إذن MLKit:', e);
           }
         }
         

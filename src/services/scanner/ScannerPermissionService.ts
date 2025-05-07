@@ -11,6 +11,7 @@ import { Camera } from '@capacitor/camera';
 export class ScannerPermissionService {
   private static instance: ScannerPermissionService;
   private permissionRequestAttempts = 0;
+  private packageName = 'app.lovable.foodvault.manager'; // معرف حزمة التطبيق
   
   private constructor() {}
   
@@ -22,20 +23,45 @@ export class ScannerPermissionService {
   }
   
   /**
-   * فتح إعدادات التطبيق
+   * فتح إعدادات التطبيق مباشرة للوصول لصفحة أذونات التطبيق
    */
   public async openAppSettings(): Promise<void> {
     try {
       console.log('[ScannerPermissionService] محاولة فتح إعدادات التطبيق...');
+      
+      // إظهار توجيهات للمستخدم
+      const platform = Capacitor.getPlatform();
+      const settingsMessage = platform === 'ios' 
+        ? 'سيتم توجيهك الآن إلى إعدادات التطبيق. الرجاء تمكين إذن الكاميرا.'
+        : 'سيتم توجيهك الآن إلى إعدادات التطبيق. الرجاء الانتقال إلى "الأذونات" وتمكين إذن الكاميرا.';
+      
+      await Toast.show({
+        text: settingsMessage,
+        duration: 'long'
+      });
       
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[ScannerPermissionService] فتح الإعدادات باستخدام MLKit...');
         await BarcodeScanner.openSettings();
         return;
       }
+
+      // استخدام حزمة App إذا كانت متاحة
+      if (Capacitor.isPluginAvailable('App')) {
+        if (platform === 'android') {
+          // على Android، يمكننا فتح صفحة التطبيق في الإعدادات مباشرةً
+          const url = `package:${this.packageName}`;
+          await App.openUrl({ url });
+          return;
+        } else if (platform === 'ios') {
+          // على iOS، نحتاج استخدام URL لفتح إعدادات التطبيق
+          await App.openUrl({ url: 'app-settings:' });
+          return;
+        }
+      }
       
       // الطريقة البديلة لفتح الإعدادات على نظام Android
-      if (Capacitor.getPlatform() === 'android') {
+      if (platform === 'android') {
         console.log('[ScannerPermissionService] محاولة فتح إعدادات Android...');
         
         await Toast.show({
@@ -45,23 +71,21 @@ export class ScannerPermissionService {
         
         // تقديم توجيه مفصل للمستخدم
         alert(
-          'لتمكين إذن الكاميرا على أندرويد:\n\n' +
+          'لتمكين إذن الكاميرا يدويًا:\n\n' +
           '1. افتح إعدادات جهازك\n' +
           '2. اختر "التطبيقات" أو "إدارة التطبيقات"\n' +
           '3. ابحث عن تطبيق "مخزن الطعام"\n' +
           '4. اختر "الأذونات"\n' +
-          '5. قم بتفعيل إذن "الكاميرا"'
+          '5. اختر "الكاميرا" وقم بتمكينها\n\n' +
+          'إذا لم يظهر التطبيق في قائمة التطبيقات, قم بتثبيت التطبيق مرة أخرى أو أعد تشغيل الهاتف'
         );
-        
-        setTimeout(() => App.exitApp(), 3000);
-        return;
       }
       
       // الطريقة البديلة لنظام iOS
-      if (Capacitor.getPlatform() === 'ios') {
+      if (platform === 'ios') {
         console.log('[ScannerPermissionService] استخدام طريقة الخروج لـ iOS...');
         await Toast.show({
-          text: 'سيتم إغلاق التطبيق، يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا ثم إعادة فتح التطبيق',
+          text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا ثم إعادة فتح التطبيق',
           duration: 'long'
         });
         
@@ -73,26 +97,40 @@ export class ScannerPermissionService {
           '3. اختر "الكاميرا"\n' +
           '4. ابحث عن تطبيق "مخزن الطعام" وقم بتفعيله'
         );
-        
-        setTimeout(() => App.exitApp(), 3000);
-        return;
       }
-      
-      console.warn('[ScannerPermissionService] لا يمكن فتح الإعدادات تلقائيًا');
-      await Toast.show({
-        text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
-        duration: 'long'
-      });
     } catch (error) {
       console.error('[ScannerPermissionService] خطأ في فتح الإعدادات:', error);
       try {
+        // توجيهات إضافية في حال فشل فتح الإعدادات
         await Toast.show({
           text: 'يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا',
           duration: 'long'
         });
+        
+        // توجيهات أكثر تفصيلاً حسب نوع المنصة
+        const platform = Capacitor.getPlatform();
+        if (platform === 'android') {
+          alert(
+            'لتمكين إذن الكاميرا يدويًا:\n\n' +
+            '1. افتح إعدادات جهازك\n' +
+            '2. اختر "التطبيقات"\n' +
+            '3. ابحث عن تطبيق "مخزن الطعام"\n' +
+            '4. اختر "الأذونات"\n' +
+            '5. قم بتمكين "الكاميرا"\n\n' +
+            'بعد تمكين الإذن، أعد تشغيل التطبيق'
+          );
+        } else {
+          alert(
+            'لتمكين إذن الكاميرا:\n\n' +
+            '1. افتح إعدادات جهازك\n' +
+            '2. اختر "الخصوصية"\n' +
+            '3. اختر "الكاميرا"\n' +
+            '4. قم بتمكين الإذن لتطبيق "مخزن الطعام"\n\n' +
+            'بعد تمكين الإذن، أعد تشغيل التطبيق'
+          );
+        }
       } catch (e) {
         console.error('[ScannerPermissionService] خطأ في عرض الرسالة:', e);
-        alert('يرجى فتح إعدادات الجهاز وتمكين إذن الكاميرا للتطبيق يدويًا');
       }
     }
   }
@@ -119,71 +157,126 @@ export class ScannerPermissionService {
   
   /**
    * طلب إذن الكاميرا مع محاولات متعددة وبطرق مختلفة
+   * تم تحسين الدالة لتعامل أفضل مع مشكلة التطبيق غير الظاهر في قائمة الكاميرا
    */
   public async requestPermission(): Promise<boolean> {
     try {
       this.permissionRequestAttempts++;
       console.log(`[ScannerPermissionService] طلب إذن الكاميرا، المحاولة ${this.permissionRequestAttempts}`);
       
-      // إظهار رسالة للمستخدم
+      // جعل المحاولات أكثر مرونة لتجاوز مشاكل الأذونات على أجهزة مختلفة
+      const maxAttempts = 2;
+      let attemptCount = 0;
+      
+      // عرض رسالة توجيه للمستخدم
       await Toast.show({
-        text: 'يرجى السماح باستخدام الكاميرا لمسح الباركود',
-        duration: 'short'
+        text: 'يرجى السماح بوصول التطبيق للكاميرا. هذا ضروري لمسح الباركود.',
+        duration: 'long'
       });
       
-      // طريقة 1: استخدام MLKit
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('[ScannerPermissionService] طلب الإذن باستخدام MLKit');
-        const { camera } = await BarcodeScanner.requestPermissions();
-        console.log('[ScannerPermissionService] نتيجة طلب الإذن من MLKit:', camera);
+      // محاولة متكررة للحصول على الإذن
+      while (attemptCount < maxAttempts) {
+        attemptCount++;
+        console.log(`[ScannerPermissionService] محاولة رقم ${attemptCount} من ${maxAttempts}`);
         
-        if (camera === 'granted') {
-          // تم منح الإذن
-          return true;
+        // طريقة 1: استخدام MLKit
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          try {
+            console.log('[ScannerPermissionService] طلب الإذن باستخدام MLKit');
+            const { camera } = await BarcodeScanner.requestPermissions();
+            console.log('[ScannerPermissionService] نتيجة طلب الإذن من MLKit:', camera);
+            
+            if (camera === 'granted') {
+              console.log('[ScannerPermissionService] تم منح الإذن بنجاح من MLKit');
+              await Toast.show({
+                text: 'تم منح إذن الكاميرا بنجاح!',
+                duration: 'short'
+              });
+              return true;
+            }
+            
+            // حل مشكلة عدم ظهور التطبيق في قائمة الكاميرا - لفت انتباه المستخدم للمحاولة مرة أخرى
+            if (camera === 'denied' && attemptCount < maxAttempts) {
+              console.log('[ScannerPermissionService] تم الرفض، إعطاء توضيح للمستخدم وإعادة المحاولة');
+              await Toast.show({
+                text: 'حدثت مشكلة في طلب الإذن. سنحاول مرة أخرى...',
+                duration: 'short'
+              });
+              
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              continue;
+            }
+            
+            if (camera === 'denied') {
+              console.log('[ScannerPermissionService] تم رفض الإذن، توجيه المستخدم للإعدادات');
+              await Toast.show({
+                text: 'لم يتم منح إذن الكاميرا. سيتم توجيهك إلى إعدادات التطبيق.',
+                duration: 'long'
+              });
+              
+              setTimeout(() => this.openAppSettings(), 1000);
+              return false;
+            }
+          } catch (e) {
+            console.error('[ScannerPermissionService] خطأ في طلب الإذن من MLKit:', e);
+          }
         }
-      }
-      
-      // طريقة 2: استخدام ملحق الكاميرا
-      if (Capacitor.isPluginAvailable('Camera')) {
-        console.log('[ScannerPermissionService] طلب الإذن باستخدام ملحق الكاميرا');
-        const { camera } = await Camera.requestPermissions({
-          permissions: ['camera']
-        });
-        console.log('[ScannerPermissionService] نتيجة طلب الإذن من Camera:', camera);
         
-        if (camera === 'granted') {
-          // تم منح الإذن
-          return true;
+        // طريقة 2: استخدام ملحق الكاميرا العادي
+        if (Capacitor.isPluginAvailable('Camera')) {
+          try {
+            console.log('[ScannerPermissionService] طلب الإذن باستخدام ملحق الكاميرا');
+            const { camera } = await Camera.requestPermissions({
+              permissions: ['camera']
+            });
+            console.log('[ScannerPermissionService] نتيجة طلب الإذن من Camera:', camera);
+            
+            if (camera === 'granted') {
+              console.log('[ScannerPermissionService] تم منح الإذن بنجاح من ملحق الكاميرا');
+              await Toast.show({
+                text: 'تم منح إذن الكاميرا بنجاح!',
+                duration: 'short'
+              });
+              return true;
+            }
+          } catch (e) {
+            console.error('[ScannerPermissionService] خطأ في طلب الإذن من ملحق الكاميرا:', e);
+          }
         }
-      }
-      
-      // طريقة 3: API الويب للكاميرا
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        console.log('[ScannerPermissionService] طلب الإذن باستخدام navigator.mediaDevices');
-        try {
-          // هذا سيؤدي إلى فتح مربع حوار إذن على المتصفح
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          
-          // تم منح الإذن، تنظيف الدفق
-          stream.getTracks().forEach(track => track.stop());
-          console.log('[ScannerPermissionService] تم منح إذن الكاميرا من API الويب');
-          
-          return true;
-        } catch (mediaError) {
-          console.log('[ScannerPermissionService] تم رفض إذن كاميرا الويب', mediaError);
+        
+        // طريقة 3: API الويب للكاميرا
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            console.log('[ScannerPermissionService] طلب الإذن باستخدام navigator.mediaDevices');
+            // هذا سيؤدي إلى فتح مربع حوار إذن على المتصفح
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            
+            // تم منح الإذن، تنظيف الدفق
+            stream.getTracks().forEach(track => track.stop());
+            console.log('[ScannerPermissionService] تم منح إذن الكاميرا من API الويب');
+            
+            return true;
+          } catch (mediaError) {
+            console.log('[ScannerPermissionService] تم رفض إذن كاميرا الويب', mediaError);
+          }
+        }
+        
+        // انتظار قبل المحاولة التالية
+        if (attemptCount < maxAttempts) {
+          console.log('[ScannerPermissionService] انتظار قبل المحاولة التالية');
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
       
       // بعد فشل جميع المحاولات
-      if (this.permissionRequestAttempts > 2) {
-        console.log('[ScannerPermissionService] فشلت عدة محاولات، الانتقال إلى إعدادات التطبيق');
-        await Toast.show({
-          text: 'لم يتم منح الإذن بعد عدة محاولات، سيتم توجيهك إلى الإعدادات',
-          duration: 'short'
-        });
-        
-        setTimeout(() => this.openAppSettings(), 1500);
-      }
+      console.log('[ScannerPermissionService] فشلت جميع المحاولات، توجيه المستخدم إلى الإعدادات');
+      await Toast.show({
+        text: 'لم نتمكن من الحصول على إذن الكاميرا بشكل تلقائي. سيتم توجيهك إلى إعدادات التطبيق.',
+        duration: 'long'
+      });
+      
+      // تأخير قصير قبل فتح الإعدادات
+      setTimeout(() => this.openAppSettings(), 1500);
       
       return false;
     } catch (error) {

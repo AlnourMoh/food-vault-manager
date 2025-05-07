@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Keyboard, Settings, AlertCircle } from 'lucide-react';
+import { Camera, Keyboard, Settings, AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Toast } from '@capacitor/toast';
 import { barcodeScannerService } from '@/services/scanner/BarcodeScannerService';
@@ -17,6 +17,7 @@ interface NoPermissionViewProps {
 
 export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }: NoPermissionViewProps) => {
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [showAdvancedHelp, setShowAdvancedHelp] = useState(false);
   
   const handleRequestPermission = async () => {
     try {
@@ -50,6 +51,29 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
             await onRequestPermission();
           }
           return;
+        } else if (permissionResult.camera === 'denied') {
+          console.log('تم رفض طلب الإذن، محاولة مرة أخرى بطريقة مختلفة');
+          // محاولة أخرى بإعطاء المستخدم مزيداً من المعلومات
+          await Toast.show({
+            text: 'لاستخدام الماسح الضوئي، يرجى منح إذن الكاميرا',
+            duration: 'long'
+          });
+          
+          // انتظار لحظة قبل المحاولة التالية
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          try {
+            // محاولة أخرى
+            const secondAttempt = await BarcodeScanner.requestPermissions();
+            if (secondAttempt.camera === 'granted') {
+              if (onRequestPermission) {
+                await onRequestPermission();
+              }
+              return;
+            }
+          } catch (e) {
+            console.error('فشلت المحاولة الثانية:', e);
+          }
         }
       }
       
@@ -100,14 +124,7 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
         duration: 'short'
       });
       
-      // محاولة فتح الإعدادات باستخدام BarcodeScanner إذا كان متاحًا
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('استخدام MLKit لفتح الإعدادات');
-        await BarcodeScanner.openSettings();
-        return;
-      }
-      
-      // استخدام الخدمة المخصصة كخيار ثانٍ
+      // محاولة فتح الإعدادات
       await barcodeScannerService.openAppSettings();
       
     } catch (error) {
@@ -124,25 +141,37 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
         duration: 'long'
       });
       
-      // إظهار توجيهات أكثر تفصيلاً حسب نوع المنصة
-      if (platform === 'android') {
-        alert(
-          'لتمكين إذن الكاميرا على أندرويد:\n\n' +
-          '1. افتح إعدادات جهازك\n' +
-          '2. اختر "التطبيقات" أو "مدير التطبيقات"\n' +
-          '3. ابحث عن تطبيق "مخزن الطعام"\n' +
-          '4. اختر "الأذونات"\n' +
-          '5. قم بتفعيل إذن "الكاميرا"'
-        );
-      } else if (platform === 'ios') {
-        alert(
-          'لتمكين إذن الكاميرا على آيفون:\n\n' +
-          '1. افتح إعدادات جهازك\n' +
-          '2. اختر "الخصوصية والأمان"\n' +
-          '3. اختر "الكاميرا"\n' +
-          '4. ابحث عن تطبيق "مخزن الطعام" وقم بتفعيله'
-        );
-      }
+      // إظهار مزيد من المعلومات
+      setShowAdvancedHelp(true);
+    }
+  };
+  
+  // مساعدة متقدمة للمستخدمين - تظهر حلاً لمشكلة عدم ظهور التطبيق
+  const showFixForMissingApp = async () => {
+    const platform = Capacitor.getPlatform();
+    
+    if (platform === 'android') {
+      alert(
+        'حل مشكلة عدم ظهور التطبيق في قائمة الكاميرا:\n\n' +
+        '1. اذهب إلى الإعدادات > التطبيقات\n' +
+        '2. اضغط على ثلاث نقاط أو "إدارة التطبيقات" (تختلف حسب الجهاز)\n' +
+        '3. اختر "إظهار تطبيقات النظام" أو "عرض جميع التطبيقات"\n' +
+        '4. ابحث عن "Google Play Services"\n' +
+        '5. اختر "التخزين" ثم "محو ذاكرة التخزين المؤقت"\n' +
+        '6. عد للخلف واختر "الأذونات"\n' +
+        '7. تأكد من منح أذونات الكاميرا\n' +
+        '8. أعد تشغيل الجهاز\n\n' +
+        'إذا استمرت المشكلة، جرب إعادة تثبيت التطبيق بعد إلغاء تثبيته'
+      );
+    } else {
+      alert(
+        'حل مشكلة عدم ظهور التطبيق في قائمة الكاميرا:\n\n' +
+        '1. توجه إلى إعدادات iOS > عام > إعادة ضبط\n' +
+        '2. اختر "إعادة ضبط إعدادات الخصوصية"\n' +
+        '3. أعد تشغيل الجهاز\n' +
+        '4. افتح التطبيق مرة أخرى وسيطلب إذن الكاميرا مجدداً\n\n' +
+        'لاحظ: هذا سيعيد ضبط جميع أذونات التطبيقات، وليس فقط هذا التطبيق'
+      );
     }
   };
 
@@ -160,11 +189,33 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>تنبيه هام</AlertTitle>
             <AlertDescription>
-              يرجى منح تصريح الوصول إلى الكاميرا في إعدادات جهازك لاستخدام الماسح الضوئي.
+              يحتاج التطبيق لإذن الكاميرا لمسح الباركود. نواجه مشكلة في الحصول على الإذن.
               <br />
-              <strong>هذا التطبيق يستخدم الكاميرا فقط لمسح الباركود</strong>
+              <strong>التطبيق يستخدم الكاميرا فقط لمسح الرموز الشريطية</strong>
             </AlertDescription>
           </Alert>
+          
+          {showAdvancedHelp && (
+            <Alert className="border-amber-200 bg-amber-50 mt-2">
+              <AlertTitle className="text-amber-900">مشكلة شائعة: التطبيق غير ظاهر في قائمة الكاميرا</AlertTitle>
+              <AlertDescription className="text-amber-800">
+                قد لا يظهر التطبيق في قائمة التطبيقات المطلوب منحها إذن الكاميرا. 
+                لحل هذه المشكلة:
+                <ul className="mt-2 list-disc list-inside">
+                  <li>قم بإعادة تثبيت التطبيق</li>
+                  <li>أعد تشغيل الجهاز</li>
+                  <li>امسح ذاكرة التخزين المؤقت لـ Google Play Services</li>
+                </ul>
+                <Button 
+                  onClick={showFixForMissingApp} 
+                  variant="outline" 
+                  className="w-full mt-2 bg-amber-100"
+                >
+                  عرض حل مفصل للمشكلة
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
           
           <div className="flex flex-col w-full space-y-2 mt-4">
             <Button 
@@ -186,6 +237,15 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
               فتح إعدادات التطبيق
             </Button>
             
+            <Button
+              onClick={() => setShowAdvancedHelp(!showAdvancedHelp)}
+              className="w-full"
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 ml-2" />
+              {showAdvancedHelp ? 'إخفاء المساعدة المتقدمة' : 'مشكلة عدم ظهور التطبيق؟'}
+            </Button>
+            
             {onManualEntry && (
               <Button 
                 onClick={onManualEntry}
@@ -198,7 +258,7 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
             )}
             
             <Button 
-              variant="outline" 
+              variant="ghost" 
               onClick={onClose}
               className="w-full"
             >
