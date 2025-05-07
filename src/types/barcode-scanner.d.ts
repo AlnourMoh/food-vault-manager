@@ -1,5 +1,4 @@
 
-
 import { Plugin } from '@capacitor/core';
 
 declare global {
@@ -56,4 +55,3 @@ export interface BarcodeScannerPlugin extends Plugin {
   enableCamera(): Promise<void>; // Kept for backward compatibility
   disableCamera(): Promise<void>; // Kept for backward compatibility
 }
-
