@@ -44,7 +44,7 @@ export const useMLKitScanner = () => {
       // تنظيف وإخفاء الكاميرا بعد المسح
       try {
         // استخدام stopScan لإيقاف الكاميرا
-        await BarcodeScanner.stopScan();
+        await BarcodeScanner.stopScan().catch(() => {});
         await BarcodeScanner.disableTorch();
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا:', e);
