@@ -3,6 +3,9 @@ import { useCallback } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
 
+// Import the augmentation to ensure TypeScript recognizes the extended methods
+import '@/types/barcode-scanner-augmentation';
+
 /**
  * Hook لإدارة واجهة المستخدم للماسح الضوئي - تم تحسينه للاستجابة السريعة
  */

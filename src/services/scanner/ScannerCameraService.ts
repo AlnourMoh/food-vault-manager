@@ -3,6 +3,9 @@ import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning
 import { Toast } from '@capacitor/toast';
 import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
 
+// Import the augmentation to ensure TypeScript recognizes the extended methods
+import '@/types/barcode-scanner-augmentation';
+
 /**
  * خدمة تتحكم في وظائف كاميرا الماسح الضوئي
  */

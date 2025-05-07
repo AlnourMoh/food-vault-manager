@@ -5,6 +5,9 @@ import { App } from '@capacitor/app';
 import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 
+// Import the augmentation to ensure TypeScript recognizes the extended methods
+import '@/types/barcode-scanner-augmentation';
+
 interface BarcodeScannerProps {
   onScan: (code: string) => void;
   onClose: () => void;
