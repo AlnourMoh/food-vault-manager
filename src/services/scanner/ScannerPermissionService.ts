@@ -1,4 +1,3 @@
-
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
@@ -25,7 +24,7 @@ export class ScannerPermissionService {
   /**
    * فتح إعدادات التطبيق مباشرة للوصول لصفحة أذونات التطبيق
    */
-  public async openAppSettings(): Promise<void> {
+  public async openAppSettings(): Promise<boolean> {
     try {
       console.log('[ScannerPermissionService] محاولة فتح إعدادات التطبيق...');
       
@@ -43,21 +42,13 @@ export class ScannerPermissionService {
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[ScannerPermissionService] فتح الإعدادات باستخدام MLKit...');
         await BarcodeScanner.openSettings();
-        return;
+        return true;
       }
 
-      // استخدام حزمة App إذا كانت متاحة
-      if (Capacitor.isPluginAvailable('App')) {
-        if (platform === 'android') {
-          // على Android، يمكننا فتح صفحة التطبيق في الإعدادات مباشرةً
-          const url = `package:${this.packageName}`;
-          await App.openUrl({ url });
-          return;
-        } else if (platform === 'ios') {
-          // على iOS، نحتاج استخدام URL لفتح إعدادات التطبيق
-          await App.openUrl({ url: 'app-settings:' });
-          return;
-        }
+      // استخدام Camera API لفتح الإعدادات
+      if (Capacitor.isPluginAvailable('Camera')) {
+        await Camera.openSettings();
+        return true;
       }
       
       // الطريقة البديلة لفتح الإعدادات على نظام Android
@@ -94,10 +85,12 @@ export class ScannerPermissionService {
           'لتمكين إذن الكاميرا على آيفون:\n\n' +
           '1. افتح إعدادات جهازك\n' +
           '2. اختر "الخصوصية والأمان"\n' +
-          '3. اختر "الكاميرا"\n' +
+          '3. اخت�� "الكاميرا"\n' +
           '4. ابحث عن تطبيق "مخزن الطعام" وقم بتفعيله'
         );
       }
+      
+      return false;
     } catch (error) {
       console.error('[ScannerPermissionService] خطأ في فتح الإعدادات:', error);
       try {
@@ -132,6 +125,7 @@ export class ScannerPermissionService {
       } catch (e) {
         console.error('[ScannerPermissionService] خطأ في عرض الرسالة:', e);
       }
+      return false;
     }
   }
   
@@ -174,7 +168,7 @@ export class ScannerPermissionService {
         duration: 'long'
       });
       
-      // محاولة متكررة للحصول على الإذن
+      // محاولة متكرر�� للحصول على الإذن
       while (attemptCount < maxAttempts) {
         attemptCount++;
         console.log(`[ScannerPermissionService] محاولة رقم ${attemptCount} من ${maxAttempts}`);

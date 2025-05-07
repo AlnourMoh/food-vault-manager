@@ -8,7 +8,6 @@ import '@/styles/zxing-scanner.css';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { PermissionStatus } from '@capacitor-mlkit/barcode-scanning';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
