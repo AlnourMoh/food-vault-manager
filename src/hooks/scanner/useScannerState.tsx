@@ -19,7 +19,7 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   
   const { hasPermission, requestPermission } = useCameraPermissions();
   const { isScanning, startMLKitScan, stopMLKitScan } = useMLKitScanner();
-  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
+  const { setupScannerBackground, restoreUIAfterScanning, cleanup } = useScannerUI();
   
   const { toast } = useToast();
   
@@ -77,14 +77,14 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
       await stopMLKitScan();
       
       // تنظيف واجهة المستخدم
-      await cleanupScannerBackground();
+      await restoreUIAfterScanning();
       
       return true;
     } catch (error) {
       console.error('[useScannerState] خطأ في إيقاف المسح:', error);
       return false;
     }
-  }, [stopMLKitScan, cleanupScannerBackground]);
+  }, [stopMLKitScan, restoreUIAfterScanning]);
 
   // وظيفة للتعامل مع الإدخال اليدوي
   const handleManualEntry = useCallback(() => {
