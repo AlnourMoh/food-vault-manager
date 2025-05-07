@@ -1,6 +1,7 @@
 
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
+import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
 
 /**
  * خدمة تتحكم في وظائف كاميرا الماسح الضوئي

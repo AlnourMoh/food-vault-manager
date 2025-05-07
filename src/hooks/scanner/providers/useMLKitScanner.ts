@@ -1,7 +1,9 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { useScannerUI } from '@/hooks/scanner/useScannerUI';
+import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
 
 export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState(false);

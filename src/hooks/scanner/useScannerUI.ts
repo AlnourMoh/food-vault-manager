@@ -1,5 +1,7 @@
+
 import { useCallback } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
 
 /**
  * Hook لإدارة واجهة المستخدم للماسح الضوئي - تم تحسينه للاستجابة السريعة
