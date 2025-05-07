@@ -55,3 +55,9 @@ export interface BarcodeScannerPlugin extends Plugin {
   enableCamera(): Promise<void>; // Kept for backward compatibility
   disableCamera(): Promise<void>; // Kept for backward compatibility
 }
+
+declare module '@capacitor-mlkit/barcode-scanning' {
+  interface BarcodeScanner {
+    prepare(): Promise<void>;
+  }
+}
