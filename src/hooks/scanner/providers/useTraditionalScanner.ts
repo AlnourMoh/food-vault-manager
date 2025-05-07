@@ -4,7 +4,7 @@ import { useScannerUI } from '../useScannerUI';
 
 export const useTraditionalScanner = () => {
   const { toast } = useToast();
-  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
+  const { setupScannerBackground, restoreUIAfterScanning } = useScannerUI();
 
   const startTraditionalScan = async (onSuccess: (code: string) => void) => {
     try {
@@ -53,7 +53,8 @@ export const useTraditionalScanner = () => {
       await BarcodeScanner.showBackground().catch(() => {
         console.log("[useTraditionalScanner] تعذر إظهار الخلفية، تجاهل الخطأ");
       });
-      cleanupScannerBackground();
+      // استخدام restoreUIAfterScanning بدلاً من cleanupScannerBackground
+      await restoreUIAfterScanning();
       
       if (result.hasContent) {
         console.log("[useTraditionalScanner] تم العثور على محتوى:", result.content);
@@ -67,7 +68,8 @@ export const useTraditionalScanner = () => {
       console.error("[useTraditionalScanner] خطأ في عملية المسح:", error);
       
       // تنظيف الموارد في حالة الخطأ
-      cleanupScannerBackground();
+      // استخدام restoreUIAfterScanning بدلاً من cleanupScannerBackground
+      await restoreUIAfterScanning();
       
       // محاولة إظهار الخلفية وإيقاف المسح في حالة الخطأ
       if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {

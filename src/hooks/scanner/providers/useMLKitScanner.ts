@@ -22,8 +22,8 @@ export const useMLKitScanner = () => {
         // تهيئة العرض المباشر للكاميرا قبل بدء المسح
         console.log('[useMLKitScanner] تهيئة عرض الكاميرا...');
         
-        // إظهار الكاميرا - استخدم الأسلوب الصحيح للإصدار الحديث
-        await BarcodeScanner.enableCamera();
+        // استخدام prepare بدلاً من enableCamera لأنه مدعوم في الواجهة الحالية
+        await BarcodeScanner.prepare();
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في تهيئة الكاميرا:', e);
       }
@@ -43,7 +43,8 @@ export const useMLKitScanner = () => {
       
       // تنظيف وإخفاء الكاميرا بعد المسح
       try {
-        await BarcodeScanner.disableCamera();
+        // استخدام stopScan بدلاً من disableCamera حيث أنه مدعوم بشكل أفضل
+        await BarcodeScanner.stopScan();
         await BarcodeScanner.disableTorch();
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا:', e);
@@ -71,7 +72,7 @@ export const useMLKitScanner = () => {
       
       try {
         // التأكد من إخفاء الكاميرا في حالة الخطأ
-        await BarcodeScanner.disableCamera();
+        await BarcodeScanner.stopScan();
         await BarcodeScanner.disableTorch();
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
@@ -90,7 +91,6 @@ export const useMLKitScanner = () => {
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         await BarcodeScanner.disableTorch().catch(() => {});
         await BarcodeScanner.stopScan().catch(() => {});
-        await BarcodeScanner.disableCamera().catch(() => {});
       }
       
       setIsScanning(false);

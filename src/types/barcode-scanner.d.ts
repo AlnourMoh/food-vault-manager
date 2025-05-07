@@ -48,6 +48,6 @@ export interface BarcodeScannerPlugin extends Plugin {
   hideBackground(): Promise<void>;
   isSupported(): Promise<IsSupportedResult>;
   isTorchAvailable(): Promise<IsTorchAvailableResult>;
-  enableCamera?(): Promise<void>; // Optional new method
-  disableCamera?(): Promise<void>; // Optional new method
+  enableCamera(): Promise<void>; // Changed optional to required
+  disableCamera(): Promise<void>; // Changed optional to required
 }

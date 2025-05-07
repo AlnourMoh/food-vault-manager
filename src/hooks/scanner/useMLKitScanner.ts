@@ -18,7 +18,7 @@ export const useMLKitScanner = ({ onScan, onClose }: UseMLKitScannerProps) => {
   const [hasScannerError, setHasScannerError] = useState(false);
   
   const { toast } = useToast();
-  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
+  const { setupScannerBackground, restoreUIAfterScanning } = useScannerUI();
   
   // التحقق من الأذونات
   const checkPermission = useCallback(async () => {
@@ -130,13 +130,13 @@ export const useMLKitScanner = ({ onScan, onClose }: UseMLKitScannerProps) => {
       setIsScanningActive(false);
       return false;
     }
-  }, [hasPermission, requestPermission, onScan]);
+  }, [hasPermission, requestPermission, onScan, setupScannerBackground]);
   
   // إيقاف المسح
   const stopScan = useCallback(async () => {
     try {
       setIsScanningActive(false);
-      await cleanupScannerBackground();
+      await restoreUIAfterScanning();
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         await BarcodeScanner.stopScan().catch(() => {});
@@ -147,7 +147,7 @@ export const useMLKitScanner = ({ onScan, onClose }: UseMLKitScannerProps) => {
       console.error('خطأ في إيقاف المسح:', error);
       return false;
     }
-  }, []);
+  }, [restoreUIAfterScanning]);
   
   // الإدخال اليدوي
   const handleManualEntry = useCallback(() => {

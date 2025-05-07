@@ -47,8 +47,8 @@ export class ScannerCameraService {
       }
 
       try {
-        // إظهار خلفية الكاميرا - هذه الدالة تمت إضافتها في الإصدارات الحديثة من المكتبة
-        await BarcodeScanner.enableCamera();
+        // نستخدم prepare بدلاً من enableCamera
+        await BarcodeScanner.prepare();
       } catch (error) {
         console.error('[ScannerCameraService] خطأ في تفعيل الكاميرا:', error);
       }
@@ -74,12 +74,8 @@ export class ScannerCameraService {
       await BarcodeScanner.disableTorch().catch(() => {});
       await BarcodeScanner.stopScan().catch(() => {});
       
-      try {
-        // إخفاء خلفية الكاميرا - هذه الدالة تمت إضافتها في الإصدارات الحديثة من المكتبة
-        await BarcodeScanner.disableCamera();
-      } catch (error) {
-        console.error('[ScannerCameraService] خطأ في إيقاف الكاميرا:', error);
-      }
+      // نستخدم stopScan بدلاً من disableCamera
+      // حيث أن stopScan يعيد إيقاف تشغيل الكاميرا عبر واجهة برمجة التطبيقات
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في تنظيف موارد الكاميرا:', error);
     }

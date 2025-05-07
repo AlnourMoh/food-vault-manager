@@ -26,8 +26,11 @@ export const useScannerUI = () => {
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          // تهيئة وتفعيل الكاميرا
-          await BarcodeScanner.enableCamera();
+          // تهيئة وتفعيل الكاميرا - استخدام طريقة أخرى بدلاً من enableCamera
+          // نتحقق مما إذا كانت الدالة موجودة قبل استدعائها
+          if (typeof BarcodeScanner.prepare === 'function') {
+            await BarcodeScanner.prepare();
+          }
         } catch (error) {
           console.error('[useScannerUI] خطأ في تفعيل الكاميرا:', error);
           // نستمر حتى لو فشل هذا الجزء
@@ -79,7 +82,10 @@ export const useScannerUI = () => {
       // إيقاف الكاميرا إذا كانت نشطة
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          await BarcodeScanner.disableCamera();
+          // استخدام طريقة أخرى بدلاً من disableCamera
+          if (typeof BarcodeScanner.stopScan === 'function') {
+            await BarcodeScanner.stopScan();
+          }
         } catch (error) {
           console.error('[useScannerUI] خطأ في إيقاف الكاميرا:', error);
           // نستمر حتى لو فشل هذا الجزء
@@ -113,10 +119,14 @@ export const useScannerUI = () => {
       console.error('[useScannerUI] خطأ في تنظيف واجهة المستخدم:', error);
     }
   }, []);
+
+  // إضافة cleanupScannerBackground كاسم بديل لـ restoreUIAfterScanning للتوافق مع الكود القديم
+  const cleanupScannerBackground = restoreUIAfterScanning;
   
   return {
     setupScannerBackground,
     restoreUIAfterScanning,
+    cleanupScannerBackground,
     cleanup
   };
 };
