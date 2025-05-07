@@ -35,6 +35,7 @@ export interface ScanResult {
 export type CameraDirection = 'front' | 'back';
 
 export interface BarcodeScannerPlugin extends Plugin {
+  prepare(): Promise<void>; // إضافة دالة prepare
   startScan(options?: ScanOptions): Promise<ScanResult>;
   stopScan(): Promise<void>;
   checkPermission(): Promise<{ granted: boolean }>;
@@ -43,7 +44,6 @@ export interface BarcodeScannerPlugin extends Plugin {
   toggleTorch(): Promise<void>;
   enableTorch(): Promise<void>;
   disableTorch(): Promise<void>;
-  prepare(): Promise<void>;
   showBackground(): Promise<void>;
   hideBackground(): Promise<void>;
   isSupported(): Promise<IsSupportedResult>;
