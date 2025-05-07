@@ -36,23 +36,21 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
     // التحقق من الإذن وطلبه إذا لم يكن موجوداً
     const setupScanner = async () => {
       try {
-        // طلب الإذن مباشرة إذا لم يكن موجوداً
-        if (hasPermission === false) {
-          console.log('[ZXingBarcodeScanner] لا يوجد إذن، محاولة طلبه...');
-          
-          // عرض رسالة توضيحية للمستخدم
-          await Toast.show({
-            text: 'المطلوب إذن الكاميرا لمسح الباركود',
-            duration: 'short'
-          });
-          
-          // طلب الإذن من ScannerPermissionService
-          const granted = await scannerPermissionService.requestPermission();
-          
-          if (!granted) {
-            console.log('[ZXingBarcodeScanner] لم يتم منح الإذن');
-            return;
-          }
+        // طلب الإذن مباشرة عند تحميل المكون
+        console.log('[ZXingBarcodeScanner] محاولة طلب إذن الكاميرا...');
+        
+        // عرض رسالة توضيحية للمستخدم
+        await Toast.show({
+          text: 'المطلوب إذن الكاميرا لمسح الباركود',
+          duration: 'short'
+        });
+        
+        // محاولة طلب الإذن مباشرة
+        const granted = await requestPermission();
+        
+        if (!granted) {
+          console.log('[ZXingBarcodeScanner] لم يتم منح الإذن');
+          return;
         }
         
         // بدء المسح إذا كان لدينا إذن
@@ -75,7 +73,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
         console.error('[ZXingBarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e)
       );
     };
-  }, [hasPermission, startScan, stopScan]);
+  }, [hasPermission, startScan, stopScan, requestPermission]);
 
   return (
     <div 

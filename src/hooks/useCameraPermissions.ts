@@ -14,21 +14,41 @@ export const useCameraPermissions = () => {
       try {
         setIsLoading(true);
         
+        // فحص الإذن باستخدام ملحق MLKitBarcodeScanner إذا كان متاحًا
         if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+          console.log("فحص إذن MLKitBarcodeScanner");
           const { camera } = await BarcodeScanner.checkPermissions();
-          setHasPermission(camera === 'granted');
-        } else if (window.Capacitor?.isPluginAvailable('Camera')) {
+          const isGranted = camera === 'granted';
+          console.log("نتيجة فحص MLKitBarcodeScanner:", isGranted);
+          setHasPermission(isGranted);
+        } 
+        // استخدام ملحق Camera إذا كان متاحًا
+        else if (window.Capacitor?.isPluginAvailable('Camera')) {
+          console.log("فحص إذن Camera");
           const { camera } = await Camera.checkPermissions();
-          setHasPermission(camera === 'granted');
-        } else {
-          // في حالة التطوير على الويب، نفترض وجود الإذن
-          console.log("تشغيل في بيئة الويب، افتراض وجود الإذن");
-          setHasPermission(true);
+          const isGranted = camera === 'granted';
+          console.log("نتيجة فحص Camera:", isGranted);
+          setHasPermission(isGranted);
+        } 
+        // في حالة التطوير على الويب، نفترض وجود الإذن
+        else {
+          console.log("تشغيل في بيئة الويب، جاري طلب إذن الكاميرا من المتصفح");
+          try {
+            // محاولة طلب إذن الكاميرا من المتصفح
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // تم منح الإذن، إغلاق التدفق فورًا
+            stream.getTracks().forEach(track => track.stop());
+            console.log("تم منح إذن كاميرا المتصفح");
+            setHasPermission(true);
+          } catch (error) {
+            console.log("تم رفض إذن كاميرا المتصفح أو غير متاح:", error);
+            setHasPermission(false);
+          }
         }
       } catch (error) {
         console.error("خطأ في فحص الأذونات:", error);
-        // نفترض وجود الإذن في حالة حدوث خطأ لتجنب منع المستخدم
-        setHasPermission(true);
+        // نفترض عدم وجود الإذن في حالة حدوث خطأ
+        setHasPermission(false);
       } finally {
         setIsLoading(false);
       }
@@ -43,8 +63,10 @@ export const useCameraPermissions = () => {
       console.log("طلب إذن الكاميرا");
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log("استخدام MLKitBarcodeScanner لطلب الإذن");
         const result = await BarcodeScanner.requestPermissions();
         const granted = result.camera === 'granted';
+        console.log("نتيجة طلب إذن MLKitBarcodeScanner:", granted);
         setHasPermission(granted);
         
         if (!granted) {
@@ -56,8 +78,12 @@ export const useCameraPermissions = () => {
         
         return granted;
       } else if (window.Capacitor?.isPluginAvailable('Camera')) {
-        const result = await Camera.requestPermissions();
+        console.log("استخدام Camera لطلب الإذن");
+        const result = await Camera.requestPermissions({
+          permissions: ['camera']
+        });
         const granted = result.camera === 'granted';
+        console.log("نتيجة طلب إذن Camera:", granted);
         setHasPermission(granted);
         
         if (!granted) {
@@ -70,15 +96,25 @@ export const useCameraPermissions = () => {
         return granted;
       }
       
-      // في حالة التطوير على الويب، نفترض وجود الإذن
-      console.log("تشغيل في بيئة الويب، افتراض وجود الإذن");
-      setHasPermission(true);
-      return true;
+      // في حالة التطوير على الويب
+      console.log("محاولة طلب إذن الكاميرا من المتصفح");
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // تم منح الإذن، إغلاق التدفق فورًا
+        stream.getTracks().forEach(track => track.stop());
+        console.log("تم منح إذن كاميرا المتصفح");
+        setHasPermission(true);
+        return true;
+      } catch (error) {
+        console.error("تم رفض إذن كاميرا المتصفح أو غير متاح:", error);
+        setHasPermission(false);
+        return false;
+      }
     } catch (error) {
       console.error("خطأ في طلب الإذن:", error);
-      // نفترض وجود الإذن في حالة حدوث خطأ
-      setHasPermission(true);
-      return true;
+      // افتراض أنه لم يتم منح الإذن في حالة الخطأ
+      setHasPermission(false);
+      return false;
     } finally {
       setIsLoading(false);
     }
