@@ -2,6 +2,8 @@
 import { scannerPermissionService } from './ScannerPermissionService';
 import { scannerUIService } from './ScannerUIService';
 import { scannerOperationsService } from './ScannerOperationsService';
+import { scannerCameraService } from './ScannerCameraService';
+import { scannerResultService } from './ScannerResultService';
 
 /**
  * واجهة موحدة للتعامل مع ماسح الباركود
@@ -70,6 +72,31 @@ export class BarcodeScannerService {
    */
   public async stopScan(): Promise<void> {
     return scannerOperationsService.stopScan();
+  }
+  
+  // خدمات واجهة المستخدم
+  
+  /**
+   * إعداد الواجهة للمسح
+   */
+  public setupUIForScanning(): void {
+    scannerUIService.setupUIForScanning();
+  }
+  
+  /**
+   * استعادة الواجهة بعد المسح
+   */
+  public restoreUIAfterScanning(): void {
+    scannerUIService.restoreUIAfterScanning();
+  }
+  
+  // خدمات الكاميرا
+  
+  /**
+   * تبديل وضع الإضاءة
+   */
+  public async toggleTorch(): Promise<void> {
+    return scannerCameraService.toggleTorch();
   }
   
   /**

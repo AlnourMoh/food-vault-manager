@@ -1,8 +1,10 @@
 
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from './ScannerPermissionService';
 import { scannerUIService } from './ScannerUIService';
+import { scannerCameraService } from './ScannerCameraService';
+import { scannerResultService } from './ScannerResultService';
 
 /**
  * خدمة مسؤولة عن عمليات المسح الضوئي
@@ -93,6 +95,9 @@ export class ScannerOperationsService {
       // إعداد الواجهة للمسح
       scannerUIService.setupUIForScanning();
       
+      // تحضير الكاميرا
+      await scannerCameraService.prepareCamera();
+      
       // بدء المسح الفعلي مع محاولات متعددة
       const MAX_RETRIES = 2;
       
@@ -100,45 +105,26 @@ export class ScannerOperationsService {
         try {
           console.log(`[ScannerOperationsService] محاولة المسح ${attempt}/${MAX_RETRIES}...`);
           
-          // استخدام قيم enum للتنسيقات
-          const result = await BarcodeScanner.scan({
-            formats: [
-              BarcodeFormat.QrCode,
-              BarcodeFormat.UpcE,
-              BarcodeFormat.UpcA,
-              BarcodeFormat.Ean8,
-              BarcodeFormat.Ean13,
-              BarcodeFormat.Code39,
-              BarcodeFormat.Code93,
-              BarcodeFormat.Code128,
-              BarcodeFormat.Itf,
-              BarcodeFormat.Codabar
-            ]
-          });
+          // استخدام قيم enum للتنسيقات من خدمة الكاميرا
+          const result = await BarcodeScanner.scan(scannerCameraService.getScanFormatOptions());
           
-          // معالجة النتيجة
-          if (result.barcodes && result.barcodes.length > 0) {
-            const code = result.barcodes[0].rawValue || '';
-            console.log(`[ScannerOperationsService] تم العثور على باركود: ${code}`);
-            
-            // تنظيف الواجهة وإيقاف المسح
+          // معالجة النتيجة باستخدام خدمة النتائج
+          const scanSuccess = await scannerResultService.processScanResult(result, onSuccess);
+          
+          if (scanSuccess) {
             await this.stopScan();
-            
-            // استدعاء دالة النجاح مع الرمز
-            onSuccess(code);
             return true;
-          } else {
-            console.log('[ScannerOperationsService] لم يتم العثور على باركود في هذه المحاولة');
-            
-            // إذا كانت هذه المحاولة الأخيرة، نتوقف
-            if (attempt === MAX_RETRIES) {
-              console.log('[ScannerOperationsService] استنفذت جميع المحاولات');
-              break;
-            }
-            
-            // انتظار قصير قبل المحاولة التالية
-            await new Promise(resolve => setTimeout(resolve, 300));
           }
+          
+          // إذا كانت هذه المحاولة الأخيرة، نتوقف
+          if (attempt === MAX_RETRIES) {
+            console.log('[ScannerOperationsService] استنفذت جميع المحاولات');
+            break;
+          }
+          
+          // انتظار قصير قبل المحاولة التالية
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
         } catch (error) {
           console.error(`[ScannerOperationsService] خطأ في محاولة المسح ${attempt}:`, error);
           
@@ -184,15 +170,8 @@ export class ScannerOperationsService {
       // استعادة الواجهة إلى حالتها الطبيعية
       scannerUIService.restoreUIAfterScanning();
       
-      // محاولة إيقاف المسح من خلال MLKit
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          await BarcodeScanner.disableTorch().catch(() => {});
-          await BarcodeScanner.stopScan().catch(() => {});
-        } catch (e) {
-          console.log('[ScannerOperationsService] خطأ غير مهم عند إيقاف المسح:', e);
-        }
-      }
+      // تنظيف موارد الكاميرا
+      await scannerCameraService.cleanupCamera();
       
       // تعيين حالة المسح إلى غير نشط
       this.isScanning = false;

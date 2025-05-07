@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 
 export const useMLKitScanner = () => {
@@ -34,13 +34,13 @@ export const useMLKitScanner = () => {
       // بدء المسح الفعلي
       const result = await BarcodeScanner.scan({
         formats: [
-          'QR_CODE', 
-          'UPC_A', 
-          'UPC_E', 
-          'EAN_8', 
-          'EAN_13', 
-          'CODE_39',
-          'CODE_128'
+          BarcodeFormat.QrCode, 
+          BarcodeFormat.UpcA, 
+          BarcodeFormat.UpcE, 
+          BarcodeFormat.Ean8, 
+          BarcodeFormat.Ean13, 
+          BarcodeFormat.Code39,
+          BarcodeFormat.Code128
         ]
       });
       
