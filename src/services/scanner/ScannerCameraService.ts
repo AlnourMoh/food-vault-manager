@@ -4,7 +4,7 @@ import { Toast } from '@capacitor/toast';
 import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
 
 // Import the augmentation to ensure TypeScript recognizes the extended methods
-import '@/types/barcode-scanner-augmentation';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 /**
  * خدمة تتحكم في وظائف كاميرا الماسح الضوئي

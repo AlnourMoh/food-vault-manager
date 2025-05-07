@@ -6,7 +6,7 @@ import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 
 // Import the augmentation to ensure TypeScript recognizes the extended methods
-import '@/types/barcode-scanner-augmentation';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 interface BarcodeScannerProps {
   onScan: (code: string) => void;

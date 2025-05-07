@@ -5,7 +5,7 @@ import { Toast } from '@capacitor/toast';
 import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 
 // Import the augmentation to ensure TypeScript recognizes the extended methods
-import '@/types/barcode-scanner-augmentation';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState(false);

@@ -4,7 +4,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
 
 // Import the augmentation to ensure TypeScript recognizes the extended methods
-import '@/types/barcode-scanner-augmentation';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 /**
  * Hook لإدارة واجهة المستخدم للماسح الضوئي - تم تحسينه للاستجابة السريعة
