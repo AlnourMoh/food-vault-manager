@@ -2,10 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { App } from '@capacitor/app';
-import { Toast } from '@capacitor/toast';
-import { useCameraPermissions } from '@/hooks/useCameraPermissions';
-import { useMLKitScanner } from '@/hooks/scanner/providers/useMLKitScanner';
-import { useScannerUI } from '@/hooks/scanner/useScannerUI';
+import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 
 interface BarcodeScannerProps {
@@ -19,95 +16,25 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const scanAttempted = useRef(false);
   
   // استخدام hooks اللازمة
-  const { isLoading, hasPermission, requestPermission } = useCameraPermissions();
-  const { startMLKitScan, isScanning } = useMLKitScanner();
-  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
-  const { 
-    startMockScan, 
-    isMockScanActive, 
-    handleManualInput, 
-    cancelMockScan 
-  } = useMockScanner();
+  const {
+    isLoading,
+    hasPermission,
+    isScanningActive,
+    lastScannedCode,
+    isManualEntry,
+    hasScannerError,
+    startScan,
+    stopScan,
+    requestPermission,
+    handleManualEntry,
+    handleManualCancel,
+    handleRetry
+  } = useScannerState({ onScan, onClose });
   
-  // حالة المكون الداخلية
-  const [isScanningActive, setIsScanningActive] = React.useState(false);
-  const [lastScannedCode, setLastScannedCode] = React.useState<string | null>(null);
-  const [isManualEntry, setIsManualEntry] = React.useState(false);
-  const [hasScannerError, setHasScannerError] = React.useState(false);
-
-  // وظائف المسح
-  const startScan = async () => {
-    try {
-      console.log('[BarcodeScanner] بدء المسح...');
-      
-      if (isScanningActive) {
-        console.log('[BarcodeScanner] المسح نشط بالفعل');
-        return true;
-      }
-      
-      // التحقق من الأذونات وطلبها إذا لزم الأمر
-      if (hasPermission === false) {
-        const granted = await requestPermission();
-        if (!granted) {
-          console.log('[BarcodeScanner] لم يتم منح إذن الكاميرا');
-          return false;
-        }
-      }
-      
-      // إعداد الواجهة للمسح
-      await setupScannerBackground();
-      setIsScanningActive(true);
-      
-      // بدء المسح
-      const success = await startMLKitScan((code) => {
-        console.log('[BarcodeScanner] تم المسح بنجاح:', code);
-        scanAttempted.current = true;
-        setLastScannedCode(code);
-        onScan(code);
-      });
-      
-      if (!success) {
-        console.log('[BarcodeScanner] فشل المسح');
-        stopScan();
-        setHasScannerError(true);
-      }
-      
-      return success;
-    } catch (error) {
-      console.error('[BarcodeScanner] خطأ في بدء المسح:', error);
-      stopScan();
-      setHasScannerError(true);
-      return false;
-    }
-  };
-
-  const stopScan = async () => {
-    try {
-      console.log('[BarcodeScanner] إيقاف المسح...');
-      setIsScanningActive(false);
-      await cleanupScannerBackground();
-      return true;
-    } catch (error) {
-      console.error('[BarcodeScanner] خطأ في إيقاف المسح:', error);
-      return false;
-    }
-  };
-
-  const handleManualEntry = () => {
-    setIsManualEntry(true);
-    stopScan();
-    startMockScan(onScan);
-  };
-
-  const handleManualCancel = () => {
-    setIsManualEntry(false);
-    cancelMockScan();
-  };
-
-  const handleRetry = () => {
-    setHasScannerError(false);
-    startScan();
-  };
+  const {
+    isMockScanActive,
+    handleManualInput,
+  } = useMockScanner();
 
   // تهيئة وتنظيف المكون
   useEffect(() => {
@@ -138,14 +65,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         }
       } catch (error) {
         console.error('[BarcodeScanner] خطأ في التحقق من الإذن أو طلبه:', error);
-        
-        // محاولة إظهار رسالة للمستخدم
-        if (window.Capacitor) {
-          Toast.show({
-            text: 'يرجى تمكين إذن الكاميرا من إعدادات الجهاز',
-            duration: 'long'
-          }).catch(() => {});
-        }
       }
     };
     
@@ -182,7 +101,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         console.error('[BarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e)
       );
     };
-  }, [hasPermission, requestPermission]);
+  }, [hasPermission, requestPermission, startScan, stopScan]);
 
   return (
     <div 

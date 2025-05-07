@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
-import { useCameraPermissions } from '../useCameraPermissions';
-import { useScannerDevice } from './useScannerDevice';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useCameraPermissions } from '@/hooks/useCameraPermissions';
+import { useMLKitScanner } from './providers/useMLKitScanner';
+import { useScannerUI } from './useScannerUI';
 
 interface UseScannerStateProps {
   onScan: (code: string) => void;
@@ -10,107 +11,110 @@ interface UseScannerStateProps {
 }
 
 export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
-  const { isLoading: permissionsLoading, hasPermission, requestPermission } = useCameraPermissions();
   const [isLoading, setIsLoading] = useState(false);
-  const [isScanningActive, setIsScanningActive] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
-  const { startDeviceScan, stopDeviceScan } = useScannerDevice();
+  const [isScanningActive, setIsScanningActive] = useState(false);
+  const [isManualEntry, setIsManualEntry] = useState(false);
+  const [hasScannerError, setHasScannerError] = useState(false);
+  
+  const { hasPermission, requestPermission } = useCameraPermissions();
+  const { startMLKitScan } = useMLKitScanner();
+  const { setupScannerBackground, cleanupScannerBackground } = useScannerUI();
+  
   const { toast } = useToast();
   
-  // حالة الإلغاء (لتجنب تحديثات الحالة بعد إلغاء المكون)
-  const [isCancelled, setIsCancelled] = useState(false);
-  
-  // تنظيف عند إزالة المكون
-  useEffect(() => {
-    return () => {
-      console.log('[useScannerState] تنظيف عند الإزالة');
-      setIsCancelled(true);
-      stopScan().catch(e => 
-        console.error('[useScannerState] خطأ أثناء إيقاف المسح عند الإزالة:', e)
-      );
-    };
-  }, []);
-  
-  // معالجة المسح الناجح
-  const handleSuccessfulScan = (code: string) => {
-    if (isCancelled) return;
-    
-    console.log('[useScannerState] تم المسح بنجاح:', code);
-    setLastScannedCode(code);
-    setIsScanningActive(false);
-    
-    // استدعاء وظيفة النجاح مباشرة
-    onScan(code);
-  };
-  
-  // بدء عملية المسح - بسيطة ومباشرة
-  const startScan = async () => {
-    if (isCancelled) return false;
-    
+  // بدء المسح
+  const startScan = useCallback(async () => {
     try {
-      console.log('[useScannerState] بدء المسح مباشرة');
+      console.log('[useScannerState] بدء المسح...');
       
-      // تفعيل حالة المسح النشط لواجهة المستخدم
-      setIsScanningActive(true);
-      
-      // بدء عملية المسح الفعلية مباشرة
-      console.log('[useScannerState] بدء عملية المسح الفعلية فوراً');
-      const success = await startDeviceScan((code) => {
-        if (!isCancelled) {
-          handleSuccessfulScan(code);
+      // التحقق من الأذونات وطلبها إذا لزم الأمر
+      if (hasPermission === false) {
+        const granted = await requestPermission();
+        if (!granted) {
+          console.log('[useScannerState] لم يتم منح إذن الكاميرا');
+          return false;
         }
-      });
-      
-      if (!success && !isCancelled) {
-        console.log('[useScannerState] فشلت عملية بدء المسح - محاولة مرة أخرى');
-        // محاولة ثانية
-        return await startDeviceScan((code) => {
-          if (!isCancelled) {
-            handleSuccessfulScan(code);
-          }
-        });
       }
       
-      return true;
-    } catch (error) {
-      if (isCancelled) return false;
+      // إعداد الواجهة للمسح
+      await setupScannerBackground();
+      setIsScanningActive(true);
       
-      console.error('[useScannerState] خطأ في بدء المسح:', error);
-      
-      toast({
-        title: "خطأ في المسح",
-        description: "حدث خطأ أثناء محاولة بدء المسح. حاول مرة أخرى.",
-        variant: "destructive"
+      // بدء المسح
+      const success = await startMLKitScan((code) => {
+        console.log('[useScannerState] تم المسح بنجاح:', code);
+        setLastScannedCode(code);
+        onScan(code);
       });
       
-      setIsScanningActive(false);
+      if (!success) {
+        console.log('[useScannerState] فشل المسح');
+        stopScan();
+        setHasScannerError(true);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('[useScannerState] خطأ في بدء المسح:', error);
+      stopScan();
+      setHasScannerError(true);
       return false;
     }
-  };
-  
-  // إيقاف عملية المسح
-  const stopScan = async () => {
-    console.log('[useScannerState] إيقاف المسح');
-    
-    if (!isCancelled) {
-      setIsScanningActive(false);
-    }
-    
+  }, [hasPermission, requestPermission, onScan, setupScannerBackground, startMLKitScan]);
+
+  // إيقاف المسح
+  const stopScan = useCallback(async () => {
     try {
-      await stopDeviceScan();
+      console.log('[useScannerState] إيقاف المسح...');
+      setIsScanningActive(false);
+      await cleanupScannerBackground();
       return true;
     } catch (error) {
-      console.error('[useScannerState] خطأ أثناء إيقاف المسح:', error);
+      console.error('[useScannerState] خطأ في إيقاف المسح:', error);
       return false;
     }
-  };
-  
+  }, [cleanupScannerBackground]);
+
+  // وظيفة للتعامل مع الإدخال اليدوي
+  const handleManualEntry = useCallback(() => {
+    setIsManualEntry(true);
+    stopScan();
+  }, [stopScan]);
+
+  // وظيفة لإلغاء الإدخال اليدوي
+  const handleManualCancel = useCallback(() => {
+    setIsManualEntry(false);
+  }, []);
+
+  // وظيفة لإعادة المحاولة بعد الخطأ
+  const handleRetry = useCallback(() => {
+    setHasScannerError(false);
+    startScan();
+  }, [startScan]);
+
+  // تنظيف عند إلغاء تحميل المكون
+  useEffect(() => {
+    return () => {
+      console.log('[useScannerState] تنظيف المكون...');
+      stopScan().catch(e => 
+        console.error('[useScannerState] خطأ في إيقاف المسح عند التنظيف:', e)
+      );
+    };
+  }, [stopScan]);
+
   return {
-    isLoading: false, // دائماً نعيد false للتحميل لتسريع العملية
-    hasPermission: true, // نفترض دائماً وجود الإذن لتسريع العملية
+    isLoading,
+    hasPermission,
     isScanningActive,
     lastScannedCode,
+    isManualEntry,
+    hasScannerError,
     startScan,
-    stopScan
+    stopScan,
+    requestPermission,
+    handleManualEntry,
+    handleManualCancel,
+    handleRetry
   };
 };
