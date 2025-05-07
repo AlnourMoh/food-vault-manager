@@ -26,8 +26,7 @@ export const useScannerUI = () => {
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          // تهيئة وتفعيل الكاميرا - استخدام طريقة أخرى بدلاً من enableCamera
-          // نتحقق مما إذا كانت الدالة موجودة قبل استدعائها
+          // تهيئة وتفعيل الكاميرا
           if (typeof BarcodeScanner.prepare === 'function') {
             await BarcodeScanner.prepare();
           }
@@ -82,7 +81,7 @@ export const useScannerUI = () => {
       // إيقاف الكاميرا إذا كانت نشطة
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          // استخدام طريقة أخرى بدلاً من disableCamera
+          // استخدام stopScan لإيقاف الكاميرا
           if (typeof BarcodeScanner.stopScan === 'function') {
             await BarcodeScanner.stopScan();
           }

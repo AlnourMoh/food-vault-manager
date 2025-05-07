@@ -22,7 +22,7 @@ export const useMLKitScanner = () => {
         // تهيئة العرض المباشر للكاميرا قبل بدء المسح
         console.log('[useMLKitScanner] تهيئة عرض الكاميرا...');
         
-        // استخدام prepare بدلاً من enableCamera لأنه مدعوم في الواجهة الحالية
+        // استخدام prepare لتهيئة الكاميرا
         await BarcodeScanner.prepare();
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في تهيئة الكاميرا:', e);
@@ -43,7 +43,7 @@ export const useMLKitScanner = () => {
       
       // تنظيف وإخفاء الكاميرا بعد المسح
       try {
-        // استخدام stopScan بدلاً من disableCamera حيث أنه مدعوم بشكل أفضل
+        // استخدام stopScan لإيقاف الكاميرا
         await BarcodeScanner.stopScan();
         await BarcodeScanner.disableTorch();
       } catch (e) {
