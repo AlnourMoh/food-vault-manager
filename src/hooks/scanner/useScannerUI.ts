@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
@@ -28,9 +27,7 @@ export const useScannerUI = () => {
         try {
           // تهيئة الكاميرا بشكل متوازي لتسريع العملية
           if (typeof BarcodeScanner.prepare === 'function') {
-            BarcodeScanner.prepare().catch(error => {
-              console.error('[useScannerUI] خطأ في تفعيل الكاميرا:', error);
-            });
+            await BarcodeScanner.prepare();
           }
         } catch (error) {
           console.error('[useScannerUI] خطأ في تفعيل الكاميرا:', error);
