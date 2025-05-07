@@ -35,7 +35,7 @@ export interface ScanResult {
 export type CameraDirection = 'front' | 'back';
 
 export interface BarcodeScannerPlugin extends Plugin {
-  prepare(): Promise<void>; // إضافة دالة prepare
+  prepare(): Promise<void>; // تعريف دالة prepare بشكل صحيح
   startScan(options?: ScanOptions): Promise<ScanResult>;
   stopScan(): Promise<void>;
   checkPermission(): Promise<{ granted: boolean }>;
@@ -51,3 +51,4 @@ export interface BarcodeScannerPlugin extends Plugin {
   enableCamera(): Promise<void>; // Kept for backward compatibility
   disableCamera(): Promise<void>; // Kept for backward compatibility
 }
+
