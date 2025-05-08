@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Toast } from '@capacitor/toast';
 import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
@@ -127,13 +126,13 @@ export const useZXingBarcodeScanner = ({
 
       if (Capacitor.isPluginAvailable('Camera')) {
         try {
-          // فتح الكاميرا الخلفية - Fix type errors by using enum values
+          // استخدام القيم الصحيحة من التعدادات
           await Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: CameraResultType.Uri,
-            source: CameraSource.Camera,
-            direction: CameraDirection.Rear
+            resultType: CameraResultType.Uri, // استخدام القيمة الصحيحة من التعداد
+            source: CameraSource.Camera, // استخدام القيمة الصحيحة من التعداد
+            direction: CameraDirection.Rear // استخدام القيمة الصحيحة من التعداد
           });
           
           setCameraActive(true);

@@ -27,16 +27,15 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // Fixed function to properly have Promise<void> return type
+  // تعديل الدالة لتتوافق مع نوع Promise<void> بدلاً من Promise<boolean>
   const openScanner = async (): Promise<void> => {
     try {
       console.log('Main button clicked, opening scanner directly');
-      // Simply set scanner to open - we'll handle permissions in the ZXingBarcodeScanner component
       setScannerOpen(true);
-      // Not returning anything here, to match the Promise<void> signature
+      // لا نقوم بإرجاع أي قيمة لضمان توافق النوع مع Promise<void>
     } catch (error) {
       console.error("Error opening scanner:", error);
-      // Not returning anything in the catch block either
+      // لا نقوم بإرجاع أي قيمة في كتلة الخطأ أيضًا
     }
   };
 
@@ -50,10 +49,7 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
         />
       ) : (
         <ScanButton 
-          onClick={() => {
-            // Using void to explicitly ignore the returned Promise<boolean> value
-            void openScanner();
-          }}
+          onClick={openScanner}
           isLoading={isRequestingPermission}
         />
       )}
