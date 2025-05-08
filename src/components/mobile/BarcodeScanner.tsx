@@ -41,7 +41,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     handleManualInput,
   } = useMockScanner();
 
-  // Wrapper function to fix the Promise<boolean> to Promise<void> type issue
+  // Wrapper function for scanner start with proper type signature
   const startScan = async (): Promise<boolean> => {
     try {
       console.log('[BarcodeScanner] Starting scan with camera initialization check');
