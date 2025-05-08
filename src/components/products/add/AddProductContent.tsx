@@ -50,7 +50,10 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
         />
       ) : (
         <ScanButton 
-          onClick={openScanner}
+          onClick={() => {
+            // Using void to explicitly ignore the returned Promise<boolean> value
+            void openScanner();
+          }}
           isLoading={isRequestingPermission}
         />
       )}
