@@ -32,10 +32,10 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     try {
       console.log('Main button clicked, opening scanner directly');
       setScannerOpen(true);
-      // Remove any return statement as this function should return void
+      // Important: Don't return any value to correctly make this Promise<void>
     } catch (error) {
       console.error("Error opening scanner:", error);
-      // No return statement here either
+      // Also don't return anything here
     }
   };
 
