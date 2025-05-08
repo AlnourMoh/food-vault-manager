@@ -27,7 +27,7 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // تحديث الأسلوب للتوافق مع نوع البيانات المتوقع (يعيد Promise<void>)
+  // Modified function to have Promise<void> return type
   const openScanner = async (): Promise<void> => {
     try {
       console.log('Main button clicked, opening scanner directly');

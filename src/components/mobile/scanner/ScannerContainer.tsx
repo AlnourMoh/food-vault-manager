@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { ScannerLoading } from './ScannerLoading';
 import { NoPermissionView } from './NoPermissionView';
@@ -89,6 +90,7 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
     return (
       <ScannerView 
         isActive={true}
+        cameraActive={true} // Adding the missing cameraActive prop
         hasError={hasScannerError}
         onStartScan={startScan}
         onStopScan={stopScan}

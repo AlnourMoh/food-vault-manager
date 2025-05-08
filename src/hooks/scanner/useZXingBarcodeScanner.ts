@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Toast } from '@capacitor/toast';
-import { Camera } from '@capacitor/camera';
+import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 
@@ -127,13 +127,13 @@ export const useZXingBarcodeScanner = ({
 
       if (Capacitor.isPluginAvailable('Camera')) {
         try {
-          // فتح الكاميرا الخلفية
+          // فتح الكاميرا الخلفية - Fix type errors by using enum values
           await Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: 'uri',
-            source: 'CAMERA',
-            direction: 'REAR'
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            direction: CameraDirection.Rear
           });
           
           setCameraActive(true);
