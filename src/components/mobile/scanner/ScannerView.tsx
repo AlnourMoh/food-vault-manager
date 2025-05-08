@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ScannerFrame } from './components/ScannerFrame';
 import { ScannerControls } from './components/ScannerControls';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
+import { X } from 'lucide-react';
 
 interface ScannerViewProps {
   isActive: boolean;
@@ -13,6 +14,7 @@ interface ScannerViewProps {
   onStopScan: () => Promise<boolean>;
   onRetry: () => void;
   onClose: () => void;
+  onToggleFlash?: () => void;
 }
 
 export const ScannerView: React.FC<ScannerViewProps> = ({
@@ -22,17 +24,27 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   onStartScan,
   onStopScan,
   onRetry,
-  onClose
+  onClose,
+  onToggleFlash
 }) => {
   // عند تحميل المكون، نبدأ المسح تلقائيًا إذا كانت الكاميرا نشطة
   useEffect(() => {
     if (cameraActive && !isActive && !hasError) {
-      console.log('الكاميرا نشطة، بدء المسح تلقائيًا...');
+      console.log('الكاميرا نشطة الآن، جاري محاولة بدء المسح تلقائيًا...');
       onStartScan().catch(error => {
         console.error('خطأ في بدء المسح التلقائي:', error);
       });
     }
   }, [cameraActive, isActive, hasError, onStartScan]);
+
+  // إضافة تسجيل للمكون للتشخيص
+  useEffect(() => {
+    console.log('ScannerView حالة:', { isActive, cameraActive, hasError });
+    
+    return () => {
+      console.log('ScannerView تم إلغاء تحميل المكون');
+    };
+  }, [isActive, cameraActive, hasError]);
 
   return (
     <div className="scanner-view-container relative h-full w-full">
@@ -59,6 +71,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
         onStopScan={onStopScan}
         onRetry={onRetry}
         onClose={onClose}
+        onToggleFlash={onToggleFlash}
       />
       
       {/* زر إغلاق للحالات الطارئة */}
@@ -69,10 +82,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
         size="icon"
       >
         <span className="sr-only">إغلاق</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
+        <X className="h-6 w-6" />
       </Button>
     </div>
   );

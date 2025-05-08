@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Keyboard, X } from 'lucide-react';
+import { Camera, Keyboard, X, Settings } from 'lucide-react';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import { useToast } from '@/hooks/use-toast';
 
 interface NoPermissionViewProps {
   onClose: () => void;
@@ -15,6 +17,51 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
   onRequestPermission, 
   onManualEntry 
 }) => {
+  const [isRequesting, setIsRequesting] = useState(false);
+  const { toast } = useToast();
+  
+  const handleRequestPermission = async () => {
+    try {
+      setIsRequesting(true);
+      const granted = await onRequestPermission();
+      
+      if (!granted) {
+        toast({
+          title: "تم رفض الإذن",
+          description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك للاستمرار",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('خطأ في طلب الإذن:', error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء طلب إذن الكاميرا",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+  
+  const handleOpenSettings = async () => {
+    try {
+      toast({
+        title: "فتح الإعدادات",
+        description: "جاري توجيهك إلى إعدادات التطبيق"
+      });
+      
+      await scannerPermissionService.openAppSettings();
+    } catch (error) {
+      console.error('خطأ في فتح الإعدادات:', error);
+      toast({
+        title: "خطأ",
+        description: "تعذر فتح إعدادات التطبيق",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
       <div className="flex flex-col items-center justify-center py-6 space-y-4">
@@ -30,12 +77,22 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
         
         <div className="flex flex-col w-full space-y-2">
           <Button 
-            onClick={() => onRequestPermission()}
+            onClick={handleRequestPermission}
             className="w-full"
             variant="default"
+            disabled={isRequesting}
           >
             <Camera className="h-4 w-4 ml-2" />
-            طلب الإذن مجددًا
+            {isRequesting ? 'جاري طلب الإذن...' : 'طلب إذن الكاميرا'}
+          </Button>
+          
+          <Button 
+            onClick={handleOpenSettings}
+            className="w-full"
+            variant="secondary"
+          >
+            <Settings className="h-4 w-4 ml-2" />
+            فتح إعدادات التطبيق
           </Button>
           
           {onManualEntry && (
