@@ -19,41 +19,25 @@ const AddProducts = () => {
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
 
-  // فتح الماسح الضوئي تلقائياً عند تحميل الصفحة
   useEffect(() => {
-    // تنفيذ فقط مرة واحدة
-    if (!autoLaunchAttempted && Capacitor.isNativePlatform()) {
-      setAutoLaunchAttempted(true);
-      
-      const checkPermissionAndOpenScanner = async () => {
-        try {
-          if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-            const { camera } = await BarcodeScanner.checkPermissions();
-            
-            if (camera === 'granted') {
-              // لدينا إذن، يمكننا فتح الماسح
-              console.log('AddProducts: لدينا إذن، فتح الماسح الضوئي تلقائياً');
-              setTimeout(() => setScannerOpen(true), 500);
-            } else {
-              // لا يوجد إذن بعد، نعرض الزر للمستخدم
-              console.log('AddProducts: لا يوجد إذن، انتظار ضغط المستخدم على الزر');
-              toast({
-                title: "استخدام الماسح الضوئي",
-                description: "اضغط على زر مسح الباركود لفتح الماسح الضوئي"
-              });
-            }
-          } else {
-            // الماسح غير متاح، نعرض الزر
-            console.log('AddProducts: الماسح غير متاح، انتظار ضغط المستخدم على الزر');
-          }
-        } catch (error) {
-          console.error('AddProducts: خطأ في التحقق من إذن الكاميرا:', error);
+    // التحقق من الأذونات عند التحميل فقط بدون فتح الماسح تلقائياً
+    const checkPermissions = async () => {
+      try {
+        setAutoLaunchAttempted(true);
+        
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          const { camera } = await BarcodeScanner.checkPermissions();
+          console.log("حالة إذن الكاميرا:", camera);
         }
-      };
-      
-      checkPermissionAndOpenScanner();
+      } catch (error) {
+        console.error('خطأ في التحقق من إذن الكاميرا:', error);
+      }
+    };
+    
+    if (!autoLaunchAttempted && Capacitor.isNativePlatform()) {
+      checkPermissions();
     }
-  }, [autoLaunchAttempted, toast]);
+  }, [autoLaunchAttempted]);
 
   const handleProductAdded = () => {
     console.log('Product added successfully');
@@ -68,7 +52,6 @@ const AddProducts = () => {
     navigate(inventoryPath);
   };
 
-  // استجابة للمسح
   const handleScanResult = async (code: string) => {
     try {
       console.log('تم مسح الرمز:', code);
@@ -82,7 +65,6 @@ const AddProducts = () => {
         description: `تم مسح الرمز: ${code}`
       });
       
-      // يمكن استكمال المنطق الحالي للتعامل مع المنتج
       handleProductAdded();
     } catch (error) {
       console.error('خطأ في معالجة نتيجة المسح:', error);
@@ -95,7 +77,7 @@ const AddProducts = () => {
   };
 
   const handleScanButtonClick = () => {
-    console.log('فتح الماسح الضوئي');
+    console.log('فتح الماسح الضوئي مباشرة');
     setScannerOpen(true);
   };
 

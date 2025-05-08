@@ -1,19 +1,31 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner'; // استخدام الماسح الضوئي الجديد
+import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner'; 
 import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScanCard';
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
 import { Product } from '@/types';
+import { Capacitor } from '@capacitor/core';
 
 const ProductScan = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [autoOpenAttempted, setAutoOpenAttempted] = useState(false);
+  
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // فتح الماسح تلقائيًا عند تحميل الصفحة
+  useEffect(() => {
+    if (!autoOpenAttempted && Capacitor.isNativePlatform()) {
+      setAutoOpenAttempted(true);
+      // فتح الماسح تلقائيًا بتأخير بسيط للسماح بتحميل الواجهة
+      setTimeout(() => setIsScannerOpen(true), 500);
+    }
+  }, [autoOpenAttempted]);
 
   const handleOpenScanner = () => {
     console.log('Opening scanner');
@@ -128,11 +140,15 @@ const ProductScan = () => {
       });
     } finally {
       setIsLoading(false);
+      // إغلاق الماسح بعد الانتهاء
+      setIsScannerOpen(false);
     }
   };
 
   const handleScanAnother = () => {
     setScannedProduct(null);
+    // فتح الماسح مباشرة عند طلب مسح منتج آخر
+    setIsScannerOpen(true);
   };
 
   const viewProductDetails = () => {

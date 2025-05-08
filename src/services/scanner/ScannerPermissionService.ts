@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
 import { App } from '@capacitor/app';
@@ -25,8 +26,6 @@ class ScannerPermissionService {
   public async openAppSettings(): Promise<boolean> {
     try {
       console.log('[ScannerPermissionService] محاولة فتح إعدادات التطبيق...');
-      
-      const platform = Capacitor.getPlatform();
       
       // استخدام BarcodeScanner.openSettings للفتح في كل من Android و iOS
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {

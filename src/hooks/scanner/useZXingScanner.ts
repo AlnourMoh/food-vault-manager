@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { zxingService } from '@/services/scanner/ZXingService';
 import { ZXingScanResult } from '@/types/zxing-scanner';
@@ -28,7 +27,7 @@ export const useZXingScanner = ({
   
   const isMountedRef = useRef(true);
   
-  // التحقق من الحالة عند التحميل
+  // التحقق من الحالة عند التحميل وبدء المسح تلقائياً إذا تم تفعيل الخيار
   useEffect(() => {
     const checkSupportAndPermission = async () => {
       try {
@@ -45,8 +44,10 @@ export const useZXingScanner = ({
         const permissionStatus = await zxingService.requestPermission();
         setHasPermission(permissionStatus.granted);
         
+        // بدء المسح تلقائياً إذا تم منح الإذن وتم تفعيل خيار البدء التلقائي
         if (permissionStatus.granted && autoStart) {
-          startScan();
+          console.log('[useZXingScanner] تم منح الإذن، بدء المسح تلقائياً...');
+          await startScan();
         }
       } catch (error) {
         console.error('[useZXingScanner] خطأ في التحقق من الدعم والإذن:', error);
