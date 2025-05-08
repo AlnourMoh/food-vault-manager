@@ -205,7 +205,6 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   }
 
   if (hasPermission === false) {
-    // تصحيح المشكلة: تمرير معلمات متوافقة مع التعريف
     return (
       <NoPermissionView
         onRequestPermission={requestPermission}

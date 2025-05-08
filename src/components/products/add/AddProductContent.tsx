@@ -30,9 +30,10 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
   // Fixed wrapper function to correct the Promise<boolean> to Promise<void> type issue
   const openScanner = async (): Promise<void> => {
     try {
-      // We call the original function but ignore its boolean return value
-      await handleScanButtonClick(setScannerOpen);
-      // This function returns void
+      // We call the original function but explicitly ignore its boolean return value
+      const result = await handleScanButtonClick(setScannerOpen);
+      // This function returns void, regardless of the result
+      console.log('Scanner button click result:', result);
     } catch (error) {
       console.error("Error opening scanner:", error);
       // Still returns void even in case of error

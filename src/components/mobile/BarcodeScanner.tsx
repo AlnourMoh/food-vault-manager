@@ -42,7 +42,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   } = useMockScanner();
 
   // Wrapper function to fix the Promise<boolean> to Promise<void> type issue
-  const startScan = async (): Promise<void> => {
+  const startScan = async (): Promise<boolean> => {
     try {
       console.log('[BarcodeScanner] Starting scan with camera initialization check');
       
@@ -62,7 +62,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         setCameraInitialized(true);
       }
       
-      // We call the original function but ignore its boolean return value
+      // Call the original function and preserve its boolean return value
       const success = await originalStartScan();
       
       if (!success) {
@@ -72,14 +72,17 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
           duration: 'short'
         });
       }
+      
+      return success; // Return the success boolean value
+      
     } catch (error) {
       console.error("[BarcodeScanner] Error starting scan:", error);
       await Toast.show({
         text: 'حدث خطأ أثناء تشغيل الكاميرا',
         duration: 'short'
       });
+      return false; // Return false in case of error
     }
-    // Function returns void regardless of outcome
   };
 
   // تهيئة وتنظيف المكون
@@ -148,7 +151,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         console.error('[BarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e)
       );
     };
-  }, [hasPermission, requestPermission, startScan, stopScan]);
+  }, [hasPermission, requestPermission, stopScan]);
 
   return (
     <div 
