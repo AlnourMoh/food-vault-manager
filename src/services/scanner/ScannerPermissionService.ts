@@ -1,4 +1,3 @@
-
 import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
 import { App } from '@capacitor/app';
@@ -33,9 +32,8 @@ class ScannerPermissionService {
       if (platform === 'android') {
         console.log('[ScannerPermissionService] محاولة فتح إعدادات Android...');
         try {
-          await App.openUrl({
-            url: 'package:' + (await App.getInfo()).id
-          });
+          // Fix: use correct method for opening app settings on Android
+          await BarcodeScanner.openSettings();
           return true;
         } catch (e) {
           console.error('[ScannerPermissionService] خطأ في فتح إعدادات Android:', e);
@@ -43,9 +41,8 @@ class ScannerPermissionService {
       } else if (platform === 'ios') {
         console.log('[ScannerPermissionService] محاولة فتح إعدادات iOS...');
         try {
-          await App.openUrl({
-            url: 'app-settings:'
-          });
+          // Fix: use correct method for opening app settings on iOS
+          await BarcodeScanner.openSettings();
           return true;
         } catch (e) {
           console.error('[ScannerPermissionService] خطأ في فتح إعدادات iOS:', e);
@@ -91,8 +88,9 @@ class ScannerPermissionService {
       // التحقق من توفر MLKit BarcodeScanner
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          const supported = await BarcodeScanner.isSupported();
-          return supported;
+          // Fix: convert IsSupportedResult to boolean
+          const result = await BarcodeScanner.isSupported();
+          return result.supported;
         } catch (e) {
           console.error('[ScannerPermissionService] خطأ في التحقق من دعم MLKit:', e);
         }

@@ -1,4 +1,3 @@
-
 import { scannerPermissionService } from './ScannerPermissionService';
 import { scannerUIService } from './ScannerUIService';
 import { scannerOperationsService } from './ScannerOperationsService';
@@ -27,9 +26,7 @@ export class BarcodeScannerService {
    * فتح إعدادات التطبيق
    */
   public async openAppSettings(): Promise<void> {
-    // Fix: Ensure the method returns void, not boolean
     await scannerPermissionService.openAppSettings();
-    return;
   }
   
   /**

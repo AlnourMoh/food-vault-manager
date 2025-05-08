@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useZXingScanner } from '@/hooks/scanner/useZXingScanner';
 import { ScannerContainer } from './scanner/ScannerContainer';
@@ -118,7 +117,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
                       });
                       
                       setTimeout(async () => {
-                        // Fix: Call openAppSettings without argument
+                        // Fix: Remove the argument
                         await scannerPermissionService.openAppSettings();
                       }, 1500);
                     }
@@ -137,7 +136,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
               });
               
               setTimeout(async () => {
-                // Fix: Call openAppSettings without argument
+                // Fix: Remove the argument
                 await scannerPermissionService.openAppSettings();
               }, 1500);
               
@@ -203,7 +202,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
             // محاولة فتح إعدادات التطبيق
             setTimeout(() => {
               try {
-                // Fix: Call openAppSettings without argument
+                // Fix: Remove the argument
                 scannerPermissionService.openAppSettings();
               } catch (e) {
                 console.error('[ZXingBarcodeScanner] خطأ في فتح الإعدادات:', e);
