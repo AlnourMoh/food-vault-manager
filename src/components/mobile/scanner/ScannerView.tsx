@@ -1,11 +1,11 @@
 
-import React from 'react';
-import { ScannerControls } from './components/ScannerControls';
+import React, { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import { ScannerFrame } from './components/ScannerFrame';
+import { ScannerControls } from './components/ScannerControls';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
-import styles from './scanner.module.css';
 
-export interface ScannerViewProps {
+interface ScannerViewProps {
   isActive: boolean;
   cameraActive: boolean;
   hasError: boolean;
@@ -24,52 +24,51 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   onRetry,
   onClose
 }) => {
-  // Start scan immediately when this component mounts if it's not active already
-  React.useEffect(() => {
-    if (!isActive && !hasError && cameraActive) {
-      console.log('[ScannerView] Auto-starting scan on mount');
+  // عند تحميل المكون، نبدأ المسح تلقائيًا إذا كانت الكاميرا نشطة
+  useEffect(() => {
+    if (cameraActive && !isActive && !hasError) {
+      console.log('الكاميرا نشطة، بدء المسح تلقائيًا...');
       onStartScan().catch(error => {
-        console.error('[ScannerView] Error auto-starting scan:', error);
+        console.error('خطأ في بدء المسح التلقائي:', error);
       });
     }
-  }, [cameraActive]);
+  }, [cameraActive, isActive, hasError, onStartScan]);
 
   return (
-    <div className="scanner-container fixed inset-0 z-50 bg-black flex flex-col">
-      <div className="flex-1 relative overflow-hidden">
-        {/* حالة الكاميرا والماسح والأيقونة */}
-        <ScannerStatusIndicator 
-          isActive={isActive} 
-          cameraActive={cameraActive}
-          hasError={hasError} 
-        />
-        
-        {/* إطار المسح */}
-        <ScannerFrame 
-          isActive={isActive} 
-          cameraActive={cameraActive}
-          hasError={hasError} 
-        />
-
-        {cameraActive && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-white text-center p-2 rounded-md bg-black/50">
-              {isActive ? 'الكاميرا نشطة - وجه إلى الباركود' : 'الكاميرا جاهزة'}
-            </div>
-          </div>
-        )}
-      </div>
+    <div className="scanner-view-container relative h-full w-full">
+      {/* إطار الماسح */}
+      <ScannerFrame />
       
-      {/* أزرار التحكم */}
-      <ScannerControls 
-        isActive={isActive}
+      {/* مؤشر حالة الماسح - تم إضافته لعرض حالة الكاميرا */}
+      <ScannerStatusIndicator 
+        isActive={isActive} 
         cameraActive={cameraActive}
+        hasError={hasError}
+      />
+      
+      {/* عناصر التحكم في الماسح */}
+      <ScannerControls 
+        isScanning={isActive}
         hasError={hasError}
         onStartScan={onStartScan}
         onStopScan={onStopScan}
-        onClose={onClose}
         onRetry={onRetry}
+        onClose={onClose}
       />
+      
+      {/* زر إغلاق للحالات الطارئة */}
+      <Button
+        onClick={onClose}
+        className="absolute top-3 right-3 bg-black/20 hover:bg-black/40 text-white rounded-full p-2 size-10"
+        variant="ghost"
+        size="icon"
+      >
+        <span className="sr-only">إغلاق</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </Button>
     </div>
   );
 };

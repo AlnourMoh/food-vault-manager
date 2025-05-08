@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { PermissionErrorCard } from './PermissionErrorCard';
 import { ScanButton } from './ScanButton';
 import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { useProductScannerPermissions } from './useProductScannerPermissions';
 import { useProductScanHandler } from './useProductScanHandler';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddProductContentProps {
   isRestaurantRoute: boolean;
@@ -13,6 +14,9 @@ interface AddProductContentProps {
 export const AddProductContent: React.FC<AddProductContentProps> = ({
   isRestaurantRoute
 }) => {
+  const { toast } = useToast();
+  const [isCameraInitializing, setIsCameraInitializing] = useState(false);
+  
   const {
     hasPermissionError,
     isRequestingPermission,
@@ -27,17 +31,36 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // Ensuring this function returns Promise<void> by not returning anything
+  // تحسين عملية تشغيل الماسح: تفعيل الكاميرا أولا ثم بدء المسح
   const openScanner = async (): Promise<void> => {
     try {
-      console.log('Main button clicked, opening scanner directly');
+      console.log('تجهيز الكاميرا والماسح...');
+      setIsCameraInitializing(true);
+      
+      // عرض رسالة للمستخدم
+      toast({
+        title: "جاري تهيئة الكاميرا",
+        description: "يرجى الانتظار لحظة...",
+      });
+      
+      // تأخير قصير للسماح بتحميل واجهة المستخدم
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // تفعيل الماسح بعد تجهيز الكاميرا
       setScannerOpen(true);
-      // No return value here
+      setIsCameraInitializing(false);
+      
+      console.log('تم تفعيل الماسح بنجاح');
     } catch (error) {
-      console.error("Error opening scanner:", error);
-      // No return value here either
+      console.error("خطأ في تفعيل الكاميرا:", error);
+      setIsCameraInitializing(false);
+      
+      toast({
+        title: "خطأ في تفعيل الكاميرا",
+        description: "يرجى المحاولة مرة أخرى",
+        variant: "destructive"
+      });
     }
-    // Function implicitly returns undefined (which becomes Promise<void>)
   };
 
   return (
@@ -51,7 +74,8 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
       ) : (
         <ScanButton 
           onClick={openScanner}
-          isLoading={isRequestingPermission}
+          isLoading={isRequestingPermission || isCameraInitializing}
+          loadingText={isCameraInitializing ? "جاري تفعيل الكاميرا..." : "جاري التحقق من الأذونات..."}
         />
       )}
 
