@@ -32,10 +32,10 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     try {
       console.log('Main button clicked, opening scanner directly');
       setScannerOpen(true);
-      // No return statement needed as this function should return void
+      // Remove any return statement as this function should return void
     } catch (error) {
       console.error("Error opening scanner:", error);
-      // Still no return statement, since we want this to be void
+      // No return statement here either
     }
   };
 
