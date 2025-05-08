@@ -7,14 +7,11 @@ import { BarcodeIcon } from 'lucide-react';
 import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useScannerState } from '@/hooks/scanner/useScannerState';
-import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 const AddProducts = () => {
   const [scannerOpen, setScannerOpen] = useState(false);
-  // عند تحميل الصفحة، إذا كنا على منصة الجوال، نحاول فتح الماسح تلقائياً
   const [autoLaunchAttempted, setAutoLaunchAttempted] = useState(false);
   
   const navigate = useNavigate();
@@ -97,6 +94,11 @@ const AddProducts = () => {
     }
   };
 
+  const handleScanButtonClick = () => {
+    console.log('فتح الماسح الضوئي');
+    setScannerOpen(true);
+  };
+
   return (
     <Layout>
       <div className="container py-6">
@@ -108,10 +110,7 @@ const AddProducts = () => {
           
           <Button 
             size="lg" 
-            onClick={() => {
-              console.log('فتح الماسح الضوئي');
-              setScannerOpen(true);
-            }}
+            onClick={handleScanButtonClick}
             className="w-full gap-2"
           >
             <BarcodeIcon className="w-5 h-5" />

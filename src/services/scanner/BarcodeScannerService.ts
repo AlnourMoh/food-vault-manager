@@ -27,7 +27,9 @@ export class BarcodeScannerService {
    * فتح إعدادات التطبيق
    */
   public async openAppSettings(): Promise<void> {
-    return scannerPermissionService.openAppSettings();
+    // Fix: Ensure the method returns void, not boolean
+    await scannerPermissionService.openAppSettings();
+    return;
   }
   
   /**

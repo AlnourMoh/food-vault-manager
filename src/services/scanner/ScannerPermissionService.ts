@@ -45,13 +45,7 @@ export class ScannerPermissionService {
         return true;
       }
 
-      // استخدام Camera API لفتح الإعدادات
-      if (Capacitor.isPluginAvailable('Camera')) {
-        await Camera.openSettings();
-        return true;
-      }
-      
-      // الطريقة البديلة لفتح الإعدادات على نظام Android
+      // استخدام App API بدلاً من Camera.openSettings
       if (platform === 'android') {
         console.log('[ScannerPermissionService] محاولة فتح إعدادات Android...');
         
