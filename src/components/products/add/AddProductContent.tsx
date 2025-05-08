@@ -27,16 +27,17 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // Fix the function to properly return Promise<void> instead of Promise<boolean>
+  // The problem is in this function - it needs to return Promise<void> not Promise<boolean>
   const openScanner = async (): Promise<void> => {
     try {
       console.log('Main button clicked, opening scanner directly');
       setScannerOpen(true);
-      // Important: Don't return any value to correctly make this Promise<void>
+      // No return statement here - this is important for Promise<void>
     } catch (error) {
       console.error("Error opening scanner:", error);
-      // Also don't return anything here
+      // Also no return statement here
     }
+    // No return statement at the end of the function either
   };
 
   return (
