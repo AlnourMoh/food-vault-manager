@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, Keyboard, Settings, AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Toast } from '@capacitor/toast';
-import { barcodeScannerService } from '@/services/scanner/BarcodeScannerService';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
@@ -78,11 +78,11 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
       }
       
       // استخدام الخدمة المخصصة إذا لم ينجح الطلب المباشر
-      console.log('استخدام barcodeScannerService كخيار ثانٍ');
+      console.log('استخدام scannerPermissionService كخيار ثانٍ');
       if (onRequestPermission) {
         await onRequestPermission();
       } else {
-        const granted = await barcodeScannerService.requestPermission();
+        const granted = await scannerPermissionService.requestPermission();
         console.log('نتيجة طلب الإذن من الخدمة المخصصة:', granted);
         
         if (granted) {
@@ -125,7 +125,7 @@ export const NoPermissionView = ({ onClose, onRequestPermission, onManualEntry }
       });
       
       // محاولة فتح الإعدادات
-      await barcodeScannerService.openAppSettings();
+      await scannerPermissionService.openAppSettings();
       
     } catch (error) {
       console.error('خطأ في فتح إعدادات التطبيق:', error);

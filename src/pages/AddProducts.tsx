@@ -36,13 +36,13 @@ const AddProducts = () => {
           let hasPermission = false;
           
           if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-            const { camera } = await BarcodeScanner.checkPermissions();
-            hasPermission = camera === 'granted';
-            console.log("حالة إذن الكاميرا:", camera);
+            const result = await BarcodeScanner.checkPermissions();
+            hasPermission = result.camera === 'granted';
+            console.log("حالة إذن الكاميرا:", result.camera);
           } else if (Capacitor.isPluginAvailable('Camera')) {
-            // استخدم ملحق الكاميرا للتحقق من الأذونات
-            const { camera } = await scannerPermissionService.checkPermission();
-            hasPermission = camera === 'granted';
+            // استخدم خدمة للتحقق من الأذونات
+            const permissionResult = await scannerPermissionService.checkPermission();
+            hasPermission = permissionResult;
             console.log("حالة إذن الكاميرا من خدمة المسح:", hasPermission);
           }
           

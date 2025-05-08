@@ -4,7 +4,6 @@ import { Camera } from '@capacitor/camera';
 import { App } from '@capacitor/app';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
-import { Filesystem } from '@capacitor/filesystem';
 
 /**
  * خدمة للتعامل مع أذونات الكاميرا للماسح الضوئي
@@ -42,17 +41,8 @@ class ScannerPermissionService {
         try {
           console.log('[ScannerPermissionService] فتح إعدادات Android عبر BarcodeScanner');
           
-          // إنشاء ملف مؤقت لتسجيل حالة المحاولة
-          try {
-            await Filesystem.writeFile({
-              path: 'permission_attempt.txt',
-              data: `Opening settings at ${new Date().toISOString()}`,
-              directory: 'CACHE',
-              encoding: 'utf8'
-            });
-          } catch (e) {
-            console.log('[ScannerPermissionService] خطأ في كتابة ملف التسجيل:', e);
-          }
+          // تسجيل محاولة فتح الإعدادات
+          console.log('[ScannerPermissionService] محاولة فتح الإعدادات في:', new Date().toISOString());
           
           if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
             try {
@@ -67,25 +57,29 @@ class ScannerPermissionService {
             } catch (e) {
               console.error('[ScannerPermissionService] خطأ في فتح إعدادات BarcodeScanner:', e);
               
-              // محاولة استخدام App.openUrl كخيار احتياطي
+              // استخدام طريقة بديلة للتعامل مع الأجهزة المختلفة
               try {
-                await App.openUrl({
-                  url: 'package:app.lovable.foodvault.manager'
+                console.log('[ScannerPermissionService] استخدام طريقة بديلة لفتح الإعدادات');
+                // توجيه المستخدم للإعدادات يدويًا
+                await Toast.show({
+                  text: 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات',
+                  duration: 'long'
                 });
                 return true;
               } catch (e2) {
-                console.error('[ScannerPermissionService] خطأ في فتح إعدادات العنوان:', e2);
+                console.error('[ScannerPermissionService] خطأ في الطريقة البديلة:', e2);
               }
             }
           } else {
-            // محاولة فتح إعدادات التطبيق باستخدام Intent خاص
+            // عرض رسالة إرشادية للمستخدم كبديل
             try {
-              await App.openUrl({
-                url: 'package:app.lovable.foodvault.manager'
+              await Toast.show({
+                text: 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات > الكاميرا',
+                duration: 'long'
               });
               return true;
             } catch (e) {
-              console.error('[ScannerPermissionService] خطأ في فتح إعدادات التطبيق عبر URL:', e);
+              console.error('[ScannerPermissionService] خطأ في عرض الرسالة الإرشادية:', e);
             }
           }
         } catch (e) {
@@ -103,21 +97,7 @@ class ScannerPermissionService {
         console.log('[ScannerPermissionService] محاولة فتح إعدادات iOS...');
         
         try {
-          // في iOS، نحاول فتح تطبيق الإعدادات مباشرة
-          await App.openUrl({
-            url: 'app-settings:'
-          });
-          
-          await Toast.show({
-            text: 'يرجى تمكين إذن الكاميرا لتطبيق مخزن الطعام',
-            duration: 'long'
-          });
-          
-          return true;
-        } catch (e) {
-          console.error('[ScannerPermissionService] خطأ في فتح إعدادات iOS:', e);
-          
-          // محاولة باستخدام BarcodeScanner إذا كان متاحاً
+          // استخدام BarcodeScanner إذا كان متاحاً
           if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
             try {
               await BarcodeScanner.openSettings();
@@ -132,6 +112,8 @@ class ScannerPermissionService {
             text: 'الرجاء اتباع هذه الخطوات يدوياً: افتح تطبيق الإعدادات > الخصوصية > الكاميرا > وقم بتفعيل تطبيق مخزن الطعام',
             duration: 'long'
           });
+        } catch (error) {
+          console.error('[ScannerPermissionService] خطأ في فتح إعدادات iOS:', error);
         }
       } else {
         // إذا كانت المنصة غير معروفة، نعرض رسالة عامة

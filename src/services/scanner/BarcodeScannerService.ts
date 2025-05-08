@@ -1,14 +1,13 @@
+
+import { Capacitor } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from './ScannerPermissionService';
-import { scannerUIService } from './ScannerUIService';
-import { scannerOperationsService } from './ScannerOperationsService';
-import { scannerCameraService } from './ScannerCameraService';
-import { scannerResultService } from './ScannerResultService';
 
 /**
- * واجهة موحدة للتعامل مع ماسح الباركود
- * تجمع كل الخدمات المتخصصة في واجهة واحدة
+ * خدمة الماسح الضوئي للباركود
  */
-export class BarcodeScannerService {
+class BarcodeScannerService {
   private static instance: BarcodeScannerService;
   
   private constructor() {}
@@ -20,94 +19,85 @@ export class BarcodeScannerService {
     return BarcodeScannerService.instance;
   }
   
-  // خدمات الأذونات
-  
   /**
-   * فتح إعدادات التطبيق
-   */
-  public async openAppSettings(): Promise<void> {
-    await scannerPermissionService.openAppSettings();
-  }
-  
-  /**
-   * التحقق مما إذا كان الماسح مدعومًا على الجهاز
+   * التحقق مما إذا كان الجهاز يدعم مسح الباركود
    */
   public async isSupported(): Promise<boolean> {
-    return scannerPermissionService.isSupported();
+    try {
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        const result = await BarcodeScanner.isSupported();
+        return result.supported;
+      }
+      return false;
+    } catch (error) {
+      console.error('[BarcodeScannerService] خطأ في التحقق من الدعم:', error);
+      return false;
+    }
   }
   
   /**
    * طلب إذن الكاميرا
    */
   public async requestPermission(): Promise<boolean> {
-    return scannerPermissionService.requestPermission();
+    try {
+      // استخدام خدمة الأذونات للحصول على إذن الكاميرا
+      return await scannerPermissionService.requestPermission();
+    } catch (error) {
+      console.error('[BarcodeScannerService] خطأ في طلب الإذن:', error);
+      return false;
+    }
   }
   
   /**
-   * التحقق من حالة إذن الكاميرا
+   * فتح إعدادات التطبيق
    */
-  public async checkPermission(): Promise<boolean> {
-    return scannerPermissionService.checkPermission();
+  public async openAppSettings(): Promise<boolean> {
+    return await scannerPermissionService.openAppSettings();
   }
   
-  // خدمات المسح
-  
   /**
-   * فحص وإعداد كل ما هو مطلوب قبل بدء المسح
+   * بدء مسح الباركود
    */
-  public async prepareScanner(): Promise<boolean> {
-    return scannerOperationsService.prepareScanner();
+  public async startScan(): Promise<boolean> {
+    try {
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        await Toast.show({
+          text: 'هذا الجهاز لا يدعم مسح الباركود',
+          duration: 'long'
+        });
+        return false;
+      }
+      
+      // التحقق من الإذن أولاً
+      const { camera } = await BarcodeScanner.checkPermissions();
+      if (camera !== 'granted') {
+        const granted = await this.requestPermission();
+        if (!granted) {
+          return false;
+        }
+      }
+      
+      // بدء المسح
+      await BarcodeScanner.startScan();
+      return true;
+    } catch (error) {
+      console.error('[BarcodeScannerService] خطأ في بدء المسح:', error);
+      return false;
+    }
   }
   
   /**
-   * بدء عملية المسح
-   */
-  public async startScan(onSuccess: (code: string) => void): Promise<boolean> {
-    return scannerOperationsService.startScan(onSuccess);
-  }
-  
-  /**
-   * إيقاف عملية المسح وتنظيف الموارد
+   * إيقاف المسح
    */
   public async stopScan(): Promise<void> {
-    return scannerOperationsService.stopScan();
-  }
-  
-  // خدمات واجهة المستخدم
-  
-  /**
-   * إعداد الواجهة للمسح
-   */
-  public setupUIForScanning(): void {
-    scannerUIService.setupUIForScanning();
-  }
-  
-  /**
-   * استعادة الواجهة بعد المسح
-   */
-  public restoreUIAfterScanning(): void {
-    scannerUIService.restoreUIAfterScanning();
-  }
-  
-  // خدمات الكاميرا
-  
-  /**
-   * تبديل وضع الإضاءة
-   */
-  public async toggleTorch(): Promise<void> {
-    return scannerCameraService.toggleTorch();
-  }
-  
-  /**
-   * تنظيف الموارد والإعدادات
-   */
-  public cleanup(): void {
-    scannerUIService.cleanup();
-    this.stopScan().catch(e => 
-      console.error('[BarcodeScannerService] خطأ في تنظيف الموارد:', e)
-    );
+    if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+      try {
+        await BarcodeScanner.stopScan();
+      } catch (error) {
+        console.error('[BarcodeScannerService] خطأ في إيقاف المسح:', error);
+      }
+    }
   }
 }
 
-// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const barcodeScannerService = BarcodeScannerService.getInstance();
