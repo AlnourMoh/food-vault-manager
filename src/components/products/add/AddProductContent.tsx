@@ -27,17 +27,17 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // Fixed the function to properly return Promise<void> instead of Promise<boolean>
+  // Ensuring this function returns Promise<void> by not returning anything
   const openScanner = async (): Promise<void> => {
     try {
       console.log('Main button clicked, opening scanner directly');
       setScannerOpen(true);
-      // No return statement here to ensure Promise<void>
+      // No return value here
     } catch (error) {
       console.error("Error opening scanner:", error);
-      // No return statement here either
+      // No return value here either
     }
-    // No return statement at the end of the function
+    // Function implicitly returns undefined (which becomes Promise<void>)
   };
 
   return (

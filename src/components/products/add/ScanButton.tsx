@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { BarcodeIcon } from 'lucide-react';
 
 interface ScanButtonProps {
-  onClick: () => void;
+  onClick: () => Promise<void>; // Changed from potentially returning boolean to void
   isLoading: boolean;
   loadingText?: string;
   defaultText?: string;

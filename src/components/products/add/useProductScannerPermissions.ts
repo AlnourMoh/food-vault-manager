@@ -7,7 +7,7 @@ export const useProductScannerPermissions = () => {
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const { toast } = useToast();
 
-  const handleRequestPermission = async (): Promise<boolean> => {
+  const handleRequestPermission = async (): Promise<void> => {
     try {
       setIsRequestingPermission(true);
       
@@ -18,7 +18,6 @@ export const useProductScannerPermissions = () => {
       // Simulated successful permission grant
       setHasPermissionError(false);
       setIsRequestingPermission(false);
-      return true;
     } catch (error) {
       console.error('Error requesting camera permission:', error);
       setHasPermissionError(true);
@@ -29,8 +28,6 @@ export const useProductScannerPermissions = () => {
         description: "تعذر الحصول على إذن الكاميرا",
         variant: "destructive",
       });
-      
-      return false;
     }
   };
 
@@ -51,7 +48,7 @@ export const useProductScannerPermissions = () => {
     }
   };
 
-  const handleScanButtonClick = async (setScannerOpen: (open: boolean) => void): Promise<boolean> => {
+  const handleScanButtonClick = async (setScannerOpen: (open: boolean) => void): Promise<void> => {
     try {
       setIsRequestingPermission(true);
       
@@ -59,20 +56,16 @@ export const useProductScannerPermissions = () => {
       const hasPermission = !hasPermissionError;
       
       if (!hasPermission) {
-        const granted = await handleRequestPermission();
-        if (!granted) {
-          setIsRequestingPermission(false);
-          return false;
-        }
+        await handleRequestPermission();
+        setIsRequestingPermission(false);
+        return; // Early return if permission not granted
       }
       
       setIsRequestingPermission(false);
       setScannerOpen(true);
-      return true;
     } catch (error) {
       console.error('Error preparing scanner:', error);
       setIsRequestingPermission(false);
-      return false;
     }
   };
 
