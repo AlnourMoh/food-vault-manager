@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { ScannerLoading } from './ScannerLoading';
 import { NoPermissionView } from './NoPermissionView';
@@ -14,11 +15,11 @@ interface ScannerContainerProps {
   lastScannedCode: string | null;
   onScan: (code: string) => void;
   onClose: () => void;
-  startScan: () => void;
-  stopScan: () => void;
+  startScan: () => Promise<boolean>;
+  stopScan: () => Promise<void>;
   handleManualEntry: () => void;
   handleManualCancel: () => void;
-  handleRequestPermission: () => void;
+  handleRequestPermission: () => Promise<boolean>;
   handleRetry: () => void;
 }
 
@@ -82,36 +83,38 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   }
 
   if (isLoading) {
-    return <ScannerLoading />;
+    return <ScannerLoading onClose={onClose} />;
   }
 
+  if (isScanningActive) {
+    return (
+      <ScannerView 
+        isActive={true}
+        hasError={hasScannerError}
+        onStartScan={startScan}
+        onStopScan={stopScan}
+        onRetry={handleRetry}
+        onClose={onClose}
+      />
+    );
+  }
+  
+  if (hasPermission === false) {
+    return (
+      <NoPermissionView 
+        onClose={onClose} 
+        onRequestPermission={handleRequestPermission}
+        onManualEntry={handleManualEntry}
+      />
+    );
+  }
+  
   return (
-    <div className="fixed inset-0 z-50">
-      {isScanningActive ? (
-        <ScannerView 
-          isActive={true}
-          hasError={hasScannerError}
-          onStartScan={startScan}
-          onStopScan={stopScan}
-          onRetry={handleRetry}
-          onClose={onClose}
-        />
-      ) : (
-        hasPermission === false ? (
-          <NoPermissionView 
-            onClose={onClose} 
-            onRequestPermission={handleRequestPermission}
-            onManualEntry={handleManualEntry}
-          />
-        ) : (
-          <ScannerReadyView
-            lastScannedCode={lastScannedCode}
-            onStartScan={startScan}
-            onClose={onClose}
-            onManualEntry={handleManualEntry}
-          />
-        )
-      )}
-    </div>
+    <ScannerReadyView
+      lastScannedCode={lastScannedCode}
+      onStartScan={startScan}
+      onClose={onClose}
+      onManualEntry={handleManualEntry}
+    />
   );
 };

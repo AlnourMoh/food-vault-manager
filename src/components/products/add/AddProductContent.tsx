@@ -28,7 +28,8 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
   } = useProductScanHandler({ isRestaurantRoute });
 
   // This wrapper function ensures the return type is Promise<void>
-  const openScanner = async () => {
+  const openScanner = async (): Promise<void> => {
+    // We ignore the boolean result by not returning it
     await handleScanButtonClick(setScannerOpen);
   };
 

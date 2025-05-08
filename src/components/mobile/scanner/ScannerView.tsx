@@ -3,7 +3,7 @@ import React from 'react';
 import { ScannerControls } from './components/ScannerControls';
 import { ScannerFrame } from './components/ScannerFrame';
 import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
-import './scanner.module.css';
+import styles from './scanner.module.css';
 
 export interface ScannerViewProps {
   isActive: boolean;

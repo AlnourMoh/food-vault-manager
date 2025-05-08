@@ -6,17 +6,17 @@ import { Camera, Check, Keyboard } from 'lucide-react';
 
 interface ScannerReadyViewProps {
   lastScannedCode: string | null;
-  onStartScan: () => void;
+  onStartScan: () => Promise<boolean>;
   onClose: () => void;
   onManualEntry?: () => void;
 }
 
-export const ScannerReadyView = ({ 
+export const ScannerReadyView: React.FC<ScannerReadyViewProps> = ({ 
   lastScannedCode, 
   onStartScan, 
   onClose,
   onManualEntry 
-}: ScannerReadyViewProps) => {
+}) => {
   return (
     <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
       <div className="flex flex-col items-center justify-center h-60">
@@ -31,7 +31,7 @@ export const ScannerReadyView = ({
             </p>
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose}>إغلاق</Button>
-              <Button variant="default" onClick={onStartScan}>مسح آخر</Button>
+              <Button variant="default" onClick={() => onStartScan()}>مسح آخر</Button>
             </div>
           </>
         ) : (
@@ -44,7 +44,7 @@ export const ScannerReadyView = ({
               قم بتوجيه الكاميرا إلى باركود المنتج لمسحه
             </p>
             <div className="flex flex-col w-full space-y-2">
-              <Button variant="default" onClick={onStartScan} className="w-full">
+              <Button variant="default" onClick={() => onStartScan()} className="w-full">
                 <Camera className="h-4 w-4 ml-2" />
                 بدء المسح
               </Button>
