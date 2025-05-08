@@ -90,7 +90,7 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
     return (
       <ScannerView 
         isActive={true}
-        cameraActive={true} // إضافة الخاصية المفقودة cameraActive
+        cameraActive={true}
         hasError={hasScannerError}
         onStartScan={startScan}
         onStopScan={stopScan}

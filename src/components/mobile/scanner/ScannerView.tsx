@@ -37,7 +37,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   return (
     <div className="scanner-view-container relative h-full w-full">
       {/* إطار الماسح */}
-      <ScannerFrame />
+      <ScannerFrame 
+        isActive={isActive} 
+        cameraActive={cameraActive} 
+        hasError={hasError} 
+      />
       
       {/* مؤشر حالة الماسح - تم إضافته لعرض حالة الكاميرا */}
       <ScannerStatusIndicator 
@@ -48,7 +52,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       
       {/* عناصر التحكم في الماسح */}
       <ScannerControls 
-        isScanning={isActive}
+        isActive={isActive}
+        cameraActive={cameraActive}
         hasError={hasError}
         onStartScan={onStartScan}
         onStopScan={onStopScan}

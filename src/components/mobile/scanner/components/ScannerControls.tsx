@@ -41,7 +41,7 @@ export const ScannerControls: React.FC<ScannerControlsProps> = ({
         </Button>
       ) : isActive ? (
         <>
-          {/* أزرار التحكم عندما يكون الماسح نشطاً */}
+          {/* أزرار التحكم عندما يكون الماسح نشطًا */}
           <Button 
             variant="secondary"
             size="lg" 
