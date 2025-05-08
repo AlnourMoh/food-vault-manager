@@ -14,35 +14,54 @@ const ProductScan = () => {
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoOpenAttempted, setAutoOpenAttempted] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
   
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // فتح الماسح تلقائيًا عند تحميل الصفحة
+  // فتح الماسح تلقائيًا عند تحميل الصفحة - مؤقت لعرض المحتوى أولاً
   useEffect(() => {
     if (!autoOpenAttempted && Capacitor.isNativePlatform()) {
+      // نضع علامة أننا حاولنا الفتح التلقائي
       setAutoOpenAttempted(true);
       // فتح الماسح تلقائيًا بتأخير بسيط للسماح بتحميل الواجهة
-      setTimeout(() => setIsScannerOpen(true), 500);
+      const timer = setTimeout(() => {
+        console.log('محاولة فتح الماسح تلقائيًا...');
+        setIsScannerOpen(true);
+      }, 800);
+      
+      return () => clearTimeout(timer);
     }
   }, [autoOpenAttempted]);
 
+  // تسجيل حالة الماسح للمساعدة في تشخيص المشكلة
+  useEffect(() => {
+    console.log('حالة الماسح:', { 
+      isScannerOpen, 
+      isLoading, 
+      scanError, 
+      autoOpenAttempted
+    });
+  }, [isScannerOpen, isLoading, scanError, autoOpenAttempted]);
+
   const handleOpenScanner = () => {
-    console.log('Opening scanner');
+    console.log('فتح الماسح يدوياً');
+    setScanError(null);
     setIsScannerOpen(true);
   };
 
   const handleCloseScanner = () => {
-    console.log('Closing scanner');
+    console.log('إغلاق الماسح');
     setIsScannerOpen(false);
   };
 
   const handleScanResult = async (code: string) => {
-    console.log('Scan result received:', code);
+    console.log('تم استلام نتيجة المسح:', code);
     setIsLoading(true);
+    setScanError(null);
     
     try {
-      console.log('Fetching product data for code:', code);
+      console.log('جاري البحث عن بيانات المنتج للرمز:', code);
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
         .select('product_id')
@@ -50,12 +69,14 @@ const ProductScan = () => {
         .single();
       
       if (codeError) {
-        console.error('Error fetching product code:', codeError);
+        console.error('خطأ في البحث عن رمز المنتج:', codeError);
+        setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
         throw codeError;
       }
       
       if (!productCode?.product_id) {
-        console.error('No product ID found for code:', code);
+        console.error('لم يتم العثور على معرف المنتج للرمز:', code);
+        setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
         toast({
           title: "خطأ في الباركود",
           description: "لم يتم العثور على معلومات المنتج لهذا الباركود",
@@ -65,7 +86,7 @@ const ProductScan = () => {
         return;
       }
       
-      console.log('Found product ID:', productCode.product_id);
+      console.log('تم العثور على معرف المنتج:', productCode.product_id);
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('*')
@@ -73,14 +94,15 @@ const ProductScan = () => {
         .single();
       
       if (productError) {
-        console.error('Error fetching product details:', productError);
+        console.error('خطأ في البحث عن تفاصيل المنتج:', productError);
+        setScanError('حدث خطأ أثناء جلب تفاصيل المنتج');
         throw productError;
       }
       
-      console.log('Retrieved product data:', product);
+      console.log('تم جلب بيانات المنتج:', product);
       
-      // Convert database product to the Product interface format
-      // Make sure we validate the status value to match the expected union type
+      // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق واجهة المنتج
+      // التأكد من أن قيمة الحالة تتطابق مع النوع المتوقع
       const normalizedStatus = ((): 'active' | 'expired' | 'removed' => {
         switch(product.status) {
           case 'active':
@@ -90,8 +112,8 @@ const ProductScan = () => {
           case 'removed':
             return 'removed';
           default:
-            // Default to 'active' if status doesn't match any expected values
-            console.warn(`Unexpected product status: ${product.status}, defaulting to 'active'`);
+            // القيمة الافتراضية "active" إذا كانت الحالة لا تتطابق مع أي من القيم المتوقعة
+            console.warn(`حالة منتج غير متوقعة: ${product.status}، استخدام 'active' كقيمة افتراضية`);
             return 'active';
         }
       })();
@@ -105,18 +127,18 @@ const ProductScan = () => {
         expiryDate: new Date(product.expiry_date),
         entryDate: new Date(product.production_date),
         restaurantId: product.company_id,
-        restaurantName: '', // This information is not available from the query
-        addedBy: '', // This information is not available from the query
+        restaurantName: '', // هذه المعلومة غير متوفرة من الاستعلام
+        addedBy: '', // هذه المعلومة غير متوفرة من الاستعلام
         status: normalizedStatus,
         imageUrl: product.image_url,
       };
       
       setScannedProduct(formattedProduct);
-      console.log('Formatted product data:', formattedProduct);
+      console.log('بيانات المنتج المنسقة:', formattedProduct);
       
       const restaurantId = localStorage.getItem('restaurantId');
       if (restaurantId) {
-        console.log('Recording scan for restaurant:', restaurantId);
+        console.log('تسجيل عملية المسح للمطعم:', restaurantId);
         await supabase
           .from('product_scans')
           .insert({
@@ -132,10 +154,10 @@ const ProductScan = () => {
         description: `تم العثور على المنتج: ${product.name}`,
       });
     } catch (error) {
-      console.error('Error fetching product details:', error);
+      console.error('خطأ في البحث عن تفاصيل المنتج:', error);
       toast({
         title: "خطأ في البحث",
-        description: "حدث خطأ أثناء البحث عن معلومات المنتج",
+        description: scanError || "حدث خطأ أثناء البحث عن معلومات المنتج",
         variant: "destructive"
       });
     } finally {
@@ -147,6 +169,7 @@ const ProductScan = () => {
 
   const handleScanAnother = () => {
     setScannedProduct(null);
+    setScanError(null);
     // فتح الماسح مباشرة عند طلب مسح منتج آخر
     setIsScannerOpen(true);
   };
@@ -160,6 +183,20 @@ const ProductScan = () => {
   return (
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
+      
+      {scanError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md flex flex-col items-center">
+          <p className="font-semibold mb-1">حدث خطأ أثناء المسح:</p>
+          <p>{scanError}</p>
+          <Button 
+            onClick={handleOpenScanner}
+            className="mt-2 bg-red-100 hover:bg-red-200 text-red-800"
+            size="sm"
+          >
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
       
       {!scannedProduct ? (
         <InitialScanCard 

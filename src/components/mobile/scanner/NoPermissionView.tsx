@@ -18,6 +18,7 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
   onManualEntry 
 }) => {
   const [isRequesting, setIsRequesting] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const { toast } = useToast();
   
   const handleRequestPermission = async () => {
@@ -26,11 +27,20 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
       const granted = await onRequestPermission();
       
       if (!granted) {
-        toast({
-          title: "تم رفض الإذن",
-          description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك للاستمرار",
-          variant: "destructive"
-        });
+        setFailedAttempts(prev => prev + 1);
+        if (failedAttempts >= 1) {
+          toast({
+            title: "تم رفض الإذن عدة مرات",
+            description: "يبدو أنك بحاجة لتمكين إذن الكاميرا من إعدادات جهازك",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "تم رفض الإذن",
+            description: "يرجى تمكين إذن الكاميرا للاستمرار",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
       console.error('خطأ في طلب الإذن:', error);
@@ -115,6 +125,17 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
             إغلاق
           </Button>
         </div>
+        
+        {failedAttempts > 0 && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-700 mt-4 w-full">
+            <p className="font-medium">نصيحة للمساعدة:</p>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li>تأكد من السماح بإذن الكاميرا في إعدادات التطبيق</li>
+              <li>إذا كنت تستخدم iOS، افتح الإعدادات &gt; الخصوصية &gt; الكاميرا</li>
+              <li>إذا كنت تستخدم Android، افتح الإعدادات &gt; التطبيقات &gt; التطبيق &gt; الأذونات</li>
+            </ul>
+          </div>
+        )}
       </div>
     </Card>
   );
