@@ -28,7 +28,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- إضافة مرشحات نوايا إضافية لضمان ظهور التطبيق في قائمة إعدادات الكاميرا -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -59,14 +58,15 @@
             android:value="barcode" />
     </application>
 
-    <!-- أذونات بترتيب مناسب لضمان ظهور التطبيق في قائمة الأذونات -->
+    <!-- المستوى الأعلى أذونات يجب أن تكون أعلى مستوى بعد وسم التطبيق -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- إذن الكاميرا في أعلى الترتيب للأهمية -->
     <uses-permission android:name="android.permission.CAMERA" android:required="true" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     
-    <!-- تحسين تعريف الكاميرا لضمان ظهور التطبيق في قائمة الأذونات -->
+    <!-- تعريف الكاميرا كميزة أساسية في التطبيق -->
     <uses-feature android:name="android.hardware.camera" android:required="true" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />

@@ -9,6 +9,9 @@ import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedP
 import { Product } from '@/types';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import { Camera, Lock } from 'lucide-react';
+import { Toast } from '@capacitor/toast';
 
 const ProductScan = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -16,53 +19,204 @@ const ProductScan = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [autoOpenAttempted, setAutoOpenAttempted] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [isCheckingPermission, setIsCheckingPermission] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // فتح الماسح تلقائيًا عند تحميل الصفحة - مؤقت لعرض المحتوى أولاً
+  // التحقق من إذن الكاميرا عند تحميل الصفحة
   useEffect(() => {
-    if (!autoOpenAttempted && Capacitor.isNativePlatform()) {
-      // نضع علامة أننا حاولنا الفتح التلقائي
-      setAutoOpenAttempted(true);
-      // فتح الماسح تلقائيًا بتأخير بسيط للسماح بتحميل الواجهة
-      const timer = setTimeout(() => {
-        console.log('محاولة فتح الماسح تلقائيًا...');
-        setIsScannerOpen(true);
-      }, 800);
-      
-      return () => clearTimeout(timer);
-    }
+    const checkCameraPermission = async () => {
+      try {
+        setIsCheckingPermission(true);
+        console.log('ProductScan: التحقق من إذن الكاميرا...');
+        
+        const permissionGranted = await scannerPermissionService.checkPermission();
+        console.log('ProductScan: نتيجة التحقق من إذن الكاميرا:', permissionGranted);
+        
+        setHasPermission(permissionGranted);
+        
+        // فتح الماسح تلقائياً إذا كان لدينا إذن وكنا على منصة جوال
+        if (permissionGranted && Capacitor.isNativePlatform() && !autoOpenAttempted) {
+          console.log('ProductScan: لدينا إذن، سيتم محاولة فتح الماسح تلقائياً...');
+          setAutoOpenAttempted(true);
+          
+          // إضافة تأخير بسيط لضمان تحميل الواجهة أولاً
+          setTimeout(() => {
+            setIsScannerOpen(true);
+          }, 800);
+        }
+      } catch (error) {
+        console.error('ProductScan: خطأ في التحقق من إذن الكاميرا:', error);
+      } finally {
+        setIsCheckingPermission(false);
+      }
+    };
+    
+    checkCameraPermission();
   }, [autoOpenAttempted]);
 
   // تسجيل حالة الماسح للمساعدة في تشخيص المشكلة
   useEffect(() => {
-    console.log('حالة الماسح:', { 
+    console.log('ProductScan: حالة الماسح:', { 
       isScannerOpen, 
       isLoading, 
       scanError, 
-      autoOpenAttempted
+      autoOpenAttempted,
+      hasPermission,
+      isCheckingPermission
     });
-  }, [isScannerOpen, isLoading, scanError, autoOpenAttempted]);
+  }, [isScannerOpen, isLoading, scanError, autoOpenAttempted, hasPermission, isCheckingPermission]);
 
-  const handleOpenScanner = () => {
-    console.log('فتح الماسح يدوياً');
-    setScanError(null);
-    setIsScannerOpen(true);
+  const handleOpenScanner = async () => {
+    try {
+      console.log('ProductScan: فتح الماسح يدوياً');
+      setScanError(null);
+      setIsLoading(true);
+      
+      // التحقق من إذن الكاميرا وطلبه إذا لم يكن ممنوحاً
+      const permissionGranted = await scannerPermissionService.checkPermission();
+      
+      if (!permissionGranted) {
+        console.log('ProductScan: لا يوجد إذن للكاميرا، سيتم طلبه الآن');
+        
+        // إظهار إشعار للمستخدم
+        toast({
+          title: "طلب إذن الكاميرا",
+          description: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+        });
+        
+        const granted = await scannerPermissionService.requestPermission();
+        setHasPermission(granted);
+        
+        if (!granted) {
+          console.log('ProductScan: تم رفض إذن الكاميرا');
+          setScanError('تم رفض إذن الكاميرا، لا يمكن استخدام الماسح الضوئي');
+          
+          toast({
+            title: "تم رفض الإذن",
+            description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
+            variant: "destructive",
+          });
+          
+          setIsLoading(false);
+          return;
+        }
+      }
+      
+      // الآن بعد أن أصبح لدينا إذن، نفتح الماسح
+      setIsScannerOpen(true);
+      
+    } catch (error) {
+      console.error('ProductScan: خطأ في فتح الماسح:', error);
+      setScanError('حدث خطأ أثناء محاولة فتح الماسح الضوئي');
+      
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء محاولة فتح الماسح الضوئي",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCloseScanner = () => {
-    console.log('إغلاق الماسح');
+    console.log('ProductScan: إغلاق الماسح');
     setIsScannerOpen(false);
+  };
+  
+  const handleRequestPermission = async () => {
+    try {
+      console.log('ProductScan: طلب إذن الكاميرا يدوياً');
+      setIsLoading(true);
+      
+      // إعادة تعيين الذاكرة المخزنة مؤقتاً للإذن
+      scannerPermissionService.resetPermissionCache();
+      
+      // طلب الإذن
+      const granted = await scannerPermissionService.requestPermission();
+      setHasPermission(granted);
+      
+      // عرض نتيجة طلب الإذن
+      if (granted) {
+        console.log('ProductScan: تم منح إذن الكاميرا بنجاح');
+        setScanError(null);
+        
+        toast({
+          title: "تم منح الإذن",
+          description: "تم منح إذن الكاميرا بنجاح، يمكنك الآن استخدام الماسح الضوئي",
+        });
+        
+        // بعد الحصول على الإذن، نحاول فتح الماسح تلقائياً
+        setTimeout(() => {
+          setIsScannerOpen(true);
+        }, 500);
+      } else {
+        console.log('ProductScan: لم يتم منح إذن الكاميرا');
+        setScanError('تم رفض إذن الكاميرا، لا يمكن استخدام الماسح الضوئي');
+        
+        toast({
+          title: "تم رفض الإذن",
+          description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('ProductScan: خطأ في طلب إذن الكاميرا:', error);
+      setScanError('حدث خطأ أثناء محاولة طلب إذن الكاميرا');
+      
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء طلب إذن الكاميرا",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleOpenSettings = async () => {
+    try {
+      console.log('ProductScan: فتح إعدادات التطبيق');
+      setIsLoading(true);
+      
+      await scannerPermissionService.openAppSettings();
+      
+      // إعادة التحقق من الإذن بعد فترة قصيرة
+      setTimeout(async () => {
+        const granted = await scannerPermissionService.checkPermission();
+        setHasPermission(granted);
+        setIsLoading(false);
+        
+        if (granted) {
+          setScanError(null);
+          toast({
+            title: "تم منح الإذن",
+            description: "تم منح إذن الكاميرا بنجاح، يمكنك الآن استخدام الماسح الضوئي",
+          });
+        }
+      }, 3000);
+    } catch (error) {
+      console.error('ProductScan: خطأ في فتح إعدادات التطبيق:', error);
+      setIsLoading(false);
+      
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء محاولة فتح إعدادات التطبيق",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleScanResult = async (code: string) => {
-    console.log('تم استلام نتيجة المسح:', code);
+    console.log('ProductScan: تم استلام نتيجة المسح:', code);
     setIsLoading(true);
     setScanError(null);
     
     try {
-      console.log('جاري البحث عن بيانات المنتج للرمز:', code);
+      console.log('ProductScan: جاري البحث عن بيانات المنتج للرمز:', code);
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
         .select('product_id')
@@ -70,13 +224,13 @@ const ProductScan = () => {
         .single();
       
       if (codeError) {
-        console.error('خطأ في البحث عن رمز المنتج:', codeError);
+        console.error('ProductScan: خطأ في البحث عن رمز المنتج:', codeError);
         setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
         throw codeError;
       }
       
       if (!productCode?.product_id) {
-        console.error('لم يتم العثور على معرف المنتج للرمز:', code);
+        console.error('ProductScan: لم يتم العثور على معرف المنتج للرمز:', code);
         setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
         toast({
           title: "خطأ في الباركود",
@@ -87,7 +241,7 @@ const ProductScan = () => {
         return;
       }
       
-      console.log('تم العثور على معرف المنتج:', productCode.product_id);
+      console.log('ProductScan: تم العثور على معرف المنتج:', productCode.product_id);
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('*')
@@ -95,12 +249,12 @@ const ProductScan = () => {
         .single();
       
       if (productError) {
-        console.error('خطأ في البحث عن تفاصيل المنتج:', productError);
+        console.error('ProductScan: خطأ في البحث عن تفاصيل المنتج:', productError);
         setScanError('حدث خطأ أثناء جلب تفاصيل المنتج');
         throw productError;
       }
       
-      console.log('تم جلب بيانات المنتج:', product);
+      console.log('ProductScan: تم جلب بيانات المنتج:', product);
       
       // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق واجهة المنتج
       // التأكد من أن قيمة الحالة تتطابق مع النوع المتوقع
@@ -114,7 +268,7 @@ const ProductScan = () => {
             return 'removed';
           default:
             // القيمة الافتراضية "active" إذا كانت الحالة لا تتطابق مع أي من القيم المتوقعة
-            console.warn(`حالة منتج غير متوقعة: ${product.status}، استخدام 'active' كقيمة افتراضية`);
+            console.warn(`ProductScan: حالة منتج غير متوقعة: ${product.status}، استخدام 'active' كقيمة افتراضية`);
             return 'active';
         }
       })();
@@ -135,11 +289,11 @@ const ProductScan = () => {
       };
       
       setScannedProduct(formattedProduct);
-      console.log('بيانات المنتج المنسقة:', formattedProduct);
+      console.log('ProductScan: بيانات المنتج المنسقة:', formattedProduct);
       
       const restaurantId = localStorage.getItem('restaurantId');
       if (restaurantId) {
-        console.log('تسجيل عملية المسح للمطعم:', restaurantId);
+        console.log('ProductScan: تسجيل عملية المسح للمطعم:', restaurantId);
         await supabase
           .from('product_scans')
           .insert({
@@ -155,7 +309,7 @@ const ProductScan = () => {
         description: `تم العثور على المنتج: ${product.name}`,
       });
     } catch (error) {
-      console.error('خطأ في البحث عن تفاصيل المنتج:', error);
+      console.error('ProductScan: خطأ في البحث عن تفاصيل المنتج:', error);
       toast({
         title: "خطأ في البحث",
         description: scanError || "حدث خطأ أثناء البحث عن معلومات المنتج",
@@ -180,10 +334,50 @@ const ProductScan = () => {
       navigate(`/restaurant/products/${scannedProduct.id}`);
     }
   };
+  
+  // عرض قسم طلب الإذن إذا لم يكن لدينا إذن للكاميرا
+  const renderPermissionSection = () => {
+    if (hasPermission === false) {
+      return (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
+          <div className="flex flex-col items-center">
+            <div className="p-3 bg-red-100 rounded-full mb-2">
+              <Lock className="h-5 w-5" />
+            </div>
+            <h3 className="font-semibold mb-1">لا يوجد إذن للكاميرا</h3>
+            <p className="text-sm text-center mb-3">
+              يحتاج التطبيق إلى إذن الكاميرا لكي يتمكن من مسح الباركود
+            </p>
+            <div className="flex flex-col w-full gap-2">
+              <Button 
+                onClick={handleRequestPermission}
+                className="w-full"
+                disabled={isLoading}
+              >
+                <Camera className="h-4 w-4 ml-2" />
+                طلب إذن الكاميرا
+              </Button>
+              <Button 
+                onClick={handleOpenSettings}
+                variant="outline"
+                className="w-full"
+                disabled={isLoading}
+              >
+                فتح إعدادات التطبيق
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
+      
+      {renderPermissionSection()}
       
       {scanError && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md flex flex-col items-center">
@@ -193,6 +387,7 @@ const ProductScan = () => {
             onClick={handleOpenScanner}
             className="mt-2 bg-red-100 hover:bg-red-200 text-red-800"
             size="sm"
+            disabled={hasPermission === false || isLoading}
           >
             إعادة المحاولة
           </Button>
@@ -202,7 +397,8 @@ const ProductScan = () => {
       {!scannedProduct ? (
         <InitialScanCard 
           onOpenScanner={handleOpenScanner}
-          isLoading={isLoading}
+          isLoading={isLoading || isCheckingPermission}
+          hasPermission={hasPermission}
         />
       ) : (
         <ScannedProductCard
@@ -216,6 +412,7 @@ const ProductScan = () => {
         <ZXingBarcodeScanner
           onScan={handleScanResult}
           onClose={handleCloseScanner}
+          autoStart={true}
         />
       )}
     </div>

@@ -11,6 +11,8 @@ import { Toast } from '@capacitor/toast';
 class ScannerPermissionService {
   private static instance: ScannerPermissionService;
   private permissionRequests = 0;
+  private lastPermissionCheck = 0;
+  private permissionStatus: boolean | null = null;
   
   private constructor() {}
   
@@ -36,74 +38,47 @@ class ScannerPermissionService {
       
       const platform = Capacitor.getPlatform();
       
-      // استخدام BarcodeScanner.openSettings للفتح في Android
+      // استخدام مكتبة مخصصة لتوجيه المستخدم حسب المنصة
       if (platform === 'android') {
         try {
-          console.log('[ScannerPermissionService] فتح إعدادات Android عبر BarcodeScanner');
-          
-          // تسجيل محاولة فتح الإعدادات
-          console.log('[ScannerPermissionService] محاولة فتح الإعدادات في:', new Date().toISOString());
+          console.log('[ScannerPermissionService] فتح إعدادات Android');
           
           if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+            await BarcodeScanner.openSettings();
+            return true;
+          } else if (Capacitor.isPluginAvailable('Camera')) {
+            // محاولة استخدام ملحق الكاميرا إذا كان متاحًا
             try {
-              await BarcodeScanner.openSettings();
-              
-              await Toast.show({
-                text: 'يرجى تمكين إذن الكاميرا من إعدادات التطبيق',
-                duration: 'long'
-              });
-              
+              await Camera.openSettings();
               return true;
             } catch (e) {
-              console.error('[ScannerPermissionService] خطأ في فتح إعدادات BarcodeScanner:', e);
-              
-              // استخدام طريقة بديلة للتعامل مع الأجهزة المختلفة
-              try {
-                console.log('[ScannerPermissionService] استخدام طريقة بديلة لفتح الإعدادات');
-                // توجيه المستخدم للإعدادات يدويًا
-                await Toast.show({
-                  text: 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات',
-                  duration: 'long'
-                });
-                return true;
-              } catch (e2) {
-                console.error('[ScannerPermissionService] خطأ في الطريقة البديلة:', e2);
-              }
-            }
-          } else {
-            // عرض رسالة إرشادية للمستخدم كبديل
-            try {
-              await Toast.show({
-                text: 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات > الكاميرا',
-                duration: 'long'
-              });
-              return true;
-            } catch (e) {
-              console.error('[ScannerPermissionService] خطأ في عرض الرسالة الإرشادية:', e);
+              console.error('[ScannerPermissionService] خطأ في فتح إعدادات الكاميرا:', e);
             }
           }
+          
+          // إرشادات يدوية للمستخدم
+          await Toast.show({
+            text: 'الرجاء اتباع هذه الخطوات يدوياً: اذهب إلى إعدادات الجهاز > التطبيقات > مخزن الطعام > الأذونات > الكاميرا',
+            duration: 'long'
+          });
         } catch (e) {
           console.error('[ScannerPermissionService] خطأ في فتح إعدادات Android:', e);
         }
-        
-        // إرشادات يدوية للمستخدم في حالة عدم نجاح الطرق السابقة
-        await Toast.show({
-          text: 'الرجاء اتباع هذه الخطوات يدوياً: اذهب إلى إعدادات الجهاز > التطبيقات > مخزن الطعام > الأذونات > الكاميرا',
-          duration: 'long'
-        });
       } 
-      // فتح إعدادات التطبيق في iOS
       else if (platform === 'ios') {
         console.log('[ScannerPermissionService] محاولة فتح إعدادات iOS...');
         
         try {
-          // استخدام BarcodeScanner إذا كان متاحاً
           if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+            await BarcodeScanner.openSettings();
+            return true;
+          } else if (Capacitor.isPluginAvailable('Camera')) {
+            // محاولة استخدام ملحق الكاميرا إذا كان متاحًا
             try {
-              await BarcodeScanner.openSettings();
+              await Camera.openSettings();
               return true;
-            } catch (e2) {
-              console.error('[ScannerPermissionService] خطأ في فتح إعدادات BarcodeScanner في iOS:', e2);
+            } catch (e) {
+              console.error('[ScannerPermissionService] خطأ في فتح إعدادات الكاميرا في iOS:', e);
             }
           }
           
@@ -135,26 +110,32 @@ class ScannerPermissionService {
    */
   public async isSupported(): Promise<boolean> {
     try {
-      // التحقق من توفر الكاميرا
-      if (Capacitor.isPluginAvailable('Camera')) {
-        return true;
-      }
-      
-      // التحقق من توفر MLKit BarcodeScanner
+      // التحقق من وجود ملحق MLKitBarcodeScanner
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           const result = await BarcodeScanner.isSupported();
-          return result.supported;
+          if (result.supported) {
+            console.log('[ScannerPermissionService] MLKit BarcodeScanner مدعوم');
+            return true;
+          }
         } catch (e) {
-          console.error('[ScannerPermissionService] خطأ في التحقق من دعم MLKit:', e);
+          console.warn('[ScannerPermissionService] خطأ في التحقق من دعم MLKit:', e);
         }
       }
       
-      // التحقق من توفر الكاميرا عبر navigator
-      if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+      // التحقق من وجود ملحق Camera
+      if (Capacitor.isPluginAvailable('Camera')) {
+        console.log('[ScannerPermissionService] ملحق Camera متاح على الجهاز');
         return true;
       }
       
+      // التحقق من توفر الكاميرا عبر navigator
+      if (Capacitor.getPlatform() === 'web' && 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+        console.log('[ScannerPermissionService] واجهة برمجة تطبيقات الكاميرا متاحة في المتصفح');
+        return true;
+      }
+      
+      console.warn('[ScannerPermissionService] الماسح الضوئي غير مدعوم على هذا الجهاز');
       return false;
     } catch (error) {
       console.error('[ScannerPermissionService] خطأ في التحقق من دعم الماسح:', error);
@@ -163,126 +144,111 @@ class ScannerPermissionService {
   }
   
   /**
-   * طلب إذن الكاميرا بطرق متعددة
+   * طلب إذن الكاميرا بطرق متعددة مع محاولات متعددة
    */
   public async requestPermission(): Promise<boolean> {
     try {
+      // التحقق أولاً من وجود دعم
+      if (!await this.isSupported()) {
+        await Toast.show({
+          text: 'جهازك لا يدعم الماسح الضوئي أو لا توجد كاميرا متاحة',
+          duration: 'long'
+        });
+        return false;
+      }
+      
       // تسجيل عدد محاولات طلب الإذن
       this.permissionRequests++;
       console.log(`[ScannerPermissionService] محاولة طلب الإذن رقم: ${this.permissionRequests}`);
       
-      // بعد 3 محاولات، نحاول مباشرة فتح الإعدادات
-      if (this.permissionRequests > 3) {
-        console.log('[ScannerPermissionService] تجاوزنا عدد المحاولات، سننتقل إلى إعدادات التطبيق مباشرة');
-        
-        await Toast.show({
-          text: 'يبدو أننا نواجه صعوبة في الحصول على إذن الكاميرا. سنوجهك إلى الإعدادات لتمكين الإذن يدويًا.',
-          duration: 'long'
-        });
-        
-        setTimeout(() => this.openAppSettings(), 1500);
-        return false;
+      // التحقق من الإذن الحالي أولاً لتجنب طلب متكرر
+      const currentPermission = await this.checkPermission();
+      if (currentPermission) {
+        console.log('[ScannerPermissionService] الإذن ممنوح بالفعل، لا داعي للطلب');
+        this.permissionStatus = true;
+        this.permissionRequests = 0;
+        return true;
       }
       
-      // تحقق مما إذا كانت الكاميرا متوفرة
+      // محاولة طلب الإذن عبر ملحق MLKitBarcodeScanner
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('[ScannerPermissionService] محاولة طلب إذن MLKit BarcodeScanner...');
+        console.log('[ScannerPermissionService] محاولة طلب إذن عبر MLKitBarcodeScanner...');
         
-        // التحقق من حالة الإذن الحالية
-        const status = await BarcodeScanner.checkPermissions();
-        
-        if (status.camera === 'granted') {
-          console.log('[ScannerPermissionService] إذن MLKit ممنوح بالفعل');
-          return true;
-        }
-        
-        // إظهار رسالة توضيحية قبل طلب الإذن
+        // إظهار رسالة توضيحية
         await Toast.show({
-          text: 'سنطلب إذن الكاميرا لمسح الباركود، التطبيق يستخدم الكاميرا فقط لمسح الباركود',
+          text: 'التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود، سيتم طلب الإذن الآن',
           duration: 'short'
         });
         
-        // طلب الإذن من MLKit
+        // طلب الإذن وفحص النتيجة
+        const status = await BarcodeScanner.checkPermissions();
+        if (status.camera === 'granted') {
+          console.log('[ScannerPermissionService] إذن MLKit ممنوح بالفعل');
+          this.permissionStatus = true;
+          this.permissionRequests = 0;
+          return true;
+        }
+        
         const requestResult = await BarcodeScanner.requestPermissions();
         
         if (requestResult.camera === 'granted') {
           console.log('[ScannerPermissionService] تم منح إذن MLKit بنجاح');
-          this.permissionRequests = 0; // إعادة تعيين العداد عند النجاح
+          this.permissionStatus = true;
+          this.permissionRequests = 0;
           return true;
         } else {
           console.log('[ScannerPermissionService] تم رفض إذن MLKit:', requestResult.camera);
-          
-          // إظهار رسالة توضيحية للمستخدم
-          await Toast.show({
-            text: 'تم رفض إذن الكاميرا. بدون هذا الإذن، لن يتمكن التطبيق من مسح الباركود.',
-            duration: 'long'
-          });
-          
-          // محاولة فتح إعدادات التطبيق
-          setTimeout(() => this.openAppSettings(), 1500);
-          return false;
         }
-      } else if (Capacitor.isPluginAvailable('Camera')) {
-        console.log('[ScannerPermissionService] محاولة طلب إذن الكاميرا العادية...');
+      }
+      
+      // محاولة طلب الإذن عبر ملحق Camera
+      if (Capacitor.isPluginAvailable('Camera')) {
+        console.log('[ScannerPermissionService] محاولة طلب إذن عبر ملحق Camera...');
         
-        // التحقق من حالة الإذن
-        const status = await Camera.checkPermissions();
-        
-        if (status.camera === 'granted') {
-          console.log('[ScannerPermissionService] إذن الكاميرا ممنوح بالفعل');
-          return true;
-        }
-        
-        // إظهار رسالة توضيحية قبل طلب الإذن
+        // إظهار رسالة توضيحية
         await Toast.show({
-          text: 'سنطلب إذن الكاميرا الآن، يرجى السماح للتطبيق بالوصول إلى الكاميرا',
+          text: 'التطبيق يحتاج إلى إذن الكاميرا، يرجى السماح بالوصول',
           duration: 'short'
         });
         
-        // طلب الإذن
+        // طلب الإذن وفحص النتيجة
+        const status = await Camera.checkPermissions();
+        if (status.camera === 'granted') {
+          console.log('[ScannerPermissionService] إذن الكاميرا ممنوح بالفعل');
+          this.permissionStatus = true;
+          this.permissionRequests = 0;
+          return true;
+        }
+        
         const requestResult = await Camera.requestPermissions({
           permissions: ['camera']
         });
         
-        // التحقق من نجاح الطلب
         if (requestResult.camera === 'granted') {
-          console.log('[ScannerPermissionService] تم منح إذن الكاميرا العادية بنجاح');
-          this.permissionRequests = 0; // إعادة تعيين العداد عند النجاح
+          console.log('[ScannerPermissionService] تم منح إذن الكاميرا بنجاح');
+          this.permissionStatus = true;
+          this.permissionRequests = 0;
           return true;
         } else {
-          console.log('[ScannerPermissionService] تم رفض إذن الكاميرا العادية:', requestResult.camera);
-          
-          // محاولة فتح إعدادات التطبيق
-          setTimeout(() => this.openAppSettings(), 1500);
-          return false;
+          console.log('[ScannerPermissionService] تم رفض إذن الكاميرا:', requestResult.camera);
         }
-      } else if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
-        console.log('[ScannerPermissionService] محاولة طلب إذن الكاميرا عبر navigator...');
+      }
+      
+      // محاولة فتح الإعدادات بعد 3 محاولات من الرفض
+      if (this.permissionRequests >= 2) {
+        console.log('[ScannerPermissionService] وصلنا للمحاولة رقم', this.permissionRequests);
         
-        try {
-          // طلب إذن الكاميرا عبر navigator
-          await navigator.mediaDevices.getUserMedia({ video: true });
-          console.log('[ScannerPermissionService] تم منح إذن الكاميرا عبر navigator بنجاح');
-          this.permissionRequests = 0; // إعادة تعيين العداد عند النجاح
-          return true;
-        } catch (e) {
-          console.log('[ScannerPermissionService] تم رفض إذن الكاميرا عبر navigator');
-          
-          // محاولة فتح إعدادات التطبيق
-          setTimeout(() => this.openAppSettings(), 1500);
-          return false;
-        }
-      } else {
-        console.log('[ScannerPermissionService] لا يوجد دعم للكاميرا');
-        
-        // إظهار رسالة توضيحية للمستخدم
         await Toast.show({
-          text: 'لم نتمكن من العثور على كاميرا متاحة على جهازك. يرجى التأكد من أن جهازك يدعم الكاميرا.',
+          text: 'يبدو أنه تم رفض طلب إذن الكاميرا، سيتم توجيهك إلى الإعدادات لتمكين الإذن يدوياً',
           duration: 'long'
         });
         
-        return false;
+        await this.openAppSettings();
       }
+      
+      // إذا وصلنا إلى هنا، فإن الإذن تم رفضه
+      this.permissionStatus = false;
+      return false;
     } catch (error) {
       console.error('[ScannerPermissionService] خطأ في طلب إذن الكاميرا:', error);
       return false;
@@ -291,72 +257,60 @@ class ScannerPermissionService {
   
   /**
    * التحقق من حالة إذن الكاميرا
+   * مع تطبيق التخزين المؤقت للتحسين
    */
   public async checkPermission(): Promise<boolean> {
     try {
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const status = await BarcodeScanner.checkPermissions();
-        return status.camera === 'granted';
-      } else if (Capacitor.isPluginAvailable('Camera')) {
-        const status = await Camera.checkPermissions();
-        return status.camera === 'granted';
+      // التحقق من وجود تخزين مؤقت حديث للإذن
+      const now = Date.now();
+      if (this.permissionStatus !== null && (now - this.lastPermissionCheck < 10000)) {
+        console.log('[ScannerPermissionService] استخدام حالة الإذن المخزنة مؤقتاً:', this.permissionStatus);
+        return this.permissionStatus;
       }
       
-      return false;
+      let hasPermission = false;
+      
+      // التحقق من MLKitBarcodeScanner
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          const status = await BarcodeScanner.checkPermissions();
+          hasPermission = status.camera === 'granted';
+          console.log('[ScannerPermissionService] حالة إذن MLKit BarcodeScanner:', hasPermission);
+        } catch (e) {
+          console.warn('[ScannerPermissionService] خطأ في التحقق من إذن MLKit:', e);
+        }
+      }
+      
+      // التحقق من Camera إذا كان MLKit غير متاح أو لم يمنح الإذن
+      if (!hasPermission && Capacitor.isPluginAvailable('Camera')) {
+        try {
+          const status = await Camera.checkPermissions();
+          hasPermission = status.camera === 'granted';
+          console.log('[ScannerPermissionService] حالة إذن Camera:', hasPermission);
+        } catch (e) {
+          console.warn('[ScannerPermissionService] خطأ في التحقق من إذن Camera:', e);
+        }
+      }
+      
+      // تحديث التخزين المؤقت
+      this.lastPermissionCheck = now;
+      this.permissionStatus = hasPermission;
+      
+      return hasPermission;
     } catch (error) {
-      console.error('[ScannerPermissionService] خطأ في التحقق من إذن الكاميرا:', error);
+      console.error('[ScannerPermissionService] خطأ في التحقق من حالة إذن الكاميرا:', error);
       return false;
     }
   }
   
   /**
-   * التأكد من منح أذونات الكاميرا - محاولة قوية
-   * يحاول بكل الوسائل المتاحة الحصول على الإذن
+   * إعادة تعيين بيانات الإذن المخزنة مؤقتاً
+   * مفيدة إذا كنا نعتقد أن المستخدم قد غير الإذن يدوياً
    */
-  public async ensureCameraPermissions(): Promise<boolean> {
-    console.log('[ScannerPermissionService] محاولة التأكد من منح أذونات الكاميرا');
-    
-    try {
-      // التحقق من الإذن الحالي أولاً
-      const hasPermission = await this.checkPermission();
-      
-      if (hasPermission) {
-        console.log('[ScannerPermissionService] الإذن ممنوح بالفعل');
-        return true;
-      }
-      
-      console.log('[ScannerPermissionService] الإذن غير ممنوح، سنحاول طلبه');
-      
-      // طلب الإذن
-      const granted = await this.requestPermission();
-      
-      if (granted) {
-        return true;
-      }
-      
-      // إذا لم ننجح، نعرض إرشادات وافية للمستخدم
-      const platform = Capacitor.getPlatform();
-      
-      if (platform === 'android') {
-        await Toast.show({
-          text: 'لتمكين إذن الكاميرا يدوياً:\n1. اذهب إلى إعدادات الجهاز\n2. التطبيقات\n3. مخزن الطعام\n4. الأذونات\n5. الكاميرا\n6. اختر "السماح"',
-          duration: 'long'
-        });
-      } else if (platform === 'ios') {
-        await Toast.show({
-          text: 'لتمكين إذن الكاميرا يدوياً:\n1. افتح تطبيق الإعدادات\n2. اختر الخصوصية\n3. اختر الكاميرا\n4. قم بتفعيل تطبيق مخزن الطعام',
-          duration: 'long'
-        });
-      }
-      
-      // فتح إعدادات التطبيق
-      await this.openAppSettings();
-      
-      return false;
-    } catch (error) {
-      console.error('[ScannerPermissionService] خطأ في التأكد من منح أذونات الكاميرا:', error);
-      return false;
-    }
+  public resetPermissionCache(): void {
+    this.permissionStatus = null;
+    this.lastPermissionCheck = 0;
+    console.log('[ScannerPermissionService] تم إعادة تعيين بيانات الإذن المخزنة مؤقتاً');
   }
 }
 
