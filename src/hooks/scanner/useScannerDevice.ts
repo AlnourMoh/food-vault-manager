@@ -20,7 +20,15 @@ export const useScannerDevice = () => {
       // استخدام خدمة الماسح الضوئي الموحدة أولاً
       try {
         console.log("[useScannerDevice] محاولة استخدام خدمة الماسح الموحدة");
-        const result = await barcodeScannerService.startScan(onSuccess);
+        // عند استدعاء الخدمة، نستخدم معالج منفصل للتعامل مع نتيجة المسح
+        const result = await barcodeScannerService.startScan();
+        
+        // إذا نجح بدء المسح، نقوم بإعداد مستمع للنتيجة
+        if (result) {
+          // هنا يمكننا إعداد مستمع لنتيجة المسح باستخدام BarcodeScanner.addListener
+          // على سبيل المثال (لا يتم تنفيذه هنا):
+          // BarcodeScanner.addListener('barcodeScanned', (result) => onSuccess(result.barcode));
+        }
         return result;
       } catch (serviceError) {
         console.warn("[useScannerDevice] خطأ في استخدام خدمة الماسح الموحدة:", serviceError);

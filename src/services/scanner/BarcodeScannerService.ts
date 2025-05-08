@@ -57,6 +57,7 @@ class BarcodeScannerService {
   
   /**
    * بدء مسح الباركود
+   * تم تعديل الدالة لإزالة معامل الاستدعاء الخلفي لتتوافق مع الاستخدام الحالي
    */
   public async startScan(): Promise<boolean> {
     try {

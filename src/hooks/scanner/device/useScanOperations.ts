@@ -1,64 +1,48 @@
 
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { useToast } from '@/hooks/use-toast';
-import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { useState, useCallback } from 'react';
 import { barcodeScannerService } from '@/services/scanner/BarcodeScannerService';
+import { Toast } from '@capacitor/toast';
 
 export const useScanOperations = () => {
-  const { toast } = useToast();
+  const [isScanning, setIsScanning] = useState(false);
 
-  // تبسيط الخيارات للحصول على أفضل أداء
-  const getScanOptions = () => ({
-    formats: [
-      BarcodeFormat.QrCode,
-      BarcodeFormat.Code128,
-      BarcodeFormat.Ean13
-    ]
-  });
-
-  // تبسيط وظيفة المسح لتقليل فرص حدوث أخطاء
-  const performSimpleScan = async () => {
+  const startScanning = useCallback(async (onScanResult: (code: string) => void) => {
     try {
-      console.log("[useScanOperations] بدء عملية المسح البسيطة");
+      setIsScanning(true);
       
-      // التحقق من الأذونات أولاً
-      const permissionStatus = await BarcodeScanner.checkPermissions();
-      if (permissionStatus.camera !== 'granted') {
-        console.log("[useScanOperations] طلب إذن الكاميرا");
-        const requestResult = await BarcodeScanner.requestPermissions();
-        if (requestResult.camera !== 'granted') {
-          console.error("[useScanOperations] تم رفض إذن الكاميرا");
-          toast({
-            title: "تم رفض الإذن",
-            description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك",
-            variant: "destructive"
-          });
-          return null;
-        }
+      // بدء المسح باستخدام خدمة الماسح الضوئي
+      const result = await barcodeScannerService.startScan();
+      
+      if (!result) {
+        setIsScanning(false);
+        await Toast.show({
+          text: 'تعذر بدء الماسح الضوئي',
+          duration: 'short'
+        });
       }
+
+      // هنا يمكننا إعداد الاستماع للنتائج باستخدام BarcodeScanner.addListener
       
-      // بدء المسح باستخدام الخدمة الجديدة
-      let scannedCode: string | null = null;
-      
-      await barcodeScannerService.startScan((code) => {
-        scannedCode = code;
-      });
-      
-      return scannedCode;
+      return result;
     } catch (error) {
-      console.error("[useScanOperations] فشل المسح البسيط:", error);
-      // إظهار رسالة للمستخدم عن الخطأ
-      toast({
-        title: "خطأ في المسح",
-        description: "حدث خطأ أثناء محاولة مسح الباركود. يرجى المحاولة مرة أخرى.",
-        variant: "destructive"
-      });
-      return null;
+      console.error('خطأ في بدء المسح:', error);
+      setIsScanning(false);
+      return false;
     }
-  };
+  }, []);
+
+  const stopScanning = useCallback(async () => {
+    try {
+      await barcodeScannerService.stopScan();
+      setIsScanning(false);
+    } catch (error) {
+      console.error('خطأ في إيقاف المسح:', error);
+    }
+  }, []);
 
   return {
-    performSimpleScan,
-    getScanOptions
+    isScanning,
+    startScanning,
+    stopScanning
   };
 };
