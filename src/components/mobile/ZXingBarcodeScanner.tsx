@@ -14,12 +14,13 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   onClose,
   autoStart = true
 }) => {
-  // استخدام hook للتعامل مع منطق الماسح الضوئي
+  // استخدام hook للتعامل مع منطق الماسح الضوئي والكاميرا
   const {
     isLoading,
     hasPermission,
     isScanningActive,
     hasScannerError,
+    cameraActive,
     startScan,
     stopScan,
     requestPermission,
@@ -36,6 +37,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       hasPermission={hasPermission}
       isScanningActive={isScanningActive}
       hasScannerError={hasScannerError}
+      cameraActive={cameraActive}
       onScan={onScan}
       onClose={onClose}
       startScan={startScan}

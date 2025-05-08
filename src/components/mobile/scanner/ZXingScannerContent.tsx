@@ -9,6 +9,7 @@ interface ZXingScannerContentProps {
   hasPermission: boolean | null;
   isScanningActive: boolean;
   hasScannerError: boolean;
+  cameraActive: boolean;
   onScan: (code: string) => void;
   onClose: () => void;
   startScan: () => Promise<boolean>;
@@ -22,6 +23,7 @@ export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
   hasPermission,
   isScanningActive,
   hasScannerError,
+  cameraActive,
   onClose,
   startScan,
   stopScan,
@@ -44,6 +46,7 @@ export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
   return (
     <ScannerView
       isActive={isScanningActive}
+      cameraActive={cameraActive}
       hasError={hasScannerError}
       onStartScan={startScan}
       onStopScan={stopScan}

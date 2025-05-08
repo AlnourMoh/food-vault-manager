@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Flashlight, Keyboard, X, RotateCcw } from 'lucide-react';
+import { Flashlight, Keyboard, X, RotateCcw, Camera } from 'lucide-react';
 
 export interface ScannerControlsProps {
   isActive: boolean;
+  cameraActive: boolean;
   hasError: boolean;
   onStartScan: () => Promise<boolean>;
   onStopScan: () => Promise<boolean>;
@@ -15,6 +17,7 @@ export interface ScannerControlsProps {
 
 export const ScannerControls: React.FC<ScannerControlsProps> = ({ 
   isActive,
+  cameraActive,
   hasError,
   onStartScan,
   onStopScan,
@@ -60,17 +63,28 @@ export const ScannerControls: React.FC<ScannerControlsProps> = ({
             </Button>
           )}
         </>
+      ) : cameraActive ? (
+        // الكاميرا نشطة لكن المسح متوقف
+        <Button 
+          variant="secondary"
+          size="lg" 
+          className="rounded-full px-6"
+          onClick={() => onStartScan()}
+        >
+          <Camera className="h-5 w-5 ml-2" />
+          بدء المسح
+        </Button>
       ) : (
+        // لا الكاميرا ولا المسح نشط
         <>
-          {/* أزرار التحكم عندما يكون الماسح غير نشط */}
           <Button 
             variant="secondary"
             size="lg" 
             className="rounded-full px-6"
             onClick={() => onStartScan()}
           >
-            <Flashlight className="h-5 w-5 ml-2" />
-            بدء المسح
+            <Camera className="h-5 w-5 ml-2" />
+            تفعيل الكاميرا
           </Button>
           
           {onManualEntry && (
