@@ -28,30 +28,7 @@ class ScannerPermissionService {
       
       const platform = Capacitor.getPlatform();
       
-      // استخدام App API بدلاً من Camera.openSettings
-      if (platform === 'android') {
-        console.log('[ScannerPermissionService] محاولة فتح إعدادات Android...');
-        try {
-          // Fix: use correct method for opening app settings on Android
-          await BarcodeScanner.openSettings();
-          return true;
-        } catch (e) {
-          console.error('[ScannerPermissionService] خطأ في فتح إعدادات Android:', e);
-        }
-      } else if (platform === 'ios') {
-        console.log('[ScannerPermissionService] محاولة فتح إعدادات iOS...');
-        try {
-          // Fix: use correct method for opening app settings on iOS
-          await BarcodeScanner.openSettings();
-          return true;
-        } catch (e) {
-          console.error('[ScannerPermissionService] خطأ في فتح إعدادات iOS:', e);
-        }
-      } else {
-        console.log('[ScannerPermissionService] منصة غير مدعومة:', platform);
-      }
-      
-      // استخدام BarcodeScanner للفتح إذا لم تنجح الطرق السابقة
+      // استخدام BarcodeScanner.openSettings للفتح في كل من Android و iOS
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[ScannerPermissionService] محاولة فتح الإعدادات عبر BarcodeScanner...');
         try {
@@ -96,7 +73,7 @@ class ScannerPermissionService {
         }
       }
       
-      // التحقق من توفر الكاميرا عبر navigator
+      // التحقق من توفر الكامير�� عبر navigator
       if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
         return true;
       }
