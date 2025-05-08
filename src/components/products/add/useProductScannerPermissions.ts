@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
@@ -109,7 +108,7 @@ export const useProductScannerPermissions = () => {
     }
   };
 
-  const handleScanButtonClick = async (setScannerOpen: (isOpen: boolean) => void) => {
+  const handleScanButtonClick = async (setScannerOpen: (isOpen: boolean) => void): Promise<boolean> => {
     try {
       console.log('فتح الماسح الضوئي');
       setIsRequestingPermission(true);
@@ -125,6 +124,7 @@ export const useProductScannerPermissions = () => {
           console.log("توجد أذونات للكاميرا - جاري فتح الماسح");
           setHasPermissionError(false);
           setScannerOpen(true);
+          return true;
         } else {
           console.log("لم يتم الحصول على أذونات الكاميرا");
           setHasPermissionError(true);
@@ -145,11 +145,13 @@ export const useProductScannerPermissions = () => {
               console.error("خطأ في فتح الإعدادات:", e);
             }
           }, 1500);
+          return false;
         }
       } else {
         // في حالة عدم وجود منصة أصلية، نفترض أن الأذونات متوفرة
         console.log("تشغيل الماسح في وضع الويب");
         setScannerOpen(true);
+        return true;
       }
     } catch (error) {
       console.error("خطأ في فتح الماسح:", error);
@@ -158,6 +160,7 @@ export const useProductScannerPermissions = () => {
         description: "حدث خطأ أثناء محاولة تشغيل الماسح الضوئي",
         variant: "destructive"
       });
+      return false;
     } finally {
       setIsRequestingPermission(false);
     }

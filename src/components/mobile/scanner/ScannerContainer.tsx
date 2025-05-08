@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { ScannerLoading } from './ScannerLoading';
 import { NoPermissionView } from './NoPermissionView';
@@ -90,10 +89,12 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
     <div className="fixed inset-0 z-50">
       {isScanningActive ? (
         <ScannerView 
-          onStop={stopScan} 
-          hasPermissionError={hasPermission === false}
-          onRequestPermission={handleRequestPermission}
-          onManualEntry={handleManualEntry}
+          isActive={true}
+          hasError={hasScannerError}
+          onStartScan={startScan}
+          onStopScan={stopScan}
+          onRetry={handleRetry}
+          onClose={onClose}
         />
       ) : (
         hasPermission === false ? (

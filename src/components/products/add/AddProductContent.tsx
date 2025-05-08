@@ -27,6 +27,11 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
+  // This wrapper function ensures the return type is Promise<void>
+  const openScanner = async () => {
+    await handleScanButtonClick(setScannerOpen);
+  };
+
   return (
     <div className="max-w-md mx-auto text-center space-y-6">
       {hasPermissionError ? (
@@ -37,7 +42,7 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
         />
       ) : (
         <ScanButton 
-          onClick={() => handleScanButtonClick(setScannerOpen)}
+          onClick={openScanner}
           isLoading={isRequestingPermission}
         />
       )}

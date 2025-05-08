@@ -2,14 +2,16 @@
 import React from 'react';
 import styles from '../scanner.module.css';
 
-interface ScannerFrameProps {
+export interface ScannerFrameProps {
+  isActive: boolean;
+  hasError: boolean;
   children?: React.ReactNode;
 }
 
-export const ScannerFrame = ({ children }: ScannerFrameProps) => {
+export const ScannerFrame: React.FC<ScannerFrameProps> = ({ isActive, hasError, children }) => {
   return (
-    <div className={styles.targetFrame}>
-      <div className={styles.scanLine} />
+    <div className={`${styles.targetFrame} ${hasError ? styles.frameError : ''}`}>
+      <div className={`${styles.scanLine} ${isActive && !hasError ? styles.scanning : ''}`} />
       {children}
       <div className={styles.guideText}>
         <p className="mb-2 font-bold text-white">قم بتوجيه الكاميرا نحو الباركود</p>
