@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Flashlight, Keyboard, X, RotateCcw } from 'lucide-react';
@@ -7,7 +6,7 @@ export interface ScannerControlsProps {
   isActive: boolean;
   hasError: boolean;
   onStartScan: () => Promise<boolean>;
-  onStopScan: () => Promise<void>;
+  onStopScan: () => Promise<boolean>;
   onClose: () => void;
   onRetry: () => void;
   onToggleFlash?: () => void;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ScannerControls } from './components/ScannerControls';
 import { ScannerFrame } from './components/ScannerFrame';
@@ -9,7 +8,7 @@ export interface ScannerViewProps {
   isActive: boolean;
   hasError: boolean;
   onStartScan: () => Promise<boolean>;
-  onStopScan: () => Promise<void>;
+  onStopScan: () => Promise<boolean>;
   onRetry: () => void;
   onClose: () => void;
 }

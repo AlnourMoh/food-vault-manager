@@ -29,8 +29,8 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     isManualEntry,
     hasScannerError,
     startScan: originalStartScan,
-    stopScan,
-    requestPermission,
+    stopScan: originalStopScan,
+    requestPermission: originalRequestPermission,
     handleManualEntry,
     handleManualCancel,
     handleRetry
@@ -73,7 +73,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         });
       }
       
-      return success; // Return the success boolean value
+      return success;
       
     } catch (error) {
       console.error("[BarcodeScanner] Error starting scan:", error);
@@ -81,8 +81,19 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
         text: 'حدث خطأ أثناء تشغيل الكاميرا',
         duration: 'short'
       });
-      return false; // Return false in case of error
+      return false;
     }
+  };
+
+  // Wrapper for stop scan to match return type
+  const stopScan = async (): Promise<boolean> => {
+    await originalStopScan();
+    return true;
+  };
+  
+  // Wrapper for request permission to match return type
+  const requestPermission = async (): Promise<boolean> => {
+    return await originalRequestPermission();
   };
 
   // تهيئة وتنظيف المكون

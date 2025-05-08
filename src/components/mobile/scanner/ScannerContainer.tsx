@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { ScannerLoading } from './ScannerLoading';
 import { NoPermissionView } from './NoPermissionView';
@@ -16,7 +15,7 @@ interface ScannerContainerProps {
   onScan: (code: string) => void;
   onClose: () => void;
   startScan: () => Promise<boolean>;
-  stopScan: () => Promise<void>;
+  stopScan: () => Promise<boolean>;
   handleManualEntry: () => void;
   handleManualCancel: () => void;
   handleRequestPermission: () => Promise<boolean>;
