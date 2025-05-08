@@ -8,6 +8,7 @@ import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScan
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
 import { Product } from '@/types';
 import { Capacitor } from '@capacitor/core';
+import { Button } from '@/components/ui/button';
 
 const ProductScan = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);

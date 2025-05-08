@@ -254,15 +254,17 @@ export const useZXingBarcodeScanner = ({
         try {
           console.log('بدء استخدام MLKitBarcodeScanner للمسح...');
           
-          // تهيئة حدث المسح
+          // تهيئة حدث المسح - تغيير من "barcodeScanned" إلى "barcodesScanned" (الصيغة الجمع)
           const listener = await BarcodeScanner.addListener(
-            'barcodeScanned',
+            'barcodesScanned',
             async result => {
               try {
-                console.log('تم اكتشاف باركود:', result.barcode);
+                console.log('تم اكتشاف باركود:', result.barcodes);
                 // إيقاف المسح وإرسال النتيجة
                 await stopScan();
-                onScan(result.barcode.rawValue || '');
+                if (result.barcodes && result.barcodes.length > 0) {
+                  onScan(result.barcodes[0].rawValue || '');
+                }
               } catch (e) {
                 console.error('خطأ في معالجة نتيجة المسح:', e);
               }
