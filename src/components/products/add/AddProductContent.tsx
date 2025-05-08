@@ -32,7 +32,7 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     try {
       console.log('Main button clicked, opening scanner directly');
       setScannerOpen(true);
-      // تم إزالة إرجاع قيمة boolean لتتوافق مع نوع Promise<void>
+      // لا نقوم بإرجاع قيمة boolean لضمان توافق الدالة مع Promise<void>
     } catch (error) {
       console.error("Error opening scanner:", error);
     }

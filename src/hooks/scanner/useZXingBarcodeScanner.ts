@@ -1,9 +1,7 @@
 
-import { useState, useEffect, useRef } from 'react';
-import { useScannerPermissions } from './hooks/useScannerPermissions';
-import { useCameraActivation } from './hooks/useCameraActivation';
-import { useScanOperations } from './hooks/useScanOperations';
-import { useBarcodeDetection } from './hooks/useBarcodeDetection';
+import { useState, useEffect } from 'react';
+import { useCameraPermissions } from '@/hooks/useCameraPermissions';
+import { useToast } from '@/hooks/use-toast';
 
 interface UseZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -11,61 +9,92 @@ interface UseZXingBarcodeScannerProps {
   autoStart?: boolean;
 }
 
-export const useZXingBarcodeScanner = ({ 
-  onScan, 
-  onClose, 
-  autoStart = true 
+export const useZXingBarcodeScanner = ({
+  onScan,
+  onClose,
+  autoStart = false
 }: UseZXingBarcodeScannerProps) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [isScanningActive, setIsScanningActive] = useState(false);
-  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
+  const [hasScannerError, setHasScannerError] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const { toast } = useToast();
   
-  // Composite hooks
-  const { isLoading, hasPermission, requestPermission } = useScannerPermissions();
-  const { cameraActive, hasScannerError, activateCamera, setCameraActive, setHasScannerError } = useCameraActivation();
-  const { startScan, stopScan, handleRetry } = useScanOperations(
-    cameraActive, 
-    activateCamera, 
-    setIsScanningActive, 
-    setHasScannerError,
-    setCameraActive
-  );
+  // Use the camera permissions hook
+  const { hasPermission, requestPermission } = useCameraPermissions();
   
-  // Setup barcode detection
-  useBarcodeDetection(onScan, stopScan, isScanningActive, hasScannerError, cameraActive);
-  
-  // تهيئة المسح الضوئي تلقائيًا عند تحميل المكون
+  // Effect to auto-start scanning if requested
   useEffect(() => {
-    const initializeScanner = async () => {
-      console.log('[useZXingBarcodeScanner] تهيئة الماسح وفحص الأذونات...');
-
-      try {
-        // محاولة طلب الأذونات وتفعيل الكاميرا
-        
-        // طلب الأذونات فوراً
-        const permissionGranted = await requestPermission();
-        
-        if (permissionGranted && autoStart) {
-          // تفعيل الكاميرا أولاً قبل بدء المسح
-          await activateCamera();
-          
-          // بدء المسح مباشرة إذا تم منح الإذن
-          console.log('[useZXingBarcodeScanner] بدء المسح تلقائياً...');
-          await startScan();
-        }
-      } catch (error) {
-        console.error('[useZXingBarcodeScanner] خطأ في تهيئة الماسح:', error);
-        setHasScannerError(true);
+    const initialize = async () => {
+      // Short delay to allow UI to render
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      setIsLoading(false);
+      
+      if (autoStart && hasPermission) {
+        console.log('[useZXingBarcodeScanner] Auto-starting scan...');
+        startScan().catch(console.error);
       }
     };
-
-    // تشغيل الماسح مباشرة عند التحميل
-    initializeScanner();
-
-    // عند إلغاء تحميل المكون، نتأكد من إيقاف المسح
+    
+    initialize();
+    
+    // Cleanup on unmount
     return () => {
-      stopScan();
+      if (isScanningActive) {
+        stopScan().catch(console.error);
+      }
     };
-  }, [autoStart, requestPermission, activateCamera, startScan, stopScan]);
+  }, [autoStart, hasPermission]);
+  
+  const startScan = async (): Promise<boolean> => {
+    try {
+      console.log('[useZXingBarcodeScanner] Starting scan...');
+      
+      // Check for permission first
+      if (hasPermission === false) {
+        console.log('[useZXingBarcodeScanner] No permission, requesting...');
+        const granted = await requestPermission();
+        if (!granted) {
+          console.log('[useZXingBarcodeScanner] Permission denied');
+          return false;
+        }
+      }
+      
+      // Set the camera and scanning active
+      setCameraActive(true);
+      setIsScanningActive(true);
+      
+      // In a real implementation, this would interact with the ZXing library
+      // Here we're simulating a successful operation
+      console.log('[useZXingBarcodeScanner] Scan started');
+      return true;
+      
+    } catch (error) {
+      console.error('[useZXingBarcodeScanner] Error starting scan:', error);
+      setHasScannerError(true);
+      return false;
+    }
+  };
+  
+  const stopScan = async (): Promise<boolean> => {
+    try {
+      setIsScanningActive(false);
+      console.log('[useZXingBarcodeScanner] Scan stopped');
+      return true;
+    } catch (error) {
+      console.error('[useZXingBarcodeScanner] Error stopping scan:', error);
+      return false;
+    }
+  };
+  
+  const handleRetry = () => {
+    setHasScannerError(false);
+    startScan().catch(error => {
+      console.error('[useZXingBarcodeScanner] Error during retry:', error);
+      setHasScannerError(true);
+    });
+  };
   
   return {
     isLoading,

@@ -26,13 +26,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 }) => {
   // Start scan immediately when this component mounts if it's not active already
   React.useEffect(() => {
-    if (!isActive && !hasError) {
+    if (!isActive && !hasError && cameraActive) {
       console.log('[ScannerView] Auto-starting scan on mount');
       onStartScan().catch(error => {
         console.error('[ScannerView] Error auto-starting scan:', error);
       });
     }
-  }, []);
+  }, [cameraActive]);
 
   return (
     <div className="scanner-container fixed inset-0 z-50 bg-black flex flex-col">
