@@ -27,14 +27,16 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // Modified function to have Promise<void> return type
+  // Fixed function to properly have Promise<void> return type
   const openScanner = async (): Promise<void> => {
     try {
       console.log('Main button clicked, opening scanner directly');
       // Simply set scanner to open - we'll handle permissions in the ZXingBarcodeScanner component
       setScannerOpen(true);
+      // Not returning anything here, to match the Promise<void> signature
     } catch (error) {
       console.error("Error opening scanner:", error);
+      // Not returning anything in the catch block either
     }
   };
 
