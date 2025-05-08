@@ -27,15 +27,13 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // تعديل الدالة لتتوافق مع نوع Promise<void> بدلاً من Promise<boolean>
+  // تعديل الدالة لتتوافق مع نوع Promise<void>
   const openScanner = async (): Promise<void> => {
     try {
       console.log('Main button clicked, opening scanner directly');
       setScannerOpen(true);
-      // لا نقوم بإرجاع أي قيمة لضمان توافق النوع مع Promise<void>
     } catch (error) {
       console.error("Error opening scanner:", error);
-      // لا نقوم بإرجاع أي قيمة في كتلة الخطأ أيضًا
     }
   };
 
