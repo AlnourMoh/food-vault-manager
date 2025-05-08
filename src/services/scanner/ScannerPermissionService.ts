@@ -46,14 +46,14 @@ class ScannerPermissionService {
           if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
             await BarcodeScanner.openSettings();
             return true;
-          } else if (Capacitor.isPluginAvailable('Camera')) {
-            // محاولة استخدام ملحق الكاميرا إذا كان متاحًا
-            try {
-              await Camera.openSettings();
-              return true;
-            } catch (e) {
-              console.error('[ScannerPermissionService] خطأ في فتح إعدادات الكاميرا:', e);
-            }
+          } else if (Capacitor.isPluginAvailable('App')) {
+            // استخدام App plugin لإنهاء التطبيق بعد توجيه المستخدم لتغيير الإعدادات يدويًا
+            await Toast.show({
+              text: 'سيتم إغلاق التطبيق، الرجاء العودة وتمكين إذن الكاميرا من إعدادات الجهاز',
+              duration: 'long'
+            });
+            await App.exitApp();
+            return true;
           }
           
           // إرشادات يدوية للمستخدم
@@ -72,14 +72,14 @@ class ScannerPermissionService {
           if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
             await BarcodeScanner.openSettings();
             return true;
-          } else if (Capacitor.isPluginAvailable('Camera')) {
-            // محاولة استخدام ملحق الكاميرا إذا كان متاحًا
-            try {
-              await Camera.openSettings();
-              return true;
-            } catch (e) {
-              console.error('[ScannerPermissionService] خطأ في فتح إعدادات الكاميرا في iOS:', e);
-            }
+          } else if (Capacitor.isPluginAvailable('App')) {
+            // استخدام App plugin لإنهاء التطبيق بعد توجيه المستخدم لتغيير الإعدادات يدويًا
+            await Toast.show({
+              text: 'سيتم إغلاق التطبيق، الرجاء العودة وتمكين إذن الكاميرا من إعدادات الجهاز',
+              duration: 'long'
+            });
+            await App.exitApp();
+            return true;
           }
           
           // إرشادات يدوية للمستخدم
