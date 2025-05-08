@@ -1,9 +1,10 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { App } from '@capacitor/app';
 import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
+import { Toast } from '@capacitor/toast';
 
 // Import the augmentation to ensure TypeScript recognizes the extended methods
 import '@/types/barcode-scanner-augmentation.d.ts';
@@ -17,6 +18,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const scannerContainerRef = useRef<HTMLDivElement>(null);
   const isActive = useRef(false);
   const scanAttempted = useRef(false);
+  const [cameraInitialized, setCameraInitialized] = useState(false);
   
   // استخدام hooks اللازمة
   const {
@@ -26,7 +28,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     lastScannedCode,
     isManualEntry,
     hasScannerError,
-    startScan,
+    startScan: originalStartScan,
     stopScan,
     requestPermission,
     handleManualEntry,
@@ -38,6 +40,47 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     isMockScanActive,
     handleManualInput,
   } = useMockScanner();
+
+  // Wrapper function to fix the Promise<boolean> to Promise<void> type issue
+  const startScan = async (): Promise<void> => {
+    try {
+      console.log('[BarcodeScanner] Starting scan with camera initialization check');
+      
+      // Try to initialize camera if not already done
+      if (!cameraInitialized) {
+        console.log('[BarcodeScanner] Camera not initialized, initializing now');
+        
+        // Add a toast to show we're activating the camera
+        await Toast.show({
+          text: 'جاري تفعيل الكاميرا...',
+          duration: 'short'
+        });
+        
+        // Wait a moment to let the UI update
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        setCameraInitialized(true);
+      }
+      
+      // We call the original function but ignore its boolean return value
+      const success = await originalStartScan();
+      
+      if (!success) {
+        console.log('[BarcodeScanner] Scan start was not successful');
+        await Toast.show({
+          text: 'فشل في بدء تشغيل الكاميرا، يرجى المحاولة مرة أخرى',
+          duration: 'short'
+        });
+      }
+    } catch (error) {
+      console.error("[BarcodeScanner] Error starting scan:", error);
+      await Toast.show({
+        text: 'حدث خطأ أثناء تشغيل الكاميرا',
+        duration: 'short'
+      });
+    }
+    // Function returns void regardless of outcome
+  };
 
   // تهيئة وتنظيف المكون
   useEffect(() => {

@@ -1,34 +1,29 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface ScannerLoadingProps {
-  onClose?: () => void;
+  onClose: () => void;
 }
 
 export const ScannerLoading: React.FC<ScannerLoadingProps> = ({ onClose }) => {
   return (
-    <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
-      <div className="flex flex-col items-center justify-center h-60">
-        {onClose && (
-          <div className="absolute top-3 right-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-        <Skeleton className="h-12 w-12 rounded-full mb-4" />
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-4 w-60 mt-2" />
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90">
+      <div className="relative w-16 h-16 mb-4">
+        <div className="w-16 h-16 rounded-full border-4 border-t-white border-l-white border-r-transparent border-b-transparent animate-spin"></div>
       </div>
-    </Card>
+      
+      <p className="text-white text-lg font-medium mb-8">جاري تحضير الماسح الضوئي...</p>
+      
+      <Button 
+        variant="outline" 
+        className="absolute bottom-10 bg-white/20 hover:bg-white/30 text-white border-white/50"
+        onClick={onClose}
+      >
+        <X className="h-5 w-5 ml-2" />
+        إلغاء
+      </Button>
+    </div>
   );
 };
