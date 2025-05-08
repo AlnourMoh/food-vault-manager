@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 import { useToast } from '@/hooks/use-toast';
+import { useScannerPermissions } from '@/hooks/scanner/hooks/useScannerPermissions';
 
 interface UseScannerControlsProps {
   onScan: (code: string) => void;
@@ -13,6 +14,9 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
   const { toast } = useToast();
+  
+  // Get scanner permissions
+  const { requestPermission } = useScannerPermissions();
   
   const {
     isLoading,
@@ -165,6 +169,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     handleManualCancel,
     handleRetry,
     isMockScanActive,
-    handleManualInput
+    handleManualInput,
+    requestPermission // Add the missing property
   };
 };
