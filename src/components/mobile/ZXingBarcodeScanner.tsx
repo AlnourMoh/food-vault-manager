@@ -88,7 +88,12 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
           const permissionResult = await BarcodeScanner.requestPermissions();
           
           if (permissionResult.camera === 'granted') {
-            console.log('[ZXingBarcodeScanner] تم منح الإذن، بدء المسح فورًا');
+            console.log('[ZXingBarcodeScanner] تم منح الإذن بنجاح من MLKit');
+            await Toast.show({
+              text: 'تم منح إذن الكاميرا بنجاح!',
+              duration: 'short'
+            });
+            
             startScan();
             setIsInitializing(false);
             return;
@@ -146,9 +151,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClo
       // إزالة التأثير البصري
       document.body.classList.remove('zxing-scanning');
       
-      stopScan().catch(e => 
-        console.error('[ZXingBarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e)
-      );
+      stopScan();
     };
   }, [startScan, stopScan, requestPermission]);
 
