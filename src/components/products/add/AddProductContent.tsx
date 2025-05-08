@@ -27,16 +27,14 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleScanResult
   } = useProductScanHandler({ isRestaurantRoute });
 
-  // Fixed wrapper function to correct the Promise<boolean> to Promise<void> type issue
+  // Simplified wrapper function that directly opens the scanner
   const openScanner = async (): Promise<void> => {
     try {
-      // We call the original function but explicitly ignore its boolean return value
-      const result = await handleScanButtonClick(setScannerOpen);
-      // This function returns void, regardless of the result
-      console.log('Scanner button click result:', result);
+      console.log('Main button clicked, opening scanner directly');
+      // Simply set scanner to open - we'll handle permissions in the ZXingBarcodeScanner component
+      setScannerOpen(true);
     } catch (error) {
       console.error("Error opening scanner:", error);
-      // Still returns void even in case of error
     }
   };
 

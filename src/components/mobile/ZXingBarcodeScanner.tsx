@@ -122,7 +122,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     startScan();
   };
 
-  // محاكاة تحميل المكون والتحقق من الأذونات
+  // تهيئة المسح الضوئي تلقائيًا عند تحميل المكون
   useEffect(() => {
     const initializeScanner = async () => {
       setIsLoading(true);
@@ -135,14 +135,15 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           duration: 'short'
         });
         
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setHasPermission(true);
-        setIsLoading(false);
-
-        // إذا كان البدء التلقائي مفعلاً، نبدأ المسح
-        if (autoStart) {
-          console.log('[ZXingBarcodeScanner] بدء المسح تلقائياً...');
-          await startScan();
+        // طلب الأذونات فوراً
+        const permissionGranted = await requestPermission();
+        
+        if (permissionGranted) {
+          // بدء المسح مباشرة إذا تم منح الإذن
+          if (autoStart) {
+            console.log('[ZXingBarcodeScanner] بدء المسح تلقائياً...');
+            await startScan();
+          }
         }
       } catch (error) {
         console.error('[ZXingBarcodeScanner] خطأ في تهيئة الماسح:', error);
@@ -156,6 +157,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       }
     };
 
+    // تشغيل الماسح مباشرة عند التحميل
     initializeScanner();
 
     // عند إلغاء تحميل المكون، نتأكد من إيقاف المسح
@@ -185,16 +187,16 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     }
   };
 
-  // وظيفة محاكية للكشف عن باركود
+  // وظيفة محاكية للكشف عن باركود - تسرع المسح للتجربة
   useEffect(() => {
     if (isScanningActive && !hasScannerError) {
       console.log('[ZXingBarcodeScanner] الماسح نشط، بدء محاكاة الكشف عن باركود...');
       
-      // محاكاة وقت المسح
+      // محاكاة وقت المسح - تم تقليله من 3 إلى 2 ثانية
       const timer = setTimeout(() => {
         const simulatedBarcode = `DEMO-${Math.floor(Math.random() * 9000) + 1000}`;
         handleBarcodeDetected(simulatedBarcode);
-      }, 3000);
+      }, 2000);
 
       return () => clearTimeout(timer);
     }

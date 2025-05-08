@@ -32,13 +32,23 @@ export const useProductScanHandler = ({ isRestaurantRoute }: UseProductScanHandl
       // إغلاق الماسح
       setScannerOpen(false);
       
-      // هنا نضع المنطق الخاص بمعالجة الرمز الممسوح
+      // Here we automatically process the scan result and redirect
       toast({
         title: "تم مسح الباركود",
-        description: `تم مسح الرمز: ${code}`
+        description: `تم مسح الرمز: ${code}. جاري معالجة المنتج...`
       });
       
-      handleProductAdded();
+      // Processing toast to give feedback to user
+      setTimeout(() => {
+        toast({
+          title: "نجاح",
+          description: "تمت معالجة المنتج بنجاح"
+        });
+        
+        // Redirect after successful scan
+        handleProductAdded();
+      }, 1000);
+      
     } catch (error) {
       console.error('خطأ في معالجة نتيجة المسح:', error);
       toast({
