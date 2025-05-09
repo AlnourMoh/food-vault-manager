@@ -1,86 +1,209 @@
 
-import { Dispatch, SetStateAction, useCallback } from 'react';
-import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
-import { Toast } from '@capacitor/toast';
+import { useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Camera } from '@capacitor/camera';
 
 export const useScannerPermission = (
-  setIsLoading: Dispatch<SetStateAction<boolean>>,
-  setHasPermission: Dispatch<SetStateAction<boolean | null>>,
-  setHasScannerError: Dispatch<SetStateAction<boolean>>,
+  setIsLoading: (loading: boolean) => void,
+  setHasPermission: (permission: boolean | null) => void,
+  setHasScannerError: (error: boolean) => void
 ) => {
-  // تحقق من حالة الإذن عند تحميل المكون
-  const checkPermissions = useCallback(async (autoStart: boolean, activateCamera: () => Promise<boolean>) => {
-    try {
-      setIsLoading(true);
-      console.log('useScannerPermission: التحقق من حالة إذن الكاميرا...');
-      
-      // تسجيل للتشخيص
-      console.log('useScannerPermission: جاري تحقق حالة إذن الكاميرا');
-      
-      // التحقق من دعم الماسح أولاً
-      const isSupported = await scannerPermissionService.isSupported();
-      if (!isSupported) {
-        console.error('useScannerPermission: الماسح غير مدعوم على هذا الجهاز');
-        setHasScannerError(true);
-        setIsLoading(false);
+  // التحقق من الأذونات وتفعيل الكاميرا عند الضرورة
+  const checkPermissions = useCallback(
+    async (autoActivateCamera: boolean, activateCamera: () => Promise<boolean>) => {
+      try {
+        console.log('useScannerPermission: التحقق من أذونات الكاميرا');
+        setIsLoading(true);
+
+        // التحقق من بيئة التشغيل
+        if (Capacitor.isNativePlatform()) {
+          console.log('useScannerPermission: نحن على منصة أصلية');
+          
+          // التحقق من توفر الملحقات
+          if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+            console.log('useScannerPermission: ملحق MLKitBarcodeScanner متاح');
+            
+            // استخدام ملحق BarcodeScanner للتحقق من الإذن
+            const result = await BarcodeScanner.checkPermissions();
+            const granted = result.camera === 'granted';
+            
+            console.log('useScannerPermission: نتيجة فحص الأذونات:', { 
+              result, 
+              granted 
+            });
+            
+            setHasPermission(granted);
+            setIsLoading(false);
+            
+            // تفعيل الكاميرا تلقائيًا إذا كان هناك إذن وكانت الخاصية autoActivateCamera مفعلة
+            if (granted && autoActivateCamera) {
+              console.log('useScannerPermission: لدينا إذن والتفعيل التلقائي مطلوب، سنقوم بتفعيل الكاميرا');
+              await activateCamera();
+            }
+            
+            return;
+          }
+          
+          if (Capacitor.isPluginAvailable('Camera')) {
+            console.log('useScannerPermission: ملحق Camera متاح');
+            
+            // استخدام ملحق Camera للتحقق من الإذن
+            const result = await Camera.checkPermissions();
+            const granted = result.camera === 'granted';
+            
+            console.log('useScannerPermission: نتيجة فحص الأذونات:', { 
+              result, 
+              granted 
+            });
+            
+            setHasPermission(granted);
+            setIsLoading(false);
+            
+            // تفعيل الكاميرا تلقائيًا إذا كان هناك إذن
+            if (granted && autoActivateCamera) {
+              console.log('useScannerPermission: لدينا إذن والتفعيل التلقائي مطلوب، سنقوم بتفعيل الكاميرا');
+              await activateCamera();
+            }
+            
+            return;
+          }
+        }
+
+        // في بيئة الويب، نتحقق من الإذن باستخدام API الويب
+        console.log('useScannerPermission: نحن في بيئة الويب، استخدام API الويب');
         
-        await Toast.show({
-          text: 'الماسح غير مدعوم على جهازك، يرجى المحاولة على جهاز آخر',
-          duration: 'long'
-        });
-        return;
+        try {
+          // التحقق من توفر mediaDevices
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error('useScannerPermission: API الكاميرا غير متوفر في هذا المتصفح');
+            setHasPermission(false);
+            setIsLoading(false);
+            return;
+          }
+          
+          // التحقق من وجود الكاميرات
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const cameras = devices.filter(device => device.kind === 'videoinput');
+          
+          console.log('useScannerPermission: تم العثور على', cameras.length, 'كاميرا(ت)');
+          
+          if (cameras.length === 0) {
+            console.error('useScannerPermission: لم يتم العثور على كاميرا متصلة بالجهاز');
+            setHasPermission(false);
+            setIsLoading(false);
+            return;
+          }
+          
+          // محاولة الوصول إلى الكاميرا للحصول على إذن
+          console.log('useScannerPermission: محاولة الوصول إلى الكاميرا');
+          
+          await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' }
+          });
+          
+          console.log('useScannerPermission: تم منح إذن الكاميرا');
+          setHasPermission(true);
+          
+          // تفعيل الكاميرا تلقائيًا إذا كانت الخاصية autoActivateCamera مفعلة
+          if (autoActivateCamera) {
+            console.log('useScannerPermission: التفعيل التلقائي مطلوب، سنقوم بتفعيل الكاميرا');
+            await activateCamera();
+          }
+        } catch (error) {
+          console.error('useScannerPermission: خطأ في الوصول إلى الكاميرا:', error);
+          setHasPermission(false);
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('useScannerPermission: خطأ في التحقق من الأذونات:', error);
+        setHasScannerError(true);
+        setHasPermission(false);
+        setIsLoading(false);
       }
-      
-      // التحقق من حالة الإذن
-      const permissionResult = await scannerPermissionService.checkPermission();
-      console.log('useScannerPermission: نتيجة التحقق من الإذن:', permissionResult);
-      
-      setHasPermission(permissionResult);
-      setIsLoading(false);
-      
-      // إذا كان الإذن ممنوحاً وتفعيل تلقائي مطلوب، نبدأ بتفعيل الكاميرا
-      if (permissionResult === true && autoStart) {
-        console.log('useScannerPermission: الإذن ممنوح، بدء تفعيل الكاميرا تلقائياً...');
-        setTimeout(() => {
-          activateCamera();
-        }, 500);
-      }
-    } catch (error) {
-      console.error('useScannerPermission: خطأ في التحقق من الأذونات:', error);
-      setHasScannerError(true);
-      setIsLoading(false);
-    }
-  }, [setIsLoading, setHasPermission, setHasScannerError]);
-  
-  // وظيفة لطلب إذن الكاميرا
-  const requestPermission = useCallback(async () => {
+    },
+    [setIsLoading, setHasPermission, setHasScannerError]
+  );
+
+  // طلب الإذن
+  const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
+      console.log('useScannerPermission: طلب إذن الكاميرا');
       setIsLoading(true);
+
+      // التحقق من بيئة التشغيل
+      if (Capacitor.isNativePlatform()) {
+        console.log('useScannerPermission: نحن على منصة أصلية');
+        
+        // استخدام ملحق BarcodeScanner لطلب الإذن
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          console.log('useScannerPermission: استخدام ملحق MLKitBarcodeScanner لطلب الإذن');
+          
+          const result = await BarcodeScanner.requestPermissions();
+          const granted = result.camera === 'granted';
+          
+          console.log('useScannerPermission: نتيجة طلب الإذن:', { 
+            result, 
+            granted 
+          });
+          
+          setHasPermission(granted);
+          setIsLoading(false);
+          return granted;
+        }
+        
+        // محاولة استخدام ملحق Camera
+        if (Capacitor.isPluginAvailable('Camera')) {
+          console.log('useScannerPermission: استخدام ملحق Camera لطلب الإذن');
+          
+          const result = await Camera.requestPermissions({
+            permissions: ['camera']
+          });
+          const granted = result.camera === 'granted';
+          
+          console.log('useScannerPermission: نتيجة طلب الإذن:', { 
+            result, 
+            granted 
+          });
+          
+          setHasPermission(granted);
+          setIsLoading(false);
+          return granted;
+        }
+      }
+
+      // في بيئة الويب
+      console.log('useScannerPermission: نحن في بيئة الويب، استخدام API الويب');
       
-      console.log('useScannerPermission: جاري طلب إذن الكاميرا...');
+      // التحقق من توفر mediaDevices
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('useScannerPermission: API الكاميرا غير متوفر في هذا المتصفح');
+        setHasPermission(false);
+        setIsLoading(false);
+        return false;
+      }
       
-      // استخدام خدمة أذونات الماسح الضوئي العامة
-      const granted = await scannerPermissionService.requestPermission();
-      console.log('useScannerPermission: نتيجة طلب الإذن:', granted);
-      
-      setHasPermission(granted);
-      setIsLoading(false);
-      
-      if (granted) {
-        await Toast.show({
-          text: 'تم منح إذن الكاميرا بنجاح!',
-          duration: 'short'
+      try {
+        // محاولة الوصول إلى الكاميرا للحصول على إذن
+        console.log('useScannerPermission: محاولة الوصول إلى الكاميرا');
+        await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' }
         });
+        
+        console.log('useScannerPermission: تم منح إذن الكاميرا');
+        setHasPermission(true);
+        setIsLoading(false);
         return true;
-      } else {
-        await Toast.show({
-          text: 'تم رفض إذن الكاميرا، لن يتمكن الماسح من العمل بدون هذا الإذن',
-          duration: 'long'
-        });
+      } catch (error) {
+        console.error('useScannerPermission: خطأ في الوصول إلى الكاميرا:', error);
+        setHasPermission(false);
+        setIsLoading(false);
         return false;
       }
     } catch (error) {
       console.error('useScannerPermission: خطأ في طلب الإذن:', error);
+      setHasPermission(false);
       setHasScannerError(true);
       setIsLoading(false);
       return false;
