@@ -23,14 +23,14 @@ export const useZXingBarcodeScanner = ({
   const [cameraActive, setCameraActive] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
   
-  // استخدام مكون منفصل للتحقق من الأذونات
+  // Use the scanner permission hook
   const { checkPermissions, requestPermission } = useScannerPermission(
     setIsLoading,
     setHasPermission,
-    setHasScannerError
+    (error) => setHasScannerError(!!error)
   );
   
-  // استخدام مكونات أصغر لإدارة المسح
+  // Use the barcode scanning hook
   const { startScan, stopScan } = useBarcodeScanning({
     onScan,
     isScanningActive,
@@ -40,7 +40,7 @@ export const useZXingBarcodeScanner = ({
     setHasScannerError
   });
   
-  // استخدام مكون منفصل لتفعيل الكاميرا
+  // Use the scanner activation hook
   const { activateCamera } = useScannerActivation({
     cameraActive,
     setCameraActive,
@@ -51,7 +51,7 @@ export const useZXingBarcodeScanner = ({
     startScan
   });
   
-  // استخدام مكون منفصل لمعالجة إعادة المحاولة
+  // Use the scanner retry hook
   const { handleRetry } = useScannerRetry({
     setHasScannerError,
     setCameraActive,

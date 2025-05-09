@@ -48,11 +48,11 @@ export const useBarcodeScanning = ({
         // بدء المسح
         await BarcodeScanner.scan({
           formats: [
-            BarcodeFormat.QR_CODE,
-            BarcodeFormat.EAN_13,
-            BarcodeFormat.EAN_8,
-            BarcodeFormat.CODE_39,
-            BarcodeFormat.CODE_128
+            BarcodeFormat.QrCode,
+            BarcodeFormat.Ean13,
+            BarcodeFormat.Ean8,
+            BarcodeFormat.Code39,
+            BarcodeFormat.Code128
           ]
         });
         
