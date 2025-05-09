@@ -265,6 +265,7 @@ export const useZXingBarcodeScanner = ({
           );
           
           // بدء المسح باستخدام واجهة MLKit مباشرة
+          // تصحيح الخطأ هنا - BarcodeScanner.startScan() لا يتوقع أي وسائط
           await BarcodeScanner.startScan();
           
           console.log('تم بدء مسح الباركود بنجاح');
