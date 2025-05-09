@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
@@ -141,13 +140,12 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
             // استخدام BarcodeFormat الصحيح من الكائن المستورد
             await BarcodeScanner.scan({
               formats: [
-                BarcodeFormat.QR_CODE,
-                BarcodeFormat.EAN_13,
-                BarcodeFormat.EAN_8,
-                BarcodeFormat.CODE_39,
-                BarcodeFormat.CODE_128
-              ],
-              scanMode: "SINGLE", // Scan once and return the result
+                BarcodeFormat.QrCode,
+                BarcodeFormat.Ean13,
+                BarcodeFormat.Ean8,
+                BarcodeFormat.Code39,
+                BarcodeFormat.Code128
+              ]
             });
             
             // استخدام اسم الحدث الصحيح "barcodesScanned"
