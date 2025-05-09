@@ -34,11 +34,15 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   
   // تفعيل الكاميرا وبدء المسح فوراً عند تحميل المكون
   useEffect(() => {
-    console.log('ZXingBarcodeScanner: تم تحميل المكون، جاري تفعيل الكاميرا وبدء المسح تلقائياً');
-    
-    const initializeScanner = async () => {
+    const initScanner = async () => {
+      console.log('ZXingBarcodeScanner: تم تحميل المكون، جاري تفعيل الكاميرا...');
+      
       try {
-        // طلب الإذن أولاً إذا لم يكن موجوداً
+        if (hasPermission === null) {
+          console.log('ZXingBarcodeScanner: انتظار التحقق من الإذن...');
+          return; // ننتظر حتى يكتمل فحص الإذن
+        }
+        
         if (hasPermission === false) {
           console.log('ZXingBarcodeScanner: لا يوجد إذن، جاري طلبه...');
           const granted = await requestPermission();
@@ -48,40 +52,35 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           }
         }
         
-        // محاولة تفعيل الكاميرا بشكل مباشر
-        console.log('ZXingBarcodeScanner: جاري تفعيل الكاميرا...');
+        console.log('ZXingBarcodeScanner: لدينا إذن، جاري تفعيل الكاميرا...');
         const activated = await activateCamera();
         
         if (activated) {
-          console.log('ZXingBarcodeScanner: تم تفعيل الكاميرا، جاري بدء المسح...');
-          // تأخير قصير قبل بدء المسح لضمان تهيئة الكاميرا بشكل كامل
-          setTimeout(async () => {
-            await startScan();
-          }, 500);
+          console.log('ZXingBarcodeScanner: تم تفعيل الكاميرا بنجاح');
         } else {
           console.error('ZXingBarcodeScanner: فشل في تفعيل الكاميرا');
           Toast.show({
-            text: 'تعذر تفعيل الكاميرا، حاول مرة أخرى',
+            text: 'تعذر تفعيل الكاميرا، يرجى المحاولة مرة أخرى',
             duration: 'short'
           });
         }
       } catch (error) {
-        console.error('ZXingBarcodeScanner: خطأ في تفعيل الماسح تلقائياً:', error);
+        console.error('ZXingBarcodeScanner: خطأ في تهيئة الماسح:', error);
       }
     };
     
-    // بدء التفعيل مباشرة إذا كان autoStart مفعلاً
     if (autoStart) {
-      initializeScanner();
+      initScanner();
     }
     
-    // تنظيف مؤقت التأخير عند إلغاء تحميل المكون
+    // تنظيف عند إزالة المكون
     return () => {
-      stopScan().catch(e => 
-        console.error('ZXingBarcodeScanner: خطأ في إيقاف المسح عند إلغاء التحميل:', e)
-      );
+      console.log('ZXingBarcodeScanner: تنظيف الموارد...');
+      stopScan().catch(e => {
+        console.error('ZXingBarcodeScanner: خطأ في إيقاف المسح عند التنظيف:', e);
+      });
     };
-  }, [autoStart, hasPermission, requestPermission, activateCamera, startScan, stopScan]);
+  }, [hasPermission, autoStart, requestPermission, activateCamera, stopScan]);
   
   return (
     <ZXingScannerContent

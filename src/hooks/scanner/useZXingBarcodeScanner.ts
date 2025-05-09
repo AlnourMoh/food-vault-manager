@@ -53,6 +53,9 @@ export const useZXingBarcodeScanner = ({
         setIsLoading(true);
         console.log('useZXingBarcodeScanner: التحقق من حالة إذن الكاميرا...');
         
+        // تسجيل للتشخيص
+        console.log('useZXingBarcodeScanner: جاري تحقق حالة إذن الكاميرا');
+        
         // التحقق من دعم الماسح أولاً
         const isSupported = await scannerPermissionService.isSupported();
         if (!isSupported) {
@@ -73,6 +76,14 @@ export const useZXingBarcodeScanner = ({
         
         setHasPermission(permissionResult);
         setIsLoading(false);
+        
+        // إذا كان الإذن ممنوحاً وتفعيل تلقائي مطلوب، نبدأ بتفعيل الكاميرا
+        if (permissionResult === true && autoStart) {
+          console.log('useZXingBarcodeScanner: الإذن ممنوح، بدء تفعيل الكاميرا تلقائياً...');
+          setTimeout(() => {
+            activateCamera();
+          }, 500);
+        }
       } catch (error) {
         console.error('useZXingBarcodeScanner: خطأ في التحقق من الأذونات:', error);
         setHasScannerError(true);
@@ -81,7 +92,7 @@ export const useZXingBarcodeScanner = ({
     };
     
     checkPermissions();
-  }, []);
+  }, [autoStart]);
   
   // وظيفة لطلب إذن الكاميرا
   const requestPermission = useCallback(async () => {
@@ -102,6 +113,11 @@ export const useZXingBarcodeScanner = ({
           text: 'تم منح إذن الكاميرا بنجاح!',
           duration: 'short'
         });
+        
+        // تفعيل الكاميرا مباشرة بعد منح الإذن
+        setTimeout(() => {
+          activateCamera();
+        }, 500);
       } else {
         await Toast.show({
           text: 'تم رفض إذن الكاميرا، لن يتمكن الماسح من العمل بدون هذا الإذن',
@@ -141,23 +157,40 @@ export const useZXingBarcodeScanner = ({
         }
       }
       
-      // تفعيل الكاميرا بشكل مباشر بدون إشعارات إضافية
+      // تأكيد على وجود الشاشة
+      console.log('useZXingBarcodeScanner: التأكد من وجود الشاشة قبل تفعيل الكاميرا');
+      
+      // تفعيل الكاميرا بشكل مباشر
       let activated = false;
       
       if (Capacitor.isNativePlatform()) {
         if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
           try {
-            // تحقق من دعم الماسح أولاً
+            // إعداد الماسح
+            console.log('MLKitBarcodeScanner: جاري التحقق من الدعم');
             const supported = await BarcodeScanner.isSupported();
             if (supported.supported) {
-              console.log('MLKitBarcodeScanner مدعوم، جاري بدء التهيئة...');
-              // هنا يمكن عمل أي تهيئة مطلوبة للماسح
+              console.log('MLKitBarcodeScanner مدعوم، جاري التهيئة...');
+              
+              // تهيئة الماسح للاستخدام
+              await BarcodeScanner.enableTorch(false);
+              
+              // تم التهيئة بنجاح
               activated = true;
+              console.log('تم تهيئة MLKitBarcodeScanner بنجاح');
             } else {
               console.error('MLKitBarcodeScanner غير مدعوم على هذا الجهاز');
+              await Toast.show({
+                text: 'ماسح الباركود غير مدعوم على هذا الجهاز',
+                duration: 'short'
+              });
             }
           } catch (e) {
             console.error('خطأ في تهيئة MLKitBarcodeScanner:', e);
+            await Toast.show({
+              text: 'خطأ في تفعيل الكاميرا، يرجى المحاولة مرة أخرى',
+              duration: 'short'
+            });
           }
         } else {
           // محاكاة نجاح تفعيل الكاميرا للتجربة على المنصات التي لا تدعم MLKit
@@ -172,6 +205,14 @@ export const useZXingBarcodeScanner = ({
       
       setCameraActive(activated);
       setIsLoading(false);
+      
+      // عند نجاح تفعيل الكاميرا، ابدأ المسح تلقائياً
+      if (activated) {
+        console.log('useZXingBarcodeScanner: تم تفعيل الكاميرا، بدء المسح تلقائياً بعد تأخير قصير...');
+        setTimeout(() => {
+          startScan();
+        }, 500);
+      }
       
       return activated;
     } catch (error) {
@@ -242,8 +283,7 @@ export const useZXingBarcodeScanner = ({
         // في بيئة حقيقية، سيتم استخدام الكاميرا الفعلية
         setTimeout(() => {
           console.log('محاكاة اكتشاف باركود للاختبار');
-          // هذه للتجربة فقط - في بيئة الإنتاج سيتم استخدام باركود حقيقي
-          // onScan('mock-barcode-123456789');
+          onScan('mock-barcode-123456789');
         }, 5000);
         
         return true;

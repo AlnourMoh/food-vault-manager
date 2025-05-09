@@ -30,12 +30,22 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 }) => {
   // عند تحميل المكون، نبدأ المسح تلقائيًا إذا كانت الكاميرا نشطة
   useEffect(() => {
-    if (cameraActive && !isActive && !hasError) {
-      console.log('ScannerView: الكاميرا نشطة الآن، جاري بدء المسح تلقائيًا...');
-      onStartScan().catch(error => {
-        console.error('ScannerView: خطأ في بدء المسح التلقائي:', error);
-      });
-    }
+    const initScan = async () => {
+      if (cameraActive && !isActive && !hasError) {
+        console.log('ScannerView: الكاميرا نشطة الآن، جاري بدء المسح تلقائيًا...');
+        try {
+          const started = await onStartScan();
+          console.log(`ScannerView: نتيجة بدء المسح التلقائي: ${started ? 'نجاح' : 'فشل'}`);
+        } catch (error) {
+          console.error('ScannerView: خطأ في بدء المسح التلقائي:', error);
+        }
+      }
+    };
+    
+    // تأخير قصير قبل بدء المسح لضمان جاهزية الواجهة
+    const timer = setTimeout(initScan, 800);
+    
+    return () => clearTimeout(timer);
   }, [cameraActive, isActive, hasError, onStartScan]);
 
   // إضافة تسجيل للمكون للتشخيص
@@ -77,10 +87,10 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     return (
       <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
         <div className="text-white text-center p-4">
-          <div className="mb-4 flex flex-col items-center">
-            <Spinner size="lg" className="border-white border-t-transparent mb-4" />
-            <h3 className="text-xl font-semibold mb-2">جاري تفعيل الكاميرا</h3>
-            <p className="text-sm text-gray-300 mb-4">يرجى الانتظار قليلاً...</p>
+          <div className="mb-6 flex flex-col items-center">
+            <Spinner size="lg" className="border-white border-t-transparent mb-6" />
+            <h3 className="text-xl font-semibold mb-3">جاري تفعيل الكاميرا</h3>
+            <p className="text-sm text-gray-300">يرجى الانتظار بضع لحظات...</p>
           </div>
           <Button onClick={onClose} variant="ghost" className="text-white hover:bg-white/20 w-full">
             <X className="h-4 w-4 ml-2" />
@@ -96,9 +106,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     return (
       <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
         <div className="text-white text-center p-4">
-          <div className="mb-4 flex flex-col items-center">
+          <div className="mb-6 flex flex-col items-center">
             <Loader2 className="h-12 w-12 animate-spin mb-4" />
-            <h3 className="text-xl font-semibold mb-2">جاري تحضير المسح</h3>
+            <h3 className="text-xl font-semibold mb-3">جاري تحضير المسح</h3>
             <p className="text-sm text-gray-300 mb-4">يرجى تثبيت الكاميرا على الباركود...</p>
           </div>
           <Button onClick={() => onStartScan()} className="bg-white text-black hover:bg-gray-200 w-full mb-2">

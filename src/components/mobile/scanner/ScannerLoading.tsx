@@ -13,7 +13,8 @@ export const ScannerLoading: React.FC<ScannerLoadingProps> = ({ onClose }) => {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90">
       <Spinner size="lg" className="mb-4 border-white border-t-transparent" />
       
-      <p className="text-white text-lg font-medium mb-8">جاري تحضير الكاميرا...</p>
+      <p className="text-white text-lg font-medium mb-2">جاري تحضير الكاميرا...</p>
+      <p className="text-white/70 text-sm mb-8">يرجى الانتظار قليلاً</p>
       
       <Button 
         variant="outline" 
