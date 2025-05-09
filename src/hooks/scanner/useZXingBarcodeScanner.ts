@@ -22,6 +22,30 @@ export const useZXingBarcodeScanner = ({
   const [cameraActive, setCameraActive] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
   
+  // Declare stopScan early as a function reference that will be defined later
+  // This resolves the "used before declaration" error
+  const stopScanRef = useCallback(async (): Promise<boolean> => {
+    try {
+      console.log('useZXingBarcodeScanner: إيقاف المسح...');
+      
+      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          // إيقاف المسح وإزالة المستمعين
+          await BarcodeScanner.stopScan();
+          console.log('تم إيقاف مسح الباركود');
+        } catch (e) {
+          console.error('خطأ في إيقاف مسح MLKitBarcodeScanner:', e);
+        }
+      }
+      
+      setIsScanningActive(false);
+      return true;
+    } catch (error) {
+      console.error('useZXingBarcodeScanner: خطأ في إيقاف المسح:', error);
+      return false;
+    }
+  }, []);
+  
   // تحقق من حالة الإذن عند تحميل المكون
   useEffect(() => {
     const checkPermissions = async () => {
@@ -189,7 +213,7 @@ export const useZXingBarcodeScanner = ({
               try {
                 console.log('تم اكتشاف باركود:', result.barcodes);
                 // إيقاف المسح وإرسال النتيجة
-                await stopScan();
+                await stopScanRef();
                 if (result.barcodes && result.barcodes.length > 0) {
                   onScan(result.barcodes[0].rawValue || '');
                 }
@@ -230,30 +254,10 @@ export const useZXingBarcodeScanner = ({
       setHasScannerError(true);
       return false;
     }
-  }, [cameraActive, activateCamera, onScan, stopScan]);
+  }, [cameraActive, activateCamera, onScan, stopScanRef]);
   
-  // وظيفة لإيقاف المسح
-  const stopScan = useCallback(async () => {
-    try {
-      console.log('useZXingBarcodeScanner: إيقاف المسح...');
-      
-      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          // إيقاف المسح وإزالة المستمعين
-          await BarcodeScanner.stopScan();
-          console.log('تم إيقاف مسح الباركود');
-        } catch (e) {
-          console.error('خطأ في إيقاف مسح MLKitBarcodeScanner:', e);
-        }
-      }
-      
-      setIsScanningActive(false);
-      return true;
-    } catch (error) {
-      console.error('useZXingBarcodeScanner: خطأ في إيقاف المسح:', error);
-      return false;
-    }
-  }, []);
+  // Use our early reference to avoid the circular reference issue
+  const stopScan = stopScanRef;
   
   // وظيفة لإعادة المحاولة بعد حدوث خطأ
   const handleRetry = useCallback(() => {
