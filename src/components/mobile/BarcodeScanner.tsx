@@ -1,9 +1,11 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { App } from '@capacitor/app';
 import { useScannerControls } from './scanner/hooks/useScannerControls';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { useScannerInitialization } from './scanner/hooks/useScannerInitialization';
+import { Toast } from '@capacitor/toast';
+import { Capacitor } from '@capacitor/core';
 
 // Import the augmentation to ensure TypeScript recognizes the extended methods
 import '@/types/barcode-scanner-augmentation.d.ts';
@@ -35,6 +37,44 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
     handleRetry,
     requestPermission: handleRequestPermission
   } = useScannerControls({ onScan, onClose });
+  
+  // Add debug information when component mounts
+  useEffect(() => {
+    const logScannerInfo = async () => {
+      try {
+        console.log('BarcodeScanner: تهيئة المكون');
+        
+        // Log platform information
+        const platform = Capacitor.getPlatform();
+        console.log('BarcodeScanner: المنصة الحالية:', platform);
+        console.log('BarcodeScanner: هل المنصة جوال؟', Capacitor.isNativePlatform());
+        
+        // Log available plugins
+        console.log('BarcodeScanner: ملحقات كاباسيتور المتاحة:', Capacitor.isPluginAvailable('MLKitBarcodeScanner') 
+          ? 'MLKitBarcodeScanner متاح' 
+          : 'MLKitBarcodeScanner غير متاح');
+        
+        // Log permission state
+        console.log('BarcodeScanner: حالة إذن الكاميرا:', hasPermission === true 
+          ? 'ممنوح' 
+          : hasPermission === false 
+            ? 'مرفوض' 
+            : 'غير معروف');
+        
+        // Show toast with scanner status
+        if (Capacitor.isNativePlatform()) {
+          await Toast.show({
+            text: `حالة الماسح: ${hasPermission === true ? 'جاهز' : 'يحتاج إذن'}`,
+            duration: 'short'
+          });
+        }
+      } catch (error) {
+        console.error('BarcodeScanner: خطأ في تسجيل معلومات الماسح:', error);
+      }
+    };
+    
+    logScannerInfo();
+  }, [hasPermission]);
   
   return (
     <div 
