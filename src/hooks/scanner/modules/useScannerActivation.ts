@@ -99,7 +99,7 @@ export const useScannerActivation = ({
       if (activated) {
         console.log('useScannerActivation: تم تفعيل الكاميرا، بدء المسح تلقائياً بعد تأخير قصير...');
         setTimeout(() => {
-          // الخطأ كان هنا - نستدعي startScan بدون وسيطات
+          // تصحيح الخطأ - استدعاء startScan بدون وسيطات
           startScan();
         }, 500);
       }
