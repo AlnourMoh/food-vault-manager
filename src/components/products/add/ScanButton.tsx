@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { BarcodeIcon } from 'lucide-react';
+import { Camera } from 'lucide-react';
 
 interface ScanButtonProps {
-  onClick: () => Promise<void>; // Changed from potentially returning boolean to void
+  onClick: () => Promise<void>; 
   isLoading: boolean;
   loadingText?: string;
   defaultText?: string;
@@ -13,8 +13,8 @@ interface ScanButtonProps {
 export const ScanButton: React.FC<ScanButtonProps> = ({
   onClick,
   isLoading,
-  loadingText = 'جاري التحقق من الأذونات...',
-  defaultText = 'كاميرا الباركود ادخال'
+  loadingText = 'جاري فتح الكاميرا...',
+  defaultText = 'فتح كاميرا المنتج'
 }) => {
   return (
     <Button 
@@ -23,7 +23,7 @@ export const ScanButton: React.FC<ScanButtonProps> = ({
       className="w-full gap-2"
       disabled={isLoading}
     >
-      <BarcodeIcon className="w-5 h-5" />
+      <Camera className="w-5 h-5" />
       {isLoading ? loadingText : defaultText}
     </Button>
   );
