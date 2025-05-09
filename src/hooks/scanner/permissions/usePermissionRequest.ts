@@ -16,7 +16,7 @@ export const usePermissionRequest = () => {
       console.log('[usePermissionRequest] المنصة الحالية:', platform);
 
       // في بيئة الويب، نعتبر الإذن ممنوح دائمًا (سيتم طلبه عند بدء المسح)
-      if (!Capacitor.isNative) {
+      if (!Capacitor.isNativePlatform()) {
         console.log('[usePermissionRequest] نحن في بيئة الويب، سنعتبر الإذن ممنوح');
         // سيقوم المتصفح بطلب الإذن تلقائيًا عند محاولة الوصول إلى الكاميرا
         return await handleWebPermissions();
