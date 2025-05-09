@@ -8,9 +8,7 @@ import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScan
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
 import { Product } from '@/types';
 import { Capacitor } from '@capacitor/core';
-import { Button } from '@/components/ui/button';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
-import { Camera, Lock } from 'lucide-react';
 import { Toast } from '@capacitor/toast';
 
 const ProductScan = () => {
@@ -19,64 +17,27 @@ const ProductScan = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [autoOpenAttempted, setAutoOpenAttempted] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [isCheckingPermission, setIsCheckingPermission] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // التحقق من إذن الكاميرا عند تحميل الصفحة
+  // فتح الماسح تلقائياً عند تحميل الصفحة
   useEffect(() => {
-    const checkCameraPermission = async () => {
-      try {
-        setIsCheckingPermission(true);
-        console.log('ProductScan: التحقق من إذن الكاميرا...');
-        
-        const permissionGranted = await scannerPermissionService.checkPermission();
-        console.log('ProductScan: نتيجة التحقق من إذن الكاميرا:', permissionGranted);
-        
-        setHasPermission(permissionGranted);
-        
-        // فتح الماسح تلقائياً إذا كان لدينا إذن وكنا على منصة جوال
-        if (permissionGranted && Capacitor.isNativePlatform() && !autoOpenAttempted) {
-          console.log('ProductScan: لدينا إذن، سيتم محاولة فتح الماسح تلقائياً...');
-          setAutoOpenAttempted(true);
-          
-          // إضافة تأخير بسيط لضمان تحميل الواجهة أولاً
-          setTimeout(() => {
-            setIsScannerOpen(true);
-          }, 800);
-        }
-      } catch (error) {
-        console.error('ProductScan: خطأ في التحقق من إذن الكاميرا:', error);
-      } finally {
-        setIsCheckingPermission(false);
-      }
-    };
-    
-    checkCameraPermission();
-  }, [autoOpenAttempted]);
-
-  // تسجيل حالة الماسح للمساعدة في تشخيص المشكلة
-  useEffect(() => {
-    console.log('ProductScan: حالة الماسح:', { 
-      isScannerOpen, 
-      isLoading, 
-      scanError, 
-      autoOpenAttempted,
-      hasPermission,
-      isCheckingPermission
-    });
-  }, [isScannerOpen, isLoading, scanError, autoOpenAttempted, hasPermission, isCheckingPermission]);
+    if (!autoOpenAttempted) {
+      console.log('ProductScan: فتح الماسح تلقائياً عند تحميل الصفحة');
+      setAutoOpenAttempted(true);
+      handleOpenScanner();
+    }
+  }, []);
 
   const handleOpenScanner = async () => {
     try {
-      console.log('ProductScan: فتح الماسح يدوياً');
+      console.log('ProductScan: فتح الماسح الضوئي');
       setScanError(null);
       setIsLoading(true);
       
-      // التحقق من إذن الكاميرا وطلبه إذا لم يكن ممنوحاً
-      const permissionGranted = await scannerPermissionService.checkPermission();
+      // التحقق من إذن الكاميرا وطلبه إذا لم يكن ممنوحاً بشكل مباشر
+      let permissionGranted = await scannerPermissionService.checkPermission();
       
       if (!permissionGranted) {
         console.log('ProductScan: لا يوجد إذن للكاميرا، سيتم طلبه الآن');
@@ -87,25 +48,29 @@ const ProductScan = () => {
           description: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
         });
         
-        const granted = await scannerPermissionService.requestPermission();
-        setHasPermission(granted);
+        permissionGranted = await scannerPermissionService.requestPermission();
         
-        if (!granted) {
+        if (!permissionGranted) {
           console.log('ProductScan: تم رفض إذن الكاميرا');
           setScanError('تم رفض إذن الكاميرا، لا يمكن استخدام الماسح الضوئي');
           
-          toast({
-            title: "تم رفض الإذن",
-            description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
-            variant: "destructive",
-          });
-          
-          setIsLoading(false);
-          return;
+          // محاولة إضافية من خلال فتح إعدادات التطبيق
+          const openSettings = await scannerPermissionService.openAppSettings();
+          if (!openSettings) {
+            toast({
+              title: "تم رفض الإذن",
+              description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
+              variant: "destructive",
+            });
+            
+            setIsLoading(false);
+            return;
+          }
         }
       }
       
-      // الآن بعد أن أصبح لدينا إذن، نفتح الماسح
+      // الآن بعد أن أصبح لدينا إذن، نفتح الماسح مباشرة
+      console.log('ProductScan: فتح الماسح الضوئي مباشرة');
       setIsScannerOpen(true);
       
     } catch (error) {
@@ -125,89 +90,6 @@ const ProductScan = () => {
   const handleCloseScanner = () => {
     console.log('ProductScan: إغلاق الماسح');
     setIsScannerOpen(false);
-  };
-  
-  const handleRequestPermission = async () => {
-    try {
-      console.log('ProductScan: طلب إذن الكاميرا يدوياً');
-      setIsLoading(true);
-      
-      // إعادة تعيين الذاكرة المخزنة مؤقتاً للإذن
-      scannerPermissionService.resetPermissionCache();
-      
-      // طلب الإذن
-      const granted = await scannerPermissionService.requestPermission();
-      setHasPermission(granted);
-      
-      // عرض نتيجة طلب الإذن
-      if (granted) {
-        console.log('ProductScan: تم منح إذن الكاميرا بنجاح');
-        setScanError(null);
-        
-        toast({
-          title: "تم منح الإذن",
-          description: "تم منح إذن الكاميرا بنجاح، يمكنك الآن استخدام الماسح الضوئي",
-        });
-        
-        // بعد الحصول على الإذن، نحاول فتح الماسح تلقائياً
-        setTimeout(() => {
-          setIsScannerOpen(true);
-        }, 500);
-      } else {
-        console.log('ProductScan: لم يتم منح إذن الكاميرا');
-        setScanError('تم رفض إذن الكاميرا، لا يمكن استخدام الماسح الضوئي');
-        
-        toast({
-          title: "تم رفض الإذن",
-          description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('ProductScan: خطأ في طلب إذن الكاميرا:', error);
-      setScanError('حدث خطأ أثناء محاولة طلب إذن الكاميرا');
-      
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء طلب إذن الكاميرا",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleOpenSettings = async () => {
-    try {
-      console.log('ProductScan: فتح إعدادات التطبيق');
-      setIsLoading(true);
-      
-      await scannerPermissionService.openAppSettings();
-      
-      // إعادة التحقق من الإذن بعد فترة قصيرة
-      setTimeout(async () => {
-        const granted = await scannerPermissionService.checkPermission();
-        setHasPermission(granted);
-        setIsLoading(false);
-        
-        if (granted) {
-          setScanError(null);
-          toast({
-            title: "تم منح الإذن",
-            description: "تم منح إذن الكاميرا بنجاح، يمكنك الآن استخدام الماسح الضوئي",
-          });
-        }
-      }, 3000);
-    } catch (error) {
-      console.error('ProductScan: خطأ في فتح إعدادات التطبيق:', error);
-      setIsLoading(false);
-      
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء محاولة فتح إعدادات التطبيق",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleScanResult = async (code: string) => {
@@ -257,7 +139,6 @@ const ProductScan = () => {
       console.log('ProductScan: تم جلب بيانات المنتج:', product);
       
       // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق واجهة المنتج
-      // التأكد من أن قيمة الحالة تتطابق مع النوع المتوقع
       const normalizedStatus = ((): 'active' | 'expired' | 'removed' => {
         switch(product.status) {
           case 'active':
@@ -267,7 +148,6 @@ const ProductScan = () => {
           case 'removed':
             return 'removed';
           default:
-            // القيمة الافتراضية "active" إذا كانت الحالة لا تتطابق مع أي من القيم المتوقعة
             console.warn(`ProductScan: حالة منتج غير متوقعة: ${product.status}، استخدام 'active' كقيمة افتراضية`);
             return 'active';
         }
@@ -282,8 +162,8 @@ const ProductScan = () => {
         expiryDate: new Date(product.expiry_date),
         entryDate: new Date(product.production_date),
         restaurantId: product.company_id,
-        restaurantName: '', // هذه المعلومة غير متوفرة من الاستعلام
-        addedBy: '', // هذه المعلومة غير متوفرة من الاستعلام
+        restaurantName: '', 
+        addedBy: '', 
         status: normalizedStatus,
         imageUrl: product.image_url,
       };
@@ -334,50 +214,10 @@ const ProductScan = () => {
       navigate(`/restaurant/products/${scannedProduct.id}`);
     }
   };
-  
-  // عرض قسم طلب الإذن إذا لم يكن لدينا إذن للكاميرا
-  const renderPermissionSection = () => {
-    if (hasPermission === false) {
-      return (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
-          <div className="flex flex-col items-center">
-            <div className="p-3 bg-red-100 rounded-full mb-2">
-              <Lock className="h-5 w-5" />
-            </div>
-            <h3 className="font-semibold mb-1">لا يوجد إذن للكاميرا</h3>
-            <p className="text-sm text-center mb-3">
-              يحتاج التطبيق إلى إذن الكاميرا لكي يتمكن من مسح الباركود
-            </p>
-            <div className="flex flex-col w-full gap-2">
-              <Button 
-                onClick={handleRequestPermission}
-                className="w-full"
-                disabled={isLoading}
-              >
-                <Camera className="h-4 w-4 ml-2" />
-                طلب إذن الكاميرا
-              </Button>
-              <Button 
-                onClick={handleOpenSettings}
-                variant="outline"
-                className="w-full"
-                disabled={isLoading}
-              >
-                فتح إعدادات التطبيق
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
-      
-      {renderPermissionSection()}
       
       {scanError && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md flex flex-col items-center">
@@ -387,7 +227,6 @@ const ProductScan = () => {
             onClick={handleOpenScanner}
             className="mt-2 bg-red-100 hover:bg-red-200 text-red-800"
             size="sm"
-            disabled={hasPermission === false || isLoading}
           >
             إعادة المحاولة
           </Button>
@@ -397,8 +236,7 @@ const ProductScan = () => {
       {!scannedProduct ? (
         <InitialScanCard 
           onOpenScanner={handleOpenScanner}
-          isLoading={isLoading || isCheckingPermission}
-          hasPermission={hasPermission}
+          isLoading={isLoading}
         />
       ) : (
         <ScannedProductCard

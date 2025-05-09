@@ -1,132 +1,114 @@
 
 import { useCallback } from 'react';
+import { Toast } from '@capacitor/toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
+import { Capacitor } from '@capacitor/core';
 
-// Import the augmentation to ensure TypeScript recognizes the extended methods
-import '@/types/barcode-scanner-augmentation.d.ts';
-
-/**
- * Hook لإدارة واجهة المستخدم للماسح الضوئي - تم تحسينه للاستجابة السريعة
- */
 export const useScannerUI = () => {
-  /**
-   * تهيئة خلفية الماسح الضوئي بشكل فوري
-   */
+  // إعداد الخلفية للماسح
   const setupScannerBackground = useCallback(async (): Promise<boolean> => {
     try {
-      console.log('[useScannerUI] تهيئة خلفية الماسح...');
+      console.log('[useScannerUI] إعداد خلفية الماسح...');
       
-      // تحديد العناصر التي نحتاج إلى إخفائها على الفور
-      document.querySelectorAll('header, .app-header, footer, nav, .app-footer').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.style.opacity = '0';
-          el.style.visibility = 'hidden';
-        }
-      });
-      
-      // تعيين خلفية الجسم إلى شفافة لإظهار الكاميرا فورًا
-      document.body.classList.add('scanner-active');
-      
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          // تهيئة الكاميرا بشكل متوازي لتسريع العملية
-          if (typeof BarcodeScanner.prepare === 'function') {
-            await BarcodeScanner.prepare();
+      // محاولة إخفاء خلفية التطبيق على المنصات المدعومة
+      if (Capacitor.isNativePlatform()) {
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          try {
+            // استخدام MLKit BarcodeScanner لإخفاء خلفية التطبيق
+            console.log('[useScannerUI] إخفاء خلفية التطبيق باستخدام MLKit...');
+            
+            // لن نحتاج لهذا عندما نستخدم طريقة الفتح المباشر
+            // await BarcodeScanner.hideBackground();
+            
+            // تطبيق أنماط CSS لإخفاء العناصر الأخرى
+            document.documentElement.style.setProperty('--app-bg-opacity', '0');
+            
+            // إخفاء عناصر واجهة المستخدم الأخرى
+            const elementsToHide = document.querySelectorAll('header, footer, nav');
+            elementsToHide.forEach((el) => {
+              if (el instanceof HTMLElement) {
+                el.classList.add('app-header');
+                el.style.visibility = 'hidden';
+                el.style.opacity = '0';
+                el.style.background = 'transparent';
+              }
+            });
+            
+            return true;
+          } catch (e) {
+            console.error('[useScannerUI] خطأ في إخفاء خلفية MLKit:', e);
           }
-        } catch (error) {
-          console.error('[useScannerUI] خطأ في تفعيل الكاميرا:', error);
-          // نستمر حتى لو فشل هذا الجزء
         }
       }
       
-      // إضافة حدود للعناصر المهمة التي نريد إظهارها فوق الكاميرا
-      document.querySelectorAll('.scanner-frame, .scanner-overlay, .scanner-controls').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.style.position = 'relative';
-          el.style.zIndex = '999';
-        }
-      });
-      
-      return true;
+      return false;
     } catch (error) {
       console.error('[useScannerUI] خطأ في إعداد خلفية الماسح:', error);
       return false;
     }
   }, []);
   
-  /**
-   * استعادة واجهة المستخدم بعد المسح
-   */
-  const restoreUIAfterScanning = useCallback(async (): Promise<void> => {
+  // استعادة واجهة المستخدم بعد المسح
+  const restoreUIAfterScanning = useCallback(async (): Promise<boolean> => {
     try {
       console.log('[useScannerUI] استعادة واجهة المستخدم بعد المسح...');
       
-      // إزالة أي قيود على العناصر
-      document.body.classList.remove('scanner-active');
-      
       // استعادة العناصر المخفية
-      document.querySelectorAll('header, .app-header, footer, nav, .app-footer').forEach(el => {
+      document.documentElement.style.setProperty('--app-bg-opacity', '1');
+      
+      // إظهار عناصر واجهة المستخدم
+      const elementsToShow = document.querySelectorAll('.app-header');
+      elementsToShow.forEach((el) => {
         if (el instanceof HTMLElement) {
-          el.style.opacity = '1';
           el.style.visibility = 'visible';
+          el.style.opacity = '1';
+          el.style.background = el.dataset.originalBg || 'white';
+          el.classList.remove('app-header');
         }
       });
       
-      // إزالة القيود من العناصر التي أضفناها
-      document.querySelectorAll('.scanner-frame, .scanner-overlay, .scanner-controls').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.style.position = '';
-          el.style.zIndex = '';
-        }
-      });
-      
-      // إيقاف الكاميرا إذا كانت نشطة
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+      // إظهار الخلفية باستخدام MLKit إذا كانت متاحة
+      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          if (typeof BarcodeScanner.stopScan === 'function') {
-            await BarcodeScanner.stopScan().catch(() => {});
-          }
-        } catch (error) {
-          console.error('[useScannerUI] خطأ في إيقاف الكاميرا:', error);
+          // لم نعد نحتاج لهذا لأننا نستخدم طريقة أخرى للمسح
+          // await BarcodeScanner.showBackground();
+        } catch (e) {
+          console.error('[useScannerUI] خطأ في إظهار خلفية MLKit:', e);
         }
       }
+      
+      return true;
     } catch (error) {
       console.error('[useScannerUI] خطأ في استعادة واجهة المستخدم:', error);
+      return false;
     }
   }, []);
   
-  /**
-   * تنظيف أي تغييرات في واجهة المستخدم
-   */
-  const cleanup = useCallback((): void => {
+  // تنظيف الماسح ومعالجة الحالات الخاصة
+  const cleanup = useCallback(async (): Promise<void> => {
     try {
-      console.log('[useScannerUI] تنظيف واجهة المستخدم...');
+      console.log('[useScannerUI] تنظيف الماسح...');
       
-      // إزالة فئة حالة الماسح
-      document.body.classList.remove('scanner-active');
+      // استعادة واجهة المستخدم
+      await restoreUIAfterScanning();
       
-      // استعادة جميع العناصر المخفية
-      document.querySelectorAll('header, .app-header, footer, nav, .app-footer').forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.style.opacity = '1';
-          el.style.visibility = 'visible';
-          el.style.background = '';
-          el.style.backgroundColor = '';
+      // إيقاف البث المباشر من الكاميرا
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          await BarcodeScanner.stopScan();
+        } catch (e) {
+          console.error('[useScannerUI] خطأ في إيقاف المسح عند التنظيف:', e);
         }
-      });
+      }
+      
     } catch (error) {
-      console.error('[useScannerUI] خطأ في تنظيف واجهة المستخدم:', error);
+      console.error('[useScannerUI] خطأ في تنظيف الماسح:', error);
     }
-  }, []);
-  
-  // إضافة cleanupScannerBackground كاسم بديل لـ restoreUIAfterScanning للتوافق مع الكود القديم
-  const cleanupScannerBackground = restoreUIAfterScanning;
+  }, [restoreUIAfterScanning]);
   
   return {
     setupScannerBackground,
     restoreUIAfterScanning,
-    cleanupScannerBackground,
     cleanup
   };
 };
