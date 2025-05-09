@@ -184,9 +184,10 @@ class ScannerPermissionService {
       if (Capacitor.isNativePlatform()) {
         console.log('ScannerPermissionService: محاولة فتح إعدادات التطبيق...');
         
-        // App.openSettings() هو الاسم الصحيح للدالة في الإصدارات الحديثة من Capacitor
-        if (typeof App.openSettings === 'function') {
-          await App.openSettings();
+        // التحقق من وجود الدالة في الإصدارات المختلفة من Capacitor
+        const appSettings = App as any;
+        if (typeof appSettings.openSettings === 'function') {
+          await appSettings.openSettings();
           return true;
         } else {
           console.warn('ScannerPermissionService: دالة فتح الإعدادات غير متوفرة في هذا الإصدار من Capacitor');
