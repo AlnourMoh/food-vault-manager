@@ -8,11 +8,10 @@ interface UseScannerActivationProps {
   cameraActive: boolean;
   setCameraActive: (active: boolean) => void;
   hasPermission: boolean | null;
-  setHasPermission: (permission: boolean | null) => void;
-  startScan: () => Promise<boolean>;
   setIsLoading: (loading: boolean) => void;
   setHasScannerError: (error: boolean) => void;
   requestPermission: () => Promise<boolean>;
+  startScan: () => Promise<boolean>;
 }
 
 export const useScannerActivation = ({
