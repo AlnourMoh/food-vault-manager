@@ -183,8 +183,19 @@ class ScannerPermissionService {
     try {
       if (Capacitor.isNativePlatform()) {
         console.log('ScannerPermissionService: محاولة فتح إعدادات التطبيق...');
-        await App.openSettings();
-        return true;
+        
+        // App.openSettings() هو الاسم الصحيح للدالة في الإصدارات الحديثة من Capacitor
+        if (typeof App.openSettings === 'function') {
+          await App.openSettings();
+          return true;
+        } else {
+          console.warn('ScannerPermissionService: دالة فتح الإعدادات غير متوفرة في هذا الإصدار من Capacitor');
+          await Toast.show({
+            text: 'يرجى فتح إعدادات جهازك يدوياً وتمكين إذن الكاميرا',
+            duration: 'long'
+          });
+          return false;
+        }
       } else {
         console.log('ScannerPermissionService: غير قادر على فتح الإعدادات في بيئة الويب');
         await Toast.show({
