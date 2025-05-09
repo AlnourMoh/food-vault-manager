@@ -131,13 +131,20 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
             console.log("إعداد الكاميرا والبدء في المسح...");
             
             // بدء المسح
+            // Fix: We need to change how we call BarcodeScanner.scan()
+            // The correct way is to use a single options object
             await BarcodeScanner.scan({
               formats: ["QR_CODE", "EAN_13", "EAN_8", "CODE_39", "CODE_128"],
-            }, (result) => {
+              // We'll handle the callback separately via the result
+              scanMode: "SINGLE", // Scan once and return the result
+            });
+            
+            // Handle scan results
+            const result = await BarcodeScanner.addListener('barcodeScanned', (result) => {
               // استدعاء دالة onScan عندما يتم مسح رمز شريطي
-              if (result && result.content) {
-                console.log("تم العثور على رمز:", result.content);
-                onScan(result.content);
+              if (result && result.barcode && result.barcode.rawValue) {
+                console.log("تم العثور على رمز:", result.barcode.rawValue);
+                onScan(result.barcode.rawValue);
               }
             });
             
