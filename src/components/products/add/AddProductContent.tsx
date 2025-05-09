@@ -4,7 +4,7 @@ import { PermissionErrorCard } from './PermissionErrorCard';
 import { ScanButton } from './ScanButton';
 import { useProductScannerPermissions } from './useProductScannerPermissions';
 import { useToast } from '@/hooks/use-toast';
-import { Camera } from '@capacitor/camera';
+import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 
 interface AddProductContentProps {
@@ -51,9 +51,9 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
           await Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: 'uri',
-            source: 'CAMERA',
-            direction: 'REAR'
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            direction: CameraDirection.Rear
           });
           
           toast({
