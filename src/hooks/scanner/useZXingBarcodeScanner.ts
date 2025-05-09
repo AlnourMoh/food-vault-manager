@@ -1,14 +1,10 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
-import { Toast } from '@capacitor/toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Capacitor } from '@capacitor/core';
-import { useScannerCleanup } from './modules/useScannerCleanup';
 import { useScannerPermission } from './modules/useScannerPermission';
 import { useBarcodeScanning } from './modules/useBarcodeScanning';
 import { useScannerActivation } from './modules/useScannerActivation';
 import { useScannerRetry } from './modules/useScannerRetry';
+import { useScannerCleanup } from './modules/useScannerCleanup';
 
 interface UseZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -27,12 +23,12 @@ export const useZXingBarcodeScanner = ({
   const [cameraActive, setCameraActive] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
   
-  // للتسجيل عند بدء الاستخدام
-  useEffect(() => {
-    console.log('useZXingBarcodeScanner: تهيئة الماسح الضوئي مع الإعدادات', {
-      autoStart,
-    });
-  }, [autoStart]);
+  // استخدام مكون منفصل للتحقق من الأذونات
+  const { checkPermissions, requestPermission } = useScannerPermission(
+    setIsLoading,
+    setHasPermission,
+    setHasScannerError
+  );
   
   // استخدام مكونات أصغر لإدارة المسح
   const { startScan, stopScan } = useBarcodeScanning({
@@ -43,13 +39,6 @@ export const useZXingBarcodeScanner = ({
     hasScannerError,
     setHasScannerError
   });
-  
-  // استخدام مكون منفصل للتحقق من الأذونات
-  const { checkPermissions, requestPermission } = useScannerPermission(
-    setIsLoading,
-    setHasPermission,
-    setHasScannerError
-  );
   
   // استخدام مكون منفصل لتفعيل الكاميرا
   const { activateCamera } = useScannerActivation({
@@ -73,24 +62,11 @@ export const useZXingBarcodeScanner = ({
   // التحقق من الأذونات عند تحميل المكون
   useEffect(() => {
     const initPermissions = async () => {
-      console.log('useZXingBarcodeScanner: بدء التحقق من الأذونات');
       await checkPermissions(autoStart, activateCamera);
-      console.log('useZXingBarcodeScanner: انتهى التحقق من الأذونات');
     };
     
     initPermissions();
   }, [autoStart, checkPermissions, activateCamera]);
-  
-  // للتسجيل عند تغيير الحالات
-  useEffect(() => {
-    console.log('useZXingBarcodeScanner: تحديث الحالات', {
-      isLoading,
-      hasPermission,
-      isScanningActive,
-      cameraActive,
-      hasScannerError
-    });
-  }, [isLoading, hasPermission, isScanningActive, cameraActive, hasScannerError]);
   
   // استخدام hook للتنظيف عند إلغاء تحميل المكون
   useScannerCleanup(isScanningActive, stopScan);

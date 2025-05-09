@@ -1,8 +1,8 @@
 
-import { useCallback, useEffect, useRef } from 'react';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { useCallback } from 'react';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
-import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import { Toast } from '@capacitor/toast';
 
 interface UseBarcodeScanningProps {
   onScan: (code: string) => void;
@@ -21,160 +21,96 @@ export const useBarcodeScanning = ({
   hasScannerError,
   setHasScannerError
 }: UseBarcodeScanningProps) => {
-  // لتتبع فترة محاكاة المسح
-  const simulationIntervalRef = useRef<number | null>(null);
-  
-  // تنظيف المحاكاة عند إلغاء تحميل المكون
-  useEffect(() => {
-    return () => {
-      if (simulationIntervalRef.current) {
-        clearTimeout(simulationIntervalRef.current);
-      }
-    };
-  }, []);
-  
-  // استخدام محاكاة للمسح في حالة عدم وجود كاميرا
-  const simulateScan = useCallback(() => {
-    // أكواد محاكاة لأغراض الاختبار
-    const fakeCodes = [
-      'TEST994784', 
-      'PROD123456', 
-      'ITEM789012',
-      '1234567890123'
-    ];
-    
-    // اختيار كود عشوائي
-    const randomCode = fakeCodes[Math.floor(Math.random() * fakeCodes.length)];
-    
-    console.log('تم اكتشاف باركود (محاكاة):', randomCode);
-    onScan(randomCode);
-    return true;
-  }, [onScan]);
-  
-  // بدء عملية المسح
+
+  // بدء المسح
   const startScan = useCallback(async (): Promise<boolean> => {
+    if (isScanningActive || !cameraActive || hasScannerError) {
+      console.log('useBarcodeScanning: لا يمكن بدء المسح، المسح نشط بالفعل أو الكاميرا غير نشطة أو هناك خطأ');
+      return false;
+    }
+
     try {
-      if (isScanningActive) {
-        console.log('useBarcodeScanning: المسح نشط بالفعل');
-        return true;
-      }
+      console.log('useBarcodeScanning: بدء المسح...');
       
-      if (!cameraActive) {
-        console.log('useBarcodeScanning: الكاميرا غير نشطة، لا يمكن بدء المسح');
-        return false;
-      }
-      
-      if (hasScannerError) {
-        console.log('useBarcodeScanning: هناك خطأ في الماسح، يرجى إعادة المحاولة');
-        return false;
-      }
-      
-      console.log('useBarcodeScanning: محاولة بدء المسح...');
-      
-      // في منصات الجوال
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          console.log('useBarcodeScanning: استخدام MLKitBarcodeScanner للمسح');
-          
-          // التحقق من دعم الماسح
-          const supported = await BarcodeScanner.isSupported();
-          if (!supported.supported) {
-            console.error('useBarcodeScanning: ماسح MLKit غير مدعوم على هذا الجهاز');
-            setHasScannerError(true);
-            return false;
-          }
-          
-          // بدء المسح
-          setIsScanningActive(true);
-          
-          // سنستخدم واجهة MLKit لاحقًا، اترك هذا الفراغ للآن
-          return true;
-        } catch (error) {
-          console.error('useBarcodeScanning: خطأ في بدء مسح MLKit:', error);
+        // التحقق من دعم جهاز المستخدم للماسح
+        const supported = await BarcodeScanner.isSupported();
+        if (!supported.supported) {
+          console.error('useBarcodeScanning: جهاز المستخدم لا يدعم مسح الباركود');
           setHasScannerError(true);
+          await Toast.show({
+            text: 'جهازك لا يدعم مسح الرموز الشريطية',
+            duration: 'short'
+          });
           return false;
         }
-      } else {
-        console.log('useBarcodeScanning: نحن في بيئة الويب، استخدام API الويب أو المحاكاة');
         
-        try {
-          // التحقق من وجود كاميرات
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const cameras = devices.filter(device => device.kind === 'videoinput');
-          
-          if (cameras.length > 0) {
-            console.log('useBarcodeScanning: تم العثور على كاميرات، جاري التهيئة');
-            
-            // إعداد المسح على الويب (محاكاة)
-            console.log('useBarcodeScanning: تفعيل محاكاة المسح للويب');
-            setIsScanningActive(true);
-            
-            // جدولة محاكاة مسح لاختبار التطبيق
-            simulationIntervalRef.current = window.setTimeout(() => {
-              simulateScan();
-            }, 3000);
-            
-            return true;
-          } else {
-            console.error('useBarcodeScanning: لم يتم العثور على كاميرا متصلة بالجهاز');
-            
-            // محاكاة المسح للاختبار حتى بدون كاميرا
-            console.log('useBarcodeScanning: تفعيل محاكاة المسح للاختبار');
-            setIsScanningActive(true);
-            
-            // جدولة محاكاة مسح بعد 3 ثوان
-            simulationIntervalRef.current = window.setTimeout(() => {
-              simulateScan();
-            }, 3000);
-            
-            return true;
+        // بدء المسح
+        await BarcodeScanner.scan({
+          formats: [
+            BarcodeFormat.QR_CODE,
+            BarcodeFormat.EAN_13,
+            BarcodeFormat.EAN_8,
+            BarcodeFormat.CODE_39,
+            BarcodeFormat.CODE_128
+          ]
+        });
+        
+        // إضافة مستمع للأحداث
+        const listener = await BarcodeScanner.addListener('barcodesScanned', (result) => {
+          if (result && result.barcodes && result.barcodes.length > 0) {
+            console.log('useBarcodeScanning: تم العثور على باركود:', result.barcodes[0].rawValue);
+            onScan(result.barcodes[0].rawValue);
+            // إزالة المستمع بعد المسح
+            listener.remove();
           }
-        } catch (error) {
-          console.error('useBarcodeScanning: خطأ في بدء المسح:', error);
-          
-          // محاكاة المسح للاختبار حتى في حالة الخطأ
-          console.log('useBarcodeScanning: تفعيل محاكاة المسح للاختبار بعد الخطأ');
-          setIsScanningActive(true);
-          
-          simulationIntervalRef.current = window.setTimeout(() => {
-            simulateScan();
-          }, 3000);
-          
-          return true;
-        }
+        });
+      } else {
+        // في بيئة الويب، نحاكي عملية المسح
+        console.log('useBarcodeScanning: محاكاة عملية المسح في بيئة الويب');
+        
+        // محاكاة وجود مسح بعد فترة
+        setTimeout(() => {
+          console.log('useBarcodeScanning: محاكاة اكتشاف باركود');
+          onScan("TEST_BARCODE_123456");
+        }, 3000);
       }
+      
+      setIsScanningActive(true);
+      return true;
     } catch (error) {
       console.error('useBarcodeScanning: خطأ في بدء المسح:', error);
       setHasScannerError(true);
+      setIsScanningActive(false);
       return false;
     }
-  }, [isScanningActive, cameraActive, hasScannerError, setIsScanningActive, setHasScannerError, simulateScan]);
-  
-  // إيقاف عملية المسح
+  }, [isScanningActive, cameraActive, hasScannerError, setIsScanningActive, setHasScannerError, onScan]);
+
+  // إيقاف المسح
   const stopScan = useCallback(async (): Promise<boolean> => {
+    if (!isScanningActive) {
+      return true;
+    }
+
     try {
       console.log('useBarcodeScanning: إيقاف المسح...');
       
-      // تنظيف محاكاة المسح إذا كانت قيد التشغيل
-      if (simulationIntervalRef.current) {
-        clearTimeout(simulationIntervalRef.current);
-        simulationIntervalRef.current = null;
-      }
-      
-      // في منصات الجوال
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        // سيتم استكمال هذا لاحقًا
+        // إيقاف المسح
+        await BarcodeScanner.removeAllListeners();
       }
       
-      // تحديث الحالة
       setIsScanningActive(false);
-      
       return true;
     } catch (error) {
       console.error('useBarcodeScanning: خطأ في إيقاف المسح:', error);
+      setIsScanningActive(false);
       return false;
     }
-  }, [setIsScanningActive]);
-  
-  return { startScan, stopScan };
+  }, [isScanningActive, setIsScanningActive]);
+
+  return {
+    startScan,
+    stopScan
+  };
 };

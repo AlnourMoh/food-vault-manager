@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useZXingBarcodeScannerHook } from '@/hooks/scanner/useZXingBarcodeScannerHook';
+import { useZXingBarcodeScanner } from '@/hooks/scanner/useZXingBarcodeScanner';
 import { ScannerLoadingView } from './scanner/components/ScannerLoadingView';
 import { PermissionRequestView } from './scanner/components/PermissionRequestView';
 import { ScannerErrorView } from './scanner/components/ScannerErrorView';
@@ -21,10 +21,10 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     isLoading,
     hasPermission,
     cameraActive,
-    scannerError,
+    hasScannerError: scannerError,
     requestPermission,
     handleRetry
-  } = useZXingBarcodeScannerHook({ onScan, onClose, autoStart });
+  } = useZXingBarcodeScanner({ onScan, onClose, autoStart });
 
   // عرض شاشة التحميل
   if (isLoading) {
@@ -38,7 +38,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   
   // عرض شاشة الخطأ
   if (scannerError) {
-    return <ScannerErrorView errorMessage={scannerError} onRetry={handleRetry} onClose={onClose} />;
+    return <ScannerErrorView errorMessage={"حدث خطأ في الماسح الضوئي"} onRetry={handleRetry} onClose={onClose} />;
   }
   
   // عرض الكاميرا النشطة

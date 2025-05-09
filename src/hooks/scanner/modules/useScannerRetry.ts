@@ -15,23 +15,22 @@ export const useScannerRetry = ({
   startScan
 }: UseScannerRetryProps) => {
   
-  // وظيفة لإعادة المحاولة بعد حدوث خطأ
-  const handleRetry = useCallback(() => {
-    console.log('useScannerRetry: إعادة المحاولة بعد حدوث خطأ...');
+  const handleRetry = useCallback(async () => {
+    console.log('useScannerRetry: إعادة المحاولة...');
+    
+    // إعادة تعيين حالة الخطأ
     setHasScannerError(false);
     setCameraActive(false);
     
-    // محاولة تفعيل الكاميرا وبدء المسح مجدداً
-    setTimeout(() => {
-      activateCamera().then(activated => {
-        if (activated) {
-          startScan();
-        }
-      });
-    }, 500);
-  }, [activateCamera, startScan, setCameraActive, setHasScannerError]);
+    // إعادة تنشيط الكاميرا
+    const activated = await activateCamera();
+    
+    // إذا تم تنشيط الكاميرا بنجاح، نبدأ المسح
+    if (activated) {
+      console.log('useScannerRetry: تم إعادة تنشيط الكاميرا، نبدأ المسح الآن...');
+      await startScan();
+    }
+  }, [setHasScannerError, setCameraActive, activateCamera, startScan]);
   
-  return {
-    handleRetry
-  };
+  return { handleRetry };
 };
