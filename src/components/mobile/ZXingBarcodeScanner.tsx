@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, RefreshCw } from 'lucide-react';
@@ -219,7 +218,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           
           // تعيين معالج للاستجابة
           const listener = await BarcodeScanner.addListener(
-            "barcodesScanned",
+            "barcodesScanned", // FIXED: Corrected event name from "barcodeScanned" to "barcodesScanned"
             async result => {
               console.log('تم مسح الباركود:', result);
               
