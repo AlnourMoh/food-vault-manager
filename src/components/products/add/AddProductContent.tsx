@@ -2,9 +2,7 @@
 import React, { useState } from 'react';
 import { PermissionErrorCard } from './PermissionErrorCard';
 import { ScanButton } from './ScanButton';
-import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { useProductScannerPermissions } from './useProductScannerPermissions';
-import { useProductScanHandler } from './useProductScanHandler';
 import { useToast } from '@/hooks/use-toast';
 import { Camera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -26,21 +24,15 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
     handleOpenSettings,
   } = useProductScannerPermissions();
 
-  const {
-    scannerOpen,
-    setScannerOpen,
-    handleScanResult
-  } = useProductScanHandler({ isRestaurantRoute });
-
-  // تعديل الوظيفة لفتح الماسح بشكل مباشر
+  // وظيفة مبسطة لفتح كاميرا الهاتف فقط بدون باركود
   const handleScanButtonClick = async (): Promise<void> => {
     try {
-      console.log('فتح الماسح الضوئي مباشرة...');
+      console.log('فتح الكاميرا مباشرة...');
       setIsCameraInitializing(true);
       
       // عرض رسالة للمستخدم
       toast({
-        title: "جاري فتح الماسح الضوئي",
+        title: "جاري فتح الكاميرا",
         description: "يرجى الانتظار لحظة...",
       });
       
@@ -53,16 +45,43 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
         }
       }
       
-      // فتح الماسح مباشرة
-      setScannerOpen(true);
+      // فتح كاميرا الجهاز مباشرة بدون مسح الباركود
+      if (Capacitor.isPluginAvailable('Camera')) {
+        try {
+          await Camera.getPhoto({
+            quality: 90,
+            allowEditing: false,
+            resultType: 'uri',
+            source: 'CAMERA',
+            direction: 'REAR'
+          });
+          
+          toast({
+            title: "تم فتح الكاميرا بنجاح",
+          });
+        } catch (error) {
+          console.error("خطأ في فتح الكاميرا:", error);
+          toast({
+            title: "تعذر فتح الكاميرا",
+            description: "يرجى التحقق من أذونات الكاميرا والمحاولة مرة أخرى",
+            variant: "destructive"
+          });
+        }
+      } else {
+        // في بيئة الويب أو إذا لم يكن الملحق متاحًا
+        toast({
+          title: "محاكاة فتح الكاميرا",
+          description: "هذه الميزة تعمل بشكل أفضل على الهاتف المحمول",
+        });
+      }
       
       setIsCameraInitializing(false);
     } catch (error) {
-      console.error("خطأ في فتح الماسح:", error);
+      console.error("خطأ في فتح الكاميرا:", error);
       setIsCameraInitializing(false);
       
       toast({
-        title: "خطأ في فتح الماسح",
+        title: "خطأ في فتح الكاميرا",
         description: "يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
@@ -81,15 +100,7 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
         <ScanButton 
           onClick={handleScanButtonClick}
           isLoading={isRequestingPermission || isCameraInitializing}
-          loadingText={isCameraInitializing ? "جاري فتح الماسح الضوئي..." : "جاري التحقق من الأذونات..."}
-        />
-      )}
-
-      {scannerOpen && (
-        <ZXingBarcodeScanner
-          onScan={handleScanResult}
-          onClose={() => setScannerOpen(false)}
-          autoStart={true}
+          loadingText={isCameraInitializing ? "جاري فتح الكاميرا..." : "جاري التحقق من الأذونات..."}
         />
       )}
     </div>

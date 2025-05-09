@@ -13,7 +13,7 @@ interface ScanButtonProps {
 export const ScanButton: React.FC<ScanButtonProps> = ({
   onClick,
   isLoading,
-  loadingText = 'جاري فتح الماسح الضوئي...',
+  loadingText = 'جاري فتح الكاميرا...',
   defaultText = 'امسح ادخال المنتج'
 }) => {
   return (
