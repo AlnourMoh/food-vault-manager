@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
@@ -79,9 +79,16 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       
       // استخدام MLKitBarcodeScanner إذا كان متاحًا
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const status = await BarcodeScanner.requestPermissions();
-        isGranted = status.camera === 'granted';
+        console.log("ZXingBarcodeScanner: محاولة طلب الإذن من MLKitBarcodeScanner...");
+        
+        const result = await BarcodeScanner.requestPermissions();
+        isGranted = result.camera === 'granted';
+        
         console.log("نتيجة طلب إذن MLKitBarcodeScanner:", isGranted);
+        
+        if (isGranted) {
+          activateCamera();
+        }
       } 
       // في بيئة الويب، محاولة طلب الإذن مباشرة
       else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -131,20 +138,24 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
             console.log("إعداد الكاميرا والبدء في المسح...");
             
             // بدء المسح
-            // Fix: We need to change how we call BarcodeScanner.scan()
-            // The correct way is to use a single options object
+            // استخدام BarcodeFormat الصحيح من الكائن المستورد
             await BarcodeScanner.scan({
-              formats: ["QR_CODE", "EAN_13", "EAN_8", "CODE_39", "CODE_128"],
-              // We'll handle the callback separately via the result
+              formats: [
+                BarcodeFormat.QR_CODE,
+                BarcodeFormat.EAN_13,
+                BarcodeFormat.EAN_8,
+                BarcodeFormat.CODE_39,
+                BarcodeFormat.CODE_128
+              ],
               scanMode: "SINGLE", // Scan once and return the result
             });
             
-            // Handle scan results
-            const result = await BarcodeScanner.addListener('barcodeScanned', (result) => {
+            // استخدام اسم الحدث الصحيح "barcodesScanned"
+            const result = await BarcodeScanner.addListener('barcodesScanned', (result) => {
               // استدعاء دالة onScan عندما يتم مسح رمز شريطي
-              if (result && result.barcode && result.barcode.rawValue) {
-                console.log("تم العثور على رمز:", result.barcode.rawValue);
-                onScan(result.barcode.rawValue);
+              if (result && result.barcodes && result.barcodes.length > 0) {
+                console.log("تم العثور على رمز:", result.barcodes[0].rawValue);
+                onScan(result.barcodes[0].rawValue);
               }
             });
             
