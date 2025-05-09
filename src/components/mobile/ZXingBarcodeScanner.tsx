@@ -99,6 +99,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
               }
             } else {
               setError('الجهاز لا يدعم مسح الباركود');
+              setDeviceHasCamera(false);
               Toast.show({
                 text: 'الجهاز لا يدعم مسح الباركود',
                 duration: 'short'
@@ -119,34 +120,39 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
         // بيئة الويب
         else {
           console.log('ZXingBarcodeScanner: نحن في بيئة الويب، استخدام API الويب');
-          // في بيئة الويب، نفترض أن الماسح مدعوم دائمًا
-          setIsInitialized(true);
           
           // التحقق من وجود كاميرا متصلة بالجهاز
           try {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const hasVideoDevice = devices.some(device => device.kind === 'videoinput');
             
+            setIsInitialized(true);
+            
             if (!hasVideoDevice) {
               console.log('ZXingBarcodeScanner: لم يتم العثور على كاميرا متصلة بالجهاز');
               setDeviceHasCamera(false);
               setError('لا يوجد كاميرا متصلة بهذا الجهاز');
+              simulateBarcodeDetection(); // استخدام محاكاة الباركود عندما لا توجد كاميرا
               return;
+            }
+            
+            // بدء المسح تلقائياً في بيئة الويب إذا كان مطلوباً
+            if (autoStart) {
+              setTimeout(() => {
+                startWebCamera();
+              }, 500);
             }
           } catch (e) {
             console.error('خطأ في التحقق من توفر الكاميرا:', e);
-          }
-          
-          // بدء المسح تلقائياً في بيئة الويب إذا كان مطلوباً
-          if (autoStart) {
-            setTimeout(() => {
-              startWebCamera();
-            }, 500);
+            setDeviceHasCamera(false);
+            setError('تعذر الوصول إلى الكاميرا');
+            simulateBarcodeDetection(); // استخدام محاكاة الباركود في حالة الخطأ
           }
         }
       } catch (e) {
         console.error('خطأ في تهيئة الماسح:', e);
         setError('حدث خطأ أثناء تهيئة الماسح الضوئي');
+        simulateBarcodeDetection(); // استخدام محاكاة الباركود في حالة الخطأ
       }
     };
     
@@ -163,6 +169,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setError('المتصفح لا يدعم الوصول إلى الكاميرا');
+        simulateBarcodeDetection(); // استخدام محاكاة الباركود عندما لا يدعم المتصفح الكاميرا
         return;
       }
       
@@ -196,20 +203,24 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
         console.error('خطأ في بدء الكاميرا:', error);
         
         // التعامل مع خطأ عدم وجود الجهاز بشكل خاص
-        if (error.name === 'NotFoundError') {
+        if (error.name === 'NotFoundError' || error.message.includes('device not found')) {
           setDeviceHasCamera(false);
           setError('لا يوجد كاميرا متصلة بهذا الجهاز. يرجى التأكد من وجود كاميرا وأنها متاحة.');
+          simulateBarcodeDetection(); // استخدام محاكاة الباركود للتجربة
         } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
           setHasPermission(false);
           setError('تم رفض إذن الوصول إلى الكاميرا');
+          simulateBarcodeDetection(); // استخدام محاكاة الباركود للتجربة
         } else {
           setError('تعذر الوصول إلى الكاميرا: ' + error.message);
+          simulateBarcodeDetection(); // استخدام محاكاة الباركود للتجربة
         }
       }
     } catch (error) {
       console.error('خطأ في بدء الكاميرا:', error);
       setError('تعذر الوصول إلى الكاميرا');
       setHasPermission(false);
+      simulateBarcodeDetection(); // استخدام محاكاة الباركود في حالة الخطأ
     }
   };
   
@@ -255,7 +266,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           
           // تعيين معالج للاستجابة
           const listener = await BarcodeScanner.addListener(
-            "barcodesScanned", // إصلاح: تصحيح اسم الحدث من "barcodeScanned" إلى "barcodesScanned"
+            "barcodesScanned",
             async result => {
               console.log('تم مسح الباركود:', result);
               
@@ -286,6 +297,8 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       console.error('خطأ في بدء المسح:', e);
       setError('حدث خطأ أثناء بدء المسح');
       setIsScanning(false);
+      // استخدام محاكاة المسح في حالة الفشل
+      simulateBarcodeDetection();
     }
   };
   
@@ -350,6 +363,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     } catch (e) {
       console.error('خطأ في إعادة المحاولة:', e);
       setError('حدث خطأ أثناء إعادة المحاولة');
+      simulateBarcodeDetection(); // استخدام محاكاة المسح في حالة الفشل
     }
   };
   
@@ -378,6 +392,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     } catch (e) {
       console.error('خطأ في طلب الإذن:', e);
       setError('حدث خطأ أثناء طلب الإذن');
+      simulateBarcodeDetection(); // استخدام محاكاة المسح في حالة الفشل
       return false;
     }
   };
@@ -513,6 +528,18 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           </>
         )}
       </div>
+
+      {/* زر المحاكاة في أسفل الشاشة دائماً للأجهزة التي لا تملك كاميرا */}
+      {!deviceHasCamera && (
+        <div className="p-4 border-t border-gray-800">
+          <Button 
+            onClick={() => simulateBarcodeDetection()}
+            className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            إنشاء باركود تجريبي
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
