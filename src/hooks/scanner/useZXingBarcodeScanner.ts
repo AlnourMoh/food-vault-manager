@@ -88,7 +88,7 @@ export const useZXingBarcodeScanner = ({
             }
           );
           
-          // بدء المسح باستخدام واجهة MLKit - FIX: don't pass any arguments
+          // بدء المسح باستخدام واجهة MLKit - Fix: don't pass any arguments
           await BarcodeScanner.startScan();
           
           console.log('تم بدء مسح الباركود بنجاح');
