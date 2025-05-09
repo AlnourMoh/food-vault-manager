@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +27,10 @@ const ProductScan = () => {
     if (!autoOpenAttempted) {
       console.log('ProductScan: فتح الماسح تلقائياً عند تحميل الصفحة');
       setAutoOpenAttempted(true);
-      handleOpenScanner();
+      // تأخير قصير قبل فتح الماسح لضمان تحميل الصفحة بالكامل
+      setTimeout(() => {
+        handleOpenScanner();
+      }, 1000);
     }
   }, []);
 
@@ -36,7 +40,16 @@ const ProductScan = () => {
       setScanError(null);
       setIsLoading(true);
       
-      // التحقق من إذن الكاميرا وطلبه إذا لم يكن ممنوحاً بشكل مباشر
+      // في بيئة الويب، نفتح الماسح مباشرة بدون التحقق من الإذن
+      // سيقوم المتصفح بطلب الإذن عند محاولة الوصول إلى الكاميرا
+      if (!Capacitor.isNativePlatform()) {
+        console.log('ProductScan: نحن في بيئة الويب، فتح الماسح مباشرة');
+        setIsScannerOpen(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // التحقق من إذن الكاميرا في الأجهزة الجوالة
       let permissionGranted = await scannerPermissionService.checkPermission();
       
       if (!permissionGranted) {
@@ -258,3 +271,4 @@ const ProductScan = () => {
 };
 
 export default ProductScan;
+

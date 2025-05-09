@@ -1,6 +1,6 @@
 
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 
 export class PermissionStatusChecker {
@@ -11,41 +11,33 @@ export class PermissionStatusChecker {
     try {
       console.log('PermissionStatusChecker: جاري التحقق من حالة إذن الكاميرا...');
       
-      // محاولة 1: استخدام ملحق MLKitBarcodeScanner
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const status = await BarcodeScanner.checkPermissions();
-        const hasPermission = status.camera === 'granted';
-        console.log('PermissionStatusChecker: نتيجة التحقق من MLKitBarcodeScanner:', hasPermission);
-        return hasPermission;
+      // في حالة بيئة الويب، نقوم بتجربة واجهة برمجة تطبيقات الكاميرا
+      if (!Capacitor.isNativePlatform()) {
+        console.log('PermissionStatusChecker: نحن في بيئة الويب، سنقوم بالمحاكاة');
+        
+        // في بيئة الويب، نفترض أن الإذن ممنوح للتجربة
+        // لا يمكن التحقق من حالة الإذن مسبقًا في معظم المتصفحات
+        return true;
       }
       
-      // محاولة 2: استخدام ملحق Camera
+      // التحقق من حالة إذن الكاميرا باستخدام واجهة برمجة تطبيقات Camera
       if (Capacitor.isPluginAvailable('Camera')) {
-        const status = await Camera.checkPermissions();
-        const hasPermission = status.camera === 'granted';
-        console.log('PermissionStatusChecker: نتيجة التحقق من Camera:', hasPermission);
-        return hasPermission;
+        console.log('PermissionStatusChecker: استخدام Camera للتحقق من إذن الكاميرا');
+        const result = await Camera.checkPermissions();
+        console.log('PermissionStatusChecker: نتيجة التحقق من Camera:', result.camera === 'granted');
+        return result.camera === 'granted';
       }
       
-      // محاولة 3: في بيئة الويب
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          
-          // إيقاف المسار بعد التحقق
-          stream.getTracks().forEach(track => track.stop());
-          
-          console.log('PermissionStatusChecker: تم منح إذن كاميرا المتصفح');
-          return true;
-        } catch (error) {
-          console.error('PermissionStatusChecker: تم رفض إذن كاميرا المتصفح:', error);
-          return false;
-        }
+      // التحقق من حالة إذن BarcodeScanner في حالة توفره
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('PermissionStatusChecker: استخدام BarcodeScanner للتحقق من إذن الكاميرا');
+        const result = await BarcodeScanner.checkPermissions();
+        console.log('PermissionStatusChecker: نتيجة التحقق من BarcodeScanner:', result.camera === 'granted');
+        return result.camera === 'granted';
       }
       
-      // في حالة عدم وجود طريقة للتحقق، نفترض أن الإذن غير ممنوح
-      console.log('PermissionStatusChecker: لا يوجد وسيلة للتحقق من الإذن، نفترض أنه غير ممنوح');
-      return false;
+      console.log('PermissionStatusChecker: لا توجد واجهة برمجة تطبيقات للتحقق من إذن الكاميرا، سنفترض أن الإذن ممنوح للتجربة');
+      return true; // افتراض منح الإذن إذا لم نتمكن من التحقق
     } catch (error) {
       console.error('PermissionStatusChecker: خطأ في التحقق من إذن الكاميرا:', error);
       return false;

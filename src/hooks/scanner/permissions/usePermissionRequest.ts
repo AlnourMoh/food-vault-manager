@@ -14,6 +14,13 @@ export const usePermissionRequest = () => {
       const platform = window.Capacitor?.getPlatform();
       console.log('[usePermissionRequest] المنصة الحالية:', platform);
 
+      // في بيئة الويب، نعتبر الإذن ممنوح دائمًا (سيتم طلبه عند بدء المسح)
+      if (!window.Capacitor?.isNativePlatform()) {
+        console.log('[usePermissionRequest] نحن في بيئة الويب، سنعتبر الإذن ممنوح');
+        // سيقوم المتصفح بطلب الإذن تلقائيًا عند محاولة الوصول إلى الكاميرا
+        return await handleWebPermissions();
+      }
+
       // طريقة 1: استخدام BarcodeScanner
       if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log(`[usePermissionRequest] محاولة طلب إذن BarcodeScanner...`);
@@ -45,9 +52,6 @@ export const usePermissionRequest = () => {
           });
           return await handleAndroidPermissions();
         }
-        
-        console.log('[usePermissionRequest] فشلت جميع محاولات طلب إذن BarcodeScanner');
-        return false;
       } 
       
       // طريقة 2: استخدام ملحق Camera الأساسي
@@ -69,11 +73,9 @@ export const usePermissionRequest = () => {
         } else if (platform === 'android') {
           return await handleAndroidPermissions();
         }
-        
-        return false;
       } 
       
-      // طريقة 3: بيئة الويب
+      // طريقة 3: بيئة الويب - تمكين الوصول إلى الكاميرا في بيئة الويب
       console.log('[usePermissionRequest] استخدام API الويب للكاميرا');
       return await handleWebPermissions();
     } catch (error) {

@@ -63,24 +63,21 @@ export const usePlatformPermissions = () => {
 
   const handleWebPermissions = async () => {
     console.log('[usePlatformPermissions] طلب أذونات الويب للكاميرا');
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        console.log('[usePlatformPermissions] طلب الوصول إلى الكاميرا عبر واجهة mediaDevices');
-        // طلب الوصول إلى الكاميرا - سيؤدي هذا إلى تشغيل مربع حوار إذن المتصفح
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (stream) {
-          console.log('[usePlatformPermissions] تم منح إذن الكاميرا، إيقاف التدفق');
-          // تنظيف الدفق بعد منح الإذن
-          stream.getTracks().forEach(track => track.stop());
-        }
-        return true;
-      } catch (error) {
-        console.error('[usePlatformPermissions] خطأ في طلب إذن الكاميرا:', error);
-        return false;
-      }
+    
+    try {
+      // في بيئة الويب، سنعتبر الإذن ممنوح دائمًا
+      // ولكن سنعرض رسالة للمستخدم لتوجيهه
+      toast({
+        title: "إذن الكاميرا",
+        description: "سيطلب المتصفح منك السماح بالوصول إلى الكاميرا عند بدء المسح",
+      });
+      
+      // إذا كنا في بيئة المحاكاة
+      return true;
+    } catch (error) {
+      console.error('[usePlatformPermissions] خطأ في طلب إذن الكاميرا للويب:', error);
+      return false;
     }
-    console.log('[usePlatformPermissions] واجهة MediaDevices غير متوفرة، افتراض منح الإذن للاختبار');
-    return true; // التراجع للاختبار
   };
 
   return {
