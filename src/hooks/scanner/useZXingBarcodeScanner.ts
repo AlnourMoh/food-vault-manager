@@ -42,11 +42,10 @@ export const useZXingBarcodeScanner = ({
     cameraActive,
     setCameraActive,
     hasPermission,
-    setHasPermission,
-    startScan,
     setIsLoading,
     setHasScannerError,
-    requestPermission: async () => await requestPermission()
+    requestPermission: async () => await requestPermission(),
+    startScan
   });
   
   // استخدام مكون منفصل للتحقق من الأذونات
