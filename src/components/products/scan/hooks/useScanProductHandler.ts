@@ -123,10 +123,19 @@ export const useScanProductHandler = ({
         .from('product_codes')
         .select('product_id, is_used')
         .eq('qr_code', code)
-        .single();
+        .maybeSingle(); // استخدام maybeSingle بدلاً من single
 
       if (codeError) {
         console.error('Code error:', codeError);
+        toast({
+          title: "باركود غير معروف",
+          description: "هذا الباركود غير مسجل في النظام",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (!productCode) {
         toast({
           title: "باركود غير معروف",
           description: "هذا الباركود غير مسجل في النظام",

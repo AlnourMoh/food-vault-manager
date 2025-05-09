@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -116,7 +115,7 @@ const ProductScan = () => {
         .from('product_codes')
         .select('product_id')
         .eq('qr_code', code)
-        .single();
+        .maybeSingle(); // استخدام maybeSingle بدلاً من single لتجنب أخطاء عدم وجود نتائج
       
       if (codeError) {
         console.error('ProductScan: خطأ في البحث عن رمز المنتج:', codeError);
@@ -141,12 +140,24 @@ const ProductScan = () => {
         .from('products')
         .select('*')
         .eq('id', productCode.product_id)
-        .single();
+        .maybeSingle(); // استخدام maybeSingle بدلاً من single
       
       if (productError) {
         console.error('ProductScan: خطأ في البحث عن تفاصيل المنتج:', productError);
         setScanError('حدث خطأ أثناء جلب تفاصيل المنتج');
         throw productError;
+      }
+      
+      if (!product) {
+        console.error('ProductScan: لم يتم العثور على بيانات المنتج:', productCode.product_id);
+        setScanError('لم يتم العثور على بيانات المنتج');
+        toast({
+          title: "خطأ في البحث",
+          description: "لم يتم العثور على بيانات المنتج المطلوب",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
       }
       
       console.log('ProductScan: تم جلب بيانات المنتج:', product);
@@ -271,4 +282,3 @@ const ProductScan = () => {
 };
 
 export default ProductScan;
-

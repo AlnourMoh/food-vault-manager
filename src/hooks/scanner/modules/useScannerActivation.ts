@@ -99,7 +99,7 @@ export const useScannerActivation = ({
       if (activated) {
         console.log('useScannerActivation: تم تفعيل الكاميرا، بدء المسح تلقائياً بعد تأخير قصير...');
         setTimeout(() => {
-          startScan(); // هنا قمنا بإزالة الوسيط الذي كان يسبب الخطأ
+          startScan(); // هنا تم إزالة الوسيط الذي كان يسبب خطأ TypeScript
         }, 500);
       }
       
