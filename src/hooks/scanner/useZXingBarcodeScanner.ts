@@ -5,7 +5,6 @@ import { Toast } from '@capacitor/toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { useScannerCleanup } from './modules/useScannerCleanup';
-import { useScannerActivation } from './modules/useScannerActivation';
 import { useScannerPermission } from './modules/useScannerPermission';
 
 interface UseZXingBarcodeScannerProps {
@@ -25,9 +24,8 @@ export const useZXingBarcodeScanner = ({
   const [cameraActive, setCameraActive] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
   
-  // Declare stopScan early as a function reference that will be defined later
-  // This resolves the "used before declaration" error
-  const stopScanRef = useCallback(async (): Promise<boolean> => {
+  // Define stopScan early so we can reference it in useScannerActivation
+  const stopScan = useCallback(async (): Promise<boolean> => {
     try {
       console.log('useZXingBarcodeScanner: إيقاف المسح...');
       
@@ -48,19 +46,8 @@ export const useZXingBarcodeScanner = ({
       return false;
     }
   }, []);
-  
-  const { checkPermissions, requestPermission } = useScannerPermission(setIsLoading, setHasPermission, setHasScannerError);
-  const { activateCamera } = useScannerActivation(cameraActive, setCameraActive, hasPermission, requestPermission, startScan, setIsLoading, setHasScannerError);
-  
-  useEffect(() => {
-    const initPermissions = async () => {
-      await checkPermissions(autoStart, activateCamera);
-    };
-    
-    initPermissions();
-  }, [autoStart, checkPermissions, activateCamera]);
-  
-  // وظيفة لبدء المسح
+
+  // Define startScan here so it can be used in useScannerActivation
   const startScan = useCallback(async () => {
     try {
       console.log('useZXingBarcodeScanner: محاولة بدء المسح...');
@@ -91,7 +78,7 @@ export const useZXingBarcodeScanner = ({
               try {
                 console.log('تم اكتشاف باركود:', result.barcodes);
                 // إيقاف المسح وإرسال النتيجة
-                await stopScanRef();
+                await stopScan();
                 if (result.barcodes && result.barcodes.length > 0) {
                   onScan(result.barcodes[0].rawValue || '');
                 }
@@ -101,8 +88,7 @@ export const useZXingBarcodeScanner = ({
             }
           );
           
-          // بدء المسح باستخدام واجهة MLKit مباشرة
-          // تصحيح الخطأ هنا - BarcodeScanner.startScan() لا يتوقع أي وسائط
+          // بدء المسح باستخدام واجهة MLKit - FIX: don't pass any arguments
           await BarcodeScanner.startScan();
           
           console.log('تم بدء مسح الباركود بنجاح');
@@ -132,10 +118,107 @@ export const useZXingBarcodeScanner = ({
       setHasScannerError(true);
       return false;
     }
-  }, [cameraActive, activateCamera, onScan, stopScanRef]);
+  }, [cameraActive, onScan, stopScan]);
   
-  // Use our early reference to avoid the circular reference issue
-  const stopScan = stopScanRef;
+  // Now that we've defined startScan, we can use it in other hooks
+  const { checkPermissions, requestPermission } = useScannerPermission(setIsLoading, setHasPermission, setHasScannerError);
+  
+  // Declare activateCamera after startScan is defined
+  const activateCamera = useCallback(async () => {
+    try {
+      if (cameraActive) {
+        console.log('useScannerActivation: الكاميرا نشطة بالفعل');
+        return true;
+      }
+      
+      console.log('useScannerActivation: جاري محاولة تفعيل الكاميرا...');
+      setIsLoading(true);
+      
+      // التحقق من وجود الإذن قبل محاولة تفعيل الكاميرا
+      if (hasPermission !== true) {
+        console.log('useScannerActivation: لا يمكن تفعيل الكاميرا بدون إذن، جاري طلب الإذن...');
+        // طلب الإذن تلقائياً إذا لم يكن موجوداً
+        const granted = await requestPermission();
+        if (!granted) {
+          console.error('useScannerActivation: لم يتم منح إذن الكاميرا');
+          setIsLoading(false);
+          return false;
+        }
+      }
+      
+      // تأكيد على وجود الشاشة
+      console.log('useScannerActivation: التأكد من وجود الشاشة قبل تفعيل الكاميرا');
+      
+      // تفعيل الكاميرا بشكل مباشر
+      let activated = false;
+      
+      if (Capacitor.isNativePlatform()) {
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          try {
+            // إعداد الماسح
+            console.log('MLKitBarcodeScanner: جاري التحقق من الدعم');
+            const supported = await BarcodeScanner.isSupported();
+            if (supported.supported) {
+              console.log('MLKitBarcodeScanner مدعوم، جاري التهيئة...');
+              
+              // تهيئة الماسح للاستخدام
+              await BarcodeScanner.enableTorch(false);
+              
+              // تم التهيئة بنجاح
+              activated = true;
+              console.log('تم تهيئة MLKitBarcodeScanner بنجاح');
+            } else {
+              console.error('MLKitBarcodeScanner غير مدعوم على هذا الجهاز');
+              await Toast.show({
+                text: 'ماسح الباركود غير مدعوم على هذا الجهاز',
+                duration: 'short'
+              });
+            }
+          } catch (e) {
+            console.error('خطأ في تهيئة MLKitBarcodeScanner:', e);
+            await Toast.show({
+              text: 'خطأ في تفعيل الكاميرا، يرجى المحاولة مرة أخرى',
+              duration: 'short'
+            });
+          }
+        } else {
+          // محاكاة نجاح تفعيل الكاميرا للتجربة على المنصات التي لا تدعم MLKit
+          console.log('محاكاة تفعيل الكاميرا للتجربة');
+          activated = true;
+        }
+      } else {
+        // في بيئة الويب
+        console.log('نحن في بيئة الويب، محاكاة تفعيل الكاميرا');
+        activated = true;
+      }
+      
+      setCameraActive(activated);
+      setIsLoading(false);
+      
+      // عند نجاح تفعيل الكاميرا، ابدأ المسح تلقائياً
+      if (activated) {
+        console.log('useScannerActivation: تم تفعيل الكاميرا، بدء المسح تلقائياً بعد تأخير قصير...');
+        setTimeout(() => {
+          startScan();
+        }, 500);
+      }
+      
+      return activated;
+    } catch (error) {
+      console.error('useScannerActivation: خطأ في تفعيل الكاميرا:', error);
+      setHasScannerError(true);
+      setIsLoading(false);
+      return false;
+    }
+  }, [cameraActive, hasPermission, requestPermission, setCameraActive, setIsLoading, setHasScannerError, startScan]);
+  
+  useEffect(() => {
+    const initPermissions = async () => {
+      await checkPermissions(autoStart, activateCamera);
+    };
+    
+    initPermissions();
+  }, [autoStart, checkPermissions, activateCamera]);
   
   // وظيفة لإعادة المحاولة بعد حدوث خطأ
   const handleRetry = useCallback(() => {
