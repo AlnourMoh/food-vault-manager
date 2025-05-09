@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { Camera } from '@capacitor/camera';
 import { usePlatformPermissions } from './usePlatformPermissions';
+import { Capacitor } from '@capacitor/core';
 
 export const usePermissionRequest = () => {
   const { toast } = useToast();
@@ -11,18 +12,18 @@ export const usePermissionRequest = () => {
   const requestPermission = async (force = true) => {
     try {
       console.log(`[usePermissionRequest] طلب الإذن مع force=${force}، جاري التحقق من المنصة...`);
-      const platform = window.Capacitor?.getPlatform();
+      const platform = Capacitor.getPlatform();
       console.log('[usePermissionRequest] المنصة الحالية:', platform);
 
       // في بيئة الويب، نعتبر الإذن ممنوح دائمًا (سيتم طلبه عند بدء المسح)
-      if (!window.Capacitor?.isNativePlatform()) {
+      if (!Capacitor.isNative) {
         console.log('[usePermissionRequest] نحن في بيئة الويب، سنعتبر الإذن ممنوح');
         // سيقوم المتصفح بطلب الإذن تلقائيًا عند محاولة الوصول إلى الكاميرا
         return await handleWebPermissions();
       }
 
       // طريقة 1: استخدام BarcodeScanner
-      if (window.Capacitor && window.Capacitor.isPluginAvailable('BarcodeScanner')) {
+      if (Capacitor.isPluginAvailable('BarcodeScanner')) {
         console.log(`[usePermissionRequest] محاولة طلب إذن BarcodeScanner...`);
         
         // طلب الإذن من المستخدم
@@ -55,7 +56,7 @@ export const usePermissionRequest = () => {
       } 
       
       // طريقة 2: استخدام ملحق Camera الأساسي
-      if (window.Capacitor?.isPluginAvailable('Camera')) {
+      if (Capacitor.isPluginAvailable('Camera')) {
         console.log('[usePermissionRequest] استخدام ملحق الكاميرا...');
         
         const cameraResult = await Camera.requestPermissions({

@@ -219,13 +219,13 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           
           // تعيين معالج للاستجابة
           const listener = await BarcodeScanner.addListener(
-            'barcodeScanned',
+            "barcodesScanned",
             async result => {
               console.log('تم مسح الباركود:', result);
               
               // استدعاء وظيفة المسح مع الرمز المكتشف
-              if (result && result.barcode && result.barcode.rawValue) {
-                onScan(result.barcode.rawValue);
+              if (result && result.barcodes && result.barcodes.length > 0) {
+                onScan(result.barcodes[0].rawValue || '');
               }
               
               // إلغاء المستمع
