@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +9,7 @@ import { Product } from '@/types';
 import { Capacitor } from '@capacitor/core';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { Toast } from '@capacitor/toast';
+import { Button } from '@/components/ui/button';
 
 const ProductScan = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
