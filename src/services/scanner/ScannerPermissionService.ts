@@ -4,85 +4,34 @@ import { Camera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Toast } from '@capacitor/toast';
+import { DeviceSupportChecker } from './permission/DeviceSupportChecker';
+import { PermissionStatusChecker } from './permission/PermissionStatusChecker';
+import { AppSettingsOpener } from './permission/AppSettingsOpener';
 
 class ScannerPermissionService {
   private permissionDeniedCount: number = 0;
+  private deviceSupportChecker: DeviceSupportChecker;
+  private permissionStatusChecker: PermissionStatusChecker;
+  private appSettingsOpener: AppSettingsOpener;
+  
+  constructor() {
+    this.deviceSupportChecker = new DeviceSupportChecker();
+    this.permissionStatusChecker = new PermissionStatusChecker();
+    this.appSettingsOpener = new AppSettingsOpener();
+  }
   
   /**
    * التحقق من دعم الجهاز للماسح
    */
   public async isSupported(): Promise<boolean> {
-    try {
-      // أولاً نتحقق من توفر الملحقات
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const result = await BarcodeScanner.isSupported();
-        return result.supported;
-      }
-      
-      // نتحقق من توفر الكاميرا على الأقل
-      if (Capacitor.isPluginAvailable('Camera')) {
-        return true;
-      }
-      
-      // في بيئة الويب، نتحقق من دعم الكاميرا
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        return true;
-      }
-      
-      // في حالة عدم توفر أي دعم
-      return false;
-    } catch (error) {
-      console.error('خطأ في التحقق من دعم الماسح:', error);
-      return false;
-    }
+    return await this.deviceSupportChecker.checkDeviceSupport();
   }
   
   /**
    * التحقق من حالة إذن الكاميرا
    */
   public async checkPermission(): Promise<boolean> {
-    try {
-      console.log('ScannerPermissionService: جاري التحقق من حالة إذن الكاميرا...');
-      
-      // محاولة 1: استخدام ملحق MLKitBarcodeScanner
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const status = await BarcodeScanner.checkPermissions();
-        const hasPermission = status.camera === 'granted';
-        console.log('ScannerPermissionService: نتيجة التحقق من MLKitBarcodeScanner:', hasPermission);
-        return hasPermission;
-      }
-      
-      // محاولة 2: استخدام ملحق Camera
-      if (Capacitor.isPluginAvailable('Camera')) {
-        const status = await Camera.checkPermissions();
-        const hasPermission = status.camera === 'granted';
-        console.log('ScannerPermissionService: نتيجة التحقق من Camera:', hasPermission);
-        return hasPermission;
-      }
-      
-      // محاولة 3: في بيئة الويب
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          
-          // إيقاف المسار بعد التحقق
-          stream.getTracks().forEach(track => track.stop());
-          
-          console.log('ScannerPermissionService: تم منح إذن كاميرا المتصفح');
-          return true;
-        } catch (error) {
-          console.error('ScannerPermissionService: تم رفض إذن كاميرا المتصفح:', error);
-          return false;
-        }
-      }
-      
-      // في حالة عدم وجود طريقة للتحقق، نفترض أن الإذن غير ممنوح
-      console.log('ScannerPermissionService: لا يوجد وسيلة للتحقق من الإذن، نفترض أنه غير ممنوح');
-      return false;
-    } catch (error) {
-      console.error('ScannerPermissionService: خطأ في التحقق من إذن الكاميرا:', error);
-      return false;
-    }
+    return await this.permissionStatusChecker.checkPermissionStatus();
   }
   
   /**
@@ -180,35 +129,7 @@ class ScannerPermissionService {
    * فتح إعدادات التطبيق
    */
   public async openAppSettings(): Promise<boolean> {
-    try {
-      if (Capacitor.isNativePlatform()) {
-        console.log('ScannerPermissionService: محاولة فتح إعدادات التطبيق...');
-        
-        // التحقق من وجود الدالة في الإصدارات المختلفة من Capacitor
-        const appSettings = App as any;
-        if (typeof appSettings.openSettings === 'function') {
-          await appSettings.openSettings();
-          return true;
-        } else {
-          console.warn('ScannerPermissionService: دالة فتح الإعدادات غير متوفرة في هذا الإصدار من Capacitor');
-          await Toast.show({
-            text: 'يرجى فتح إعدادات جهازك يدوياً وتمكين إذن الكاميرا',
-            duration: 'long'
-          });
-          return false;
-        }
-      } else {
-        console.log('ScannerPermissionService: غير قادر على فتح الإعدادات في بيئة الويب');
-        await Toast.show({
-          text: 'يرجى تمكين إذن الكاميرا من إعدادات المتصفح',
-          duration: 'long'
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error('ScannerPermissionService: خطأ في فتح إعدادات التطبيق:', error);
-      return false;
-    }
+    return await this.appSettingsOpener.openSettings();
   }
 }
 
