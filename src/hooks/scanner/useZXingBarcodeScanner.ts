@@ -48,22 +48,16 @@ export const useZXingBarcodeScanner = ({
         console.log('useZXingBarcodeScanner: نتيجة التحقق من الإذن:', permissionResult);
         
         setHasPermission(permissionResult);
-        
-        // إذا كان لديك إذن وتم تفعيل autoStart، نحاول تفعيل الكاميرا تلقائياً
-        if (permissionResult && autoStart) {
-          console.log('useZXingBarcodeScanner: لديك إذن للكاميرا، جاري محاولة تفعيلها تلقائياً...');
-        }
-        
+        setIsLoading(false);
       } catch (error) {
         console.error('useZXingBarcodeScanner: خطأ في التحقق من الأذونات:', error);
         setHasScannerError(true);
-      } finally {
         setIsLoading(false);
       }
     };
     
     checkPermissions();
-  }, [autoStart]);
+  }, []);
   
   // وظيفة لطلب إذن الكاميرا
   const requestPermission = useCallback(async () => {
@@ -71,60 +65,19 @@ export const useZXingBarcodeScanner = ({
       setIsLoading(true);
       
       console.log('useZXingBarcodeScanner: جاري طلب إذن الكاميرا...');
-      await Toast.show({
-        text: 'جاري طلب إذن الكاميرا...',
-        duration: 'short'
-      });
       
-      // محاولة طلب الإذن باستخدام MLKitBarcodeScanner أولاً
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          const status = await BarcodeScanner.checkPermissions();
-          
-          if (status.camera === 'granted') {
-            console.log('useZXingBarcodeScanner: إذن BarcodeScanner ممنوح بالفعل');
-            setHasPermission(true);
-            setIsLoading(false);
-            return true;
-          }
-          
-          const requestResult = await BarcodeScanner.requestPermissions();
-          if (requestResult.camera === 'granted') {
-            console.log('useZXingBarcodeScanner: تم منح إذن BarcodeScanner');
-            setHasPermission(true);
-            setIsLoading(false);
-            return true;
-          } else {
-            console.log('useZXingBarcodeScanner: تم رفض إذن BarcodeScanner');
-            setHasPermission(false);
-            setIsLoading(false);
-            return false;
-          }
-        } catch (e) {
-          console.error('useZXingBarcodeScanner: خطأ في طلب إذن BarcodeScanner:', e);
-        }
-      }
-      
-      // استخدام خدمة أذونات الماسح الضوئي العامة كاحتياطي
+      // استخدام خدمة أذونات الماسح الضوئي العامة
       const granted = await scannerPermissionService.requestPermission();
       console.log('useZXingBarcodeScanner: نتيجة طلب الإذن:', granted);
       
       setHasPermission(granted);
+      setIsLoading(false);
       
       if (granted) {
         await Toast.show({
-          text: 'تم منح إذن الكاميرا بنجاح! جاري تفعيل الكاميرا...',
+          text: 'تم منح إذن الكاميرا بنجاح!',
           duration: 'short'
         });
-        
-        // محاولة تفعيل الكاميرا بعد منح الإذن
-        const cameraActivated = await activateCamera();
-        
-        if (!cameraActivated) {
-          console.error('useZXingBarcodeScanner: فشل في تفعيل الكاميرا بعد منح الإذن');
-          setHasScannerError(true);
-          return false;
-        }
       } else {
         await Toast.show({
           text: 'تم رفض إذن الكاميرا، لن يتمكن الماسح من العمل بدون هذا الإذن',
@@ -136,9 +89,8 @@ export const useZXingBarcodeScanner = ({
     } catch (error) {
       console.error('useZXingBarcodeScanner: خطأ في طلب الإذن:', error);
       setHasScannerError(true);
-      return false;
-    } finally {
       setIsLoading(false);
+      return false;
     }
   }, []);
   
@@ -165,13 +117,7 @@ export const useZXingBarcodeScanner = ({
         }
       }
       
-      // محاولة تفعيل الكاميرا
-      await Toast.show({
-        text: 'جاري تفعيل الكاميرا...',
-        duration: 'short'
-      });
-      
-      // هنا يتم التفعيل الفعلي للكاميرا حسب المنصة
+      // تفعيل الكاميرا بشكل مباشر بدون إشعارات إضافية
       let activated = false;
       
       if (Capacitor.isNativePlatform()) {
@@ -190,43 +136,25 @@ export const useZXingBarcodeScanner = ({
             console.error('خطأ في تهيئة MLKitBarcodeScanner:', e);
           }
         } else {
-          console.log('MLKitBarcodeScanner غير متاح، جاري استخدام محاكاة الكاميرا للاختبار');
-          // محاكاة نجاح تفعيل الكاميرا للتجربة
+          // محاكاة نجاح تفعيل الكاميرا للتجربة على المنصات التي لا تدعم MLKit
+          console.log('محاكاة تفعيل الكاميرا للتجربة');
           activated = true;
         }
       } else {
-        console.log('نحن في بيئة الويب، استخدام محاكاة الكاميرا للاختبار');
-        // محاكاة نجاح تفعيل الكاميرا في بيئة الويب
+        // في بيئة الويب
+        console.log('نحن في بيئة الويب، محاكاة تفعيل الكاميرا');
         activated = true;
       }
       
       setCameraActive(activated);
-      
-      if (activated) {
-        await Toast.show({
-          text: 'تم تفعيل الكاميرا بنجاح',
-          duration: 'short'
-        });
-      } else {
-        await Toast.show({
-          text: 'تعذر تفعيل الكاميرا، يرجى المحاولة مرة أخرى',
-          duration: 'short'
-        });
-      }
+      setIsLoading(false);
       
       return activated;
     } catch (error) {
       console.error('useZXingBarcodeScanner: خطأ في تفعيل الكاميرا:', error);
       setHasScannerError(true);
-      
-      await Toast.show({
-        text: 'تعذر تفعيل الكاميرا، يرجى المحاولة مرة أخرى',
-        duration: 'short'
-      });
-      
-      return false;
-    } finally {
       setIsLoading(false);
+      return false;
     }
   }, [cameraActive, hasPermission, requestPermission]);
   
@@ -271,7 +199,7 @@ export const useZXingBarcodeScanner = ({
             }
           );
           
-          // بدء المسح باستخدام واجهة MLKit
+          // بدء المسح باستخدام واجهة MLKit مباشرة
           await BarcodeScanner.startScan();
           
           console.log('تم بدء مسح الباركود بنجاح');
@@ -283,8 +211,17 @@ export const useZXingBarcodeScanner = ({
           return false;
         }
       } else {
-        // في بيئة المحاكاة أو الويب، نقوم بمحاكاة نجاح بدء المسح
-        console.log('المسح جاهز، انتظار تحديد الباركود');
+        // في بيئة المحاكاة أو الويب
+        console.log('المسح جاهز في بيئة المحاكاة، انتظار تحديد الباركود');
+        
+        // محاكاة نجاح عملية المسح للاختبار
+        // في بيئة حقيقية، سيتم استخدام الكاميرا الفعلية
+        setTimeout(() => {
+          console.log('محاكاة اكتشاف باركود للاختبار');
+          // هذه للتجربة فقط - في بيئة الإنتاج سيتم استخدام باركود حقيقي
+          // onScan('mock-barcode-123456789');
+        }, 5000);
+        
         return true;
       }
     } catch (error) {
@@ -293,7 +230,7 @@ export const useZXingBarcodeScanner = ({
       setHasScannerError(true);
       return false;
     }
-  }, [cameraActive, activateCamera, onScan]);
+  }, [cameraActive, activateCamera, onScan, stopScan]);
   
   // وظيفة لإيقاف المسح
   const stopScan = useCallback(async () => {
@@ -302,6 +239,7 @@ export const useZXingBarcodeScanner = ({
       
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
+          // إيقاف المسح وإزالة المستمعين
           await BarcodeScanner.stopScan();
           console.log('تم إيقاف مسح الباركود');
         } catch (e) {

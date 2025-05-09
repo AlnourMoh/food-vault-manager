@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 interface ScannerLoadingProps {
   onClose: () => void;
@@ -10,11 +11,9 @@ interface ScannerLoadingProps {
 export const ScannerLoading: React.FC<ScannerLoadingProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90">
-      <div className="relative w-16 h-16 mb-4">
-        <div className="w-16 h-16 rounded-full border-4 border-t-white border-l-white border-r-transparent border-b-transparent animate-spin"></div>
-      </div>
+      <Spinner size="lg" className="mb-4 border-white border-t-transparent" />
       
-      <p className="text-white text-lg font-medium mb-8">جاري تحضير الماسح الضوئي...</p>
+      <p className="text-white text-lg font-medium mb-8">جاري تحضير الكاميرا...</p>
       
       <Button 
         variant="outline" 
