@@ -14,7 +14,7 @@ export const ScanButton: React.FC<ScanButtonProps> = ({
   onClick,
   isLoading,
   loadingText = 'جاري فتح الكاميرا...',
-  defaultText = 'امسح ادخال المنتج'
+  defaultText = 'امسح لادخال المنتج'
 }) => {
   return (
     <Button 
