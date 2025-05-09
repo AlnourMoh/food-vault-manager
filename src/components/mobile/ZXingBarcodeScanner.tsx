@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, RefreshCw } from 'lucide-react';
@@ -21,6 +22,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deviceHasCamera, setDeviceHasCamera] = useState<boolean>(true);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -120,6 +122,21 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           // في بيئة الويب، نفترض أن الماسح مدعوم دائمًا
           setIsInitialized(true);
           
+          // التحقق من وجود كاميرا متصلة بالجهاز
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const hasVideoDevice = devices.some(device => device.kind === 'videoinput');
+            
+            if (!hasVideoDevice) {
+              console.log('ZXingBarcodeScanner: لم يتم العثور على كاميرا متصلة بالجهاز');
+              setDeviceHasCamera(false);
+              setError('لا يوجد كاميرا متصلة بهذا الجهاز');
+              return;
+            }
+          } catch (e) {
+            console.error('خطأ في التحقق من توفر الكاميرا:', e);
+          }
+          
           // بدء المسح تلقائياً في بيئة الويب إذا كان مطلوباً
           if (autoStart) {
             setTimeout(() => {
@@ -149,26 +166,46 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
         return;
       }
       
-      // طلب الوصول إلى الكاميرا
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' }
-      });
-      
-      if (!videoRef.current) return;
-      
-      // تخزين المسار لاستخدامه لاحقًا عند التنظيف
-      streamRef.current = stream;
-      
-      // تعيين المسار للفيديو
-      videoRef.current.srcObject = stream;
-      videoRef.current.play();
-      
-      setIsScanning(true);
-      setHasPermission(true);
-      
-      // هنا يمكن إضافة كود لمسح الباركود من الفيديو
-      // لكن في هذا المثال، سنستخدم وظيفة محاكاة فقط للتجربة
-      simulateBarcodeDetection();
+      // محاولة الوصول إلى الكاميرا مع معالجة خطأ عدم وجود جهاز
+      try {
+        // طلب الوصول إلى الكاميرا
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        
+        if (!videoRef.current) return;
+        
+        // تخزين المسار لاستخدامه لاحقًا عند التنظيف
+        streamRef.current = stream;
+        
+        // تعيين المسار للفيديو
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        
+        setIsScanning(true);
+        setHasPermission(true);
+        
+        // هنا يمكن إضافة كود لمسح الباركود من الفيديو
+        // لكن في هذا المثال، سنستخدم وظيفة محاكاة فقط للتجربة
+        simulateBarcodeDetection();
+      } catch (error: any) {
+        console.error('خطأ في بدء الكاميرا:', error);
+        
+        // التعامل مع خطأ عدم وجود الجهاز بشكل خاص
+        if (error.name === 'NotFoundError') {
+          setDeviceHasCamera(false);
+          setError('لا يوجد كاميرا متصلة بهذا الجهاز. يرجى التأكد من وجود كاميرا وأنها متاحة.');
+        } else if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          setHasPermission(false);
+          setError('تم رفض إذن الوصول إلى الكاميرا');
+        } else {
+          setError('تعذر الوصول إلى الكاميرا: ' + error.message);
+        }
+      }
     } catch (error) {
       console.error('خطأ في بدء الكاميرا:', error);
       setError('تعذر الوصول إلى الكاميرا');
@@ -218,7 +255,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           
           // تعيين معالج للاستجابة
           const listener = await BarcodeScanner.addListener(
-            "barcodesScanned", // FIXED: Corrected event name from "barcodeScanned" to "barcodesScanned"
+            "barcodesScanned", // إصلاح: تصحيح اسم الحدث من "barcodeScanned" إلى "barcodesScanned"
             async result => {
               console.log('تم مسح الباركود:', result);
               
@@ -294,6 +331,10 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
           // في بيئة الويب، نحاول مرة أخرى
           startWebCamera();
         }
+      } else if (!deviceHasCamera) {
+        // إظهار رسالة توضح للمستخدم أنه لا توجد كاميرا
+        setError('لا يوجد كاميرا متصلة بهذا الجهاز. يرجى توصيل كاميرا والمحاولة مرة أخرى.');
+        simulateBarcodeDetection(); // استخدام محاكاة الباركود للتجربة
       } else {
         // إعادة تشغيل المسح
         if (isInitialized) {
@@ -360,7 +401,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       {/* منطقة المسح */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
         {/* عنصر الفيديو للويب */}
-        {!Capacitor.isNativePlatform() && (
+        {!Capacitor.isNativePlatform() && deviceHasCamera && (
           <div className="w-full relative flex flex-col items-center">
             <video 
               ref={videoRef}
@@ -384,6 +425,22 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+        
+        {/* حالة عدم وجود كاميرا */}
+        {!deviceHasCamera && !error && (
+          <div className="bg-orange-500/20 p-6 rounded-lg text-white text-center mb-4">
+            <p className="font-semibold text-lg mb-2">لا يوجد كاميرا متصلة بهذا الجهاز</p>
+            <p className="mb-4">هذا التطبيق يتطلب كاميرا لمسح الباركود. يمكنك تجربة محاكاة مسح الباركود بالنقر على الزر أدناه.</p>
+            <Button 
+              onClick={() => simulateBarcodeDetection()}
+              size="sm"
+              variant="outline"
+              className="border-white text-white hover:bg-white/20"
+            >
+              محاكاة مسح الباركود
+            </Button>
           </div>
         )}
         
