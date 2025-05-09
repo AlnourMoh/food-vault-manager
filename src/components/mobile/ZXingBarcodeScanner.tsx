@@ -33,7 +33,12 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   
   // عرض شاشة طلب الإذن
   if (hasPermission === false) {
-    return <PermissionRequestView onRequestPermission={requestPermission} onClose={onClose} />;
+    return <PermissionRequestView 
+      onRequestPermission={async () => {
+        await requestPermission();
+      }} 
+      onClose={onClose} 
+    />;
   }
   
   // عرض شاشة الخطأ
