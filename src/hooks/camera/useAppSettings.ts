@@ -15,8 +15,10 @@ export const useAppSettings = () => {
       
       // على نظام Android
       if (platform === 'android') {
+        // نحتاج إلى معرف التطبيق للاستخدام في URL
+        const appInfo = await App.getInfo();
         await Browser.open({
-          url: 'package:' + App.getId()
+          url: 'package:' + appInfo.id
         });
         return true;
       } 

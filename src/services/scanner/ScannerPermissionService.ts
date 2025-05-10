@@ -1,4 +1,3 @@
-
 /**
  * خدمة إدارة أذونات الماسح الضوئي
  */
@@ -33,7 +32,7 @@ export class ScannerPermissionService {
       console.log('ScannerPermissionService: المنصة:', Capacitor.getPlatform());
       console.log('ScannerPermissionService: بيئة نظام أصلي؟', Capacitor.isNativePlatform());
       
-      // في بيئة التطبيق الأصلي
+      // في بيئة التط��يق الأصلي
       if (Capacitor.isNativePlatform()) {
         // تحقق من وجود ملحقات الكاميرا
         if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
@@ -245,9 +244,11 @@ export class ScannerPermissionService {
       // على نظام Android
       if (platform === 'android') {
         try {
+          // الحصول على معلومات التطبيق
+          const appInfo = await App.getInfo();
           // استخدام Browser بدلاً من App.openUrl
           await Browser.open({
-            url: 'package:' + App.getId()
+            url: 'package:' + appInfo.id
           });
           return true;
         } catch (error) {
@@ -314,7 +315,7 @@ export class ScannerPermissionService {
     try {
       console.log('ScannerPermissionService: التحقق من دعم الماسح الضوئي');
       
-      // في بيئة التطبيق الأصلي
+      // في بيئة التط��يق الأصلي
       if (Capacitor.isNativePlatform()) {
         // التحقق من وجود ملحقات الماسح الضوئي
         const hasMLKit = Capacitor.isPluginAvailable('MLKitBarcodeScanner');
