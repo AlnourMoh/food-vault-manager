@@ -84,7 +84,7 @@ export const useBarcodeScanning = ({
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.error('[useBarcodeScanning] WebRTC غير مدعوم في هذا المتصفح');
           setHasScannerError(true);
-          if (onScanError) onScanError('متصفحك لا يدعم الوصول إلى الكاميرا');
+          if (onScanError) onScanError('متصفح�� لا يدعم الوصول إلى الكاميرا');
           return;
         }
         
@@ -110,7 +110,7 @@ export const useBarcodeScanning = ({
   }, [onScanError]);
   
   // وظيفة طلب تصاريح الكاميرا
-  const requestCameraPermission = useCallback(async (): Promise<boolean> => {
+  const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
       console.log('[useBarcodeScanning] طلب تصريح الكاميرا');
       
@@ -159,7 +159,7 @@ export const useBarcodeScanning = ({
       
       if (!hasPermission) {
         console.log('[useBarcodeScanning] لا يوجد تصريح للكاميرا، محاولة طلب التصريح');
-        const granted = await requestCameraPermission();
+        const granted = await requestPermission();
         if (!granted) {
           console.warn('[useBarcodeScanning] لم يتم منح تصريح الكاميرا');
           return false;
@@ -183,7 +183,7 @@ export const useBarcodeScanning = ({
         }
         
         try {
-          // في حالة وجود مسار كاميرا نشط، نغلقه أولاً
+          // في حالة وجو�� مسار كاميرا نشط، نغلقه أولاً
           if (webStreamRef) {
             webStreamRef.getTracks().forEach(track => track.stop());
           }
@@ -297,15 +297,15 @@ export const useBarcodeScanning = ({
           }
         });
         
-        // بدء المسح
+        // بدء المسح - استخدام القيم الحرفية مباشرةً بدلاً من الثوابت
         await BarcodeScanner.startScan({
           formats: [
-            BarcodeFormat.QrCode, 
-            BarcodeFormat.Ean13, 
-            BarcodeFormat.Ean8, 
-            BarcodeFormat.Code128
+            "qr_code",    // بدلاً من BarcodeFormat.QrCode
+            "ean_13",     // بدلاً من BarcodeFormat.Ean13
+            "ean_8",      // بدلاً من BarcodeFormat.Ean8
+            "code_128"    // بدلاً من BarcodeFormat.Code128
           ],
-          lensFacing: LensFacing.Back,
+          lensFacing: "back", // بدلاً من LensFacing.Back
         });
         
         setCameraActive(true);
@@ -347,7 +347,7 @@ export const useBarcodeScanning = ({
     onScanError, 
     onScanComplete, 
     prepareWebRTC, 
-    requestCameraPermission
+    requestPermission
   ]);
 
   // وظيفة إيقاف المسح
@@ -454,7 +454,7 @@ export const useBarcodeScanning = ({
     hasScannerError,
     hasPermissionError,
     retryScanning,
-    requestCameraPermission,
+    requestPermission,
     openAppSettings
   };
 };

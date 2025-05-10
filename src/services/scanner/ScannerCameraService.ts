@@ -252,15 +252,15 @@ export class ScannerCameraService {
   public getScanFormatOptions() {
     return {
       formats: [
-        BarcodeFormat.QrCode,
-        BarcodeFormat.UpcA,
-        BarcodeFormat.UpcE,
-        BarcodeFormat.Ean8,
-        BarcodeFormat.Ean13,
-        BarcodeFormat.Code39,
-        BarcodeFormat.Code128,
-        BarcodeFormat.Itf,
-        BarcodeFormat.Codabar
+        "qr_code",    // بدلاً من BarcodeFormat.QrCode
+        "upc_a",      // بدلاً من BarcodeFormat.UpcA
+        "upc_e",      // بدلاً من BarcodeFormat.UpcE
+        "ean_8",      // بدلاً من BarcodeFormat.Ean8
+        "ean_13",     // بدلاً من BarcodeFormat.Ean13
+        "code_39",    // بدلاً من BarcodeFormat.Code39
+        "code_128",   // بدلاً من BarcodeFormat.Code128
+        "itf",        // بدلاً من BarcodeFormat.Itf
+        "codabar"     // بدلاً من BarcodeFormat.Codabar
       ]
     };
   }
