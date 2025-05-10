@@ -23,7 +23,6 @@ export const useZXingBarcodeScanner = ({
 
   const { 
     cameraActive,
-    isScanningActive: scannerActive,
     startScan,
     stopScan,
     setCameraActive,
@@ -125,4 +124,3 @@ export const useZXingBarcodeScanner = ({
     openAppSettings
   };
 };
-
