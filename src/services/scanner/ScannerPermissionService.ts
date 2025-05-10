@@ -336,8 +336,10 @@ export class ScannerPermissionService {
           // الحصول على معلومات التطبيق
           const appInfo = await App.getInfo();
           
-          // فتح صفحة إعدادات التطبيق
-          await App.openUrl(`package:${appInfo.id}`);
+          // فتح صفحة إعدادات التطبيق باستخدام Browser.open بدلاً من App.openUrl
+          await Browser.open({
+            url: `package:${appInfo.id}`
+          });
           
           // محاولة إضافية باستخدام منهج آخر
           setTimeout(async () => {
@@ -385,9 +387,11 @@ export class ScannerPermissionService {
             return true;
           }
           
-          // بديل: استخدام App plugin للذهاب إلى الإعدادات
-          console.log('ScannerPermissionService: استخدام App plugin لفتح الإعدادات');
-          await App.openUrl('app-settings:');
+          // بديل: استخدام Browser.open للذهاب إلى الإعدادات
+          console.log('ScannerPermissionService: استخدام Browser.open لفتح الإعدادات');
+          await Browser.open({
+            url: 'app-settings:'
+          });
           
           return true;
         } catch (error) {
