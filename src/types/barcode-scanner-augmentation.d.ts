@@ -18,6 +18,12 @@ export enum BarcodeFormat {
   Pdf417 = "pdf417"
 }
 
+// تعريف اتجاه الكاميرا
+export enum LensFacing {
+  Front = "front",
+  Back = "back"
+}
+
 // تعريف نتيجة الكشف عن الباركود
 export interface BarcodeDetectorResult {
   boundingBox: DOMRectReadOnly;
@@ -38,6 +44,11 @@ export class BarcodeDetector {
   detect(image: ImageBitmapSource): Promise<Array<BarcodeDetectorResult>>;
 }
 
+// تعريف نوع المستمعين والأحداث
+export interface BarcodeScanListener {
+  (result: { barcodes: Array<{ rawValue: string, format?: string }> }): void;
+}
+
 // إضافة توسعة لواجهة الباركود سكانر من MLKit
 export interface BarcodeScannerPlugin {
   // الوظائف الأصلية
@@ -45,14 +56,26 @@ export interface BarcodeScannerPlugin {
   checkPermissions(): Promise<{ camera: 'granted' | 'denied' | 'prompt' }>;
   requestPermissions(): Promise<{ camera: 'granted' | 'denied' | 'prompt' }>;
   
-  // إضافة الوظائف المفقودة
-  prepare(): Promise<void>;
+  // إضافة وظائف معالجة المستمعين
+  addListener(eventName: string, listenerFunc: BarcodeScanListener): Promise<{ remove: () => Promise<void> }>;
+  removeAllListeners(): Promise<void>;
+  
+  // إضافة وظائف الماسح
+  startScan(options?: { formats?: BarcodeFormat[], lensFacing?: LensFacing }): Promise<void>;
   stopScan(): Promise<void>;
+  
+  // إضافة وظائف الإعداد والتهيئة
+  prepare(): Promise<void>;
+  isSupported(): Promise<{ supported: boolean }>;
+  openSettings(): Promise<void>;
+  
+  // إضافة وظائف الخلفية والواجهة
   hideBackground(): Promise<void>;
   showBackground(): Promise<void>;
-  isSupported(): Promise<{ supported: boolean }>;
-  disableTorch(): Promise<void>;
+  
+  // إضافة وظائف الإضاءة
   enableTorch(): Promise<void>;
+  disableTorch(): Promise<void>;
   toggleTorch(): Promise<void>;
   isTorchAvailable(): Promise<{ available: boolean }>;
 }
@@ -60,5 +83,5 @@ export interface BarcodeScannerPlugin {
 // إعلان عن وجود BarcodeScanner في الحزمة
 declare module '@capacitor-mlkit/barcode-scanning' {
   export const BarcodeScanner: BarcodeScannerPlugin;
-  export { BarcodeFormat };
+  export { BarcodeFormat, LensFacing };
 }
