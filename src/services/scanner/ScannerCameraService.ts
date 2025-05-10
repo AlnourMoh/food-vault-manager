@@ -13,6 +13,7 @@ export class ScannerCameraService {
   private initializationTimeout: number = 10000; // 10 ثواني كحد أقصى للتهيئة
   private initializationAttempts: number = 0;
   private maxAttempts: number = 3;
+  private mockModeEnabled: boolean = false;
   
   private constructor() {
     console.log('[ScannerCameraService] تهيئة خدمة الكاميرا');
@@ -212,7 +213,6 @@ export class ScannerCameraService {
         BarcodeScanner.disableTorch().catch(() => console.log('[ScannerCameraService] تجاهل خطأ إيقاف الفلاش')),
         BarcodeScanner.stopScan().catch(() => console.log('[ScannerCameraService] تجاهل خطأ إيقاف المسح')),
         BarcodeScanner.showBackground().catch(() => console.log('[ScannerCameraService] تجاهل خطأ إظهار الخلفية'))
-        // تم إزالة استدعاء enableCamera لأنه غير موجود في واجهة BarcodeScannerPlugin
       ];
       
       // تنفيذ كل العمليات بالتوازي
@@ -233,15 +233,15 @@ export class ScannerCameraService {
   public getScanFormatOptions() {
     return {
       formats: [
-        "qr_code",    // بدلاً من BarcodeFormat.QrCode
-        "upc_a",      // بدلاً من BarcodeFormat.UpcA
-        "upc_e",      // بدلاً من BarcodeFormat.UpcE
-        "ean_8",      // بدلاً من BarcodeFormat.Ean8
-        "ean_13",     // بدلاً من BarcodeFormat.Ean13
-        "code_39",    // بدلاً من BarcodeFormat.Code39
-        "code_128",   // بدلاً من BarcodeFormat.Code128
-        "itf",        // بدلاً من BarcodeFormat.Itf
-        "codabar"     // بدلاً من BarcodeFormat.Codabar
+        "qr_code",    
+        "upc_a",      
+        "upc_e",      
+        "ean_8",      
+        "ean_13",     
+        "code_39",    
+        "code_128",   
+        "itf",        
+        "codabar"     
       ]
     };
   }
@@ -290,6 +290,21 @@ export class ScannerCameraService {
       console.error('[ScannerCameraService] خطأ في إعادة تعيين الكاميرا:', error);
       return false;
     }
+  }
+  
+  /**
+   * التحقق مما إذا كان وضع المحاكاة مفعل
+   */
+  public isMockMode(): boolean {
+    return this.mockModeEnabled;
+  }
+  
+  /**
+   * تمكين أو تعطيل وضع المحاكاة
+   */
+  public enableMockMode(enable: boolean): void {
+    console.log(`[ScannerCameraService] ${enable ? 'تمكين' : 'تعطيل'} وضع المحاكاة`);
+    this.mockModeEnabled = enable;
   }
 }
 

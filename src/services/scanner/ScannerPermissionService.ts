@@ -214,10 +214,15 @@ class ScannerPermissionService {
         return false;
       }
       
-      // فتح إعدادات التطبيق
-      await App.openSettings();
-      console.log('[ScannerPermissionService] تم فتح إعدادات التطبيق');
-      return true;
+      // فتح إعدادات التطبيق - تصحيح استخدام App.openSettings
+      if (App && typeof App.openSettings === 'function') {
+        await App.openSettings();
+        console.log('[ScannerPermissionService] تم فتح إعدادات التطبيق');
+        return true;
+      } else {
+        console.error('[ScannerPermissionService] App.openSettings غير متوفر');
+        return false;
+      }
     } catch (error) {
       console.error('[ScannerPermissionService] خطأ في فتح إعدادات التطبيق:', error);
       return false;

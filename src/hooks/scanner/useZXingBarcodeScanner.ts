@@ -21,13 +21,14 @@ export const useZXingBarcodeScanner = ({
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
+  const [cameraActive, setCameraActive] = useState(false);
 
   const { 
-    cameraActive,
+    cameraActive: isCameraActive,
     isScanningActive,
     startScan,
     stopScan,
-    setCameraActive,
+    hasScannerError
   } = useBarcodeScanning({
     onScan,
     onScanError: (error: string) => {
@@ -41,9 +42,13 @@ export const useZXingBarcodeScanner = ({
     }
   });
 
+  // ضبط حالة تنشيط الكاميرا بناءً على الحالة المشتركة
+  useEffect(() => {
+    setCameraActive(isCameraActive);
+  }, [isCameraActive]);
+
   const { handleRetry } = useScannerRetry({
     setHasScannerError: setScannerError,
-    setCameraActive,
     activateCamera: async () => {
       return await startScan();
     },
@@ -155,8 +160,10 @@ export const useZXingBarcodeScanner = ({
     isLoading,
     hasPermission,
     cameraActive,
+    setCameraActive, // نصدر هذه الوظيفة للسماح بتحديث الحالة خارجيًا
     isScanningActive,
     scannerError,
+    hasScannerError, // إضافة مؤشر أخطاء الماسح
     requestPermission,
     handleRetry,
     openAppSettings,
