@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useZXingBarcodeScanner } from '@/hooks/scanner/useZXingBarcodeScanner';
 import { ScannerLoadingView } from './scanner/components/ScannerLoadingView';
@@ -9,6 +8,7 @@ import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { NoPermissionView } from './scanner/NoPermissionView';
+import { Button } from '@/components/ui/button';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
