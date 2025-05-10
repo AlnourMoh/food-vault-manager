@@ -1,11 +1,8 @@
 
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Camera, Keyboard, X, Settings, RefreshCw } from 'lucide-react';
-import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import { Button } from '@/components/ui/card';
+import { Camera, Settings, Keyboard, RefreshCw, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Capacitor } from '@capacitor/core';
 
 interface NoPermissionViewProps {
   onClose: () => void;
@@ -19,46 +16,12 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
   onManualEntry 
 }) => {
   const [isRequesting, setIsRequesting] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
   const { toast } = useToast();
   
   const handleRequestPermission = async () => {
     try {
       setIsRequesting(true);
-      
-      // عرض رسالة للمستخدم
-      toast({
-        title: "جاري طلب الإذن",
-        description: "يرجى السماح باستخدام الكاميرا عند ظهور النافذة"
-      });
-      
-      // طلب الإذن
-      const granted = await onRequestPermission();
-      
-      if (!granted) {
-        // زيادة عداد المحاولات الفاشلة
-        setFailedAttempts(prev => prev + 1);
-        
-        // عرض رسالة مناسبة بناءً على عدد المحاولات
-        if (failedAttempts >= 1) {
-          toast({
-            title: "تم رفض الإذن عدة مرات",
-            description: "يبدو أنك بحاجة لتمكين إذن الكاميرا من إعدادات جهازك",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "تم رفض الإذن",
-            description: "يرجى تمكين إذن الكاميرا للاستمرار",
-            variant: "destructive"
-          });
-        }
-      } else {
-        toast({
-          title: "تم منح الإذن",
-          description: "يمكنك الآن استخدام الماسح الضوئي"
-        });
-      }
+      await onRequestPermission();
     } catch (error) {
       console.error('خطأ في طلب الإذن:', error);
       toast({
@@ -71,111 +34,70 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
     }
   };
   
-  const handleOpenSettings = async () => {
-    try {
-      toast({
-        title: "فتح الإعدادات",
-        description: "جاري توجيهك إلى إعدادات التطبيق"
-      });
-      
-      await scannerPermissionService.openAppSettings();
-    } catch (error) {
-      console.error('خطأ في فتح الإعدادات:', error);
-      toast({
-        title: "خطأ",
-        description: "تعذر فتح إعدادات التطبيق",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // تحديد نوع الجهاز والمنصة
-  const platform = Capacitor.getPlatform();
-  const isNative = Capacitor.isNativePlatform();
-
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center">
-      <Card className="p-4 m-4 bg-background max-w-md w-full">
-        <div className="flex flex-col items-center justify-center py-6 space-y-4">
-          <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center">
-            <Camera className="h-8 w-8" />
-          </div>
+    <div className="fixed inset-0 z-50 bg-white flex flex-col items-center">
+      {/* Red Error Banner */}
+      <div className="bg-red-500 text-white w-full p-4 text-center shadow-md">
+        <h2 className="font-bold text-xl">تم رفض الإذِن</h2>
+        <p>يرجى تمكين إذن الكاميرا للاستمرار</p>
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 w-full">
+        <h1 className="text-3xl font-bold mb-2">فشل تفعيل الكاميرا</h1>
+        <h2 className="text-xl text-red-600 mb-6">لم يتم منح إذن الوصول للكاميرا</h2>
+        
+        <p className="text-center text-gray-700 mb-10">
+          يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي للباركود
+        </p>
+        
+        <div className="w-full space-y-3">
+          <Button 
+            onClick={handleRequestPermission}
+            className="w-full bg-blue-500 text-white hover:bg-blue-600 p-4 rounded-md flex items-center justify-center"
+            disabled={isRequesting}
+          >
+            <RefreshCw className={`h-5 w-5 ml-2 ${isRequesting ? 'animate-spin' : ''}`} />
+            {isRequesting ? 'جاري الطلب...' : 'محاولة مجددًا'}
+          </Button>
           
-          <h3 className="text-xl font-bold text-center">فشل تفعيل الكاميرا</h3>
-          <h4 className="text-lg font-medium text-red-600 text-center">لم يتم منح إذن الوصول للكاميرا</h4>
+          <Button 
+            onClick={onClose}
+            className="w-full bg-blue-100 text-blue-800 hover:bg-blue-200 p-4 rounded-md flex items-center justify-center"
+          >
+            <Settings className="h-5 w-5 ml-2" />
+            فتح إعدادات الجهاز
+          </Button>
           
-          <p className="text-center text-muted-foreground">
-            يرجى السماح بالوصول إلى الكاميرا لاستخدام الماسح الضوئي للباركود
-          </p>
-          
-          <div className="flex flex-col w-full space-y-2">
+          {onManualEntry && (
             <Button 
-              onClick={handleRequestPermission}
-              className="w-full"
-              variant="default"
-              disabled={isRequesting}
+              onClick={onManualEntry}
+              className="w-full bg-blue-100 text-blue-800 hover:bg-blue-200 p-4 rounded-md flex items-center justify-center"
             >
-              <RefreshCw className={`h-4 w-4 ml-2 ${isRequesting ? 'animate-spin' : ''}`} />
-              {isRequesting ? 'جاري طلب الإذن...' : 'محاولة مجددًا'}
+              <Keyboard className="h-5 w-5 ml-2" />
+              إدخال الكود يدويًا
             </Button>
-            
-            <Button 
-              onClick={handleOpenSettings}
-              className="w-full"
-              variant="secondary"
-            >
-              <Settings className="h-4 w-4 ml-2" />
-              فتح إعدادات الجهاز
-            </Button>
-            
-            {onManualEntry && (
-              <Button 
-                onClick={onManualEntry}
-                className="w-full"
-                variant="secondary"
-              >
-                <Keyboard className="h-4 w-4 ml-2" />
-                إدخال الكود يدويًا
-              </Button>
-            )}
-            
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="w-full"
-            >
-              <X className="h-4 w-4 ml-2" />
-              إغلاق
-            </Button>
-          </div>
+          )}
           
-          {/* تقديم إرشادات محددة بناءً على المنصة */}
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-700 mt-4 w-full">
-            <p className="font-medium">نصائح لتمكين الكاميرا:</p>
-            <ul className="list-disc list-inside mt-1 space-y-1">
-              {platform === 'ios' ? (
-                <>
-                  <li>افتح الإعدادات على جهازك</li>
-                  <li>انتقل إلى الخصوصية والأمان &gt; الكاميرا</li>
-                  <li>ابحث عن التطبيق وقم بتمكين الوصول للكاميرا</li>
-                </>
-              ) : platform === 'android' ? (
-                <>
-                  <li>افتح الإعدادات على جهازك</li>
-                  <li>انتقل إلى التطبيقات &gt; مخزن الطعام &gt; الأذونات</li>
-                  <li>قم بتمكين إذن الكاميرا</li>
-                </>
-              ) : (
-                <>
-                  <li>انقر على أيقونة القفل/معلومات بجوار عنوان URL</li>
-                  <li>اختر 'أذونات الموقع' أو 'الإعدادات'</li>
-                  <li>قم بتمكين إذن الكاميرا</li>
-                </>
-              )}
-            </ul>
-          </div>
+          <Button 
+            onClick={onClose}
+            className="w-full bg-white border border-gray-300 text-gray-800 hover:bg-gray-100 p-4 rounded-md flex items-center justify-center"
+          >
+            <X className="h-5 w-5 ml-2" />
+            إغلاق
+          </Button>
         </div>
-      </Card>
+        
+        {/* Tips Box */}
+        <div className="mt-10 bg-yellow-50 border border-yellow-200 rounded-md p-4 w-full">
+          <h3 className="font-bold text-amber-800 mb-2">نصائح لتمكين الكاميرا:</h3>
+          <ul className="list-disc list-inside space-y-1 text-amber-700">
+            <li>انقر على أيقونة القفل/معلومات بجوار عنوان URL</li>
+            <li>اختر "أذونات الموقع" أو "الإعدادات"</li>
+            <li>قم بتمكين إذن الكاميرا</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };

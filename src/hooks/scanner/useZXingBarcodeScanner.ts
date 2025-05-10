@@ -23,6 +23,7 @@ export const useZXingBarcodeScanner = ({
 
   const { 
     cameraActive,
+    isScanningActive,
     startScan,
     stopScan,
     setCameraActive,
@@ -111,13 +112,13 @@ export const useZXingBarcodeScanner = ({
   // فحص الأذونات عند تحميل المكون
   useEffect(() => {
     checkPermissions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
     isLoading,
     hasPermission,
     cameraActive,
+    isScanningActive,
     scannerError,
     requestPermission,
     handleRetry,

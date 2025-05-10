@@ -58,24 +58,29 @@ export const useBarcodeScanning = ({
         }
       }
 
-      // إضافة مستمع للأحداث إذا لم يكن موجوداً بالفعل
-      if (!listenerRef.current) {
-        console.log('[useBarcodeScanning] إضافة مستمع لأحداث المسح');
-        listenerRef.current = await BarcodeScanner.addListener(
-          'barcodesScanned',
-          (result) => {
-            console.log('[useBarcodeScanning] تم مسح الرمز:', result);
-            if (result.barcodes && result.barcodes.length > 0) {
-              const barcode = result.barcodes[0];
-              if (barcode.rawValue) {
-                onScan(barcode.rawValue);
-                stopScan();
-                onScanComplete();
-              }
+      // إزالة المستمع القديم إن وجد
+      if (listenerRef.current) {
+        console.log('[useBarcodeScanning] إزالة المستمع القديم');
+        await listenerRef.current.remove();
+        listenerRef.current = null;
+      }
+
+      // إضافة مستمع للأحداث
+      console.log('[useBarcodeScanning] إضافة مستمع لأحداث المسح');
+      listenerRef.current = await BarcodeScanner.addListener(
+        'barcodesScanned',
+        (result) => {
+          console.log('[useBarcodeScanning] تم مسح الرمز:', result);
+          if (result.barcodes && result.barcodes.length > 0) {
+            const barcode = result.barcodes[0];
+            if (barcode.rawValue) {
+              onScan(barcode.rawValue);
+              stopScan();
+              onScanComplete();
             }
           }
-        );
-      }
+        }
+      );
 
       // بدء المسح
       console.log('[useBarcodeScanning] بدء عملية المسح');
@@ -99,7 +104,7 @@ export const useBarcodeScanning = ({
       // تنظيف المستمع
       if (listenerRef.current) {
         console.log('[useBarcodeScanning] إزالة مستمع أحداث المسح');
-        listenerRef.current.remove();
+        await listenerRef.current.remove();
         listenerRef.current = null;
       }
 

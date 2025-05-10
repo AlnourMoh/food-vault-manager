@@ -25,7 +25,8 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     isLoading,
     hasPermission,
     cameraActive,
-    scannerError: hasScannerError,
+    isScanningActive,
+    scannerError,
     requestPermission,
     handleRetry,
     openAppSettings
@@ -97,16 +98,20 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   }
   
   // عرض شاشة الخطأ
-  if (hasScannerError) {
+  if (scannerError) {
     return <ScannerErrorView 
-      errorMessage={"حدث خطأ في الماسح الضوئي"} 
+      errorMessage={scannerError} 
       onRetry={handleRetry} 
       onClose={onClose} 
     />;
   }
   
   // عرض الكاميرا النشطة
-  return <ActiveScannerView cameraActive={cameraActive} onClose={onClose} />;
+  return <ActiveScannerView 
+    cameraActive={cameraActive} 
+    isScanningActive={isScanningActive}
+    onClose={onClose} 
+  />;
 };
 
 export default ZXingBarcodeScanner;
