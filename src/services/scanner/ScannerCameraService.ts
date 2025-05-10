@@ -1,4 +1,5 @@
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
 import '@/types/barcode-scanner-augmentation.d.ts';
@@ -12,14 +13,9 @@ export class ScannerCameraService {
   private initializationTimeout: number = 10000; // 10 ثواني كحد أقصى للتهيئة
   private initializationAttempts: number = 0;
   private maxAttempts: number = 3;
-  private mockCamera: boolean = false;
   
   private constructor() {
-    // التحقق مما إذا كنا في بيئة الويب وإن كانت الكاميرا غير متوفرة
-    if (!Capacitor.isNativePlatform() && !this.isWebCameraAvailable()) {
-      console.log('[ScannerCameraService] نحن في بيئة الويب والكاميرا غير متوفرة، سنستخدم وضع المحاكاة');
-      this.mockCamera = true;
-    }
+    console.log('[ScannerCameraService] تهيئة خدمة الكاميرا');
   }
   
   public static getInstance(): ScannerCameraService {
@@ -42,12 +38,6 @@ export class ScannerCameraService {
   public async isScannerSupported(): Promise<boolean> {
     try {
       console.log('[ScannerCameraService] التحقق من دعم الماسح...');
-      
-      // إذا كنا في وضع المحاكاة
-      if (this.mockCamera) {
-        console.log('[ScannerCameraService] وضع المحاكاة نشط، سنفترض أن الماسح مدعوم');
-        return true;
-      }
       
       // التحقق من توفر ملحق MLKit
       if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
@@ -89,7 +79,7 @@ export class ScannerCameraService {
   }
   
   /**
-   * تحضير وإعداد الكاميرا للمسح - تم تحسينها للاستج��بة السريعة
+   * تحضير وإعداد الكاميرا للمسح - تم تحسينها للاستجابة السريعة
    */
   public async prepareCamera(): Promise<boolean> {
     try {
@@ -107,13 +97,6 @@ export class ScannerCameraService {
           duration: 'long'
         });
         return false;
-      }
-      
-      // إذا كنا في وضع المحاكاة
-      if (this.mockCamera) {
-        console.log('[ScannerCameraService] تشغيل وضع المحاكاة للكاميرا');
-        this.isCameraReady = true;
-        return true;
       }
       
       // في بيئة الويب
@@ -138,10 +121,8 @@ export class ScannerCameraService {
             return false;
           }
         } else {
-          console.log('[ScannerCameraService] كاميرا الويب غير مدعومة، تفعيل وضع المحاكاة');
-          this.mockCamera = true;
-          this.isCameraReady = true;
-          return true;
+          console.log('[ScannerCameraService] كاميرا الويب غير مدعومة');
+          return false;
         }
       }
       
@@ -219,9 +200,9 @@ export class ScannerCameraService {
     try {
       console.log('[ScannerCameraService] تنظيف موارد الكاميرا...');
       
-      // إذا كنا في وضع المحاكاة أو ويب
-      if (this.mockCamera || !Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('[ScannerCameraService] وضع المحاكاة أو ويب، تعيين الحالة فقط');
+      // إذا كنا في ويب
+      if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('[ScannerCameraService] ويب، تعيين الحالة فقط');
         this.isCameraReady = false;
         return;
       }
@@ -270,7 +251,7 @@ export class ScannerCameraService {
    */
   public async toggleTorch(): Promise<void> {
     try {
-      if (this.mockCamera || !Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+      if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[ScannerCameraService] غير قادر على تبديل الفلاش في هذه البيئة');
         return;
       }
@@ -309,21 +290,6 @@ export class ScannerCameraService {
       console.error('[ScannerCameraService] خطأ في إعادة تعيين الكاميرا:', error);
       return false;
     }
-  }
-  
-  /**
-   * تعيين حالة المحاكاة - مفيد للبيئات التي لا تدعم الكاميرا
-   */
-  public enableMockMode(enable: boolean = true): void {
-    console.log(`[ScannerCameraService] تعيين وضع المحاكاة: ${enable}`);
-    this.mockCamera = enable;
-  }
-  
-  /**
-   * التحقق مما إذا كنا في وضع المحاكاة
-   */
-  public isMockMode(): boolean {
-    return this.mockCamera;
   }
 }
 
