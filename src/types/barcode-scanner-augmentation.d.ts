@@ -37,3 +37,28 @@ export class BarcodeDetector {
   static getSupportedFormats(): Promise<Array<BarcodeFormat>>;
   detect(image: ImageBitmapSource): Promise<Array<BarcodeDetectorResult>>;
 }
+
+// إضافة توسعة لواجهة الباركود سكانر من MLKit
+export interface BarcodeScannerPlugin {
+  // الوظائف الأصلية
+  scan(options?: { formats?: string[] }): Promise<{ barcodes: Array<{ rawValue: string }> }>;
+  checkPermissions(): Promise<{ camera: 'granted' | 'denied' | 'prompt' }>;
+  requestPermissions(): Promise<{ camera: 'granted' | 'denied' | 'prompt' }>;
+  
+  // إضافة الوظائف المفقودة
+  prepare(): Promise<void>;
+  stopScan(): Promise<void>;
+  hideBackground(): Promise<void>;
+  showBackground(): Promise<void>;
+  isSupported(): Promise<{ supported: boolean }>;
+  disableTorch(): Promise<void>;
+  enableTorch(): Promise<void>;
+  toggleTorch(): Promise<void>;
+  isTorchAvailable(): Promise<{ available: boolean }>;
+}
+
+// إعلان عن وجود BarcodeScanner في الحزمة
+declare module '@capacitor-mlkit/barcode-scanning' {
+  export const BarcodeScanner: BarcodeScannerPlugin;
+  export { BarcodeFormat };
+}

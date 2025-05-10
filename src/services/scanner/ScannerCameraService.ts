@@ -1,7 +1,7 @@
-
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 /**
  * خدمة تتحكم في وظائف كاميرا الماسح الضوئي
@@ -78,6 +78,7 @@ export class ScannerCameraService {
         return false;
       }
       
+      // استخدام الواجهة المُحسّنة
       const result = await BarcodeScanner.isSupported();
       console.log('[ScannerCameraService] نتيجة التحقق من دعم الماسح:', result);
       return result.supported;
