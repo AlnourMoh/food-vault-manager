@@ -49,23 +49,26 @@ export const useBarcodeScanning = ({
         throw new Error('MLKit Barcode Scanner not available');
       }
       
-      // Set up the barcode listener
+      // Set up the barcode listener - FIXED: Changed "barcodeScanned" to "barcodesScanned"
       const listener = await BarcodeScanner.addListener(
-        'barcodeScanned',
+        'barcodesScanned',
         async result => {
           try {
-            const code = result.barcode.displayValue || result.barcode.rawValue;
-            
-            console.log('[BarcodeScanning] Barcode detected:', code);
-            setLastScannedCode(code);
-            
-            // Call the onScan callback with the scanned code
-            if (code) {
-              onScan(code);
+            // Check if result.barcodes exists and has at least one barcode
+            if (result.barcodes && result.barcodes.length > 0) {
+              const code = result.barcodes[0].displayValue || result.barcodes[0].rawValue;
+              
+              console.log('[BarcodeScanning] Barcode detected:', code);
+              setLastScannedCode(code);
+              
+              // Call the onScan callback with the scanned code
+              if (code) {
+                onScan(code);
+              }
+              
+              // Stop scanning after successful scan
+              await stopScan();
             }
-            
-            // Stop scanning after successful scan
-            await stopScan();
           } catch (error) {
             console.error('[BarcodeScanning] Error processing scan result:', error);
           }
