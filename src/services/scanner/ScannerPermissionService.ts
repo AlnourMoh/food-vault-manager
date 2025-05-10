@@ -35,9 +35,9 @@ export class ScannerPermissionService {
         if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
           console.log('ScannerPermissionService: ملحق MLKitBarcodeScanner متاح');
           try {
-            const isSupported = await BarcodeScanner.isSupported();
-            console.log('ScannerPermissionService: نتيجة التحقق من الدعم:', isSupported);
-            return isSupported;
+            const result = await BarcodeScanner.isSupported();
+            console.log('ScannerPermissionService: نتيجة التحقق من الدعم:', result.supported);
+            return result.supported;
           } catch (error) {
             console.error('ScannerPermissionService: خطأ في التحقق من دعم MLKitBarcodeScanner:', error);
           }
