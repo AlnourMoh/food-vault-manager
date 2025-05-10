@@ -47,7 +47,14 @@ export const useZXingBarcodeScanner = ({
   }, [isCameraActive]);
 
   const { handleRetry } = useScannerRetry({
-    setHasScannerError: setScannerError,
+    setHasScannerError: (hasError: boolean | string | null) => {
+      // تحويل القيمة إذا كانت boolean إلى نص أو null لتتوافق مع حالة setScannerError
+      if (typeof hasError === 'boolean') {
+        setScannerError(hasError ? "حدث خطأ غير محدد" : null);
+      } else {
+        setScannerError(hasError);
+      }
+    },
     activateCamera: async () => {
       return await startScan();
     },
@@ -159,13 +166,26 @@ export const useZXingBarcodeScanner = ({
     isLoading,
     hasPermission,
     cameraActive,
-    setCameraActive, // نصدر هذه الوظيفة للسماح بتحديث الحالة خارجيًا
+    setCameraActive, 
     isScanningActive,
     scannerError,
-    hasScannerError, // إضافة مؤشر أخطاء الماسح
-    requestPermission,
+    hasScannerError, 
+    requestPermission: async () => {
+      // Implementation of requestPermission
+      try {
+        const granted = await scannerPermissionService.requestPermission();
+        setHasPermission(granted);
+        return granted;
+      } catch (error) {
+        console.error("Error requesting permission:", error);
+        return false;
+      }
+    },
     handleRetry,
-    openAppSettings,
-    startScan // إضافة للتحكم المباشر ببدء المسح
+    openAppSettings: async () => {
+      // Implementation of openAppSettings
+      return false; // Placeholder implementation
+    },
+    startScan
   };
 };
