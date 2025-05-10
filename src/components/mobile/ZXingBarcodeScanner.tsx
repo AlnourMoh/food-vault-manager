@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useZXingBarcodeScanner } from '@/hooks/scanner/useZXingBarcodeScanner';
 import { ScannerLoadingView } from './scanner/components/ScannerLoadingView';
 import { PermissionRequestView } from './scanner/components/PermissionRequestView';
 import { ScannerErrorView } from './scanner/components/ScannerErrorView';
 import { ActiveScannerView } from './scanner/components/ActiveScannerView';
+import { Toast } from '@capacitor/toast';
+import { Capacitor } from '@capacitor/core';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -26,6 +28,30 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     handleRetry
   } = useZXingBarcodeScanner({ onScan, onClose, autoStart });
 
+  // إضافة سجل تشخيصي لتتبع حالة المكون
+  useEffect(() => {
+    const logDiagnostic = async () => {
+      try {
+        const platform = Capacitor.getPlatform();
+        const isNative = Capacitor.isNativePlatform();
+        const message = `حالة الماسح الضوئي - المنصة: ${platform}, أصلي: ${isNative ? 'نعم' : 'لا'}, الإذن: ${hasPermission === true ? 'ممنوح' : hasPermission === false ? 'مرفوض' : 'غير معروف'}`;
+        
+        console.log(message);
+        
+        if (isNative) {
+          await Toast.show({
+            text: message,
+            duration: 'long'
+          });
+        }
+      } catch (error) {
+        console.error("خطأ في سجل التشخيص:", error);
+      }
+    };
+    
+    logDiagnostic();
+  }, [hasPermission]);
+  
   // عرض شاشة التحميل
   if (isLoading) {
     return <ScannerLoadingView onClose={onClose} />;
@@ -35,7 +61,8 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   if (hasPermission === false) {
     return <PermissionRequestView 
       onRequestPermission={async () => {
-        await requestPermission();
+        const granted = await requestPermission();
+        console.log("نتيجة طلب الإذن:", granted);
       }} 
       onClose={onClose} 
     />;

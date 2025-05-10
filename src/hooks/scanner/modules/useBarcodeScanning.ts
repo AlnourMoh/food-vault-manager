@@ -49,7 +49,7 @@ export const useBarcodeScanning = ({
         throw new Error('MLKit Barcode Scanner not available');
       }
       
-      // Set up the barcode listener - using 'barcodesScanned' event name
+      // Set up the barcode listener - using 'barcodesScanned' event name (plural, not singular)
       const listener = await BarcodeScanner.addListener(
         'barcodesScanned',
         async result => {
@@ -85,10 +85,12 @@ export const useBarcodeScanning = ({
       setHasScannerError(true);
       setIsScanningActive(false);
       
-      await Toast.show({
-        text: 'فشل في بدء المسح الضوئي',
-        duration: 'long'
-      });
+      if (Capacitor.isNativePlatform()) {
+        await Toast.show({
+          text: 'فشل في بدء المسح الضوئي',
+          duration: 'long'
+        });
+      }
       
       return false;
     }

@@ -49,7 +49,7 @@ export const useScannerActivation = ({ onStart, onStop, onError }: UseScannerAct
     checkSupportAndPermission();
   }, [onStart, onError]);
 
-  const requestCamera = async (): Promise<void> => {
+  const requestCamera = async (): Promise<boolean> => {
     setIsLoading(true);
     try {
       // Request camera permission
@@ -63,6 +63,8 @@ export const useScannerActivation = ({ onStart, onStop, onError }: UseScannerAct
           description: "يمكنك الآن استخدام الكاميرا لمسح المنتجات",
         });
         onStart();
+        setIsLoading(false);
+        return true;
       } else {
         toast({
           title: "فشل تفعيل الكاميرا",
@@ -70,6 +72,8 @@ export const useScannerActivation = ({ onStart, onStop, onError }: UseScannerAct
           variant: "destructive",
         });
         onError("لم يتم منح إذن الوصول للكاميرا");
+        setIsLoading(false);
+        return false;
       }
     } catch (error) {
       console.error("كاميرا: خطأ أثناء طلب إذن الكاميرا:", error);
@@ -79,8 +83,8 @@ export const useScannerActivation = ({ onStart, onStop, onError }: UseScannerAct
         variant: "destructive",
       });
       onError("حدث خطأ أثناء محاولة تفعيل الكاميرا");
-    } finally {
       setIsLoading(false);
+      return false;
     }
   };
 

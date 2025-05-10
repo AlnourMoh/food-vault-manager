@@ -1,8 +1,10 @@
 
 import { useCallback } from 'react';
+import { Toast } from '@capacitor/toast';
+import { Capacitor } from '@capacitor/core';
 
 interface UseScannerRetryProps {
-  setHasScannerError: (error: boolean | string | null) => void;
+  setHasScannerError: (error: string | null) => void;
   setCameraActive: (active: boolean) => void;
   activateCamera: () => Promise<boolean>;
   startScan: () => Promise<boolean>;
@@ -14,30 +16,78 @@ export const useScannerRetry = ({
   activateCamera,
   startScan
 }: UseScannerRetryProps) => {
-  
   const handleRetry = useCallback(async () => {
-    console.log('[Scanner] Attempting retry...');
-    setHasScannerError(false);
+    console.log('[useScannerRetry] محاولة إعادة تشغيل الماسح الضوئي...');
     
     try {
-      // Reset camera state
-      setCameraActive(false);
+      // إعادة تعيين حالة الخطأ أولاً
+      setHasScannerError(null);
       
-      // Activate camera
-      const cameraActivated = await activateCamera();
-      
-      if (cameraActivated) {
-        // Start scanning if camera was activated successfully
-        await startScan();
+      // عرض رسالة للمستخدم
+      if (Capacitor.isNativePlatform()) {
+        await Toast.show({
+          text: 'جاري إعادة تشغيل الماسح الضوئي...',
+          duration: 'short'
+        });
       }
       
-      return cameraActivated;
+      // محاولة تفعيل الكاميرا
+      console.log('[useScannerRetry] محاولة تفعيل الكاميرا...');
+      const cameraActivated = await activateCamera();
+      
+      if (!cameraActivated) {
+        console.error('[useScannerRetry] فشلت محاولة تفعيل الكاميرا');
+        setHasScannerError('فشلت محاولة تفعيل الكاميرا');
+        
+        if (Capacitor.isNativePlatform()) {
+          await Toast.show({
+            text: 'فشلت محاولة تفعيل الكاميرا، يرجى المحاولة مرة أخرى',
+            duration: 'short'
+          });
+        }
+        
+        return;
+      }
+      
+      // الانتظار لحظة قصيرة قبل بدء المسح
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // محاولة بدء المسح
+      console.log('[useScannerRetry] محاولة بدء المسح...');
+      const scanStarted = await startScan();
+      
+      if (!scanStarted) {
+        console.error('[useScannerRetry] فشل بدء المسح');
+        setHasScannerError('فشل بدء المسح');
+        
+        if (Capacitor.isNativePlatform()) {
+          await Toast.show({
+            text: 'فشل بدء المسح، يرجى المحاولة مرة أخرى',
+            duration: 'short'
+          });
+        }
+      } else {
+        console.log('[useScannerRetry] تم إعادة تشغيل الماسح الضوئي بنجاح');
+        
+        if (Capacitor.isNativePlatform()) {
+          await Toast.show({
+            text: 'تم إعادة تشغيل الماسح الضوئي بنجاح',
+            duration: 'short'
+          });
+        }
+      }
     } catch (error) {
-      console.error('[Scanner] Retry failed:', error);
-      setHasScannerError(true);
-      return false;
+      console.error('[useScannerRetry] خطأ في إعادة المحاولة:', error);
+      setHasScannerError('حدث خطأ أثناء محاولة إعادة التشغيل');
+      
+      if (Capacitor.isNativePlatform()) {
+        await Toast.show({
+          text: 'حدث خطأ أثناء محاولة إعادة التشغيل',
+          duration: 'short'
+        });
+      }
     }
-  }, [setHasScannerError, setCameraActive, activateCamera, startScan]);
-  
+  }, [setHasScannerError, activateCamera, startScan, setCameraActive]);
+
   return { handleRetry };
 };
