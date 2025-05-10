@@ -62,14 +62,8 @@ export class AppSettingsOpener {
         settingsUrl = 'app-settings:';
       } else if (platform === 'android') {
         // على Android، نستخدم نية محددة لفتح إعدادات التطبيق
-        const packageName = 'app.lovable.foodvault.manager';
-        
-        // تغيير المسار حسب إصدار Android
-        if (deviceInfo.osVersion && parseInt(deviceInfo.osVersion) >= 9) {
-          settingsUrl = `package:${packageName}`;
-        } else {
-          settingsUrl = `package:${packageName}`;
-        }
+        const packageName = await App.getInfo();
+        settingsUrl = `package:${packageName.id}`;
       } else {
         console.log('AppSettingsOpener: المنصة غير مدعومة');
         return false;
