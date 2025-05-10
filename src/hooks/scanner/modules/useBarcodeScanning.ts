@@ -1,174 +1,250 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { BarcodeScanner, BarcodeFormat, LensFacing } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 
 interface UseBarcodeScanningOptions {
   onScan: (code: string) => void;
   onScanError?: (error: string) => void;
   onScanComplete?: () => void;
+  onPermissionError?: (error: string) => void;
 }
 
 export const useBarcodeScanning = ({ 
   onScan, 
   onScanError, 
-  onScanComplete 
+  onScanComplete,
+  onPermissionError
 }: UseBarcodeScanningOptions) => {
   const [cameraActive, setCameraActive] = useState(false);
   const [isScanningActive, setIsScanningActive] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const [isWebRTCReady, setIsWebRTCReady] = useState(false);
   const [webStreamRef, setWebStreamRef] = useState<MediaStream | null>(null);
+  const [hasScannerError, setHasScannerError] = useState(false);
+  const [hasPermissionError, setHasPermissionError] = useState(false);
+  
+  // مرجع للفاصل الزمني للتشخيص
+  const diagIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // تنظيف عند إلغاء تحميل المكون
   useEffect(() => {
-    // تنظيف موارد الكاميرا عند إلغاء تحميل المكون
     return () => {
       console.log('[useBarcodeScanning] تنظيف موارد الكاميرا عند إلغاء التحميل');
+      if (diagIntervalRef.current) {
+        clearInterval(diagIntervalRef.current);
+      }
       stopScan().catch(error => {
         console.error('[useBarcodeScanning] خطأ في إيقاف المسح عند التنظيف:', error);
       });
     };
   }, []);
-
-  // إضافة استماع للأحداث في بيئة المتصفح
+  
+  // عند تهيئة المكون، نتحقق من حالة التصاريح
   useEffect(() => {
-    // فقط في بيئة الويب
-    if (!Capacitor.isNativePlatform()) {
-      console.log('[useBarcodeScanning] إعداد WebRTC للمسح في بيئة الويب');
-      
+    const checkPermissionOnInit = async () => {
       try {
-        // التحقق من دعم WebRTC
+        // التحقق من دعم الماسح أولاً
+        const isSupported = await scannerPermissionService.isSupported();
+        console.log('[useBarcodeScanning] دعم الماسح الضوئي:', isSupported);
+        
+        if (!isSupported) {
+          if (onScanError) {
+            onScanError('الماسح الضوئي غير مدعوم على هذا الجهاز');
+          }
+          setHasScannerError(true);
+          return;
+        }
+        
+        // التحقق من وجود تصريح الكاميرا
+        const hasPermission = await scannerPermissionService.checkPermission();
+        console.log('[useBarcodeScanning] حالة تصريح الكاميرا عند التهيئة:', hasPermission);
+        
+        // في حالة عدم وجود التصريح، نعين حالة خطأ التصريح
+        setHasPermissionError(!hasPermission);
+        
+        // في حالة تشغيل التطبيق على الويب، نعد واجهة WebRTC
+        if (!Capacitor.isNativePlatform()) {
+          console.log('[useBarcodeScanning] إعداد WebRTC للمسح في بيئة الويب');
+          prepareWebRTC();
+        }
+      } catch (error) {
+        console.error('[useBarcodeScanning] خطأ في التحقق من حالة التصاريح عند التهيئة:', error);
+      }
+    };
+    
+    checkPermissionOnInit();
+  }, [onScanError, onPermissionError]);
+
+  // وظيفة إعداد WebRTC لبيئة الويب
+  const prepareWebRTC = useCallback(async () => {
+    try {
+      if (!Capacitor.isNativePlatform()) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.error('[useBarcodeScanning] WebRTC غير مدعوم في هذا المتصفح');
+          setHasScannerError(true);
           if (onScanError) onScanError('متصفحك لا يدعم الوصول إلى الكاميرا');
           return;
         }
         
-        // تهيئة WebRTC
-        setTimeout(async () => {
-          try {
-            // التحقق من توفر الكاميرا
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const hasCamera = devices.some(device => device.kind === 'videoinput');
-            
-            if (!hasCamera) {
-              console.error('[useBarcodeScanning] لم يتم العثور على كاميرا متصلة');
-              if (onScanError) onScanError('لم يتم العثور على كاميرا متصلة بالجهاز');
-              return;
-            }
-            
-            setIsWebRTCReady(true);
-            console.log('[useBarcodeScanning] WebRTC جاهز للاستخدام');
-          } catch (error) {
-            console.error('[useBarcodeScanning] خطأ في تهيئة WebRTC:', error);
-          }
-        }, 500);
-      } catch (error) {
-        console.error('[useBarcodeScanning] خطأ في إعداد WebRTC:', error);
+        // التحقق من توفر الكاميرا
+        console.log('[useBarcodeScanning] التحقق من توفر الكاميرا');
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const hasCamera = devices.some(device => device.kind === 'videoinput');
+        
+        if (!hasCamera) {
+          console.error('[useBarcodeScanning] لم يتم العثور على كاميرا متصلة');
+          setHasScannerError(true);
+          if (onScanError) onScanError('لم يتم العثور على كاميرا متصلة بالجهاز');
+          return;
+        }
+        
+        setIsWebRTCReady(true);
+        console.log('[useBarcodeScanning] WebRTC جاهز للاستخدام');
       }
+    } catch (error) {
+      console.error('[useBarcodeScanning] خطأ في إعداد WebRTC:', error);
+      setHasScannerError(true);
     }
   }, [onScanError]);
+  
+  // وظيفة طلب تصاريح الكاميرا
+  const requestCameraPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      console.log('[useBarcodeScanning] طلب تصريح الكاميرا');
+      
+      // إعادة تعيين حالة خطأ التصريح
+      setHasPermissionError(false);
+      
+      // استخدام خدمة التصاريح لطلب الإذن
+      const granted = await scannerPermissionService.requestPermission();
+      console.log('[useBarcodeScanning] نتيجة طلب تصريح الكاميرا:', granted);
+      
+      if (!granted) {
+        console.warn('[useBarcodeScanning] تم رفض تصريح الكاميرا');
+        setHasPermissionError(true);
+        
+        if (onPermissionError) {
+          onPermissionError('تم رفض تصريح الكاميرا. الرجاء تمكينه من إعدادات جهازك.');
+        }
+        
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('[useBarcodeScanning] خطأ في طلب تصريح الكاميرا:', error);
+      setHasPermissionError(true);
+      
+      if (onPermissionError) {
+        onPermissionError('حدث خطأ أثناء طلب تصريح الكاميرا.');
+      }
+      
+      return false;
+    }
+  }, [onPermissionError]);
 
   // وظيفة بدء المسح
   const startScan = useCallback(async (): Promise<boolean> => {
     console.log('[useBarcodeScanning] محاولة بدء المسح');
     
     try {
+      // إعادة تعيين حالات الأخطاء
+      setHasScannerError(false);
+      
+      // التحقق أولاً من وجود تصريح الكاميرا
+      const hasPermission = await scannerPermissionService.checkPermission();
+      console.log('[useBarcodeScanning] حالة تصريح الكاميرا قبل بدء المسح:', hasPermission);
+      
+      if (!hasPermission) {
+        console.log('[useBarcodeScanning] لا يوجد تصريح للكاميرا، محاولة طلب التصريح');
+        const granted = await requestCameraPermission();
+        if (!granted) {
+          console.warn('[useBarcodeScanning] لم يتم منح تصريح الكاميرا');
+          return false;
+        }
+      }
+      
       // في بيئة الويب، نستخدم WebRTC مباشرة
       if (!Capacitor.isNativePlatform()) {
         console.log('[useBarcodeScanning] بدء المسح في بيئة الويب');
         
         // التحقق من جاهزية WebRTC
         if (!isWebRTCReady) {
-          console.warn('[useBarcodeScanning] WebRTC غير جاهز بعد');
+          console.warn('[useBarcodeScanning] WebRTC غير جاهز بعد، محاولة إعداده');
+          await prepareWebRTC();
           
-          // محاولة جديدة لتهيئة WebRTC
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-              video: { 
-                facingMode: 'environment',
-                width: { min: 640, ideal: 1280, max: 1920 },
-                height: { min: 480, ideal: 720, max: 1080 }
-              } 
-            });
-            
-            // حفظ المسار لاستخدامه وإغلاقه لاحقًا
-            setWebStreamRef(stream);
-            
-            // تهيئة عنصر الفيديو وتعيينه
-            const videoElement = document.createElement('video');
-            videoElement.id = 'scanner-video-element';
-            videoElement.srcObject = stream;
-            videoElement.autoplay = true;
-            videoElement.style.width = '100%';
-            videoElement.style.height = '100%';
-            videoElement.style.objectFit = 'cover';
-            
-            // إضافة عنصر الفيديو إلى الصفحة
-            const scannerView = document.getElementById('barcode-scanner-view');
-            if (scannerView) {
-              // إزالة أي عنصر فيديو سابق
-              scannerView.querySelectorAll('video').forEach(v => v.remove());
-              scannerView.appendChild(videoElement);
-            }
-            
-            setIsWebRTCReady(true);
-            setCameraActive(true);
-            setIsScanningActive(true);
-            
-            // تأخر محاكاة المسح الناجح لـ 30 ثانية بدلاً من 3 ثواني للسماح بالاختبار الأطول
-            console.log('[useBarcodeScanning] الكاميرا ستبقى مفعلة لفترة أطول للمسح');
-            
-            return true;
-          } catch (error) {
-            console.error('[useBarcodeScanning] خطأ في الوصول إلى الكاميرا:', error);
-            if (onScanError) onScanError('تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات.');
+          if (!isWebRTCReady) {
+            console.error('[useBarcodeScanning] فشل إعداد WebRTC');
+            setHasScannerError(true);
             return false;
           }
         }
         
-        // في حالة جاهزية WebRTC
-        setCameraActive(true);
-        setIsScanningActive(true);
-        
-        // إنشاء بث كاميرا جديد إذا لم يكن موجودًا
-        if (!webStreamRef) {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-              video: { 
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-              } 
-            });
-            
-            setWebStreamRef(stream);
-            
-            // تهيئة عنصر الفيديو
-            const videoElement = document.createElement('video');
-            videoElement.id = 'scanner-video-element';
-            videoElement.srcObject = stream;
-            videoElement.autoplay = true;
-            videoElement.style.width = '100%';
-            videoElement.style.height = '100%';
-            videoElement.style.objectFit = 'cover';
-            
-            // إضافة عنصر الفيديو إلى الصفحة
-            const scannerView = document.getElementById('barcode-scanner-view');
-            if (scannerView) {
-              scannerView.querySelectorAll('video').forEach(v => v.remove());
-              scannerView.appendChild(videoElement);
-            }
-          } catch (error) {
-            console.error('[useBarcodeScanning] خطأ في إنشاء بث كاميرا جديد:', error);
-            if (onScanError) onScanError('تعذر إنشاء بث كاميرا جديد');
-            return false;
+        try {
+          // في حالة وجود مسار كاميرا نشط، نغلقه أولاً
+          if (webStreamRef) {
+            webStreamRef.getTracks().forEach(track => track.stop());
           }
+          
+          // إنشاء مسار كاميرا جديد
+          console.log('[useBarcodeScanning] طلب الوصول إلى الكاميرا في المتصفح');
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              facingMode: 'environment',
+              width: { min: 640, ideal: 1280, max: 1920 },
+              height: { min: 480, ideal: 720, max: 1080 }
+            } 
+          });
+          
+          // حفظ المسار لاستخدامه وإغلاقه لاحقًا
+          setWebStreamRef(stream);
+          
+          // تهيئة عنصر الفيديو وتعيينه
+          const videoElement = document.createElement('video');
+          videoElement.id = 'scanner-video-element';
+          videoElement.srcObject = stream;
+          videoElement.autoplay = true;
+          videoElement.style.width = '100%';
+          videoElement.style.height = '100%';
+          videoElement.style.objectFit = 'cover';
+          
+          // إضافة عنصر الفيديو إلى الصفحة
+          const scannerView = document.getElementById('barcode-scanner-view');
+          if (scannerView) {
+            // إزالة أي عنصر فيديو سابق
+            scannerView.querySelectorAll('video').forEach(v => v.remove());
+            scannerView.appendChild(videoElement);
+          }
+          
+          setCameraActive(true);
+          setIsScanningActive(true);
+          
+          // بدء فاصل زمني للتشخيص للتأكد من أن الكاميرا لا تزال نشطة
+          if (diagIntervalRef.current) {
+            clearInterval(diagIntervalRef.current);
+          }
+          
+          diagIntervalRef.current = setInterval(() => {
+            if (webStreamRef) {
+              const activeTracks = webStreamRef.getVideoTracks().filter(t => t.enabled && t.readyState === 'live');
+              console.log(`[useBarcodeScanning] فحص دوري للكاميرا: ${activeTracks.length} مسارات نشطة`);
+            }
+          }, 5000); // كل 5 ثوانٍ
+          
+          return true;
+        } catch (error) {
+          console.error('[useBarcodeScanning] خطأ في الوصول إلى الكاميرا في المتصفح:', error);
+          setHasScannerError(true);
+          
+          if (onScanError) {
+            onScanError('تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات.');
+          }
+          
+          return false;
         }
-        
-        return true;
       }
       
       // في بيئة التطبيق الأصلي مع Capacitor
@@ -177,63 +253,124 @@ export const useBarcodeScanning = ({
       // التحقق من توفر ملحق BarcodeScanner
       if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.error('[useBarcodeScanning] ملحق MLKitBarcodeScanner غير متوفر');
-        if (onScanError) onScanError('ملحق المسح الضوئي غير متوفر على هذا الجهاز');
+        setHasScannerError(true);
+        
+        if (onScanError) {
+          onScanError('ملحق المسح الضوئي غير متوفر على هذا الجهاز');
+        }
+        
         return false;
       }
       
-      // بدء المسح واستماع للنتائج
-      await BarcodeScanner.startScan({
-        formats: [BarcodeFormat.QrCode, BarcodeFormat.Ean13, BarcodeFormat.Ean8, BarcodeFormat.Code128],
-        lensFacing: LensFacing.Back,
-      });
-      
-      // إضافة مستمع للأحداث
-      BarcodeScanner.addListener('barcodesScanned', async (result: any) => {
-        console.log('[useBarcodeScanning] تم مسح باركود:', result.barcodes);
+      try {
+        // إزالة أي مستمع سابق
+        await BarcodeScanner.removeAllListeners();
         
-        try {
+        // إضافة مستمع للأحداث
+        await BarcodeScanner.addListener('barcodesScanned', async (result: any) => {
+          console.log('[useBarcodeScanning] تم مسح باركود:', result.barcodes);
+          
           if (result.barcodes && result.barcodes.length > 0) {
-            // حفظ الكود الممسوح
-            const barcode = result.barcodes[0];
-            setLastScannedCode(barcode.rawValue);
-            
-            // استدعاء دالة رد الاتصال
-            onScan(barcode.rawValue);
-            
-            // إيقاف المسح تلقائيًا بعد النجاح
-            await BarcodeScanner.stopScan();
-            setIsScanningActive(false);
-            
-            // استدعاء دالة اكتمال المسح
-            if (onScanComplete) onScanComplete();
+            try {
+              // حفظ الكود الممسوح
+              const barcode = result.barcodes[0];
+              setLastScannedCode(barcode.rawValue);
+              
+              // عرض إشعار بنجاح المسح
+              await Toast.show({
+                text: 'تم مسح الباركود بنجاح',
+                duration: 'short'
+              });
+              
+              // استدعاء دالة رد الاتصال
+              onScan(barcode.rawValue);
+              
+              // إيقاف المسح تلقائيًا بعد النجاح
+              await stopScan();
+              
+              // استدعاء دالة اكتمال المسح
+              if (onScanComplete) {
+                onScanComplete();
+              }
+            } catch (error) {
+              console.error('[useBarcodeScanning] خطأ في معالجة الباركود الممسوح:', error);
+            }
           }
-        } catch (error) {
-          console.error('[useBarcodeScanning] خطأ في معالجة الباركود الممسوح:', error);
+        });
+        
+        // بدء المسح
+        await BarcodeScanner.startScan({
+          formats: [
+            BarcodeFormat.QrCode, 
+            BarcodeFormat.Ean13, 
+            BarcodeFormat.Ean8, 
+            BarcodeFormat.Code128
+          ],
+          lensFacing: LensFacing.Back,
+        });
+        
+        setCameraActive(true);
+        setIsScanningActive(true);
+        
+        return true;
+      } catch (error) {
+        console.error('[useBarcodeScanning] خطأ في بدء المسح باستخدام BarcodeScanner:', error);
+        setHasScannerError(true);
+        
+        if (onScanError) {
+          if (error instanceof Error) {
+            onScanError(`خطأ في بدء المسح: ${error.message}`);
+          } else {
+            onScanError('حدث خطأ غير معروف في بدء المسح');
+          }
         }
-      });
-      
-      setCameraActive(true);
-      setIsScanningActive(true);
-      
-      return true;
+        
+        return false;
+      }
     } catch (error) {
       console.error('[useBarcodeScanning] خطأ في بدء المسح:', error);
-      if (onScanError) onScanError(error instanceof Error ? error.message : 'خطأ غير معروف في بدء المسح');
+      setHasScannerError(true);
+      
+      if (onScanError) {
+        if (error instanceof Error) {
+          onScanError(error.message);
+        } else {
+          onScanError('خطأ غير معروف في بدء المسح');
+        }
+      }
+      
       return false;
     }
-  }, [onScan, onScanError, onScanComplete, isWebRTCReady, webStreamRef]);
+  }, [
+    isWebRTCReady, 
+    webStreamRef, 
+    onScan, 
+    onScanError, 
+    onScanComplete, 
+    prepareWebRTC, 
+    requestCameraPermission
+  ]);
 
   // وظيفة إيقاف المسح
   const stopScan = useCallback(async (): Promise<boolean> => {
     console.log('[useBarcodeScanning] إيقاف المسح');
     
     try {
+      // إيقاف فاصل التشخيص
+      if (diagIntervalRef.current) {
+        clearInterval(diagIntervalRef.current);
+        diagIntervalRef.current = null;
+      }
+      
       // في بيئة الويب
       if (!Capacitor.isNativePlatform()) {
         // تنظيف بث الكاميرا
         if (webStreamRef) {
           console.log('[useBarcodeScanning] إيقاف بث الكاميرا في بيئة الويب');
-          webStreamRef.getTracks().forEach(track => track.stop());
+          webStreamRef.getTracks().forEach(track => {
+            console.log(`[useBarcodeScanning] إيقاف مسار ${track.kind}`);
+            track.stop();
+          });
           setWebStreamRef(null);
         }
         
@@ -251,9 +388,12 @@ export const useBarcodeScanning = ({
       // في بيئة التطبيق الأصلي
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         // التحقق قبل الاستدعاء لتجنب الأخطاء
+        console.log('[useBarcodeScanning] إيقاف BarcodeScanner، حالة المسح:', isScanningActive);
+        
         if (isScanningActive) {
           await BarcodeScanner.removeAllListeners();
           await BarcodeScanner.stopScan();
+          console.log('[useBarcodeScanning] تم إيقاف BarcodeScanner بنجاح');
         }
         
         setCameraActive(false);
@@ -267,6 +407,43 @@ export const useBarcodeScanning = ({
     }
   }, [isScanningActive, webStreamRef]);
 
+  // وظيفة إعادة المحاولة - تقوم بإعادة تعيين الحالات وإعادة بدء المسح
+  const retryScanning = useCallback(async (): Promise<boolean> => {
+    console.log('[useBarcodeScanning] إعادة محاولة المسح');
+    
+    try {
+      // إعادة تعيين الحالات
+      setHasScannerError(false);
+      setHasPermissionError(false);
+      
+      // إيقاف أي مسح نشط
+      await stopScan();
+      
+      // في بيئة الويب، نعيد إعداد WebRTC
+      if (!Capacitor.isNativePlatform()) {
+        await prepareWebRTC();
+      }
+      
+      // بدء المسح من جديد
+      return await startScan();
+    } catch (error) {
+      console.error('[useBarcodeScanning] خطأ في إعادة محاولة المسح:', error);
+      return false;
+    }
+  }, [stopScan, startScan, prepareWebRTC]);
+
+  // وظيفة فتح إعدادات التطبيق للتصاريح
+  const openAppSettings = useCallback(async (): Promise<boolean> => {
+    console.log('[useBarcodeScanning] فتح إعدادات التطبيق');
+    
+    try {
+      return await scannerPermissionService.openAppSettings();
+    } catch (error) {
+      console.error('[useBarcodeScanning] خطأ في فتح إعدادات التطبيق:', error);
+      return false;
+    }
+  }, []);
+
   return {
     cameraActive,
     setCameraActive,
@@ -274,6 +451,11 @@ export const useBarcodeScanning = ({
     lastScannedCode,
     startScan,
     stopScan,
-    isWebRTCReady
+    isWebRTCReady,
+    hasScannerError,
+    hasPermissionError,
+    retryScanning,
+    requestCameraPermission,
+    openAppSettings
   };
 };
