@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Camera, RefreshCw } from 'lucide-react';
+import { Toast } from '@capacitor/toast';
 
 interface ActiveScannerViewProps {
   cameraActive: boolean;
@@ -18,24 +19,68 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
   useEffect(() => {
     console.log("ActiveScannerView: حالة الكاميرا:", { cameraActive, isScanningActive });
     
-    // إظهار الكاميرا بشكل أفضل عبر تعديل فئات CSS للفيديو
+    // تعزيز إظهار الكاميرا بشكل صحيح
     if (cameraActive) {
-      const videoElements = document.querySelectorAll('video');
-      videoElements.forEach(video => {
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        video.style.position = 'absolute';
-        video.style.top = '0';
-        video.style.left = '0';
-      });
+      setTimeout(() => {
+        const videoElements = document.querySelectorAll('video');
+        console.log("ActiveScannerView: عدد عناصر الفيديو الموجودة:", videoElements.length);
+        
+        if (videoElements.length === 0) {
+          console.warn("ActiveScannerView: لا توجد عناصر فيديو للكاميرا!");
+          // محاولة إظهار رسالة للمستخدم
+          Toast.show({
+            text: 'تعذر العثور على بث الكاميرا. يرجى المحاولة مرة أخرى',
+            duration: 'short'
+          });
+        }
+        
+        videoElements.forEach(video => {
+          console.log("ActiveScannerView: تهيئة عنصر فيديو الكاميرا", video.id);
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = 'cover';
+          video.style.position = 'absolute';
+          video.style.top = '0';
+          video.style.left = '0';
+          video.style.zIndex = '1'; // زيادة z-index لضمان الظهور
+          
+          // التحقق من حالة الفيديو
+          console.log("ActiveScannerView: حالة الفيديو:", {
+            readyState: video.readyState,
+            paused: video.paused,
+            srcObject: video.srcObject ? 'موجود' : 'غير موجود',
+            width: video.width,
+            height: video.height
+          });
+          
+          // محاولة تشغيل الفيديو إذا كان متوقفًا
+          if (video.paused && video.srcObject) {
+            video.play().catch(err => {
+              console.error("ActiveScannerView: خطأ في تشغيل الفيديو:", err);
+            });
+          }
+        });
+      }, 500); // تأخير قصير للتأكد من تحميل عنصر الفيديو
     }
     
     return () => {
       // تنظيف عند إزالة المكون
+      console.log("ActiveScannerView: تنظيف موارد الكاميرا");
       const videoElements = document.querySelectorAll('video');
       videoElements.forEach(video => {
-        video.srcObject = null;
+        if (video.srcObject) {
+          console.log("ActiveScannerView: إيقاف بث الكاميرا");
+          try {
+            const tracks = (video.srcObject as MediaStream).getTracks();
+            tracks.forEach(track => {
+              track.stop();
+              console.log("ActiveScannerView: تم إيقاف مسار الكاميرا:", track.kind);
+            });
+            video.srcObject = null;
+          } catch (error) {
+            console.error("ActiveScannerView: خطأ في إيقاف الكاميرا:", error);
+          }
+        }
       });
     };
   }, [cameraActive, isScanningActive]);
@@ -48,6 +93,29 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
       setScanAnimationActive(true);
     }
   }, [cameraActive]);
+  
+  // محاولة إعادة تنشيط الكاميرا إذا لم تظهر
+  const handleRefreshCamera = () => {
+    console.log("ActiveScannerView: محاولة إعادة تنشيط الكاميرا");
+    
+    // محاولة تحديث العرض بإعادة تهيئة عناصر الفيديو
+    const videoElements = document.querySelectorAll('video');
+    if (videoElements.length > 0) {
+      videoElements.forEach(video => {
+        if (video.paused && video.srcObject) {
+          video.play().catch(err => {
+            console.error("ActiveScannerView: خطأ في تشغيل الفيديو:", err);
+          });
+        }
+      });
+    }
+    
+    // إشعار المستخدم
+    Toast.show({
+      text: 'جاري محاولة إعادة تفعيل الكاميرا...',
+      duration: 'short'
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col items-center">
@@ -59,6 +127,10 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
           <p className="text-gray-300 mt-2 text-sm text-center px-6">
             إذا استمر هذا لفترة طويلة، تأكد من منح الإذن للكاميرا في إعدادات جهازك
           </p>
+          <Button onClick={handleRefreshCamera} variant="outline" className="mt-4">
+            <RefreshCw className="h-4 w-4 ml-2" />
+            إعادة المحاولة
+          </Button>
         </div>
       )}
       
@@ -107,7 +179,7 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
           variant="ghost"
           className="text-white hover:text-gray-300"
         >
-          إغلاق
+          <X className="h-6 w-6" /> إغلاق
         </Button>
         
         <div className="flex-1 flex justify-center">
@@ -116,6 +188,7 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
             size="lg"
             className={`${cameraActive ? 'bg-white' : 'bg-gray-400'} text-black rounded-full w-16 h-16 flex items-center justify-center`}
             disabled={!cameraActive}
+            onClick={handleRefreshCamera}
           >
             <Camera className="h-6 w-6" />
           </Button>
