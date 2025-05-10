@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
@@ -58,7 +57,6 @@ export const useZXingBarcodeScannerHook = ({
   // استخدام خطاف إعادة المحاولة للماسح
   const { handleRetry } = useScannerRetry({
     setHasScannerError: (error) => setScannerError(error ? "حدث خطأ في الماسح الضوئي" : null),
-    setCameraActive,
     activateCamera,
     startScan
   });
