@@ -418,3 +418,4 @@ export class ScannerPermissionService {
 
 // تصدير نسخة واحدة من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerPermissionService = ScannerPermissionService.getInstance();
+
