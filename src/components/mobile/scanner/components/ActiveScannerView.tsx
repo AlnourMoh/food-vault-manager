@@ -17,6 +17,27 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
   // تسجيل لحالة الكاميرا النشطة
   useEffect(() => {
     console.log("ActiveScannerView: حالة الكاميرا:", { cameraActive, isScanningActive });
+    
+    // إظهار الكاميرا بشكل أفضل عبر تعديل فئات CSS للفيديو
+    if (cameraActive) {
+      const videoElements = document.querySelectorAll('video');
+      videoElements.forEach(video => {
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.position = 'absolute';
+        video.style.top = '0';
+        video.style.left = '0';
+      });
+    }
+    
+    return () => {
+      // تنظيف عند إزالة المكون
+      const videoElements = document.querySelectorAll('video');
+      videoElements.forEach(video => {
+        video.srcObject = null;
+      });
+    };
   }, [cameraActive, isScanningActive]);
 
   const [scanAnimationActive, setScanAnimationActive] = useState(true);
@@ -41,8 +62,18 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
         </div>
       )}
       
-      {/* الكاميرا النشطة أو المنطقة السوداء التي ستحتوي الكاميرا */}
-      <div className="relative flex-1 w-full bg-transparent">
+      {/* منطقة الكاميرا والرسالة التوجيهية */}
+      <div className="relative flex-1 w-full bg-transparent overflow-hidden">
+        {/* منطقة العرض الفعلية للكاميرا - سيتم إدراج عنصر فيديو الكاميرا هنا تلقائياً */}
+        <div id="barcode-scanner-view" className="absolute inset-0 z-0">
+          {/* زر للتبديل إلى وضع التصحيح - يمكن إخفاؤه في الإنتاج */}
+          {!cameraActive && (
+            <div className="w-full h-full bg-black flex items-center justify-center">
+              <p className="text-white text-center">جاري تحضير الكاميرا...</p>
+            </div>
+          )}
+        </div>
+        
         {/* رسالة توجيه للمستخدم */}
         <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center w-full z-10">
           <h3 className="font-bold text-lg mb-1">قم بتوجيه الكاميرا نحو الباركود</h3>

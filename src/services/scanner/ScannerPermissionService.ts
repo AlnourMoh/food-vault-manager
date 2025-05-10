@@ -51,16 +51,22 @@ export class ScannerPermissionService {
             return false;
           }
             
-          // محاولة الوصول للكاميرا
-          const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
+          // محاولة الوصول للكاميرا مع خيارات أكثر تحديدًا
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
           });
           
           // إذا نجحت المحاولة، نتوقف مباشرة عن استخدام الكاميرا
-          stream.getTracks().forEach(track => {
-            console.log('ScannerPermissionService: إيقاف مسار الكاميرا:', track.kind);
-            track.stop();
-          });
+          if (stream && stream.getTracks) {
+            stream.getTracks().forEach(track => {
+              console.log('ScannerPermissionService: إيقاف مسار الكاميرا:', track.kind);
+              track.stop();
+            });
+          }
           
           console.log('ScannerPermissionService: تم منح إذن الكاميرا في المتصفح');
           return true;
@@ -108,8 +114,9 @@ export class ScannerPermissionService {
             return false;
           }
             
-          // محاولة الوصول للكاميرا
+          // محاولة الوصول للكاميرا مع خيارات أكثر تحديدًا للويب
           const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: false,
             video: { 
               facingMode: 'environment',
               width: { min: 640, ideal: 1280, max: 1920 },
@@ -118,12 +125,21 @@ export class ScannerPermissionService {
           });
           
           // إذا نجحت المحاولة، نتوقف مباشرة عن استخدام الكاميرا
-          stream.getTracks().forEach(track => {
-            console.log('ScannerPermissionService: إيقاف مسار الكاميرا:', track.kind);
-            track.stop();
-          });
+          if (stream && stream.getTracks) {
+            stream.getTracks().forEach(track => {
+              console.log('ScannerPermissionService: إيقاف مسار الكاميرا:', track.kind);
+              track.stop();
+            });
+          }
           
           console.log('ScannerPermissionService: تم منح إذن الكاميرا في المتصفح');
+          
+          // تأكيد نجاح العملية للمستخدم
+          await Toast.show({
+            text: 'تم منح إذن الكاميرا بنجاح',
+            duration: 'short'
+          });
+          
           return true;
         } catch (error) {
           console.error('ScannerPermissionService: خطأ في طلب إذن الكاميرا في المتصفح:', error);
