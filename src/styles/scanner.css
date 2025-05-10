@@ -1,0 +1,16 @@
+
+@keyframes scannerLine {
+  0% {
+    top: 5%;
+  }
+  50% {
+    top: 95%;
+  }
+  100% {
+    top: 5%;
+  }
+}
+
+.animate-scanner-line {
+  animation: scannerLine 2s infinite ease-in-out;
+}

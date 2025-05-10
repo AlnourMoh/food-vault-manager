@@ -12,8 +12,15 @@ export class ScannerCameraService {
   private initializationTimeout: number = 10000; // 10 ثواني كحد أقصى للتهيئة
   private initializationAttempts: number = 0;
   private maxAttempts: number = 3;
+  private mockCamera: boolean = false;
   
-  private constructor() {}
+  private constructor() {
+    // التحقق مما إذا كنا في بيئة الويب وإن كانت الكاميرا غير متوفرة
+    if (!Capacitor.isNativePlatform() && !this.isWebCameraAvailable()) {
+      console.log('[ScannerCameraService] نحن في بيئة الويب والكاميرا غير متوفرة، سنستخدم وضع المحاكاة');
+      this.mockCamera = true;
+    }
+  }
   
   public static getInstance(): ScannerCameraService {
     if (!ScannerCameraService.instance) {
@@ -23,16 +30,50 @@ export class ScannerCameraService {
   }
   
   /**
+   * التحقق من توفر كاميرا الويب
+   */
+  private isWebCameraAvailable(): boolean {
+    return 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
+  }
+  
+  /**
    * التحقق من دعم الجهاز للماسح
    */
   public async isScannerSupported(): Promise<boolean> {
     try {
+      console.log('[ScannerCameraService] التحقق من دعم الماسح...');
+      
+      // إذا كنا في وضع المحاكاة
+      if (this.mockCamera) {
+        console.log('[ScannerCameraService] وضع المحاكاة نشط، سنفترض أن الماسح مدعوم');
+        return true;
+      }
+      
+      // التحقق من توفر ملحق MLKit
       if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[ScannerCameraService] ملحق MLKit غير متاح');
         
         // في بيئة الويب نتحقق من دعم getUserMedia
         if (!Capacitor.isNativePlatform()) {
-          return 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
+          const webCameraSupported = this.isWebCameraAvailable();
+          console.log(`[ScannerCameraService] دعم كاميرا الويب: ${webCameraSupported}`);
+          
+          // محاولة الوصول للكاميرا في المتصفح للتأكد من الدعم والإذن
+          if (webCameraSupported) {
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              
+              // إغلاق الدفق فورًا بعد التحقق
+              stream.getTracks().forEach(track => track.stop());
+              
+              console.log('[ScannerCameraService] تم الوصول لكاميرا المتصفح بنجاح');
+              return true;
+            } catch (e) {
+              console.error('[ScannerCameraService] فشل الوصول لكاميرا المتصفح:', e);
+              return false;
+            }
+          }
+          return webCameraSupported;
         }
         return false;
       }
@@ -67,12 +108,43 @@ export class ScannerCameraService {
         return false;
       }
       
-      if (!Capacitor.isNativePlatform()) {
-        console.log('[ScannerCameraService] نحن في بيئة الويب، سنفترض أن الكاميرا ستعمل عند الطلب');
+      // إذا كنا في وضع المحاكاة
+      if (this.mockCamera) {
+        console.log('[ScannerCameraService] تشغيل وضع المحاكاة للكاميرا');
         this.isCameraReady = true;
         return true;
       }
       
+      // في بيئة الويب
+      if (!Capacitor.isNativePlatform()) {
+        console.log('[ScannerCameraService] نحن في بيئة الويب، سنتحقق من وجود الكاميرا');
+        
+        if (this.isWebCameraAvailable()) {
+          try {
+            // محاولة الوصول للكاميرا
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+              video: { facingMode: 'environment' } // نستخدم الكاميرا الخلفية إن أمكن
+            });
+            
+            // إغلاق الدفق فورًا - سيتم إنشاءه مرة أخرى عند المسح الفعلي
+            stream.getTracks().forEach(track => track.stop());
+            
+            console.log('[ScannerCameraService] تم تفعيل كاميرا الويب بنجاح');
+            this.isCameraReady = true;
+            return true;
+          } catch (e) {
+            console.error('[ScannerCameraService] فشل في تفعيل كاميرا الويب:', e);
+            return false;
+          }
+        } else {
+          console.log('[ScannerCameraService] كاميرا الويب غير مدعومة، تفعيل وضع المحاكاة');
+          this.mockCamera = true;
+          this.isCameraReady = true;
+          return true;
+        }
+      }
+      
+      // التحقق من توفر MLKit
       if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.error('[ScannerCameraService] MLKit غير متوفر على هذا الجهاز');
         await Toast.show({
@@ -146,8 +218,9 @@ export class ScannerCameraService {
     try {
       console.log('[ScannerCameraService] تنظيف موارد الكاميرا...');
       
-      if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('[ScannerCameraService] لا حاجة لتنظيف الموارد');
+      // إذا كنا في وضع المحاكاة أو ويب
+      if (this.mockCamera || !Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('[ScannerCameraService] وضع المحاكاة أو ويب، تعيين الحالة فقط');
         this.isCameraReady = false;
         return;
       }
@@ -196,7 +269,7 @@ export class ScannerCameraService {
    */
   public async toggleTorch(): Promise<void> {
     try {
-      if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+      if (this.mockCamera || !Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[ScannerCameraService] غير قادر على تبديل الفلاش في هذه البيئة');
         return;
       }
@@ -235,6 +308,21 @@ export class ScannerCameraService {
       console.error('[ScannerCameraService] خطأ في إعادة تعيين الكاميرا:', error);
       return false;
     }
+  }
+  
+  /**
+   * تعيين حالة المحاكاة - مفيد للبيئات التي لا تدعم الكاميرا
+   */
+  public enableMockMode(enable: boolean = true): void {
+    console.log(`[ScannerCameraService] تعيين وضع المحاكاة: ${enable}`);
+    this.mockCamera = enable;
+  }
+  
+  /**
+   * التحقق مما إذا كنا في وضع المحاكاة
+   */
+  public isMockMode(): boolean {
+    return this.mockCamera;
   }
 }
 
