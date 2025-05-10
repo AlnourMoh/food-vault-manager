@@ -2,13 +2,25 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
 import { useState } from 'react';
+import { formatProductData } from './utils/productFormatter';
+import { logProductScan } from './utils/scanLogger';
 
+/**
+ * Hook for scanning and fetching product information
+ */
 export const useScanProduct = () => {
   const [scanError, setScanError] = useState<string | null>(null);
   
+  /**
+   * Fetches product information by its barcode/QR code
+   * @param code The product's barcode or QR code
+   * @returns Product information if found, null otherwise
+   */
   const fetchProductByCode = async (code: string): Promise<Product | null> => {
     console.log('useScanProduct: جاري البحث عن بيانات المنتج للرمز:', code);
+    
     try {
+      // البحث عن معرف المنتج باستخدام الرمز الممسوح
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
         .select('product_id')
@@ -28,6 +40,8 @@ export const useScanProduct = () => {
       }
       
       console.log('useScanProduct: تم العثور على معرف المنتج:', productCode.product_id);
+      
+      // البحث عن تفاصيل المنتج باستخدام المعرف
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('*')
@@ -48,39 +62,10 @@ export const useScanProduct = () => {
       
       console.log('useScanProduct: تم جلب بيانات المنتج:', product);
       
-      // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق واجهة المنتج
-      const normalizedStatus = ((): 'active' | 'expired' | 'removed' => {
-        switch(product.status) {
-          case 'active':
-            return 'active';
-          case 'expired':
-            return 'expired';
-          case 'removed':
-            return 'removed';
-          default:
-            console.warn(`useScanProduct: حالة منتج غير متوقعة: ${product.status}، استخدام 'active' كقيمة افتراضية`);
-            return 'active';
-        }
-      })();
+      // تنسيق بيانات المنتج واستخدام المرافق المساعدة
+      const formattedProduct = formatProductData(product);
       
-      const formattedProduct: Product = {
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        unit: product.unit || '',
-        quantity: product.quantity,
-        expiryDate: new Date(product.expiry_date),
-        entryDate: new Date(product.production_date),
-        restaurantId: product.company_id,
-        restaurantName: '', 
-        addedBy: '', 
-        status: normalizedStatus,
-        imageUrl: product.image_url,
-      };
-      
-      console.log('useScanProduct: بيانات المنتج المنسقة:', formattedProduct);
-      
-      // Log scan in database
+      // تسجيل عملية المسح في قاعدة البيانات
       await logProductScan(code, product.id);
       
       return formattedProduct;
@@ -89,21 +74,6 @@ export const useScanProduct = () => {
         throw error;
       }
       throw 'حدث خطأ أثناء البحث عن المنتج';
-    }
-  };
-
-  const logProductScan = async (code: string, productId: string) => {
-    const restaurantId = localStorage.getItem('restaurantId');
-    if (restaurantId) {
-      console.log('useScanProduct: تسجيل عملية المسح للمطعم:', restaurantId);
-      await supabase
-        .from('product_scans')
-        .insert({
-          product_id: productId,
-          qr_code: code,
-          scan_type: 'check',
-          scanned_by: restaurantId
-        });
     }
   };
   
