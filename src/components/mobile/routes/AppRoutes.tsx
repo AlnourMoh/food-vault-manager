@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MobileLayout from '@/components/layout/MobileLayout';
@@ -7,6 +6,7 @@ import ProductManagement from '@/pages/mobile/ProductManagement';
 import MobileAccount from '@/pages/mobile/MobileAccount';
 import MobileInventory from '@/pages/mobile/MobileInventory';
 import { ProtectedRoute } from '@/components/mobile/auth/ProtectedRoute';
+import CameraTest from '@/pages/CameraTest';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -52,6 +52,9 @@ export const AppRoutes: React.FC = () => {
           </MobileLayout>
         </ProtectedRoute>
       } />
+      
+      {/* إضافة مسار جديد لاختبار الكاميرا */}
+      <Route path="/camera-test" element={<CameraTest />} />
       
       <Route path="*" element={<Navigate to="/mobile/inventory" replace />} />
     </Routes>
