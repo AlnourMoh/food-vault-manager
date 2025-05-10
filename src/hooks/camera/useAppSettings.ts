@@ -1,65 +1,45 @@
 
-import { Toast } from '@capacitor/toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { Toast } from '@capacitor/toast';
 
 export const useAppSettings = () => {
-  const openAppSettings = async () => {
+  const openAppSettings = async (): Promise<boolean> => {
     try {
       console.log("جاري محاولة فتح إعدادات التطبيق...");
       
-      // عرض رسالة توضيحية
-      await Toast.show({
-        text: 'سيتم توجيهك إلى إعدادات التطبيق لتمكين الكاميرا',
-        duration: 'short'
-      });
+      // المنصة الحالية
+      const platform = Capacitor.getPlatform();
+      console.log("المنصة الحالية:", platform);
       
-      // المحاولة الأولى: استخدام MLKitBarcodeScanner إذا كان متاحًا
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log("استخدام MLKitBarcodeScanner لفتح الإعدادات");
-        await BarcodeScanner.openSettings();
-        return true;
-      }
-      
-      // طرق تحديد المنصة
-      const platform = window.Capacitor?.getPlatform();
-      
+      // على نظام Android
       if (platform === 'android') {
-        // محاولة فتح صفحة معلومات التطبيق
-        console.log("محاولة إرشاد المستخدم لفتح إعدادات أندرويد");
+        await Browser.open({
+          url: 'package:' + App.getId()
+        });
+        return true;
+      } 
+      // على نظام iOS
+      else if (platform === 'ios') {
+        await Browser.open({
+          url: 'app-settings:'
+        });
+        return true;
+      } 
+      // في بيئة الويب أو منصات أخرى
+      else {
+        console.log("لا يمكن فتح الإعدادات على هذه المنصة:", platform);
         await Toast.show({
-          text: 'يرجى تمكين إذن الكاميرا في إعدادات > التطبيقات > مخزن الطعام > الأذونات',
+          text: 'يرجى تفعيل إذن الكاميرا من إعدادات المتصفح',
           duration: 'long'
         });
-        
-        // على Android يمكننا المحاولة باستخدام ملحق App للخروج وإرشاد المستخدم
-        setTimeout(() => App.exitApp(), 3000);
-        return true;
-      } else if (platform === 'ios') {
-        console.log("محاولة إرشاد المستخدم لفتح إعدادات آيفون");
-        await Toast.show({
-          text: 'يرجى فتح إعدادات الجهاز > الخصوصية > الكاميرا، وابحث عن التطبيق لتمكين الإذن',
-          duration: 'long'
-        });
-        
-        // على iOS لا يمكننا فتح الإعدادات مباشرة، نرشد المستخدم فقط
-        return true;
+        return false;
       }
-      
-      // في حالة عدم التعرف على المنصة
-      console.log("منصة غير معروفة، عرض إرشادات عامة");
-      await Toast.show({
-        text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا للتطبيق',
-        duration: 'long'
-      });
-      return true;
     } catch (error) {
-      console.error("خطأ في فتح الإعدادات:", error);
-      
-      // في حالة الخطأ نعرض رسالة إرشادية للمستخدم
+      console.error("خطأ في فتح إعدادات التطبيق:", error);
       await Toast.show({
-        text: 'يرجى فتح إعدادات جهازك يدوياً وتمكين إذن الكاميرا للتطبيق',
+        text: 'تعذر فتح إعدادات التطبيق، يرجى فتحها يدوياً',
         duration: 'long'
       });
       return false;

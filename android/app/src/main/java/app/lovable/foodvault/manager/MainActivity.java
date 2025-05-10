@@ -41,15 +41,37 @@ public class MainActivity extends BridgeActivity {
             // عرض رسالة للمستخدم
             Toast.makeText(this, "يرجى السماح باستخدام الكاميرا لتمكين مسح الباركود", Toast.LENGTH_LONG).show();
             
-            // طلب الإذن
+            // طلب الإذن بشكل واضح
             ActivityCompat.requestPermissions(
                 this,
-                new String[]{Manifest.permission.CAMERA},
+                new String[]{
+                    Manifest.permission.CAMERA,
+                    // إضافة أذونات مرتبطة يمكن أن تحسن عمل الكاميرا
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                },
                 CAMERA_PERMISSION_REQUEST_CODE
             );
         } else {
             Log.d(TAG, "requestCameraPermission: إذن الكاميرا ممنوح بالفعل");
+            // يمكن إضافة تسجيل إضافي هنا لتأكيد منح الإذن
+            logCameraPermissionStatus();
         }
+    }
+    
+    /**
+     * تسجيل حالة إذن الكاميرا للتشخيص
+     */
+    private void logCameraPermissionStatus() {
+        boolean hasPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        Log.d(TAG, "حالة إذن الكاميرا: " + (hasPermission ? "ممنوح" : "غير ممنوح"));
+        
+        // يمكننا أيضًا فحص الأذونات الأخرى ذات الصلة
+        boolean hasWriteStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        boolean hasReadStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        
+        Log.d(TAG, "إذن الكتابة على التخزين: " + (hasWriteStorage ? "ممنوح" : "غير ممنوح"));
+        Log.d(TAG, "إذن القراءة من التخزين: " + (hasReadStorage ? "ممنوح" : "غير ممنوح"));
     }
     
     @Override
@@ -57,9 +79,27 @@ public class MainActivity extends BridgeActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            boolean cameraPermissionGranted = false;
+            
+            // التحقق من نتائج طلب الإذن
+            if (grantResults.length > 0) {
+                for (int i = 0; i < permissions.length; i++) {
+                    String permission = permissions[i];
+                    int grantResult = grantResults[i];
+                    
+                    if (permission.equals(Manifest.permission.CAMERA)) {
+                        cameraPermissionGranted = (grantResult == PackageManager.PERMISSION_GRANTED);
+                        Log.d(TAG, "onRequestPermissionsResult: إذن الكاميرا " + (cameraPermissionGranted ? "ممنوح" : "مرفوض"));
+                    }
+                }
+            }
+            
+            if (cameraPermissionGranted) {
                 Log.d(TAG, "onRequestPermissionsResult: تم منح إذن الكاميرا");
                 Toast.makeText(this, "تم منح إذن الكاميرا بنجاح!", Toast.LENGTH_SHORT).show();
+                
+                // تسجيل حالة الإذن بعد المنح
+                logCameraPermissionStatus();
             } else {
                 Log.d(TAG, "onRequestPermissionsResult: تم رفض إذن الكاميرا");
                 Toast.makeText(this, "تم رفض إذن الكاميرا. بعض الميزات قد لا تعمل بشكل صحيح.", Toast.LENGTH_LONG).show();
@@ -108,6 +148,9 @@ public class MainActivity extends BridgeActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 Log.d(TAG, "onActivityResult: تم منح إذن الكاميرا بعد العودة من الإعدادات");
                 Toast.makeText(this, "تم منح إذن الكاميرا بنجاح!", Toast.LENGTH_SHORT).show();
+                
+                // تسجيل حالة الإذن بعد المنح
+                logCameraPermissionStatus();
             } else {
                 Log.d(TAG, "onActivityResult: لا يزال إذن الكاميرا مرفوضًا بعد العودة من الإعدادات");
             }

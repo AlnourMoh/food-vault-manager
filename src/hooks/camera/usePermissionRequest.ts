@@ -2,6 +2,7 @@
 import { Toast } from '@capacitor/toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 import { usePermissionStatus } from './usePermissionStatus';
 import { useAppSettings } from './useAppSettings';
 
@@ -29,16 +30,55 @@ export const usePermissionRequest = (permissionStatus: ReturnType<typeof usePerm
         return opened;
       }
       
-      // استراتيجية متعددة للمحاولة
+      // استراتيجية متعددة للمحاولة - على أساس المنصة
+      
+      // 1. في بيئة الويب
+      if (!Capacitor.isNativePlatform()) {
+        console.log("محاولة طلب إذن الكاميرا في المتصفح");
+        
+        // إذا كان المتصفح يدعم واجهات برمجة الكاميرا
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // تم منح الإذن، إغلاق التدفق فورًا
+            stream.getTracks().forEach(track => track.stop());
+            console.log("تم منح إذن كاميرا المتصفح");
+            setHasPermission(true);
+            setPermissionDeniedCount(0);
+            return true;
+          } catch (error) {
+            console.error("تم رفض إذن كاميرا المتصفح:", error);
+            setHasPermission(false);
+            setPermissionDeniedCount(prev => prev + 1);
+            
+            // عرض رسالة للمستخدم
+            await Toast.show({
+              text: 'تم رفض إذن الكاميرا. يرجى تمكينه من إعدادات المتصفح.',
+              duration: 'long'
+            });
+            return false;
+          }
+        } else {
+          console.warn("المتصفح لا يدعم واجهة mediaDevices");
+          setHasPermission(false);
+          await Toast.show({
+            text: 'متصفحك لا يدعم الوصول إلى الكاميرا.',
+            duration: 'long'
+          });
+          return false;
+        }
+      }
+      
+      // 2. في بيئة التطبيق الأصلي
       let granted = false;
       
-      // المحاولة الأولى: استخدام MLKitBarcodeScanner
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+      // محاولة استخدام MLKitBarcodeScanner
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log("استخدام MLKitBarcodeScanner لطلب الإذن");
         
         // عرض رسالة توضيحية
         await Toast.show({
-          text: 'التطبيق يحتاج لإذن الكاميرا لمسح الباركود فقط',
+          text: 'التطبيق يحتاج لإذن الكاميرا لمسح الباركود',
           duration: 'short'
         });
         
@@ -49,13 +89,13 @@ export const usePermissionRequest = (permissionStatus: ReturnType<typeof usePerm
         
         if (granted) {
           setHasPermission(true);
-          setPermissionDeniedCount(0); // إعادة تعيين عداد المحاولات
+          setPermissionDeniedCount(0);
           return true;
         }
       }
       
-      // المحاولة الثانية: استخدام ملحق الكاميرا
-      if (!granted && window.Capacitor?.isPluginAvailable('Camera')) {
+      // إذا لم ننجح، جرب ملحق الكاميرا
+      if (!granted && Capacitor.isPluginAvailable('Camera')) {
         console.log("استخدام Camera لطلب الإذن");
         
         // عرض رسالة توضيحية
@@ -73,28 +113,8 @@ export const usePermissionRequest = (permissionStatus: ReturnType<typeof usePerm
         
         if (granted) {
           setHasPermission(true);
-          setPermissionDeniedCount(0); // إعادة تعيين عداد المحاولات
+          setPermissionDeniedCount(0);
           return true;
-        }
-      }
-      
-      // المحاولة الثالثة: في حالة التطوير على الويب
-      if (!granted) {
-        console.log("محاولة طلب إذن الكاميرا من المتصفح");
-        
-        // محاولة الاستعلام عن توفر الكاميرا في المتصفح
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            // تم منح الإذن، إغلاق التدفق فورًا
-            stream.getTracks().forEach(track => track.stop());
-            console.log("تم منح إذن كاميرا المتصفح");
-            setHasPermission(true);
-            setPermissionDeniedCount(0); // إعادة تعيين عداد المحاولات
-            return true;
-          } catch (error) {
-            console.error("تم رفض إذن كاميرا المتصفح:", error);
-          }
         }
       }
       
