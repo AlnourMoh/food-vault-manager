@@ -62,7 +62,7 @@ export const useBarcodeScanning = ({
       if (!listenerRef.current) {
         console.log('[useBarcodeScanning] إضافة مستمع لأحداث المسح');
         listenerRef.current = await BarcodeScanner.addListener(
-          'barcodeScanned',
+          'barcodesScanned', // Fix: Using correct event name 'barcodesScanned' (plural)
           (result) => {
             console.log('[useBarcodeScanning] تم مسح الرمز:', result);
             if (result.barcodes && result.barcodes.length > 0) {
