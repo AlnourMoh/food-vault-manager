@@ -42,10 +42,32 @@ export class ScannerPermissionService {
         }
       }
       
-      // في بيئة الويب، افترض أن الإذن ممنوح لتسهيل الاختبار
+      // في بيئة الويب، نحاول الوصول للكاميرا مباشرة
       if (!Capacitor.isNativePlatform()) {
-        console.log('ScannerPermissionService: في وضع الويب، نفترض أن الإذن سيتم طلبه لاحقًا');
-        return true;
+        console.log('ScannerPermissionService: في بيئة الويب، نحاول التحقق من إذن الكاميرا مباشرة');
+        try {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.log('ScannerPermissionService: واجهة mediaDevices غير متوفرة في هذا المتصفح');
+            return false;
+          }
+            
+          // محاولة الوصول للكاميرا
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+          });
+          
+          // إذا نجحت المحاولة، نتوقف مباشرة عن استخدام الكاميرا
+          stream.getTracks().forEach(track => {
+            console.log('ScannerPermissionService: إيقاف مسار الكاميرا:', track.kind);
+            track.stop();
+          });
+          
+          console.log('ScannerPermissionService: تم منح إذن الكاميرا في المتصفح');
+          return true;
+        } catch (error) {
+          console.error('ScannerPermissionService: خطأ في التحقق من إذن الكاميرا في المتصفح:', error);
+          return false;
+        }
       }
       
       // إذا وصلنا إلى هنا، فهذا يعني أننا لم نتمكن من التحقق من الإذن
@@ -77,52 +99,81 @@ export class ScannerPermissionService {
         duration: 'short'
       });
       
-      // طلب الإذن بناءً على البيئة
-      if (Capacitor.isNativePlatform()) {
-        // طلب الإذن في البيئة الأصلية (تطبيق جوال)
-        console.log('ScannerPermissionService: طلب إذن الكاميرا في بيئة التطبيق الأصلي');
-        
-        // استخدام MLKit إذا كان متاحًا
-        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-          console.log('ScannerPermissionService: استخدام MLKitBarcodeScanner لطلب الإذن');
-          const result = await BarcodeScanner.requestPermissions();
-          const granted = result.camera === 'granted';
-          console.log('ScannerPermissionService: نتيجة طلب إذن MLKit:', granted);
-          
-          if (granted) {
-            return true;
+      // في بيئة الويب، نحاول الوصول للكاميرا مباشرة
+      if (!Capacitor.isNativePlatform()) {
+        console.log('ScannerPermissionService: في بيئة الويب، نحاول طلب إذن الكاميرا مباشرة');
+        try {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.log('ScannerPermissionService: واجهة mediaDevices غير متوفرة في هذا المتصفح');
+            return false;
           }
+            
+          // محاولة الوصول للكاميرا
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              facingMode: 'environment',
+              width: { min: 640, ideal: 1280, max: 1920 },
+              height: { min: 480, ideal: 720, max: 1080 }
+            } 
+          });
           
-          // إذا تم الرفض وتجاوزنا عدد المحاولات، افتح الإعدادات
-          if (this.permissionAttempts > 1) {
-            console.log('ScannerPermissionService: فتح الإعدادات بعد رفض متكرر');
-            await this.openAppSettings();
-          }
+          // إذا نجحت المحاولة، نتوقف مباشرة عن استخدام الكاميرا
+          stream.getTracks().forEach(track => {
+            console.log('ScannerPermissionService: إيقاف مسار الكاميرا:', track.kind);
+            track.stop();
+          });
+          
+          console.log('ScannerPermissionService: تم منح إذن الكاميرا في المتصفح');
+          return true;
+        } catch (error) {
+          console.error('ScannerPermissionService: خطأ في طلب إذن الكاميرا في المتصفح:', error);
+          await Toast.show({
+            text: 'تم رفض إذن الكاميرا في المتصفح. يرجى تفعيله من إعدادات المتصفح',
+            duration: 'long'
+          });
           return false;
         }
+      }
+      
+      // طلب الإذن في البيئة الأصلية (تطبيق جوال)
+      console.log('ScannerPermissionService: طلب إذن الكاميرا في بيئة التطبيق الأصلي');
+      
+      // استخدام MLKit إذا كان متاحًا
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('ScannerPermissionService: استخدام MLKitBarcodeScanner لطلب الإذن');
+        const result = await BarcodeScanner.requestPermissions();
+        const granted = result.camera === 'granted';
+        console.log('ScannerPermissionService: نتيجة طلب إذن MLKit:', granted);
         
-        // استخدام Camera إذا كان متاحًا
-        if (Capacitor.isPluginAvailable('Camera')) {
-          console.log('ScannerPermissionService: استخدام Camera لطلب الإذن');
-          const result = await Camera.requestPermissions({ permissions: ['camera'] });
-          const granted = result.camera === 'granted';
-          console.log('ScannerPermissionService: نتيجة طلب إذن Camera:', granted);
-          
-          if (granted) {
-            return true;
-          }
-          
-          // إذا تم الرفض وتجاوزنا عدد المحاولات، افتح الإعدادات
-          if (this.permissionAttempts > 1) {
-            console.log('ScannerPermissionService: فتح الإعدادات بعد رفض متكرر');
-            await this.openAppSettings();
-          }
-          return false;
+        if (granted) {
+          return true;
         }
-      } else {
-        // في بيئة الويب، افترض أن الإذن ممنوح لتسهيل الاختبار
-        console.log('ScannerPermissionService: في وضع الويب، نفترض أن الإذن سيتم طلبه لاحقًا');
-        return true;
+        
+        // إذا تم الرفض وتجاوزنا عدد المحاولات، افتح الإعدادات
+        if (this.permissionAttempts > 1) {
+          console.log('ScannerPermissionService: فتح الإعدادات بعد رفض متكرر');
+          await this.openAppSettings();
+        }
+        return false;
+      }
+      
+      // استخدام Camera إذا كان متاحًا
+      if (Capacitor.isPluginAvailable('Camera')) {
+        console.log('ScannerPermissionService: استخدام Camera لطلب الإذن');
+        const result = await Camera.requestPermissions({ permissions: ['camera'] });
+        const granted = result.camera === 'granted';
+        console.log('ScannerPermissionService: نتيجة طلب إذن Camera:', granted);
+        
+        if (granted) {
+          return true;
+        }
+        
+        // إذا تم الرفض وتجاوزنا عدد المحاولات، افتح الإعدادات
+        if (this.permissionAttempts > 1) {
+          console.log('ScannerPermissionService: فتح الإعدادات بعد رفض متكرر');
+          await this.openAppSettings();
+        }
+        return false;
       }
 
       return false;

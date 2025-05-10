@@ -20,6 +20,7 @@ export const useZXingBarcodeScanner = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scannerError, setScannerError] = useState<string | null>(null);
+  const [attempts, setAttempts] = useState(0);
 
   const { 
     cameraActive,
@@ -61,7 +62,25 @@ export const useZXingBarcodeScanner = ({
 
       if (permissionResult && autoStart) {
         console.log('[useZXingBarcodeScanner] الأذونات موجودة، بدء المسح التلقائي');
-        await startScan();
+        
+        // محاولة بدء المسح مع تأخير قصير للتأكد من استقرار حالة الإذن
+        setTimeout(async () => {
+          try {
+            const success = await startScan();
+            console.log('[useZXingBarcodeScanner] نتيجة بدء المسح:', success);
+            
+            if (!success && attempts < 3) {
+              console.warn('[useZXingBarcodeScanner] فشل بدء المسح، محاولة مرة أخرى...');
+              setAttempts(prev => prev + 1);
+              
+              setTimeout(() => {
+                startScan().catch(e => console.error('[useZXingBarcodeScanner] خطأ في إعادة محاولة المسح:', e));
+              }, 1000);
+            }
+          } catch (e) {
+            console.error('[useZXingBarcodeScanner] خطأ في بدء المسح:', e);
+          }
+        }, 500);
       }
       
       setIsLoading(false);
@@ -70,7 +89,7 @@ export const useZXingBarcodeScanner = ({
       setScannerError('خطأ في التحقق من أذونات الكاميرا');
       setIsLoading(false);
     }
-  }, [autoStart, startScan]);
+  }, [autoStart, startScan, attempts]);
 
   // طلب الأذونات
   const requestPermission = useCallback(async (): Promise<boolean> => {
@@ -86,7 +105,20 @@ export const useZXingBarcodeScanner = ({
       
       if (granted && autoStart) {
         console.log('[useZXingBarcodeScanner] تم منح الإذن، بدء المسح');
-        await startScan();
+        
+        // محاولة بدء المسح مع تأخير قصير للتأكد من استقرار حالة الإذن
+        setTimeout(async () => {
+          const started = await startScan();
+          console.log('[useZXingBarcodeScanner] نتيجة بدء المسح بعد منح الإذن:', started);
+          
+          // محاولة مرة أخرى بعد تأخير أطول إذا فشلت المحاولة الأولى
+          if (!started) {
+            console.warn('[useZXingBarcodeScanner] فشل بدء المسح، محاولة مرة أخرى بعد تأخير');
+            setTimeout(() => {
+              startScan().catch(e => console.error('[useZXingBarcodeScanner] خطأ في إعادة محاولة المسح:', e));
+            }, 1500);
+          }
+        }, 500);
       }
       
       return granted;
@@ -112,6 +144,11 @@ export const useZXingBarcodeScanner = ({
   // فحص الأذونات عند تحميل المكون
   useEffect(() => {
     checkPermissions();
+    
+    // تنظيف عند إلغاء تحميل المكون
+    return () => {
+      stopScan().catch(e => console.error('[useZXingBarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e));
+    };
   }, []);
 
   return {
@@ -122,6 +159,7 @@ export const useZXingBarcodeScanner = ({
     scannerError,
     requestPermission,
     handleRetry,
-    openAppSettings
+    openAppSettings,
+    startScan // إضافة للتحكم المباشر ببدء المسح
   };
 };

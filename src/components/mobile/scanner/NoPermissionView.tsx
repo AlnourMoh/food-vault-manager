@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/card';
+import { Button } from '@/components/ui/button'; // Fixed import from button instead of card
 import { Camera, Settings, Keyboard, RefreshCw, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,7 +21,10 @@ export const NoPermissionView: React.FC<NoPermissionViewProps> = ({
   const handleRequestPermission = async () => {
     try {
       setIsRequesting(true);
-      await onRequestPermission();
+      console.log("NoPermissionView: محاولة طلب الإذن");
+      const granted = await onRequestPermission();
+      console.log("NoPermissionView: نتيجة طلب الإذن:", granted);
+      return granted;
     } catch (error) {
       console.error('خطأ في طلب الإذن:', error);
       toast({
