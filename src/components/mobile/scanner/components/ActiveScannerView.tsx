@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Camera, RefreshCw } from 'lucide-react';
+import { X, Camera, RefreshCw, AlertCircle } from 'lucide-react';
 import { Toast } from '@capacitor/toast';
 
 interface ActiveScannerViewProps {
@@ -15,13 +15,15 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
   isScanningActive,
   onClose 
 }) => {
+  const [lastVideoCheckTime, setLastVideoCheckTime] = useState(Date.now());
+  
   // تسجيل لحالة الكاميرا النشطة
   useEffect(() => {
     console.log("ActiveScannerView: حالة الكاميرا:", { cameraActive, isScanningActive });
     
     // تعزيز إظهار الكاميرا بشكل صحيح
-    if (cameraActive) {
-      setTimeout(() => {
+    const checkCamera = () => {
+      if (cameraActive) {
         const videoElements = document.querySelectorAll('video');
         console.log("ActiveScannerView: عدد عناصر الفيديو الموجودة:", videoElements.length);
         
@@ -60,12 +62,23 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
             });
           }
         });
-      }, 500); // تأخير قصير للتأكد من تحميل عنصر الفيديو
-    }
+        
+        // تسجيل وقت آخر فحص
+        setLastVideoCheckTime(Date.now());
+      }
+    };
+    
+    // الفحص الفوري
+    checkCamera();
+    
+    // فحص دوري كل ثانية للتأكد من عمل الكاميرا
+    const interval = setInterval(checkCamera, 1000);
     
     return () => {
       // تنظيف عند إزالة المكون
       console.log("ActiveScannerView: تنظيف موارد الكاميرا");
+      clearInterval(interval);
+      
       const videoElements = document.querySelectorAll('video');
       videoElements.forEach(video => {
         if (video.srcObject) {
@@ -86,6 +99,7 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
   }, [cameraActive, isScanningActive]);
 
   const [scanAnimationActive, setScanAnimationActive] = useState(true);
+  const [refreshAttempts, setRefreshAttempts] = useState(0);
 
   // تنشيط خط المسح المتحرك عندما تكون الكاميرا نشطة
   useEffect(() => {
@@ -95,26 +109,88 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
   }, [cameraActive]);
   
   // محاولة إعادة تنشيط الكاميرا إذا لم تظهر
-  const handleRefreshCamera = () => {
+  const handleRefreshCamera = async () => {
     console.log("ActiveScannerView: محاولة إعادة تنشيط الكاميرا");
-    
-    // محاولة تحديث العرض بإعادة تهيئة عناصر الفيديو
-    const videoElements = document.querySelectorAll('video');
-    if (videoElements.length > 0) {
-      videoElements.forEach(video => {
-        if (video.paused && video.srcObject) {
-          video.play().catch(err => {
-            console.error("ActiveScannerView: خطأ في تشغيل الفيديو:", err);
-          });
-        }
-      });
-    }
+    setRefreshAttempts(prev => prev + 1);
     
     // إشعار المستخدم
-    Toast.show({
+    await Toast.show({
       text: 'جاري محاولة إعادة تفعيل الكاميرا...',
       duration: 'short'
     });
+    
+    // محاولة تعديل الـ DOM مباشرة
+    const scannerContainer = document.getElementById('barcode-scanner-view');
+    if (scannerContainer) {
+      // محاولة إنشاء عنصر فيديو جديد إذا لم يكن موجودًا
+      const videoElements = scannerContainer.querySelectorAll('video');
+      
+      if (videoElements.length === 0 && 'mediaDevices' in navigator) {
+        try {
+          console.log('محاولة إنشاء عنصر فيديو جديد وتنشيط الكاميرا');
+          
+          // التحقق من وجود كاميرا
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const hasCamera = devices.some(device => device.kind === 'videoinput');
+          
+          if (!hasCamera) {
+            console.warn('لا توجد كاميرا متاحة في هذا الجهاز');
+            await Toast.show({
+              text: 'لم يتم العثور على كاميرا في جهازك',
+              duration: 'long'
+            });
+            return;
+          }
+          
+          // إنشاء عنصر فيديو وتنشيط الكاميرا
+          const video = document.createElement('video');
+          video.id = 'scanner-video-manual';
+          video.autoplay = true;
+          video.playsInline = true;
+          
+          scannerContainer.appendChild(video);
+          
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { 
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
+          });
+          
+          video.srcObject = stream;
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = 'cover';
+          video.style.position = 'absolute';
+          video.style.top = '0';
+          video.style.left = '0';
+          video.style.zIndex = '1';
+          
+          await video.play();
+          
+          await Toast.show({
+            text: 'تم تنشيط الكاميرا بنجاح',
+            duration: 'short'
+          });
+        } catch (error) {
+          console.error('فشل في إنشاء عنصر فيديو جديد:', error);
+          await Toast.show({
+            text: 'فشل في تنشيط الكاميرا. تحقق من أذونات الكاميرا',
+            duration: 'short'
+          });
+        }
+      } else {
+        // محاولة إعادة تشغيل الفيديو الموجود
+        videoElements.forEach(video => {
+          if (video.paused && video.srcObject) {
+            video.play().catch(err => {
+              console.error("ActiveScannerView: خطأ في تشغيل الفيديو:", err);
+            });
+          }
+        });
+      }
+    }
   };
 
   return (
@@ -165,9 +241,14 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
         </div>
         
         {/* رسالة الحالة */}
-        {isScanningActive && (
+        {isScanningActive ? (
           <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm z-10">
             جاري المسح...
+          </div>
+        ) : cameraActive && (
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-yellow-500/80 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm z-10 flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2" />
+            الكاميرا نشطة لكن المسح غير نشط
           </div>
         )}
       </div>
@@ -190,7 +271,11 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
             disabled={!cameraActive}
             onClick={handleRefreshCamera}
           >
-            <Camera className="h-6 w-6" />
+            {refreshAttempts > 0 ? (
+              <RefreshCw className={`h-6 w-6 ${refreshAttempts > 0 ? 'animate-spin' : ''}`} />
+            ) : (
+              <Camera className="h-6 w-6" />
+            )}
           </Button>
         </div>
         

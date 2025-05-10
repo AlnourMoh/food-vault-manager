@@ -7,6 +7,7 @@ import { Toast } from '@capacitor/toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { App } from '@capacitor/app';
 import { Camera } from '@capacitor/camera';
+import { Browser } from '@capacitor/browser';
 
 export class ScannerPermissionService {
   private permissionAttempts = 0;
@@ -280,12 +281,19 @@ export class ScannerPermissionService {
           duration: 'long'
         });
         
-        // محاولة فتح إعدادات التطبيق على iOS
-        try {
-          await App.openUrl('app-settings:');
-          return true;
-        } catch (e) {
-          console.error('فشل في فتح إعدادات التطبيق على iOS:', e);
+        // استخدام App.exitApp() بدلاً من openUrl
+        if (Capacitor.isPluginAvailable('App')) {
+          try {
+            // على iOS نعرض رسالة ونخرج من التطبيق ليتمكن المستخدم من الذهاب للإعدادات
+            const confirmMessage = 'سيتم إغلاق التطبيق الآن. يرجى الذهاب إلى: الإعدادات > الخصوصية > الكاميرا، وتمكين الإذن';
+            alert(confirmMessage);
+            
+            // إغلاق التطبيق ليتمكن المستخدم من الذهاب للإعدادات يدويًا
+            await App.exitApp();
+            return true;
+          } catch (e) {
+            console.error('فشل في إغلاق التطبيق على iOS:', e);
+          }
         }
       } else if (platform === 'android') {
         await Toast.show({
@@ -293,12 +301,19 @@ export class ScannerPermissionService {
           duration: 'long'
         });
         
-        // محاولة فتح إعدادات التطبيق على Android
-        try {
-          await App.openUrl('package:' + (await App.getInfo()).id);
-          return true;
-        } catch (e) {
-          console.error('فشل في فتح إعدادات التطبيق على Android:', e);
+        // استخدام Browser.open لفتح صفحة الإعدادات على أندرويد
+        if (Capacitor.isPluginAvailable('Browser') && Capacitor.isPluginAvailable('App')) {
+          try {
+            // على Android نعرض رسالة ثم نغلق التطبيق
+            const confirmMessage = 'سيتم إغلاق التطبيق الآن. يرجى الذهاب إلى: الإعدادات > التطبيقات > مخزن الطعام > الأذونات، وتمكين الكاميرا';
+            alert(confirmMessage);
+            
+            // إغلاق التطبيق ليتمكن المستخدم من الذهاب للإعدادات يدويًا
+            await App.exitApp();
+            return true;
+          } catch (e) {
+            console.error('فشل في فتح إعدادات التطبيق على Android:', e);
+          }
         }
       } else {
         await Toast.show({
