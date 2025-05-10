@@ -57,10 +57,6 @@ repositories {
     maven {
         url "https://plugins.gradle.org/m2/"
     }
-    // تصحيح بنية المستودعات
-    flatDir {
-        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
-    }
 }
 
 dependencies {
