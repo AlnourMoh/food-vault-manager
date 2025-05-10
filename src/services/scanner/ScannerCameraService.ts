@@ -156,8 +156,8 @@ export class ScannerCameraService {
       const operations = [
         BarcodeScanner.disableTorch().catch(() => console.log('[ScannerCameraService] تجاهل خطأ إيقاف الفلاش')),
         BarcodeScanner.stopScan().catch(() => console.log('[ScannerCameraService] تجاهل خطأ إيقاف المسح')),
-        BarcodeScanner.showBackground().catch(() => console.log('[ScannerCameraService] تجاهل خطأ إظهار الخلفية')),
-        BarcodeScanner.enableCamera(false).catch(() => console.log('[ScannerCameraService] تجاهل خطأ تعطيل الكاميرا'))
+        BarcodeScanner.showBackground().catch(() => console.log('[ScannerCameraService] تجاهل خطأ إظهار الخلفية'))
+        // تم إزالة استدعاء enableCamera لأنه غير موجود في واجهة BarcodeScannerPlugin
       ];
       
       // تنفيذ كل العمليات بالتوازي
