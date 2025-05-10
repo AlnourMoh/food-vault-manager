@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ZXingScannerContent } from './scanner/ZXingScannerContent';
 import { useScannerPermissions } from '@/hooks/scanner/hooks/useScannerPermissions';
 import { Capacitor } from '@capacitor/core';
@@ -24,6 +24,11 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   const [hasScannerError, setHasScannerError] = React.useState(false);
   const [cameraActive, setCameraActive] = React.useState(false);
   const [useWebScanner, setUseWebScanner] = React.useState(false);
+  
+  // تتبع ما إذا تم تجهيز الكاميرا بنجاح
+  const scannerPrepared = useRef(false);
+  // منع الإغلاق التلقائي
+  const scanTimeoutRef = useRef<number | null>(null);
 
   // تحديد ما إذا كنا سنستخدم الماسح المحلي أو ماسح الويب
   useEffect(() => {
@@ -37,11 +42,29 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
 
   // تفعيل الماسح تلقائياً إذا كانت الخاصية autoStart مضبوطة على true
   useEffect(() => {
-    if (autoStart && hasPermission && !isLoading) {
+    if (autoStart && hasPermission && !isLoading && !scannerPrepared.current) {
       console.log('[ZXingBarcodeScanner] تفعيل الماسح تلقائياً');
+      scannerPrepared.current = true;
       startScan();
     }
   }, [autoStart, hasPermission, isLoading]);
+
+  // تنظيف عند إلغاء تحميل المكون
+  useEffect(() => {
+    return () => {
+      console.log('[ZXingBarcodeScanner] تنظيف المكون...');
+      // إلغاء أي مهلات زمنية
+      if (scanTimeoutRef.current !== null) {
+        clearTimeout(scanTimeoutRef.current);
+        scanTimeoutRef.current = null;
+      }
+      
+      // التأكد من إيقاف المسح وتنظيف موارد الكاميرا
+      stopScan().catch(e => 
+        console.error('[ZXingBarcodeScanner] خطأ في تنظيف الموارد:', e)
+      );
+    };
+  }, []);
 
   // بدء المسح الضوئي
   const startScan = async () => {
@@ -122,9 +145,15 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     }
   };
 
+  // معالج المسح الناجح
+  const handleScan = (code: string) => {
+    console.log('[ZXingBarcodeScanner] تم مسح الكود:', code);
+    onScan(code);
+  };
+
   // استخدام ماسح الويب إذا كنا في بيئة الويب
   if (useWebScanner) {
-    return <WebScanner onScan={onScan} onClose={onClose} />;
+    return <WebScanner onScan={handleScan} onClose={onClose} />;
   }
 
   // استخدام الماسح الأصلي في الأجهزة الجوالة
@@ -135,7 +164,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       isScanningActive={isScanningActive}
       hasScannerError={hasScannerError}
       cameraActive={cameraActive}
-      onScan={onScan}
+      onScan={handleScan}
       onClose={onClose}
       startScan={startScan}
       stopScan={stopScan}

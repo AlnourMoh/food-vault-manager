@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, RefreshCw, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { scannerCameraService } from '@/services/scanner/ScannerCameraService';
+import { BarcodeDetector } from '@/types/barcode-scanner-augmentation.d';
 
 interface WebScannerProps {
   onScan: (code: string) => void;
@@ -13,6 +14,9 @@ interface WebScannerProps {
 export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const detectorRef = useRef<any | null>(null);
+  const animationRef = useRef<number | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [hasError, setHasError] = useState(false);
   const { toast } = useToast();
@@ -36,6 +40,52 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
     onScan(randomBarcode);
   };
   
+  // تفعيل المسح المستمر للباركود
+  const scanBarcode = async () => {
+    if (!videoRef.current || !canvasRef.current || !detectorRef.current || !isScanning) return;
+    
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const detector = detectorRef.current;
+      
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        // رسم الإطار الحالي على الكانفاس
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          // محاولة اكتشاف الباركود
+          const barcodes = await detector.detect(canvas);
+          
+          if (barcodes && barcodes.length > 0) {
+            console.log('تم اكتشاف باركود:', barcodes[0].rawValue);
+            // تم العثور على باركود، إيقاف المسح وإرجاع النتيجة
+            const code = barcodes[0].rawValue;
+            
+            // تنبيه المستخدم
+            toast({
+              title: "تم مسح الباركود",
+              description: `الرمز: ${code}`,
+            });
+            
+            // استدعاء معالج المسح
+            onScan(code);
+          }
+        }
+      }
+      
+      // استمرار الحلقة
+      animationRef.current = requestAnimationFrame(scanBarcode);
+    } catch (error) {
+      console.error('خطأ في مسح الباركود:', error);
+      // استمرار المحاولة على الرغم من الخطأ
+      animationRef.current = requestAnimationFrame(scanBarcode);
+    }
+  };
+  
   // تفعيل الكاميرا
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -52,6 +102,22 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
         
         console.log('[WebScanner] بدء تهيئة كاميرا الويب...');
         
+        // التحقق من دعم BarcodeDetector
+        const isBarcodeDetectorSupported = 'BarcodeDetector' in window;
+        console.log(`[WebScanner] هل BarcodeDetector مدعوم: ${isBarcodeDetectorSupported}`);
+        
+        if (isBarcodeDetectorSupported) {
+          try {
+            // @ts-ignore - BarcodeDetector might not be recognized by TypeScript
+            detectorRef.current = new BarcodeDetector({
+              formats: ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'itf', 'codabar']
+            });
+            console.log('[WebScanner] تم إنشاء BarcodeDetector بنجاح');
+          } catch (detectorError) {
+            console.warn('[WebScanner] فشل إنشاء BarcodeDetector:', detectorError);
+          }
+        }
+        
         // محاولة الوصول للكاميرا
         stream = await navigator.mediaDevices.getUserMedia({
           video: { 
@@ -61,11 +127,17 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
           }
         });
         
+        streamRef.current = stream;
+        
         // تطبيق تدفق الفيديو على العنصر
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          await videoRef.current.play();
           console.log('[WebScanner] تم تفعيل كاميرا الويب بنجاح');
           setIsScanning(true);
+          
+          // بدء المسح المستمر
+          animationRef.current = requestAnimationFrame(scanBarcode);
         }
       } catch (error) {
         console.error('[WebScanner] خطأ في تفعيل الكاميرا:', error);
@@ -88,13 +160,21 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
     // تنظيف الموارد عند إلغاء تحميل المكون
     return () => {
       console.log('[WebScanner] تنظيف موارد الكاميرا...');
-      if (stream) {
-        console.log('[WebScanner] إيقاف مسارات الفيديو');
-        stream.getTracks().forEach(track => track.stop());
-      }
+      
       setIsScanning(false);
+      
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      
+      if (streamRef.current) {
+        console.log('[WebScanner] إيقاف مسارات الفيديو');
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
     };
-  }, [toast]);
+  }, [toast, scanBarcode]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -141,9 +221,10 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
               ref={videoRef}
               autoPlay
               playsInline
+              muted
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+            <canvas ref={canvasRef} className="absolute inset-0 h-full w-full hidden" />
             
             {/* إطار المسح */}
             <div className="absolute inset-0 flex items-center justify-center">
@@ -154,11 +235,7 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
                 <div className="absolute bottom-0 right-0 h-12 w-12 border-b-2 border-r-2 border-blue-500 rounded-br-lg" />
                 
                 {/* خط المسح المتحرك */}
-                <div className="absolute left-0 w-full h-0.5 bg-red-500 animate-scanner-line" 
-                    style={{
-                      animation: "scannerLine 2s infinite ease-in-out",
-                    }} 
-                />
+                <div className="absolute left-0 w-full h-0.5 bg-red-500 animate-scanner-line" />
               </div>
             </div>
           </div>
