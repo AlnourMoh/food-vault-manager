@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useBarcodeScanning } from './modules/useBarcodeScanning';
 import { useScannerRetry } from './modules/useScannerRetry';

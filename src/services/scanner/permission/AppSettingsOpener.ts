@@ -1,94 +1,59 @@
 
-import { App } from '@capacitor/app';
-import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Device } from '@capacitor/device';
-import { Browser } from '@capacitor/browser';
 
+/**
+ * خدمة فتح إعدادات التطبيق للوصول إلى أذونات الكاميرا
+ */
 export class AppSettingsOpener {
   /**
-   * فتح إعدادات التطبيق للسماح للمستخدم بمنح الأذونات
+   * محاولة فتح إعدادات التطبيق باستخدام الطريقة المناسبة حسب المنصة والإصدار
    */
   public static async openAppSettings(): Promise<boolean> {
     try {
-      console.log('AppSettingsOpener: محاولة فتح إعدادات التطبيق');
+      console.log('[AppSettingsOpener] محاولة فتح إعدادات التطبيق');
       
-      // إذا لم نكن في بيئة تطبيق حقيقية
+      // التحقق من بيئة التشغيل
       if (!Capacitor.isNativePlatform()) {
-        console.log('AppSettingsOpener: لسنا في تطبيق جوال، توجيه المستخدم إلى إعدادات المتصفح');
-        
+        console.log('[AppSettingsOpener] لسنا في بيئة أصلية، عرض تعليمات بديلة');
         await Toast.show({
-          text: 'يرجى تمكين أذونات الكاميرا من خلال إعدادات المتصفح',
+          text: 'يرجى فتح إعدادات المتصفح وتمكين إذن الكاميرا',
           duration: 'long'
         });
-        
         return false;
       }
       
-      // محاولة فتح الإعدادات باستخدام BarcodeScanner أولاً
+      // محاولة استخدام ملحق MLKit لفتح الإعدادات (طريقة مفضلة)
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('AppSettingsOpener: استخدام MLKitBarcodeScanner.openSettings()');
-        await BarcodeScanner.openSettings();
-        return true;
+        try {
+          console.log('[AppSettingsOpener] محاولة استخدام openSettings من MLKit');
+          // BarcodeScanner.openSettings متوفرة في ملحق MLKit
+          await BarcodeScanner.openSettings();
+          return true;
+        } catch (e) {
+          console.warn('[AppSettingsOpener] فشل استخدام openSettings من MLKit:', e);
+        }
       }
       
-      // محاولة استخدام App.openUrl لفتح إعدادات التطبيق
+      // إظهار تعليمات للمستخدم حسب المنصة
       const platform = Capacitor.getPlatform();
-      console.log('AppSettingsOpener: المنصة:', platform);
-      
-      // تحديد رسالة حسب المنصة
-      let message = '';
       if (platform === 'ios') {
-        message = 'انتقل إلى: الإعدادات > الخصوصية > الكاميرا > (اسم التطبيق)';
-      } else {
-        message = 'انتقل إلى: الإعدادات > التطبيقات > (اسم التطبيق) > الأذونات';
-      }
-      
-      // عرض رسالة توضيحية
-      await Toast.show({
-        text: `سيتم توجيهك إلى إعدادات التطبيق. ${message}`,
-        duration: 'long'
-      });
-      
-      // الحصول على معلومات الجهاز
-      const deviceInfo = await Device.getInfo();
-      
-      // بناء رابط إعدادات التطبيق حسب المنصة
-      let settingsUrl: string;
-      
-      if (platform === 'ios') {
-        // على iOS، نفتح إعدادات التطبيق مباشرة
-        settingsUrl = 'app-settings:';
+        await Toast.show({
+          text: 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا، وتمكين إذن الكاميرا للتطبيق',
+          duration: 'long'
+        });
       } else if (platform === 'android') {
-        // على Android، نستخدم نية محددة لفتح إعدادات التطبيق
-        const packageName = await App.getInfo();
-        settingsUrl = `package:${packageName.id}`;
-      } else {
-        console.log('AppSettingsOpener: المنصة غير مدعومة');
-        return false;
+        await Toast.show({
+          text: 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات، وتمكين إذن الكاميرا',
+          duration: 'long'
+        });
       }
       
-      // محاولة فتح الرابط باستخدام متصفح كاباسيتور بدلاً من App.openUrl
-      console.log('AppSettingsOpener: محاولة فتح الرابط:', settingsUrl);
-      
-      if (Capacitor.isPluginAvailable('Browser')) {
-        await Browser.open({ url: settingsUrl });
-      } else {
-        // محاولة استخدام واجهة أقدم من Capacitor
-        await App.exitApp(); // نحن لا نستطيع فتح الرابط مباشرةً، نخرج من التطبيق لكي يفتح المستخدم الإعدادات يدوياً
-      }
-      
-      return true;
+      return false;
     } catch (error) {
-      console.error('AppSettingsOpener: خطأ في فتح إعدادات التطبيق:', error);
-      
-      // عرض رسالة خطأ
-      await Toast.show({
-        text: 'تعذر فتح إعدادات التطبيق تلقائيًا. يرجى فتح إعدادات جهازك يدويًا وتمكين إذن الكاميرا للتطبيق',
-        duration: 'long'
-      });
-      
+      console.error('[AppSettingsOpener] خطأ في فتح إعدادات التطبيق:', error);
       return false;
     }
   }

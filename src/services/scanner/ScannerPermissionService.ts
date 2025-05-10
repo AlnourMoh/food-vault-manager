@@ -1,4 +1,3 @@
-
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 import { App } from '@capacitor/app';
@@ -214,13 +213,16 @@ class ScannerPermissionService {
         return false;
       }
       
-      // فتح إعدادات التطبيق - تصحيح استخدام App.openSettings
-      if (App && typeof App.openSettings === 'function') {
-        await App.openSettings();
-        console.log('[ScannerPermissionService] تم فتح إعدادات التطبيق');
+      // في Capacitor v5+، تم تغيير واجهة البرمجة، لذا نستخدم الطريقة المناسبة
+      if (typeof App.exitApp === 'function') {
+        // نستخدم حل بديل حيث نطلب من المستخدم فتح الإعدادات يدوياً
+        await Toast.show({
+          text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا للتطبيق',
+          duration: 'long'
+        });
         return true;
       } else {
-        console.error('[ScannerPermissionService] App.openSettings غير متوفر');
+        console.error('[ScannerPermissionService] وظيفة فتح الإعدادات غير متوفرة');
         return false;
       }
     } catch (error) {

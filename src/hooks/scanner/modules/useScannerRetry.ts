@@ -5,14 +5,12 @@ import { Capacitor } from '@capacitor/core';
 
 interface UseScannerRetryProps {
   setHasScannerError: (error: string | null) => void;
-  setCameraActive: (active: boolean) => void;
   activateCamera: () => Promise<boolean>;
   startScan: () => Promise<boolean>;
 }
 
 export const useScannerRetry = ({
   setHasScannerError,
-  setCameraActive,
   activateCamera,
   startScan
 }: UseScannerRetryProps) => {
@@ -87,7 +85,7 @@ export const useScannerRetry = ({
         });
       }
     }
-  }, [setHasScannerError, activateCamera, startScan, setCameraActive]);
+  }, [setHasScannerError, activateCamera, startScan]);
 
   return { handleRetry };
 };
