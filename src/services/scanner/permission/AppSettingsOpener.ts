@@ -29,7 +29,7 @@ export class AppSettingsOpener {
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           console.log('[AppSettingsOpener] محاولة استخدام openSettings من MLKit');
-          // BarcodeScanner.openSettings متوفرة في ملحق MLKit
+          // فتح الإعدادات باستخدام MLKit
           await BarcodeScanner.openSettings();
           return true;
         } catch (e) {

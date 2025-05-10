@@ -39,6 +39,15 @@ export class ScannerCameraService {
   }
   
   /**
+   * الحصول على خيارات تنسيق المسح
+   */
+  public getScanFormatOptions(): object {
+    return {
+      formats: ['QR_CODE', 'CODE_128', 'EAN_13', 'EAN_8', 'UPC_A', 'UPC_E']
+    };
+  }
+  
+  /**
    * تحضير الكاميرا للاستخدام
    */
   public async prepareCamera(): Promise<boolean> {
@@ -54,7 +63,7 @@ export class ScannerCameraService {
         console.log('[ScannerCameraService] محاولة تحضير الكاميرا الحقيقية');
         
         try {
-          // تهيئة الكاميرا
+          // تهيئة الكاميرا - بدون وسائط (fixed: Expected 0 arguments)
           await BarcodeScanner.prepare();
           console.log('[ScannerCameraService] تم تحضير الكاميرا بنجاح');
           return true;
