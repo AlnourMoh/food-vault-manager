@@ -7,6 +7,8 @@ import { ScannerErrorView } from './scanner/components/ScannerErrorView';
 import { ActiveScannerView } from './scanner/components/ActiveScannerView';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import { NoPermissionView } from './scanner/NoPermissionView';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -25,7 +27,8 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     cameraActive,
     scannerError: hasScannerError,
     requestPermission,
-    handleRetry
+    handleRetry,
+    openAppSettings
   } = useZXingBarcodeScanner({ onScan, onClose, autoStart });
 
   // إضافة سجل تشخيصي لتتبع حالة المكون
@@ -52,6 +55,24 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     logDiagnostic();
   }, [hasPermission]);
   
+  // محاولة طلب الأذونات عند بدء التشغيل
+  useEffect(() => {
+    if (hasPermission === false && autoStart) {
+      console.log("محاولة طلب الأذونات عند بدء التشغيل");
+      
+      // استخدام خدمة الأذونات المحسّنة
+      const attemptPermission = async () => {
+        try {
+          await scannerPermissionService.requestPermission();
+        } catch (error) {
+          console.error("خطأ في طلب الإذن التلقائي:", error);
+        }
+      };
+      
+      attemptPermission();
+    }
+  }, [hasPermission, autoStart]);
+  
   // عرض شاشة التحميل
   if (isLoading) {
     return <ScannerLoadingView onClose={onClose} />;
@@ -59,18 +80,26 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   
   // عرض شاشة طلب الإذن
   if (hasPermission === false) {
-    return <PermissionRequestView 
+    return <NoPermissionView 
       onRequestPermission={async () => {
         const granted = await requestPermission();
         console.log("نتيجة طلب الإذن:", granted);
-      }} 
-      onClose={onClose} 
+      }}
+      onClose={onClose}
+      onManualEntry={() => {
+        // يمكن إضافة الإدخال اليدوي هنا في المستقبل
+        console.log("طلب الإدخال اليدوي");
+      }}
     />;
   }
   
   // عرض شاشة الخطأ
   if (hasScannerError) {
-    return <ScannerErrorView errorMessage={"حدث خطأ في الماسح الضوئي"} onRetry={handleRetry} onClose={onClose} />;
+    return <ScannerErrorView 
+      errorMessage={"حدث خطأ في الماسح الضوئي"} 
+      onRetry={handleRetry} 
+      onClose={onClose} 
+    />;
   }
   
   // عرض الكاميرا النشطة

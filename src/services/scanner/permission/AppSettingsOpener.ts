@@ -23,6 +23,7 @@ export class AppSettingsOpener {
       
       // تحديد المنصة
       const platform = Capacitor.getPlatform();
+      console.log('AppSettingsOpener: المنصة المحددة:', platform);
       
       if (platform === 'android') {
         return await this.openAndroidSettings();
@@ -49,52 +50,55 @@ export class AppSettingsOpener {
    * فتح إعدادات الأذونات في أندرويد
    */
   private static async openAndroidSettings(): Promise<boolean> {
-    console.log('AppSettingsOpener: على منصة أندرويد');
-    
-    // عرض رسالة توجيهية للمستخدم
-    await Toast.show({
-      text: 'سيتم توجيهك للإعدادات، يرجى البحث عن التطبيق وتمكين إذن الكاميرا',
-      duration: 'long'
-    });
+    console.log('AppSettingsOpener: فتح إعدادات أندرويد');
     
     try {
-      // محاولة الطريقة الأولى - استخدام الرابط المباشر
-      const packageName = 'app.lovable.foodvault.manager';
-      const url = `package:${packageName}`;
+      // ننشئ نافذة تأكيد للمستخدم
+      const result = confirm(
+        "هل تريد الانتقال إلى إعدادات التطبيق لتمكين إذن الكاميرا؟\n" +
+        "\nخطوات تفعيل الإذن في جهازك:" +
+        "\n1. انتقل إلى التطبيقات في الإعدادات" +
+        "\n2. ابحث عن تطبيق 'مخزن الطعام'" +
+        "\n3. اختر 'الأذونات'" +
+        "\n4. قم بتمكين 'الكاميرا'"
+      );
       
-      // استخدام متصفح Capacitor لفتح URL الخاص
-      await Browser.open({
-        url: `intent:${url}#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;end`
-      });
-      
-      return true;
-    } catch (err1) {
-      console.log('AppSettingsOpener: فشلت الطريقة الأولى، محاولة الطريقة الثانية');
-      
-      try {
-        // محاولة الطريقة الثانية - فتح الإعدادات العامة
-        await Browser.open({
-          url: 'intent:#Intent;action=android.settings.APPLICATION_SETTINGS;end'
-        });
+      if (result) {
+        console.log('AppSettingsOpener: المستخدم وافق على فتح الإعدادات');
         
-        // إظهار إرشادات إضافية
+        // محاولة استخدام ملحق App لفتح الإعدادات أولاً
+        if (Capacitor.isPluginAvailable('App')) {
+          try {
+            await App.openUrl({
+              url: 'package:app.lovable.foodvault.manager'
+            });
+            return true;
+          } catch (error) {
+            console.log('AppSettingsOpener: فشل فتح الإعدادات باستخدام App، تجربة البدائل');
+          }
+        }
+
+        // محاولة استخدام متصفح Capacitor كبديل
+        try {
+          await Browser.open({
+            url: 'package:app.lovable.foodvault.manager'
+          });
+          return true;
+        } catch (error) {
+          console.log('AppSettingsOpener: فشل فتح الإعدادات باستخدام Browser');
+        }
+        
+        // عرض توجيهات للمستخدم
         await Toast.show({
-          text: 'يرجى اختيار "التطبيقات" ثم البحث عن "مخزن الطعام" وتمكين الكاميرا',
+          text: 'يرجى فتح إعدادات الجهاز يدوياً وتفعيل إذن الكاميرا للتطبيق',
           duration: 'long'
         });
-        
-        return true;
-      } catch (err2) {
-        console.error('AppSettingsOpener: فشلت محاولات فتح الإعدادات', err2);
-        
-        // إظهار إرشادات يدوية
-        await Toast.show({
-          text: 'يرجى فتح "إعدادات" الجهاز > التطبيقات > مخزن الطعام > الأذونات',
-          duration: 'long'
-        });
-        
-        return false;
       }
+      
+      return false;
+    } catch (error) {
+      console.error('AppSettingsOpener: خطأ في فتح إعدادات أندرويد:', error);
+      return false;
     }
   }
 
@@ -102,23 +106,54 @@ export class AppSettingsOpener {
    * فتح إعدادات الأذونات في iOS
    */
   private static async openIOSSettings(): Promise<boolean> {
-    console.log('AppSettingsOpener: على منصة iOS');
+    console.log('AppSettingsOpener: فتح إعدادات iOS');
     
-    // على iOS لا يمكن فتح إعدادات تطبيق محدد مباشرة، فقط الإعدادات العامة
-    await Toast.show({
-      text: 'يرجى فتح إعدادات الجهاز > الخصوصية > الكاميرا، وتمكين إذن الكاميرا للتطبيق',
-      duration: 'long'
-    });
-    
-    // محاولة فتح الإعدادات العامة
     try {
-      await Browser.open({
-        url: 'App-prefs:root'
-      });
+      // ننشئ نافذة تأكيد للمستخدم
+      const result = confirm(
+        "هل تريد الانتقال إلى إعدادات التطبيق لتمكين إذن الكاميرا؟\n" +
+        "\nخطوات تفعيل الإذن في جهازك:" +
+        "\n1. انتقل إلى الإعدادات" +
+        "\n2. اختر 'الخصوصية والأمان'" +
+        "\n3. اختر 'الكاميرا'" +
+        "\n4. قم بتمكين 'مخزن الطعام'"
+      );
       
-      return true;
+      if (result) {
+        console.log('AppSettingsOpener: المستخدم وافق على فتح الإعدادات');
+        
+        // محاولة استخدام ملحق App لفتح الإعدادات أولاً
+        if (Capacitor.isPluginAvailable('App')) {
+          try {
+            await App.openUrl({
+              url: 'app-settings:'
+            });
+            return true;
+          } catch (error) {
+            console.log('AppSettingsOpener: فشل فتح الإعدادات باستخدام App، تجربة البدائل');
+          }
+        }
+
+        // محاولة استخدام Browser كبديل
+        try {
+          await Browser.open({
+            url: 'app-settings:'
+          });
+          return true;
+        } catch (error) {
+          console.log('AppSettingsOpener: فشل فتح الإعدادات باستخدام Browser');
+        }
+        
+        // عرض توجيهات للمستخدم
+        await Toast.show({
+          text: 'يرجى فتح إعدادات الجهاز يدوياً وتفعيل إذن الكاميرا للتطبيق',
+          duration: 'long'
+        });
+      }
+      
+      return false;
     } catch (error) {
-      console.error('AppSettingsOpener: فشل في فتح إعدادات iOS', error);
+      console.error('AppSettingsOpener: خطأ في فتح إعدادات iOS:', error);
       return false;
     }
   }
@@ -127,14 +162,28 @@ export class AppSettingsOpener {
    * فتح إعدادات المتصفح في الويب
    */
   private static async openWebSettings(): Promise<boolean> {
-    console.log('AppSettingsOpener: على منصة الويب');
+    console.log('AppSettingsOpener: في بيئة الويب');
     
-    // في بيئة الويب، نقدم إرشادات لإعدادات المتصفح
-    await Toast.show({
-      text: 'يرجى السماح بإذن الكاميرا عند ظهور النافذة المنبثقة من المتصفح',
-      duration: 'long'
-    });
-    
-    return true;
+    try {
+      // إظهار إرشادات للمستخدم
+      alert(
+        "لتمكين إذن الكاميرا في المتصفح:\n\n" +
+        "1. انقر على أيقونة القفل/معلومات بجوار عنوان URL\n" +
+        "2. اختر 'إعدادات الموقع' أو 'أذونات'\n" +
+        "3. قم بتمكين 'الكاميرا'\n\n" +
+        "أو افتح إعدادات المتصفح وابحث عن أذونات المواقع"
+      );
+      
+      // إظهار رسالة توضيحية
+      await Toast.show({
+        text: 'يرجى السماح بإذن الكاميرا من إعدادات المتصفح',
+        duration: 'long'
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('AppSettingsOpener: خطأ في فتح إعدادات الويب:', error);
+      return false;
+    }
   }
 }
