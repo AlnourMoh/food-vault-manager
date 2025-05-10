@@ -9,10 +9,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.widget.Toast;
-import com.getcapacitor.BridgeActivity;
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
@@ -23,67 +23,69 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // تسجيل تشخيصي - للمساعدة في تحديد المشكلة
         Log.d(TAG, "onCreate: بدء تشغيل التطبيق");
         
-        // التحقق من وجود إذن الكاميرا وطلبه فورًا عند بدء التطبيق
-        requestCameraPermission();
+        // عند بدء التشغيل نتحقق من وجود إذن الكاميرا
+        checkAndRequestCameraPermission();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // نعيد التحقق من أذونات الكاميرا عند العودة إلى التطبيق
+        checkAndRequestCameraPermission();
     }
 
     /**
-     * طلب إذن استخدام الكاميرا بشكل مباشر
+     * التحقق من وجود إذن استخدام الكاميرا وطلبه إذا لزم الأمر
      */
-    private void requestCameraPermission() {
-        // التحقق أولاً مما إذا كان الإذن ممنوحًا بالفعل
+    private void checkAndRequestCameraPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "requestCameraPermission: طلب إذن الكاميرا مباشرة");
+            Log.d(TAG, "checkAndRequestCameraPermission: لا يوجد إذن للكاميرا، سيتم طلبه");
             
-            // عرض رسالة للمستخدم
-            android.widget.Toast.makeText(this, "يرجى السماح باستخدام الكاميرا لتمكين مسح الباركود", android.widget.Toast.LENGTH_LONG).show();
+            // إظهار رسالة للمستخدم
+            android.widget.Toast.makeText(this, 
+                "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود", 
+                android.widget.Toast.LENGTH_LONG).show();
 
-            // طلب الإذن بشكل واضح
+            // طلب الأذونات المطلوبة
             String[] permissions;
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
                 permissions = new String[] {
                     Manifest.permission.CAMERA,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                };
+            } else if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                permissions = new String[] {
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
                 };
             } else {
                 permissions = new String[] {
-                    Manifest.permission.CAMERA
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.READ_MEDIA_IMAGES
                 };
             }
             
+            // طلب الأذونات
             ActivityCompat.requestPermissions(
                 this,
                 permissions,
                 CAMERA_PERMISSION_REQUEST_CODE
             );
         } else {
-            Log.d(TAG, "requestCameraPermission: إذن الكاميرا ممنوح بالفعل");
-            // يمكن إضافة تسجيل إضافي هنا لتأكيد منح الإذن
-            logCameraPermissionStatus();
+            Log.d(TAG, "checkAndRequestCameraPermission: إذن الكاميرا ممنوح بالفعل");
+            
+            // إظهار رسالة للتأكيد
+            android.widget.Toast.makeText(this, 
+                "تم منح إذن الكاميرا بالفعل", 
+                android.widget.Toast.LENGTH_SHORT).show();
         }
     }
     
-    /**
-     * تسجيل حالة إذن الكاميرا للتشخيص
-     */
-    private void logCameraPermissionStatus() {
-        boolean hasPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
-        Log.d(TAG, "حالة إذن الكاميرا: " + (hasPermission ? "ممنوح" : "غير ممنوح"));
-        
-        // يمكننا أيضًا فحص الأذونات الأخرى ذات الصلة
-        boolean hasWriteStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        boolean hasReadStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        
-        Log.d(TAG, "إذن الكتابة على التخزين: " + (hasWriteStorage ? "ممنوح" : "غير ممنوح"));
-        Log.d(TAG, "إذن القراءة من التخزين: " + (hasReadStorage ? "ممنوح" : "غير ممنوح"));
-    }
-    
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
@@ -104,72 +106,41 @@ public class MainActivity extends BridgeActivity {
             
             if (cameraPermissionGranted) {
                 Log.d(TAG, "onRequestPermissionsResult: تم منح إذن الكاميرا");
-                android.widget.Toast.makeText(this, "تم منح إذن الكاميرا بنجاح!", android.widget.Toast.LENGTH_SHORT).show();
                 
-                // تسجيل حالة الإذن بعد المنح
-                logCameraPermissionStatus();
+                android.widget.Toast.makeText(this, 
+                    "تم منح إذن الكاميرا بنجاح!", 
+                    android.widget.Toast.LENGTH_SHORT).show();
                 
-                // محاولة إعادة فتح الكاميرا بعد منح الإذن مباشرة
-                // هذا الكود يرسل بث محلي للتطبيق لإعلامه أن الإذن تم منحه
-                Intent permissionGranted = new Intent("app.permission.CAMERA_PERMISSION_GRANTED");
-                sendBroadcast(permissionGranted);
+                // إرسال بث محلي للتطبيق يفيد بأن الإذن تم منحه
+                sendBroadcast(new Intent("app.lovable.foodvault.manager.CAMERA_PERMISSION_GRANTED"));
             } else {
                 Log.d(TAG, "onRequestPermissionsResult: تم رفض إذن الكاميرا");
-                android.widget.Toast.makeText(this, "تم رفض إذن الكاميرا. بعض الميزات قد لا تعمل بشكل صحيح.", android.widget.Toast.LENGTH_LONG).show();
                 
-                // إذا تم الرفض بشكل دائم، اقترح على المستخدم الذهاب إلى الإعدادات
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                    !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                    Log.d(TAG, "onRequestPermissionsResult: تم الرفض بشكل دائم، اقتراح فتح الإعدادات");
-                    
-                    // عرض رسالة أكثر وضوحًا
-                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-                    builder.setTitle("إذن الكاميرا مطلوب");
-                    builder.setMessage("لقد قمت برفض إذن الكاميرا بشكل دائم. " +
-                                      "لتمكين مسح الباركود، يرجى فتح إعدادات التطبيق وتفعيل إذن الكاميرا يدويًا.");
-                    
-                    builder.setPositiveButton("فتح الإعدادات", (dialog, which) -> {
-                        openAppSettings();
-                    });
-                    
-                    builder.setNegativeButton("لاحقًا", (dialog, which) -> {
-                        dialog.dismiss();
-                    });
-                    
-                    builder.show();
-                } else {
-                    // إذا لم يتم الرفض بشكل دائم، نطلب الإذن مرة أخرى بعد تأخير قصير
-                    new android.os.Handler().postDelayed(() -> {
-                        requestCameraPermission();
-                    }, 3000);
-                }
+                // إظهار رسالة للمستخدم وتوجيهه إلى الإعدادات
+                android.widget.Toast.makeText(this, 
+                    "لا يمكن استخدام الماسح الضوئي بدون إذن الكاميرا. يرجى تمكينه من إعدادات التطبيق", 
+                    android.widget.Toast.LENGTH_LONG).show();
+                
+                // عرض مربع حوار لفتح إعدادات التطبيق
+                android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+                builder.setTitle("إذن مطلوب")
+                    .setMessage("التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود. هل تريد فتح إعدادات التطبيق لتمكين الإذن؟")
+                    .setPositiveButton("فتح الإعدادات", (dialog, which) -> openAppSettings())
+                    .setNegativeButton("لاحقاً", (dialog, which) -> dialog.dismiss())
+                    .show();
             }
         }
     }
     
     /**
-     * فتح صفحة إعدادات التطبيق حيث يمكن للمستخدم تعديل الأذونات
+     * فتح إعدادات التطبيق لتمكين الأذونات
      */
     private void openAppSettings() {
-        try {
-            Log.d(TAG, "openAppSettings: محاولة فتح إعدادات التطبيق");
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            Uri uri = Uri.fromParts("package", getPackageName(), null);
-            intent.setData(uri);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // إضافة علامة لفتح في مهمة جديدة
-            startActivityForResult(intent, APP_SETTINGS_REQUEST_CODE);
-        } catch (Exception e) {
-            Log.e(TAG, "openAppSettings: خطأ في فتح الإعدادات", e);
-            
-            // محاولة بديلة لفتح الإعدادات العامة
-            try {
-                Intent intent = new Intent(Settings.ACTION_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            } catch (Exception e2) {
-                Log.e(TAG, "openAppSettings: فشل في فتح الإعدادات العامة أيضًا", e2);
-            }
-        }
+        Intent intent = new Intent();
+        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", getPackageName(), null);
+        intent.setData(uri);
+        startActivityForResult(intent, APP_SETTINGS_REQUEST_CODE);
     }
     
     @Override
@@ -177,37 +148,8 @@ public class MainActivity extends BridgeActivity {
         super.onActivityResult(requestCode, resultCode, data);
         
         if (requestCode == APP_SETTINGS_REQUEST_CODE) {
-            // تحقق من الإذن بعد عودة المستخدم من صفحة الإعدادات
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "onActivityResult: تم منح إذن الكاميرا بعد العودة من الإعدادات");
-                android.widget.Toast.makeText(this, "تم منح إذن الكاميرا بنجاح!", android.widget.Toast.LENGTH_SHORT).show();
-                
-                // تسجيل حالة الإذن بعد المنح
-                logCameraPermissionStatus();
-                
-                // إرسال بث محلي للإشارة إلى أن الإذن قد تم منحه
-                Intent permissionGranted = new Intent("app.permission.CAMERA_PERMISSION_GRANTED");
-                sendBroadcast(permissionGranted);
-            } else {
-                Log.d(TAG, "onActivityResult: لا يزال إذن الكاميرا مرفوضًا بعد العودة من الإعدادات");
-                android.widget.Toast.makeText(this, "لا يزال إذن الكاميرا مرفوضًا. بعض الميزات لن تعمل.", android.widget.Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-    
-    @Override
-    protected void onResume() {
-        super.onResume();
-        
-        // تحقق من إذن الكاميرا في كل مرة يتم فيها استئناف النشاط
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "onResume: لا يزال إذن الكاميرا مفقودًا");
-        } else {
-            Log.d(TAG, "onResume: إذن الكاميرا موجود");
-            
-            // إرسال بث محلي للإشارة إلى أن الإذن متاح الآن
-            Intent permissionAvailable = new Intent("app.permission.CAMERA_PERMISSION_AVAILABLE");
-            sendBroadcast(permissionAvailable);
+            // عند العودة من إعدادات التطبيق، نتحقق من حالة الأذونات مرة أخرى
+            checkAndRequestCameraPermission();
         }
     }
 }
