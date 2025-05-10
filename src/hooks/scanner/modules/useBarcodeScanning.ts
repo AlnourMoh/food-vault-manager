@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat, LensFacing } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 
@@ -151,27 +151,30 @@ export const useBarcodeScanning = ({
       
       // بدء المسح واستماع للنتائج
       await BarcodeScanner.startScan({
-        formats: ['all'],
-        lensFacing: 'back',
+        formats: [BarcodeFormat.QrCode, BarcodeFormat.Ean13, BarcodeFormat.Ean8, BarcodeFormat.Code128],
+        lensFacing: LensFacing.Back,
       });
       
       // إضافة مستمع للأحداث
-      BarcodeScanner.addListener('barcodeScanned', async (result: any) => {
-        console.log('[useBarcodeScanning] تم مسح باركود:', result.barcode);
+      BarcodeScanner.addListener('barcodesScanned', async (result: any) => {
+        console.log('[useBarcodeScanning] تم مسح باركود:', result.barcodes);
         
         try {
-          // حفظ الكود الممسوح
-          setLastScannedCode(result.barcode.rawValue);
-          
-          // استدعاء دالة رد الاتصال
-          onScan(result.barcode.rawValue);
-          
-          // إيقاف المسح تلقائيًا بعد النجاح
-          await BarcodeScanner.stopScan();
-          setIsScanningActive(false);
-          
-          // استدعاء دالة اكتمال المسح
-          if (onScanComplete) onScanComplete();
+          if (result.barcodes && result.barcodes.length > 0) {
+            // حفظ الكود الممسوح
+            const barcode = result.barcodes[0];
+            setLastScannedCode(barcode.rawValue);
+            
+            // استدعاء دالة رد الاتصال
+            onScan(barcode.rawValue);
+            
+            // إيقاف المسح تلقائيًا بعد النجاح
+            await BarcodeScanner.stopScan();
+            setIsScanningActive(false);
+            
+            // استدعاء دالة اكتمال المسح
+            if (onScanComplete) onScanComplete();
+          }
         } catch (error) {
           console.error('[useBarcodeScanning] خطأ في معالجة الباركود الممسوح:', error);
         }
