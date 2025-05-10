@@ -1,3 +1,4 @@
+
 /**
  * خدمة إدارة أذونات الماسح الضوئي
  */
@@ -32,7 +33,7 @@ export class ScannerPermissionService {
       console.log('ScannerPermissionService: المنصة:', Capacitor.getPlatform());
       console.log('ScannerPermissionService: بيئة نظام أصلي؟', Capacitor.isNativePlatform());
       
-      // في بيئة التط��يق الأصلي
+      // في بيئة التطبيق الأصلي
       if (Capacitor.isNativePlatform()) {
         // تحقق من وجود ملحقات الكاميرا
         if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
@@ -78,8 +79,13 @@ export class ScannerPermissionService {
         // محاولة الوصول إلى الكاميرا
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         
-        // إغلاق المسار فورًا بعد التحقق
-        stream.getTracks().forEach(track => track.stop());
+        console.log('ScannerPermissionService: تم الحصول على بث الكاميرا، اختبار ناجح');
+        
+        // إغلاق المسار فورًا بعد التحقق لتجنب تعارضات لاحقة
+        stream.getTracks().forEach(track => {
+          console.log(`ScannerPermissionService: إيقاف مسار ${track.kind} بعد التحقق من الإذن`);
+          track.stop();
+        });
         
         console.log('ScannerPermissionService: تم منح إذن الكاميرا في المتصفح');
         return true;
@@ -205,10 +211,18 @@ export class ScannerPermissionService {
         }
         
         // محاولة الوصول إلى الكاميرا
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: {
+            facingMode: 'environment',
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 }
+          }
+        });
         
         // إغلاق المسار فورًا بعد التحقق
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
         
         console.log('ScannerPermissionService: تم منح إذن الكاميرا في المتصفح');
         this.permissionAttempts = 0; // إعادة تعيين عداد المحاولات
@@ -315,7 +329,7 @@ export class ScannerPermissionService {
     try {
       console.log('ScannerPermissionService: التحقق من دعم الماسح الضوئي');
       
-      // في بيئة التط��يق الأصلي
+      // في بيئة التطبيق الأصلي
       if (Capacitor.isNativePlatform()) {
         // التحقق من وجود ملحقات الماسح الضوئي
         const hasMLKit = Capacitor.isPluginAvailable('MLKitBarcodeScanner');
@@ -331,6 +345,19 @@ export class ScannerPermissionService {
       // في بيئة الويب، نتحقق من وجود واجهة برمجة الكاميرا
       const hasWebCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
       console.log('ScannerPermissionService: توفر كاميرا الويب:', hasWebCamera);
+      
+      // تحقق إضافي من وجود كاميرات متصلة
+      if (hasWebCamera) {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const cameras = devices.filter(device => device.kind === 'videoinput');
+          console.log('ScannerPermissionService: عدد الكاميرات المتاحة:', cameras.length);
+          
+          return cameras.length > 0;
+        } catch (error) {
+          console.error('ScannerPermissionService: خطأ في التحقق من الكاميرات المتاحة:', error);
+        }
+      }
       
       return hasWebCamera;
     } catch (error) {

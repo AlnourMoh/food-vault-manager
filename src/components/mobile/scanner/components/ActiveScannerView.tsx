@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Camera, RefreshCw, AlertCircle } from 'lucide-react';
@@ -32,7 +31,31 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
     // جمع معلومات تشخيصية
     setDebugInfo(`المنصة: ${Capacitor.getPlatform()}, أصلية: ${Capacitor.isNativePlatform() ? 'نعم' : 'لا'}, الكاميرا: ${cameraActive ? 'نشطة' : 'غير نشطة'}`);
     
-    // تعزيز إظهار الكاميرا بشكل صحيح
+    // منع إيقاف الكاميرا تلقائيًا في بيئة الويب
+    if (cameraActive && !Capacitor.isNativePlatform()) {
+      console.log("ActiveScannerView: منع إيقاف الكاميرا تلقائيًا في بيئة الويب");
+      
+      // الاستمرار في طلب الحصول على إطارات من الكاميرا
+      const keepAliveInterval = setInterval(() => {
+        const videoElements = document.querySelectorAll('video');
+        videoElements.forEach(video => {
+          if (video.paused && video.srcObject) {
+            console.log("ActiveScannerView: إعادة تشغيل بث الفيديو المتوقف");
+            video.play().catch(err => {
+              console.error("ActiveScannerView: خطأ في إعادة تشغيل الفيديو:", err);
+            });
+          }
+        });
+      }, 1000);
+      
+      return () => {
+        clearInterval(keepAliveInterval);
+      };
+    }
+  }, [cameraActive, isScanningActive]);
+
+  // تعزيز إظهار الكاميرا بشكل صحيح
+  useEffect(() => {
     const checkCamera = () => {
       if (cameraActive) {
         const videoElements = document.querySelectorAll('video');
@@ -87,32 +110,15 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
     // الفحص الفوري
     checkCamera();
     
-    // فحص دوري كل ثانية للتأكد من عمل الكاميرا
-    const interval = setInterval(checkCamera, 1000);
+    // فحص دوري كل نصف ثانية للتأكد من عمل الكاميرا
+    const interval = setInterval(checkCamera, 500);
     
     return () => {
       // تنظيف عند إزالة المكون
       console.log("ActiveScannerView: تنظيف موارد الكاميرا");
       clearInterval(interval);
-      
-      const videoElements = document.querySelectorAll('video');
-      videoElements.forEach(video => {
-        if (video.srcObject) {
-          console.log("ActiveScannerView: إيقاف بث الكاميرا");
-          try {
-            const tracks = (video.srcObject as MediaStream).getTracks();
-            tracks.forEach(track => {
-              track.stop();
-              console.log("ActiveScannerView: تم إيقاف مسار الكاميرا:", track.kind);
-            });
-            video.srcObject = null;
-          } catch (error) {
-            console.error("ActiveScannerView: خطأ في إيقاف الكاميرا:", error);
-          }
-        }
-      });
     };
-  }, [cameraActive, isScanningActive]);
+  }, [cameraActive]);
 
   const [scanAnimationActive, setScanAnimationActive] = useState(true);
   const [refreshAttempts, setRefreshAttempts] = useState(0);
@@ -262,6 +268,7 @@ export const ActiveScannerView: React.FC<ActiveScannerViewProps> = ({
           <p>حالة المسح: {isScanningActive ? 'نشط' : 'غير نشط'}</p>
           <p>خطأ الكاميرا: {cameraError || 'لا يوجد'}</p>
           <p>عدد محاولات التحديث: {refreshAttempts}</p>
+          <p>آخر فحص للفيديو: {new Date(lastVideoCheckTime).toLocaleTimeString()}</p>
           <Button size="sm" onClick={toggleDebug} variant="destructive" className="mt-2">إغلاق</Button>
         </div>
       )}

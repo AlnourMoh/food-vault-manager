@@ -19,6 +19,7 @@ export const useBarcodeScanning = ({
   const [isScanningActive, setIsScanningActive] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const [isWebRTCReady, setIsWebRTCReady] = useState(false);
+  const [webStreamRef, setWebStreamRef] = useState<MediaStream | null>(null);
   
   // تنظيف عند إلغاء تحميل المكون
   useEffect(() => {
@@ -93,24 +94,32 @@ export const useBarcodeScanning = ({
               } 
             });
             
-            // إيقاف المسار للتحقق من الإذن فقط
-            stream.getTracks().forEach(track => track.stop());
+            // حفظ المسار لاستخدامه وإغلاقه لاحقًا
+            setWebStreamRef(stream);
+            
+            // تهيئة عنصر الفيديو وتعيينه
+            const videoElement = document.createElement('video');
+            videoElement.id = 'scanner-video-element';
+            videoElement.srcObject = stream;
+            videoElement.autoplay = true;
+            videoElement.style.width = '100%';
+            videoElement.style.height = '100%';
+            videoElement.style.objectFit = 'cover';
+            
+            // إضافة عنصر الفيديو إلى الصفحة
+            const scannerView = document.getElementById('barcode-scanner-view');
+            if (scannerView) {
+              // إزالة أي عنصر فيديو سابق
+              scannerView.querySelectorAll('video').forEach(v => v.remove());
+              scannerView.appendChild(videoElement);
+            }
             
             setIsWebRTCReady(true);
             setCameraActive(true);
             setIsScanningActive(true);
             
-            // محاكاة مسح ناجح بعد 3 ثواني للاختبار فقط
-            setTimeout(() => {
-              console.log('[useBarcodeScanning] محاكاة مسح ناجح للاختبار');
-              const testCode = '1234567890123';
-              setLastScannedCode(testCode);
-              onScan(testCode);
-              
-              // إيقاف المسح تلقائيًا بعد النجاح
-              setIsScanningActive(false);
-              if (onScanComplete) onScanComplete();
-            }, 3000);
+            // تأخر محاكاة المسح الناجح لـ 30 ثانية بدلاً من 3 ثواني للسماح بالاختبار الأطول
+            console.log('[useBarcodeScanning] الكاميرا ستبقى مفعلة لفترة أطول للمسح');
             
             return true;
           } catch (error) {
@@ -124,17 +133,40 @@ export const useBarcodeScanning = ({
         setCameraActive(true);
         setIsScanningActive(true);
         
-        // محاكاة مسح ناجح بعد 3 ثواني للاختبار فقط في بيئة الويب
-        setTimeout(() => {
-          console.log('[useBarcodeScanning] محاكاة مسح ناجح للاختبار في بيئة الويب');
-          const testCode = '9780201379624';
-          setLastScannedCode(testCode);
-          onScan(testCode);
-          
-          // إيقاف المسح تلقائيًا بعد النجاح
-          setIsScanningActive(false);
-          if (onScanComplete) onScanComplete();
-        }, 3000);
+        // إنشاء بث كاميرا جديد إذا لم يكن موجودًا
+        if (!webStreamRef) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+              video: { 
+                facingMode: 'environment',
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              } 
+            });
+            
+            setWebStreamRef(stream);
+            
+            // تهيئة عنصر الفيديو
+            const videoElement = document.createElement('video');
+            videoElement.id = 'scanner-video-element';
+            videoElement.srcObject = stream;
+            videoElement.autoplay = true;
+            videoElement.style.width = '100%';
+            videoElement.style.height = '100%';
+            videoElement.style.objectFit = 'cover';
+            
+            // إضافة عنصر الفيديو إلى الصفحة
+            const scannerView = document.getElementById('barcode-scanner-view');
+            if (scannerView) {
+              scannerView.querySelectorAll('video').forEach(v => v.remove());
+              scannerView.appendChild(videoElement);
+            }
+          } catch (error) {
+            console.error('[useBarcodeScanning] خطأ في إنشاء بث كاميرا جديد:', error);
+            if (onScanError) onScanError('تعذر إنشاء بث كاميرا جديد');
+            return false;
+          }
+        }
         
         return true;
       }
@@ -189,7 +221,7 @@ export const useBarcodeScanning = ({
       if (onScanError) onScanError(error instanceof Error ? error.message : 'خطأ غير معروف في بدء المسح');
       return false;
     }
-  }, [onScan, onScanError, onScanComplete, isWebRTCReady]);
+  }, [onScan, onScanError, onScanComplete, isWebRTCReady, webStreamRef]);
 
   // وظيفة إيقاف المسح
   const stopScan = useCallback(async (): Promise<boolean> => {
@@ -198,6 +230,19 @@ export const useBarcodeScanning = ({
     try {
       // في بيئة الويب
       if (!Capacitor.isNativePlatform()) {
+        // تنظيف بث الكاميرا
+        if (webStreamRef) {
+          console.log('[useBarcodeScanning] إيقاف بث الكاميرا في بيئة الويب');
+          webStreamRef.getTracks().forEach(track => track.stop());
+          setWebStreamRef(null);
+        }
+        
+        // إزالة عنصر الفيديو
+        const videoElement = document.getElementById('scanner-video-element');
+        if (videoElement && videoElement.parentNode) {
+          videoElement.parentNode.removeChild(videoElement);
+        }
+        
         setCameraActive(false);
         setIsScanningActive(false);
         return true;
@@ -220,7 +265,7 @@ export const useBarcodeScanning = ({
       console.error('[useBarcodeScanning] خطأ في إيقاف المسح:', error);
       return false;
     }
-  }, [isScanningActive]);
+  }, [isScanningActive, webStreamRef]);
 
   return {
     cameraActive,
