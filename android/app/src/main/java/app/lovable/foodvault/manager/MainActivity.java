@@ -40,18 +40,7 @@ public class MainActivity extends BridgeActivity {
             
             // عرض رسالة للمستخدم
             android.widget.Toast.makeText(this, "يرجى السماح باستخدام الكاميرا لتمكين مسح الباركود", android.widget.Toast.LENGTH_LONG).show();
-            
-            // التحقق إذا كان المستخدم رفض الإذن مسبقًا لعرض شرح
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                Log.d(TAG, "requestCameraPermission: عرض شرح للمستخدم حول أهمية الإذن");
-                
-                android.widget.Toast.makeText(
-                    this, 
-                    "تحتاج التطبيق إلى إذن الكاميرا لمسح الباركود. يرجى الموافقة على الإذن في النافذة التالية.", 
-                    android.widget.Toast.LENGTH_LONG
-                ).show();
-            }
-            
+
             // طلب الإذن بشكل واضح
             String[] permissions;
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
@@ -119,6 +108,11 @@ public class MainActivity extends BridgeActivity {
                 
                 // تسجيل حالة الإذن بعد المنح
                 logCameraPermissionStatus();
+                
+                // محاولة إعادة فتح الكاميرا بعد منح الإذن مباشرة
+                // هذا الكود يرسل بث محلي للتطبيق لإعلامه أن الإذن تم منحه
+                Intent permissionGranted = new Intent("app.permission.CAMERA_PERMISSION_GRANTED");
+                sendBroadcast(permissionGranted);
             } else {
                 Log.d(TAG, "onRequestPermissionsResult: تم رفض إذن الكاميرا");
                 android.widget.Toast.makeText(this, "تم رفض إذن الكاميرا. بعض الميزات قد لا تعمل بشكل صحيح.", android.widget.Toast.LENGTH_LONG).show();
@@ -144,12 +138,10 @@ public class MainActivity extends BridgeActivity {
                     
                     builder.show();
                 } else {
-                    // إذا لم يتم الرفض بشكل دائم، يمكن طلب الإذن مرة أخرى لاحقًا
-                    android.widget.Toast.makeText(
-                        this,
-                        "لتمكين مسح الباركود، يرجى منح إذن الكاميرا عند طلبه مرة أخرى",
-                        android.widget.Toast.LENGTH_LONG
-                    ).show();
+                    // إذا لم يتم الرفض بشكل دائم، نطلب الإذن مرة أخرى بعد تأخير قصير
+                    new android.os.Handler().postDelayed(() -> {
+                        requestCameraPermission();
+                    }, 3000);
                 }
             }
         }
@@ -164,9 +156,19 @@ public class MainActivity extends BridgeActivity {
             Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             Uri uri = Uri.fromParts("package", getPackageName(), null);
             intent.setData(uri);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // إضافة علامة لفتح في مهمة جديدة
             startActivityForResult(intent, APP_SETTINGS_REQUEST_CODE);
         } catch (Exception e) {
             Log.e(TAG, "openAppSettings: خطأ في فتح الإعدادات", e);
+            
+            // محاولة بديلة لفتح الإعدادات العامة
+            try {
+                Intent intent = new Intent(Settings.ACTION_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e2) {
+                Log.e(TAG, "openAppSettings: فشل في فتح الإعدادات العامة أيضًا", e2);
+            }
         }
     }
     
@@ -182,8 +184,13 @@ public class MainActivity extends BridgeActivity {
                 
                 // تسجيل حالة الإذن بعد المنح
                 logCameraPermissionStatus();
+                
+                // إرسال بث محلي للإشارة إلى أن الإذن قد تم منحه
+                Intent permissionGranted = new Intent("app.permission.CAMERA_PERMISSION_GRANTED");
+                sendBroadcast(permissionGranted);
             } else {
                 Log.d(TAG, "onActivityResult: لا يزال إذن الكاميرا مرفوضًا بعد العودة من الإعدادات");
+                android.widget.Toast.makeText(this, "لا يزال إذن الكاميرا مرفوضًا. بعض الميزات لن تعمل.", android.widget.Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -197,6 +204,10 @@ public class MainActivity extends BridgeActivity {
             Log.d(TAG, "onResume: لا يزال إذن الكاميرا مفقودًا");
         } else {
             Log.d(TAG, "onResume: إذن الكاميرا موجود");
+            
+            // إرسال بث محلي للإشارة إلى أن الإذن متاح الآن
+            Intent permissionAvailable = new Intent("app.permission.CAMERA_PERMISSION_AVAILABLE");
+            sendBroadcast(permissionAvailable);
         }
     }
 }

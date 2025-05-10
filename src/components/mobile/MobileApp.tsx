@@ -27,36 +27,36 @@ const MobileApp: React.FC = () => {
           return;
         }
         
-        // التحقق من حالة الإذن الحالية
-        const hasPermission = await scannerPermissionService.checkPermission();
-        console.log('MobileApp: حالة إذن الكاميرا عند بدء التطبيق:', hasPermission);
-        
-        if (hasPermission) {
-          console.log('MobileApp: إذن الكاميرا ممنوح بالفعل');
-          return;
-        }
-        
-        // طلب الإذن فقط إذا كنا في تطبيق جوال حقيقي (وليس في الويب)
+        // نطلب الإذن مباشرة بدلاً من التحقق منه فقط
         if (Capacitor.isNativePlatform()) {
-          console.log('MobileApp: جاري طلب إذن الكاميرا عند بدء التطبيق');
+          console.log('MobileApp: جاري طلب إذن الكاميرا عند بدء التطبيق مباشرة');
+          
+          // انتظار قصير لضمان تحميل التطبيق بشكل كامل
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           await Toast.show({
             text: 'التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود',
             duration: 'long'
           });
           
-          // محاولة طلب الإذن
+          // طلب الإذن مباشرة
           const granted = await scannerPermissionService.requestPermission();
           console.log('MobileApp: نتيجة طلب إذن الكاميرا عند بدء التطبيق:', granted);
+          
+          // محاولة طلب الإذن مرة أخرى بعد تأخير قصير إذا لم يتم منحه
+          if (!granted) {
+            setTimeout(async () => {
+              await scannerPermissionService.requestPermission();
+            }, 5000);
+          }
         }
       } catch (error) {
         console.error('MobileApp: خطأ في طلب إذن الكاميرا عند بدء التطبيق:', error);
       }
     };
     
-    // تنفيذ الدالة بعد تأخير بسيط لضمان تحميل التطبيق أولاً
-    const timer = setTimeout(requestCameraPermissionOnStartup, 1000);
-    
-    return () => clearTimeout(timer);
+    // تنفيذ الدالة
+    requestCameraPermissionOnStartup();
   }, []);
   
   // Check authentication state
