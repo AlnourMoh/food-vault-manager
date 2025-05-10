@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Device } from '@capacitor/device';
+import { Browser } from '@capacitor/browser';
 
 export class AppSettingsOpener {
   /**
@@ -74,9 +75,15 @@ export class AppSettingsOpener {
         return false;
       }
       
-      // محاولة فتح الرابط
+      // محاولة فتح الرابط باستخدام متصفح كاباسيتور بدلاً من App.openUrl
       console.log('AppSettingsOpener: محاولة فتح الرابط:', settingsUrl);
-      await App.openUrl({ url: settingsUrl });
+      
+      if (Capacitor.isPluginAvailable('Browser')) {
+        await Browser.open({ url: settingsUrl });
+      } else {
+        // محاولة استخدام واجهة أقدم من Capacitor
+        await App.exitApp(); // نحن لا نستطيع فتح الرابط مباشرةً، نخرج من التطبيق لكي يفتح المستخدم الإعدادات يدوياً
+      }
       
       return true;
     } catch (error) {

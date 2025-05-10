@@ -22,7 +22,15 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
-      external: ["next-themes"],
+      external: [
+        "next-themes",
+        "@capacitor/device",
+        "@capacitor/app",
+        "@capacitor/core",
+        "@capacitor/toast",
+        "@capacitor-mlkit/barcode-scanning",
+        "@capacitor/camera"
+      ],
     },
   },
 }));
