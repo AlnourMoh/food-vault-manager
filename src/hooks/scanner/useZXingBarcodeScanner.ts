@@ -12,17 +12,18 @@ interface UseZXingBarcodeScannerOptions {
   autoStart?: boolean;
 }
 
-export const useZXingBarcodeScannerHook = ({ 
+export const useZXingBarcodeScanner = ({ 
   onScan, 
   onClose, 
   autoStart = true 
 }: UseZXingBarcodeScannerOptions) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [hasScannerError, setHasScannerError] = useState<string | null>(null);
+  const [scannerError, setScannerError] = useState<string | null>(null);
 
   const { 
     cameraActive,
+    isScanningActive: scannerActive,
     startScan,
     stopScan,
     setCameraActive,
@@ -30,7 +31,7 @@ export const useZXingBarcodeScannerHook = ({
     onScan,
     onScanError: (error: string) => {
       console.error(`[useZXingBarcodeScanner] خطأ في المسح:`, error);
-      setHasScannerError(`خطأ في المسح: ${error}`);
+      setScannerError(`خطأ في المسح: ${error}`);
     },
     onScanComplete: () => {
       console.log('[useZXingBarcodeScanner] اكتمل المسح');
@@ -40,7 +41,7 @@ export const useZXingBarcodeScannerHook = ({
   });
 
   const { handleRetry } = useScannerRetry({
-    setHasScannerError,
+    setHasScannerError: setScannerError,
     setCameraActive,
     activateCamera: async () => {
       return await startScan();
@@ -62,16 +63,16 @@ export const useZXingBarcodeScannerHook = ({
         console.log('[useZXingBarcodeScanner] الأذونات موجودة، بدء المسح التلقائي');
         await startScan();
       }
+      
+      setIsLoading(false);
     } catch (error) {
       console.error('[useZXingBarcodeScanner] خطأ في التحقق من الأذونات:', error);
-      setHasScannerError('خطأ في التحقق من أذونات الكاميرا');
-      setHasPermission(false);
-    } finally {
+      setScannerError('خطأ في التحقق من أذونات الكاميرا');
       setIsLoading(false);
     }
   }, [autoStart, startScan]);
 
-  // طلب إذن الكاميرا
+  // طلب الأذونات
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
       console.log('[useZXingBarcodeScanner] طلب إذن الكاميرا');
@@ -79,19 +80,19 @@ export const useZXingBarcodeScannerHook = ({
 
       const granted = await scannerPermissionService.requestPermission();
       console.log(`[useZXingBarcodeScanner] نتيجة طلب الإذن:`, granted);
+      
       setHasPermission(granted);
-
+      setIsLoading(false);
+      
       if (granted && autoStart) {
         console.log('[useZXingBarcodeScanner] تم منح الإذن، بدء المسح');
         await startScan();
       }
-
-      setIsLoading(false);
+      
       return granted;
     } catch (error) {
       console.error('[useZXingBarcodeScanner] خطأ في طلب الإذن:', error);
-      setHasScannerError('خطأ في طلب إذن الكاميرا');
-      setHasPermission(false);
+      setScannerError('خطأ في طلب إذن الكاميرا');
       setIsLoading(false);
       return false;
     }
@@ -108,26 +109,20 @@ export const useZXingBarcodeScannerHook = ({
     }
   }, []);
 
-  // التهيئة الأولية وتنظيف الموارد
+  // فحص الأذونات عند تحميل المكون
   useEffect(() => {
-    console.log('[useZXingBarcodeScanner] بدء التهيئة');
     checkPermissions();
-
-    return () => {
-      console.log('[useZXingBarcodeScanner] تنظيف الموارد');
-      stopScan().catch(err => console.error('[useZXingBarcodeScanner] خطأ في إيقاف المسح أثناء التنظيف:', err));
-    };
-  }, [checkPermissions, stopScan]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     isLoading,
     hasPermission,
     cameraActive,
-    scannerError: hasScannerError,
+    scannerError,
     requestPermission,
     handleRetry,
     openAppSettings
   };
 };
 
-export { useZXingBarcodeScannerHook as useZXingBarcodeScanner };
