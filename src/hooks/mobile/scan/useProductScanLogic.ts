@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
-import { Capacitor } from '@capacitor/core';
-import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import { useScannerPermissions } from './useScannerPermissions';
+import { useScanProduct } from './useScanProduct';
 import { Toast } from '@capacitor/toast';
+import { Capacitor } from '@capacitor/core';
 
 export const useProductScanLogic = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -17,6 +17,9 @@ export const useProductScanLogic = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const { checkPermission, requestPermission, openAppSettings } = useScannerPermissions();
+  const { fetchProductByCode, logProductScan } = useScanProduct();
   
   // فتح الماسح تلقائياً عند تحميل الصفحة
   useEffect(() => {
@@ -46,7 +49,7 @@ export const useProductScanLogic = () => {
       }
       
       // التحقق من إذن الكاميرا في الأجهزة الجوالة
-      let permissionGranted = await scannerPermissionService.checkPermission();
+      let permissionGranted = await checkPermission();
       
       if (!permissionGranted) {
         console.log('ProductScan: لا يوجد إذن للكاميرا، سيتم طلبه الآن');
@@ -57,14 +60,14 @@ export const useProductScanLogic = () => {
           description: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
         });
         
-        permissionGranted = await scannerPermissionService.requestPermission();
+        permissionGranted = await requestPermission();
         
         if (!permissionGranted) {
           console.log('ProductScan: تم رفض إذن الكاميرا');
           setScanError('تم رفض إذن الكاميرا، لا يمكن استخدام الماسح الضوئي');
           
           // محاولة إضافية من خلال فتح إعدادات التطبيق
-          const openSettings = await scannerPermissionService.openAppSettings();
+          const openSettings = await openAppSettings();
           if (!openSettings) {
             toast({
               title: "تم رفض الإذن",
@@ -121,117 +124,13 @@ export const useProductScanLogic = () => {
       console.error('ProductScan: خطأ في البحث عن تفاصيل المنتج:', error);
       toast({
         title: "خطأ في البحث",
-        description: scanError || "حدث خطأ أثناء البحث عن معلومات المنتج",
+        description: typeof error === 'string' ? error : "حدث خطأ أثناء البحث عن معلومات المنتج",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
       // إغلاق الماسح بعد الانتهاء
       setIsScannerOpen(false);
-    }
-  };
-
-  const fetchProductByCode = async (code: string): Promise<Product | null> => {
-    console.log('ProductScan: جاري البحث عن بيانات المنتج للرمز:', code);
-    const { data: productCode, error: codeError } = await supabase
-      .from('product_codes')
-      .select('product_id')
-      .eq('qr_code', code)
-      .maybeSingle();
-    
-    if (codeError) {
-      console.error('ProductScan: خطأ في البحث عن رمز المنتج:', codeError);
-      setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
-      throw codeError;
-    }
-    
-    if (!productCode?.product_id) {
-      console.error('ProductScan: لم يتم العثور على معرف المنتج للرمز:', code);
-      setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
-      toast({
-        title: "خطأ في الباركود",
-        description: "لم يتم العثور على معلومات المنتج لهذا الباركود",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
-    console.log('ProductScan: تم العثور على معرف المنتج:', productCode.product_id);
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productCode.product_id)
-      .maybeSingle();
-    
-    if (productError) {
-      console.error('ProductScan: خطأ في البحث عن تفاصيل المنتج:', productError);
-      setScanError('حدث خطأ أثناء جلب تفاصيل المنتج');
-      throw productError;
-    }
-    
-    if (!product) {
-      console.error('ProductScan: لم يتم العثور على بيانات المنتج:', productCode.product_id);
-      setScanError('لم يتم العثور على بيانات المنتج');
-      toast({
-        title: "خطأ في البحث",
-        description: "لم يتم العثور على بيانات المنتج المطلوب",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
-    console.log('ProductScan: تم جلب بيانات المنتج:', product);
-    
-    // تحويل بيانات المنتج من قاعدة البيانات إلى تنسيق واجهة المنتج
-    const normalizedStatus = ((): 'active' | 'expired' | 'removed' => {
-      switch(product.status) {
-        case 'active':
-          return 'active';
-        case 'expired':
-          return 'expired';
-        case 'removed':
-          return 'removed';
-        default:
-          console.warn(`ProductScan: حالة منتج غير متوقعة: ${product.status}، استخدام 'active' كقيمة افتراضية`);
-          return 'active';
-      }
-    })();
-    
-    const formattedProduct: Product = {
-      id: product.id,
-      name: product.name,
-      category: product.category,
-      unit: product.unit || '',
-      quantity: product.quantity,
-      expiryDate: new Date(product.expiry_date),
-      entryDate: new Date(product.production_date),
-      restaurantId: product.company_id,
-      restaurantName: '', 
-      addedBy: '', 
-      status: normalizedStatus,
-      imageUrl: product.image_url,
-    };
-    
-    console.log('ProductScan: بيانات المنتج المنسقة:', formattedProduct);
-    
-    // Log scan in database
-    await logProductScan(code, product.id);
-    
-    return formattedProduct;
-  };
-
-  const logProductScan = async (code: string, productId: string) => {
-    const restaurantId = localStorage.getItem('restaurantId');
-    if (restaurantId) {
-      console.log('ProductScan: تسجيل عملية المسح للمطعم:', restaurantId);
-      await supabase
-        .from('product_scans')
-        .insert({
-          product_id: productId,
-          qr_code: code,
-          scan_type: 'check',
-          scanned_by: restaurantId
-        });
     }
   };
 
