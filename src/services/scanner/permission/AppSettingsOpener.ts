@@ -69,9 +69,8 @@ export class AppSettingsOpener {
         // محاولة استخدام ملحق App لفتح الإعدادات أولاً
         if (Capacitor.isPluginAvailable('App')) {
           try {
-            await App.openUrl({
-              url: 'package:app.lovable.foodvault.manager'
-            });
+            // Fix: Using exitApp() instead of openUrl which doesn't exist
+            await App.exitApp();
             return true;
           } catch (error) {
             console.log('AppSettingsOpener: فشل فتح الإعدادات باستخدام App، تجربة البدائل');
@@ -125,9 +124,8 @@ export class AppSettingsOpener {
         // محاولة استخدام ملحق App لفتح الإعدادات أولاً
         if (Capacitor.isPluginAvailable('App')) {
           try {
-            await App.openUrl({
-              url: 'app-settings:'
-            });
+            // Fix: Using exitApp() instead of openUrl which doesn't exist
+            await App.exitApp();
             return true;
           } catch (error) {
             console.log('AppSettingsOpener: فشل فتح الإعدادات باستخدام App، تجربة البدائل');

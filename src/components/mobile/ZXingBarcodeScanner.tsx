@@ -63,9 +63,12 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       // استخدام خدمة الأذونات المحسّنة
       const attemptPermission = async () => {
         try {
-          await scannerPermissionService.requestPermission();
+          // Fix: Return boolean value from the function call to match expected type
+          const result = await scannerPermissionService.requestPermission();
+          return result; // Return the boolean result
         } catch (error) {
           console.error("خطأ في طلب الإذن التلقائي:", error);
+          return false; // Return false on error
         }
       };
       
@@ -84,6 +87,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       onRequestPermission={async () => {
         const granted = await requestPermission();
         console.log("نتيجة طلب الإذن:", granted);
+        return granted; // Return the result to match expected type
       }}
       onClose={onClose}
       onManualEntry={() => {
