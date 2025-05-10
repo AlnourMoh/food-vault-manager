@@ -89,7 +89,7 @@ export class ScannerCameraService {
   }
   
   /**
-   * تحضير وإعداد الكاميرا للمسح - تم تحسينها للاستجابة السريعة
+   * تحضير وإعداد الكاميرا للمسح - تم تحسينها للاستج��بة السريعة
    */
   public async prepareCamera(): Promise<boolean> {
     try {

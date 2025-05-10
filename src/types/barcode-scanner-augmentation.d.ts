@@ -2,27 +2,46 @@
 // تعريفات لتوسيع وظائف الماسح الضوئي وخصوصًا BarcodeDetector
 
 // تعريف التنسيقات المدعومة للباركود
-export enum BarcodeFormat {
-  QrCode = "qr_code",
-  UpcA = "upc_a",
-  UpcE = "upc_e",
-  Ean8 = "ean_8",
-  Ean13 = "ean_13",
-  Code39 = "code_39",
-  Code93 = "code_93",
-  Code128 = "code_128",
-  Itf = "itf",
-  Codabar = "codabar",
-  DataMatrix = "data_matrix",
-  Aztec = "aztec",
-  Pdf417 = "pdf417"
-}
+export type BarcodeFormat = 
+  | "qr_code"
+  | "upc_a"
+  | "upc_e"
+  | "ean_8"
+  | "ean_13"
+  | "code_39"
+  | "code_93"
+  | "code_128"
+  | "itf"
+  | "codabar"
+  | "data_matrix"
+  | "aztec"
+  | "pdf417";
+
+// ثوابت التنسيقات للباركود للاستخدام السهل
+export const BarcodeFormat = {
+  QrCode: "qr_code" as BarcodeFormat,
+  UpcA: "upc_a" as BarcodeFormat,
+  UpcE: "upc_e" as BarcodeFormat,
+  Ean8: "ean_8" as BarcodeFormat,
+  Ean13: "ean_13" as BarcodeFormat,
+  Code39: "code_39" as BarcodeFormat,
+  Code93: "code_93" as BarcodeFormat,
+  Code128: "code_128" as BarcodeFormat,
+  Itf: "itf" as BarcodeFormat,
+  Codabar: "codabar" as BarcodeFormat,
+  DataMatrix: "data_matrix" as BarcodeFormat,
+  Aztec: "aztec" as BarcodeFormat,
+  Pdf417: "pdf417" as BarcodeFormat
+};
 
 // تعريف اتجاه الكاميرا
-export enum LensFacing {
-  Front = "front",
-  Back = "back"
-}
+export type LensFacing = "front" | "back";
+
+// ثوابت اتجاه الكاميرا للاستخدام السهل
+export const LensFacing = {
+  Front: "front" as LensFacing,
+  Back: "back" as LensFacing
+};
 
 // تعريف نتيجة الكشف عن الباركود
 export interface BarcodeDetectorResult {
@@ -34,7 +53,7 @@ export interface BarcodeDetectorResult {
 
 // تعريف خيارات الكاشف
 export interface BarcodeDetectorOptions {
-  formats: Array<BarcodeFormat | string>;
+  formats: Array<BarcodeFormat>;
 }
 
 // تعريف BarcodeDetector لبيئة الويب
