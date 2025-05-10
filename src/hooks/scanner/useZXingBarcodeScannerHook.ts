@@ -26,7 +26,7 @@ export const useZXingBarcodeScannerHook = ({
   const [isScanningActive, setIsScanningActive] = useState(false);
   
   // Use the scanner permission hook
-  const { checkPermissions, requestPermission } = useScannerPermission(
+  const { checkPermissions } = useScannerPermission(
     setIsLoading,
     setHasPermission,
     (error) => setScannerError(error ? "حدث خطأ في الماسح الضوئي" : null)
@@ -43,15 +43,17 @@ export const useZXingBarcodeScannerHook = ({
   });
   
   // Use the scanner activation hook
-  const { activateCamera } = useScannerActivation({
-    cameraActive,
-    setCameraActive,
-    hasPermission,
-    setIsLoading,
-    setHasScannerError: (error) => setScannerError(error ? "حدث خطأ في تفعيل الكاميرا" : null),
-    requestPermission,
-    startScan
+  const { requestCamera, stopCamera } = useScannerActivation({
+    onStart: () => setCameraActive(true),
+    onStop: () => setCameraActive(false),
+    onError: (error) => setScannerError(error)
   });
+  
+  // Wrap requestCamera to return a boolean for compatibility
+  const activateCamera = async (): Promise<boolean> => {
+    await requestCamera();
+    return true;
+  };
   
   // Use the scanner retry hook
   const { handleRetry } = useScannerRetry({
@@ -68,7 +70,7 @@ export const useZXingBarcodeScannerHook = ({
     };
     
     checkPermission();
-  }, [autoStart, checkPermissions, activateCamera]);
+  }, [autoStart, checkPermissions]);
   
   // تنظيف الموارد عند إلغاء تحميل المكون
   useEffect(() => {
@@ -96,7 +98,13 @@ export const useZXingBarcodeScannerHook = ({
     hasPermission,
     cameraActive,
     scannerError,
-    requestPermission,
+    requestPermission: async (): Promise<boolean> => {
+      const result = await scannerPermissionService.requestPermission();
+      return result;
+    },
     handleRetry
   };
 };
+
+// Add the missing import
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';

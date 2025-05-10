@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 
 interface UseScannerRetryProps {
-  setHasScannerError: (error: boolean) => void;
+  setHasScannerError: (error: boolean | string | null) => void;
   setCameraActive: (active: boolean) => void;
   activateCamera: () => Promise<boolean>;
   startScan: () => Promise<boolean>;
@@ -16,19 +16,26 @@ export const useScannerRetry = ({
 }: UseScannerRetryProps) => {
   
   const handleRetry = useCallback(async () => {
-    console.log('useScannerRetry: إعادة المحاولة...');
-    
-    // إعادة تعيين حالة الخطأ
+    console.log('[Scanner] Attempting retry...');
     setHasScannerError(false);
-    setCameraActive(false);
     
-    // إعادة تنشيط الكاميرا
-    const activated = await activateCamera();
-    
-    // إذا تم تنشيط الكاميرا بنجاح، نبدأ المسح
-    if (activated) {
-      console.log('useScannerRetry: تم إعادة تنشيط الكاميرا، نبدأ المسح الآن...');
-      await startScan();
+    try {
+      // Reset camera state
+      setCameraActive(false);
+      
+      // Activate camera
+      const cameraActivated = await activateCamera();
+      
+      if (cameraActivated) {
+        // Start scanning if camera was activated successfully
+        await startScan();
+      }
+      
+      return cameraActivated;
+    } catch (error) {
+      console.error('[Scanner] Retry failed:', error);
+      setHasScannerError(true);
+      return false;
     }
   }, [setHasScannerError, setCameraActive, activateCamera, startScan]);
   

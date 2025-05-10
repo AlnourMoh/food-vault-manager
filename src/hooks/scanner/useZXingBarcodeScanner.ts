@@ -68,7 +68,13 @@ export const useZXingBarcodeScanner = ({
     console.log("ZXing: تهيئة الماسح الضوئي، autoStart =", autoStart);
     
     const initScanner = async () => {
-      await checkPermissions(autoStart, requestCamera);
+      // Convert requestCamera to return boolean for compatibility
+      const wrappedRequestCamera = async (): Promise<boolean> => {
+        await requestCamera();
+        return true;
+      };
+      
+      await checkPermissions(autoStart, wrappedRequestCamera);
     };
     
     initScanner();

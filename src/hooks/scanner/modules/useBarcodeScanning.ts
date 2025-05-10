@@ -1,6 +1,6 @@
 
-import { useCallback } from 'react';
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { useState, useEffect, useCallback } from 'react';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 
@@ -10,7 +10,7 @@ interface UseBarcodeScanningProps {
   setIsScanningActive: (active: boolean) => void;
   cameraActive: boolean;
   hasScannerError: boolean;
-  setHasScannerError: (error: boolean) => void;
+  setHasScannerError: (error: boolean | string | null) => void;
 }
 
 export const useBarcodeScanning = ({
@@ -21,89 +21,95 @@ export const useBarcodeScanning = ({
   hasScannerError,
   setHasScannerError
 }: UseBarcodeScanningProps) => {
+  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
 
+  // تنظيف عند إلغاء تحميل المكون
+  useEffect(() => {
+    return () => {
+      if (isScanningActive && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        BarcodeScanner.stopScan().catch(console.error);
+      }
+    };
+  }, [isScanningActive]);
+  
   // بدء المسح
   const startScan = useCallback(async (): Promise<boolean> => {
-    if (isScanningActive || !cameraActive || hasScannerError) {
-      console.log('useBarcodeScanning: لا يمكن بدء المسح، المسح نشط بالفعل أو الكاميرا غير نشطة أو هناك خطأ');
+    if (!cameraActive || isScanningActive || hasScannerError) {
+      console.log('[BarcodeScanning] Cannot start scan due to state:', { 
+        cameraActive, isScanningActive, hasScannerError 
+      });
       return false;
     }
-
+    
+    console.log('[BarcodeScanning] Starting scan...');
+    setHasScannerError(null);
+    
     try {
-      console.log('useBarcodeScanning: بدء المسح...');
-      
-      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        // التحقق من دعم جهاز المستخدم للماسح
-        const supported = await BarcodeScanner.isSupported();
-        if (!supported.supported) {
-          console.error('useBarcodeScanning: جهاز المستخدم لا يدعم مسح الباركود');
-          setHasScannerError(true);
-          await Toast.show({
-            text: 'جهازك لا يدعم مسح الرموز الشريطية',
-            duration: 'short'
-          });
-          return false;
-        }
-        
-        // بدء المسح
-        await BarcodeScanner.scan({
-          formats: [
-            BarcodeFormat.QrCode,
-            BarcodeFormat.Ean13,
-            BarcodeFormat.Ean8,
-            BarcodeFormat.Code39,
-            BarcodeFormat.Code128
-          ]
-        });
-        
-        // إضافة مستمع للأحداث
-        const listener = await BarcodeScanner.addListener('barcodesScanned', (result) => {
-          if (result && result.barcodes && result.barcodes.length > 0) {
-            console.log('useBarcodeScanning: تم العثور على باركود:', result.barcodes[0].rawValue);
-            onScan(result.barcodes[0].rawValue);
-            // إزالة المستمع بعد المسح
-            listener.remove();
-          }
-        });
-      } else {
-        // في بيئة الويب، نحاكي عملية المسح
-        console.log('useBarcodeScanning: محاكاة عملية المسح في بيئة الويب');
-        
-        // محاكاة وجود مسح بعد فترة
-        setTimeout(() => {
-          console.log('useBarcodeScanning: محاكاة اكتشاف باركود');
-          onScan("TEST_BARCODE_123456");
-        }, 3000);
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        throw new Error('MLKit Barcode Scanner not available');
       }
       
+      // Set up the barcode listener
+      const listener = await BarcodeScanner.addListener(
+        'barcodeScanned',
+        async result => {
+          try {
+            const code = result.barcode.displayValue || result.barcode.rawValue;
+            
+            console.log('[BarcodeScanning] Barcode detected:', code);
+            setLastScannedCode(code);
+            
+            // Call the onScan callback with the scanned code
+            if (code) {
+              onScan(code);
+            }
+            
+            // Stop scanning after successful scan
+            await stopScan();
+          } catch (error) {
+            console.error('[BarcodeScanning] Error processing scan result:', error);
+          }
+        }
+      );
+      
+      // Start the scanner
+      await BarcodeScanner.startScan();
       setIsScanningActive(true);
+      console.log('[BarcodeScanning] Scan started successfully');
       return true;
     } catch (error) {
-      console.error('useBarcodeScanning: خطأ في بدء المسح:', error);
+      console.error('[BarcodeScanning] Error starting scan:', error);
       setHasScannerError(true);
       setIsScanningActive(false);
+      
+      await Toast.show({
+        text: 'فشل في بدء المسح الضوئي',
+        duration: 'long'
+      });
+      
       return false;
     }
-  }, [isScanningActive, cameraActive, hasScannerError, setIsScanningActive, setHasScannerError, onScan]);
-
+  }, [cameraActive, isScanningActive, hasScannerError, onScan, setHasScannerError, setIsScanningActive]);
+  
   // إيقاف المسح
   const stopScan = useCallback(async (): Promise<boolean> => {
     if (!isScanningActive) {
       return true;
     }
-
+    
+    console.log('[BarcodeScanning] Stopping scan...');
+    
     try {
-      console.log('useBarcodeScanning: إيقاف المسح...');
-      
-      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        // إيقاف المسح
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        await BarcodeScanner.stopScan();
         await BarcodeScanner.removeAllListeners();
       }
       
       setIsScanningActive(false);
+      console.log('[BarcodeScanning] Scan stopped successfully');
       return true;
     } catch (error) {
-      console.error('useBarcodeScanning: خطأ في إيقاف المسح:', error);
+      console.error('[BarcodeScanning] Error stopping scan:', error);
       setIsScanningActive(false);
       return false;
     }
@@ -111,6 +117,7 @@ export const useBarcodeScanning = ({
 
   return {
     startScan,
-    stopScan
+    stopScan,
+    lastScannedCode
   };
 };
