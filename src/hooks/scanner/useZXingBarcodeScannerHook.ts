@@ -49,10 +49,15 @@ export const useZXingBarcodeScannerHook = ({
     onError: (error) => setScannerError(error)
   });
   
-  // Wrap requestCamera to return a boolean for compatibility
+  // Define activateCamera function that returns a Promise<boolean>
   const activateCamera = async (): Promise<boolean> => {
-    await requestCamera();
-    return true;
+    try {
+      await requestCamera();
+      return true;
+    } catch (error) {
+      console.error("Error activating camera:", error);
+      return false;
+    }
   };
   
   // Use the scanner retry hook
@@ -99,8 +104,13 @@ export const useZXingBarcodeScannerHook = ({
     cameraActive,
     scannerError,
     requestPermission: async (): Promise<boolean> => {
-      const result = await scannerPermissionService.requestPermission();
-      return result;
+      try {
+        const result = await scannerPermissionService.requestPermission();
+        return result;
+      } catch (error) {
+        console.error("Error requesting permission:", error);
+        return false;
+      }
     },
     handleRetry
   };

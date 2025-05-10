@@ -21,7 +21,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     isLoading,
     hasPermission,
     cameraActive,
-    hasScannerError: scannerError,
+    scannerError: hasScannerError,
     requestPermission,
     handleRetry
   } = useZXingBarcodeScanner({ onScan, onClose, autoStart });
@@ -42,7 +42,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   }
   
   // عرض شاشة الخطأ
-  if (scannerError) {
+  if (hasScannerError) {
     return <ScannerErrorView errorMessage={"حدث خطأ في الماسح الضوئي"} onRetry={handleRetry} onClose={onClose} />;
   }
   

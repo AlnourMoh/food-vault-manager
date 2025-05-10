@@ -49,7 +49,7 @@ export const useBarcodeScanning = ({
         throw new Error('MLKit Barcode Scanner not available');
       }
       
-      // Set up the barcode listener - FIXED: Changed "barcodeScanned" to "barcodesScanned"
+      // Set up the barcode listener - using 'barcodesScanned' event name
       const listener = await BarcodeScanner.addListener(
         'barcodesScanned',
         async result => {

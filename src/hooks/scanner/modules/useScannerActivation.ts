@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { checkCameraPermission, requestCameraPermission } from '@/utils/cameraPermissions';
 import { useToast } from '@/hooks/use-toast';
@@ -48,7 +49,7 @@ export const useScannerActivation = ({ onStart, onStop, onError }: UseScannerAct
     checkSupportAndPermission();
   }, [onStart, onError]);
 
-  const requestCamera = async () => {
+  const requestCamera = async (): Promise<void> => {
     setIsLoading(true);
     try {
       // Request camera permission
