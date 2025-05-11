@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.foodvault.manager',
-  appName: 'مخزن الطعام',
+  appName: 'FoodVault Manager',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
