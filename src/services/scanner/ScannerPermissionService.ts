@@ -37,7 +37,8 @@ export class ScannerPermissionService {
       // التحقق من دعم الماسح الضوئي في الجهاز
       if (Capacitor.isNativePlatform()) {
         if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-          return await BarcodeScanner.isSupported();
+          const result = await BarcodeScanner.isSupported();
+          return result.supported;
         }
       }
       
