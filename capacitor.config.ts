@@ -38,7 +38,10 @@ const config: CapacitorConfig = {
       beepOnSuccess: true,
       vibrateOnSuccess: true,
       lockOrientation: true,
-      drawFocusRect: true
+      drawFocusRect: true,
+      // إضافة خيارات جديدة
+      isCaptureEnabled: true,
+      detectionTimeout: 1500
     }
   },
   android: {

@@ -10,6 +10,17 @@
         <intent>
             <action android:name="android.settings.APPLICATION_DETAILS_SETTINGS"/>
         </intent>
+        <!-- إضافة المزيد من الاستعلامات لتعريف التطبيق كتطبيق كاميرا -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="image/*" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.STILL_IMAGE_CAMERA" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.CAMERA_BUTTON" />
+        </intent>
     </queries>
 
     <application
@@ -38,6 +49,16 @@
             <!-- إضافة فلتر نوايا للتعامل مع الكاميرا -->
             <intent-filter>
                 <action android:name="android.media.action.IMAGE_CAPTURE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            
+            <!-- إضافة فلترات نوايا جديدة للتعريف بقدرات الكاميرا -->
+            <intent-filter>
+                <action android:name="android.media.action.STILL_IMAGE_CAMERA" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.CAMERA_BUTTON" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
