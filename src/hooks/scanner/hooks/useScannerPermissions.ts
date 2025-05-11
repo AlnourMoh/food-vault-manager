@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { Toast } from '@capacitor/toast';
 import { Camera } from '@capacitor/camera';
@@ -5,17 +6,122 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 
+/**
+ * هوك خاص بإدارة أذونات الماسح الضوئي
+ */
 export const useScannerPermissions = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [permissionDeniedCount, setPermissionDeniedCount] = useState(0);
 
-  // تحقق من الأذونات عند تحميل الهوك
-  useEffect(() => {
-    checkPermission();
+  /**
+   * التحقق من توفر الملحقات اللازمة
+   */
+  const checkPluginAvailability = useCallback(() => {
+    const hasMLKit = Capacitor.isPluginAvailable('MLKitBarcodeScanner');
+    const hasCamera = Capacitor.isPluginAvailable('Camera');
+    return { hasMLKit, hasCamera };
   }, []);
 
-  // التحقق من وجود إذن الكاميرا
+  /**
+   * التحقق من إذن الكاميرا باستخدام MLKit
+   */
+  const checkMLKitPermission = useCallback(async () => {
+    try {
+      const status = await BarcodeScanner.checkPermissions();
+      console.log('[useScannerPermissions] حالة إذن MLKit:', status.camera);
+      
+      return {
+        isGranted: status.camera === 'granted',
+        isDenied: status.camera === 'denied'
+      };
+    } catch (error) {
+      console.error('[useScannerPermissions] خطأ في التحقق من إذن MLKit:', error);
+      return { isGranted: false, isDenied: false };
+    }
+  }, []);
+
+  /**
+   * التحقق من إذن الكاميرا باستخدام ملحق الكاميرا الأساسي
+   */
+  const checkCameraPermission = useCallback(async () => {
+    try {
+      const status = await Camera.checkPermissions();
+      console.log('[useScannerPermissions] حالة إذن الكاميرا:', status.camera);
+      
+      return {
+        isGranted: status.camera === 'granted',
+        isDenied: status.camera === 'denied'
+      };
+    } catch (error) {
+      console.error('[useScannerPermissions] خطأ في التحقق من إذن الكاميرا:', error);
+      return { isGranted: false, isDenied: false };
+    }
+  }, []);
+
+  /**
+   * طلب إذن الكاميرا باستخدام MLKit
+   */
+  const requestMLKitPermission = useCallback(async () => {
+    try {
+      console.log('[useScannerPermissions] طلب إذن MLKit');
+      const result = await BarcodeScanner.requestPermissions();
+      return result.camera === 'granted';
+    } catch (error) {
+      console.error('[useScannerPermissions] خطأ في طلب إذن MLKit:', error);
+      return false;
+    }
+  }, []);
+
+  /**
+   * طلب إذن الكاميرا باستخدام ملحق الكاميرا الأساسي
+   */
+  const requestCameraPermission = useCallback(async () => {
+    try {
+      console.log('[useScannerPermissions] طلب إذن الكاميرا');
+      const result = await Camera.requestPermissions({
+        permissions: ['camera']
+      });
+      return result.camera === 'granted';
+    } catch (error) {
+      console.error('[useScannerPermissions] خطأ في طلب إذن الكاميرا:', error);
+      return false;
+    }
+  }, []);
+
+  /**
+   * عرض نافذة لفتح إعدادات التطبيق
+   */
+  const showOpenSettingsPrompt = useCallback(async () => {
+    const shouldOpenSettings = window.confirm(
+      'يبدو أن إذن الكاميرا مرفوض. هل ترغب في فتح إعدادات الجهاز لتمكينه يدوياً؟'
+    );
+    
+    if (shouldOpenSettings && Capacitor.isNativePlatform()) {
+      console.log('[useScannerPermissions] توجيه المستخدم إلى الإعدادات');
+      
+      // إعطاء وقت كافٍ لظهور الإشعارات قبل الانتقال إلى الإعدادات
+      setTimeout(async () => {
+        try {
+          if (Capacitor.isPluginAvailable('App')) {
+            // محاولة فتح إعدادات التطبيق
+            if (BarcodeScanner && typeof BarcodeScanner.openSettings === 'function') {
+              await BarcodeScanner.openSettings();
+            } else {
+              console.log('[useScannerPermissions] لا يمكن فتح الإعدادات مباشرة، إنهاء التطبيق');
+              await App.exitApp();
+            }
+          }
+        } catch (settingsError) {
+          console.error('[useScannerPermissions] خطأ في فتح الإعدادات:', settingsError);
+        }
+      }, 1000);
+    }
+  }, []);
+
+  /**
+   * التحقق من وجود إذن الكاميرا
+   */
   const checkPermission = useCallback(async () => {
     try {
       console.log('[useScannerPermissions] التحقق من إذن الكاميرا');
@@ -29,16 +135,18 @@ export const useScannerPermissions = () => {
         return true;
       }
 
-      // التحقق من إذن الكاميرا باستخدام MLKit أولاً
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const status = await BarcodeScanner.checkPermissions();
-        console.log('[useScannerPermissions] حالة إذن MLKit:', status.camera);
+      // التحقق من توفر الملحقات
+      const { hasMLKit, hasCamera } = checkPluginAvailability();
+
+      // محاولة استخدام MLKit أولاً
+      if (hasMLKit) {
+        const { isGranted, isDenied } = await checkMLKitPermission();
         
-        if (status.camera === 'granted') {
+        if (isGranted) {
           setHasPermission(true);
           setIsLoading(false);
           return true;
-        } else if (status.camera === 'denied') {
+        } else if (isDenied) {
           setHasPermission(false);
           setIsLoading(false);
           return false;
@@ -46,15 +154,14 @@ export const useScannerPermissions = () => {
       }
 
       // محاولة استخدام ملحق الكاميرا الأساسي
-      if (Capacitor.isPluginAvailable('Camera')) {
-        const status = await Camera.checkPermissions();
-        console.log('[useScannerPermissions] حالة إذن الكاميرا:', status.camera);
+      if (hasCamera) {
+        const { isGranted, isDenied } = await checkCameraPermission();
         
-        if (status.camera === 'granted') {
+        if (isGranted) {
           setHasPermission(true);
           setIsLoading(false);
           return true;
-        } else if (status.camera === 'denied') {
+        } else if (isDenied) {
           setHasPermission(false);
           setIsLoading(false);
           return false;
@@ -72,9 +179,11 @@ export const useScannerPermissions = () => {
       setIsLoading(false);
       return false;
     }
-  }, []);
+  }, [checkPluginAvailability, checkMLKitPermission, checkCameraPermission]);
 
-  // طلب إذن الكاميرا
+  /**
+   * طلب إذن الكاميرا
+   */
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
       console.log('[useScannerPermissions] طلب إذن الكاميرا...');
@@ -97,15 +206,16 @@ export const useScannerPermissions = () => {
         return true;
       }
 
+      // التحقق من توفر الملحقات
+      const { hasMLKit, hasCamera } = checkPluginAvailability();
       let granted = false;
       
       // محاولة طلب الإذن باستخدام MLKit
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        // نعيد تحميل حالة الإذن أولاً
-        const currentStatus = await BarcodeScanner.checkPermissions();
+      if (hasMLKit) {
+        // التحقق من الحالة الحالية أولاً
+        const { isGranted } = await checkMLKitPermission();
         
-        // إذا كان لدينا إذن بالفعل، نرجع true
-        if (currentStatus.camera === 'granted') {
+        if (isGranted) {
           console.log('[useScannerPermissions] لدينا إذن MLKit بالفعل');
           setHasPermission(true);
           setIsLoading(false);
@@ -113,9 +223,7 @@ export const useScannerPermissions = () => {
         }
 
         // طلب الإذن
-        console.log('[useScannerPermissions] طلب إذن MLKit');
-        const result = await BarcodeScanner.requestPermissions();
-        granted = result.camera === 'granted';
+        granted = await requestMLKitPermission();
         
         if (granted) {
           setHasPermission(true);
@@ -132,12 +240,11 @@ export const useScannerPermissions = () => {
       }
 
       // إذا لم ننجح في MLKit، نجرب ملحق الكاميرا
-      if (!granted && Capacitor.isPluginAvailable('Camera')) {
-        // نتحقق من الحالة الحالية أولاً
-        const currentStatus = await Camera.checkPermissions();
+      if (!granted && hasCamera) {
+        // التحقق من الحالة الحالية أولاً
+        const { isGranted } = await checkCameraPermission();
         
-        // إذا كان لدينا إذن بالفعل، نرجع true
-        if (currentStatus.camera === 'granted') {
+        if (isGranted) {
           console.log('[useScannerPermissions] لدينا إذن الكاميرا بالفعل');
           setHasPermission(true);
           setIsLoading(false);
@@ -145,12 +252,7 @@ export const useScannerPermissions = () => {
         }
         
         // طلب الإذن
-        console.log('[useScannerPermissions] طلب إذن الكاميرا');
-        const result = await Camera.requestPermissions({
-          permissions: ['camera']
-        });
-        
-        granted = result.camera === 'granted';
+        granted = await requestCameraPermission();
         
         if (granted) {
           setHasPermission(true);
@@ -178,29 +280,7 @@ export const useScannerPermissions = () => {
       
       // إذا تم رفض الإذن أكثر من مرة، نقترح فتح الإعدادات
       if (permissionDeniedCount >= 2) {
-        const shouldOpenSettings = window.confirm(
-          'يبدو أن إذن الكاميرا مرفوض. هل ترغب في فتح إعدادات الجهاز لتمكينه يدوياً؟'
-        );
-        
-        if (shouldOpenSettings && Capacitor.isNativePlatform()) {
-          console.log('[useScannerPermissions] توجيه المستخدم إلى الإعدادات');
-          // إعطاء وقت كافٍ لظهور الإشعارات قبل الانتقال إلى الإعدادات
-          setTimeout(async () => {
-            try {
-              if (Capacitor.isPluginAvailable('App')) {
-                // محاولة فتح إعدادات التطبيق
-                if (BarcodeScanner && typeof BarcodeScanner.openSettings === 'function') {
-                  await BarcodeScanner.openSettings();
-                } else {
-                  console.log('[useScannerPermissions] لا يمكن فتح الإعدادات مباشرة، إنهاء التطبيق');
-                  await App.exitApp();
-                }
-              }
-            } catch (settingsError) {
-              console.error('[useScannerPermissions] خطأ في فتح الإعدادات:', settingsError);
-            }
-          }, 1000);
-        }
+        await showOpenSettingsPrompt();
       }
       
       return false;
@@ -217,7 +297,12 @@ export const useScannerPermissions = () => {
       
       return false;
     }
-  }, [permissionDeniedCount]);
+  }, [checkPluginAvailability, checkMLKitPermission, checkCameraPermission, requestMLKitPermission, requestCameraPermission, permissionDeniedCount, showOpenSettingsPrompt]);
+
+  // تحقق من الأذونات عند تحميل الهوك
+  useEffect(() => {
+    checkPermission();
+  }, [checkPermission]);
 
   return {
     isLoading,
