@@ -60,13 +60,16 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
         try {
           // استخدام dynamic import لتجنب مشاكل الاستيراد
           const cameraModule = await import('@capacitor/camera');
+          const CameraResultType = cameraModule.CameraResultType;
+          const CameraSource = cameraModule.CameraSource;
+          const CameraDirection = cameraModule.CameraDirection;
           
           await cameraModule.Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: 'uri',
-            source: 'camera',
-            direction: 'rear'
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            direction: CameraDirection.Rear
           });
           
           toast({

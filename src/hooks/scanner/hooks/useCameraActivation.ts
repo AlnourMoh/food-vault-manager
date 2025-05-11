@@ -3,25 +3,21 @@ import { useState } from 'react';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
 
-// Import types only to avoid the direct dependency in the web build
-type CameraResultType = 'uri' | 'base64' | 'dataUrl';
-type CameraSource = 'prompt' | 'camera' | 'photos';
-type CameraDirection = 'rear' | 'front';
-
+// Define simpler types that match what we need without direct imports
 interface CameraPhoto {
   path?: string;
   webPath?: string;
   format?: string;
 }
 
-// Define an interface for the Camera API we need
-interface CameraInterface {
+// Define a simplified Camera interface that matches our usage
+interface SimpleCameraInterface {
   getPhoto(options: {
     quality?: number;
     allowEditing?: boolean;
-    resultType?: CameraResultType;
-    source?: CameraSource;
-    direction?: CameraDirection;
+    resultType?: string;
+    source?: string;
+    direction?: string;
   }): Promise<CameraPhoto>;
 }
 
@@ -45,14 +41,14 @@ export const useCameraActivation = () => {
         try {
           // استخدام dynamic import لتجنب مشاكل الاستيراد
           const cameraModule = await import('@capacitor/camera');
-          const Camera: CameraInterface = cameraModule.Camera;
           
-          await Camera.getPhoto({
+          // استخدام الوحدات المُصدَّرة بشكل صحيح
+          await cameraModule.Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: 'uri',
-            source: 'camera',
-            direction: 'rear'
+            resultType: cameraModule.CameraResultType.Uri,
+            source: cameraModule.CameraSource.Camera,
+            direction: cameraModule.CameraDirection.Rear
           });
           
           setCameraActive(true);
