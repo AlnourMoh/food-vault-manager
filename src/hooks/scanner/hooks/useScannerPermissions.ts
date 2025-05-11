@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { Toast } from '@capacitor/toast';
 import { Camera } from '@capacitor/camera';
@@ -189,8 +188,13 @@ export const useScannerPermissions = () => {
           setTimeout(async () => {
             try {
               if (Capacitor.isPluginAvailable('App')) {
-                // استخدام أسلوب فتح الإعدادات المتوفر في الإصدار الحالي
-                await App.exitApp();
+                // محاولة فتح إعدادات التطبيق
+                if (BarcodeScanner && typeof BarcodeScanner.openSettings === 'function') {
+                  await BarcodeScanner.openSettings();
+                } else {
+                  console.log('[useScannerPermissions] لا يمكن فتح الإعدادات مباشرة، إنهاء التطبيق');
+                  await App.exitApp();
+                }
               }
             } catch (settingsError) {
               console.error('[useScannerPermissions] خطأ في فتح الإعدادات:', settingsError);
