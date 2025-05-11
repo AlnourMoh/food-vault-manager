@@ -1,6 +1,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
+import { AppSettingsOpener } from './permission/AppSettingsOpener';
 
 /**
  * خدمة لإدارة أذونات الماسح الضوئي
@@ -124,6 +125,18 @@ export class ScannerPermissionService {
       return false;
     } catch (error) {
       console.error('[ScannerPermissionService] خطأ في طلب الإذن:', error);
+      return false;
+    }
+  }
+
+  /**
+   * فتح إعدادات التطبيق
+   */
+  public async openAppSettings(): Promise<boolean> {
+    try {
+      return await AppSettingsOpener.openAppSettings();
+    } catch (error) {
+      console.error('[ScannerPermissionService] خطأ في فتح إعدادات التطبيق:', error);
       return false;
     }
   }
