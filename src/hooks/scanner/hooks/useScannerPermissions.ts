@@ -189,11 +189,8 @@ export const useScannerPermissions = () => {
           setTimeout(async () => {
             try {
               if (Capacitor.isPluginAvailable('App')) {
-                await App.openUrl({
-                  url: Capacitor.getPlatform() === 'android' 
-                    ? 'package:app.lovable.foodvault.manager' 
-                    : 'app-settings:'
-                });
+                // تم تصحيح استخدام App.openUrl
+                await App.openSettings();
               }
             } catch (settingsError) {
               console.error('[useScannerPermissions] خطأ في فتح الإعدادات:', settingsError);
