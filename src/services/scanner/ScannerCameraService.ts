@@ -63,7 +63,7 @@ export class ScannerCameraService {
         console.log('[ScannerCameraService] محاولة تحضير الكاميرا الحقيقية');
         
         try {
-          // تهيئة الكاميرا - بدون وسائط
+          // تهيئة الكاميرا - بدون وسائط (تصحيح الخطأ: إزالة الوسيط)
           await BarcodeScanner.prepare();
           console.log('[ScannerCameraService] تم تحضير الكاميرا بنجاح');
           return true;
