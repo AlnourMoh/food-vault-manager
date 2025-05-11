@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useRef } from 'react';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
@@ -9,7 +10,7 @@ export const useBarcodeDetection = (
   hasScannerError: boolean,
   cameraActive: boolean
 ) => {
-  // استخدام مرجع للتحكم في توقيت المحاكاة - سنزيل المحاكاة
+  // مرجع للتحكم في فحص حالة الكاميرا الدوري
   const cameraCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // تنظيف عند إلغاء تحميل المكون
@@ -85,8 +86,6 @@ export const useBarcodeDetection = (
     };
   }, [isScanningActive, cameraActive]);
   
-  // إزالة وظيفة محاكاة للكشف عن باركود
-
   return {
     handleBarcodeDetected
   };
