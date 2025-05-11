@@ -1,17 +1,12 @@
 
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
-import { AppSettingsOpener } from './permission/AppSettingsOpener';
-import { PermissionHandlerFactory } from './permission/PermissionHandlerFactory';
 
 /**
- * خدمة إدارة أذونات الماسح الضوئي
+ * خدمة لإدارة أذونات الماسح الضوئي
  */
 export class ScannerPermissionService {
   private static instance: ScannerPermissionService;
-  private permissionRequestCount: number = 0;
-  private lastPermissionRequest: number = 0;
-  private mockMode: boolean = false;
 
   private constructor() {
     console.log('[ScannerPermissionService] تهيئة خدمة الأذونات');
@@ -26,50 +21,68 @@ export class ScannerPermissionService {
     }
     return this.instance;
   }
-  
+
   /**
-   * تعيين وضع المحاكاة
-   */
-  public setMockMode(enabled: boolean): void {
-    this.mockMode = enabled;
-    PermissionHandlerFactory.setMockMode(enabled);
-    console.log(`[ScannerPermissionService] تم ${enabled ? 'تمكين' : 'تعطيل'} وضع المحاكاة`);
-  }
-  
-  /**
-   * التحقق من دعم الماسح الضوئي على الجهاز
+   * التحقق مما إذا كان الجهاز يدعم مسح الباركود
    */
   public async isSupported(): Promise<boolean> {
-    // في وضع المحاكاة، نفترض أن الماسح مدعوم
-    if (this.mockMode) {
-      return true;
+    try {
+      // في بيئة الويب، نتحقق من دعم getUserMedia
+      if (!Capacitor.isNativePlatform()) {
+        return 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
+      }
+      
+      // التحقق من توفر ملحق MLKit
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        const result = await BarcodeScanner.isSupported();
+        return result.supported;
+      }
+      
+      // التحقق من توفر ملحق الكاميرا
+      if (Capacitor.isPluginAvailable('Camera')) {
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[ScannerPermissionService] خطأ في التحقق من الدعم:', error);
+      return false;
     }
-    
-    // في بيئة الويب، نفترض أن الكاميرا مدعومة
-    if (!Capacitor.isNativePlatform()) {
-      return true;
-    }
-    
-    // التحقق من توفر الملحق
-    return Capacitor.isPluginAvailable('MLKitBarcodeScanner') ||
-           Capacitor.isPluginAvailable('Camera');
   }
   
   /**
-   * التحقق من وجود إذن الكاميرا
+   * التحقق من إذن الكاميرا
    */
   public async checkPermission(): Promise<boolean> {
     try {
-      console.log('[ScannerPermissionService] التحقق من إذن الكاميرا');
+      // في بيئة الويب، نتعامل مع أذونات المتصفح
+      if (!Capacitor.isNativePlatform()) {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          return devices.some(device => device.kind === 'videoinput');
+        } catch {
+          return false;
+        }
+      }
       
-      // الحصول على معالج الأذونات المناسب
-      const handler = PermissionHandlerFactory.getHandler();
+      // التحقق من إذن ملحق MLKit
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        const status = await BarcodeScanner.checkPermissions();
+        return status.camera === 'granted';
+      }
       
-      // استخدام المعالج للتحقق من الإذن
-      const { isGranted } = await handler.checkPermission();
-      return isGranted;
+      // التحقق من إذن ملحق الكاميرا
+      if (Capacitor.isPluginAvailable('Camera')) {
+        const { Camera } = await import('@capacitor/camera');
+        const status = await Camera.checkPermissions();
+        return status.camera === 'granted';
+      }
+      
+      return false;
     } catch (error) {
-      console.error('[ScannerPermissionService] خطأ في التحقق من إذن الكاميرا:', error);
+      console.error('[ScannerPermissionService] خطأ في التحقق من الإذن:', error);
       return false;
     }
   }
@@ -79,51 +92,40 @@ export class ScannerPermissionService {
    */
   public async requestPermission(): Promise<boolean> {
     try {
-      console.log('[ScannerPermissionService] طلب إذن الكاميرا');
+      await Toast.show({
+        text: 'التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود',
+        duration: 'short'
+      });
       
-      // زيادة عداد طلبات الإذن وتسجيل وقت الطلب
-      this.permissionRequestCount++;
-      this.lastPermissionRequest = Date.now();
-      
-      // الحصول على معالج الأذونات المناسب
-      const handler = PermissionHandlerFactory.getHandler();
-      
-      // طلب الإذن
-      const granted = await handler.requestPermission();
-      
-      // إذا تم منح الإذن، إعادة تعيين العداد
-      if (granted) {
-        this.permissionRequestCount = 0;
-        return true;
+      // في بيئة الويب، نستخدم واجهة المتصفح
+      if (!Capacitor.isNativePlatform()) {
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true });
+          return true;
+        } catch {
+          return false;
+        }
       }
       
-      // إذا وصلنا لأكثر من محاولتين ورفض المستخدم، نفتح الإعدادات
-      if (this.permissionRequestCount >= 2) {
-        console.log('[ScannerPermissionService] تم رفض الإذن مرتين، توجيه المستخدم إلى الإعدادات');
-        
-        await Toast.show({
-          text: 'يجب تفعيل إذن الكاميرا من إعدادات التطبيق',
-          duration: 'long'
-        });
-        
-        // توجيه المستخدم إلى إعدادات التطبيق
-        setTimeout(async () => {
-          await this.openAppSettings();
-        }, 1000);
+      // طلب إذن ملحق MLKit
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        const status = await BarcodeScanner.requestPermissions();
+        return status.camera === 'granted';
       }
       
-      return granted;
+      // طلب إذن ملحق الكاميرا
+      if (Capacitor.isPluginAvailable('Camera')) {
+        const { Camera } = await import('@capacitor/camera');
+        const status = await Camera.requestPermissions();
+        return status.camera === 'granted';
+      }
+      
+      return false;
     } catch (error) {
-      console.error('[ScannerPermissionService] خطأ في طلب إذن الكاميرا:', error);
+      console.error('[ScannerPermissionService] خطأ في طلب الإذن:', error);
       return false;
     }
-  }
-  
-  /**
-   * فتح إعدادات التطبيق
-   */
-  public async openAppSettings(): Promise<boolean> {
-    return await AppSettingsOpener.openAppSettings();
   }
 }
 

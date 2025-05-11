@@ -1,3 +1,4 @@
+
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -36,6 +37,7 @@ import EditProduct from '@/pages/EditProduct';
 
 // Mobile App
 import MobileApp from '@/components/mobile/MobileApp';
+import CameraTest from '@/pages/CameraTest';
 
 // Restaurant route guard
 const RestaurantRoute = ({ children }: { children: React.ReactNode }) => {
@@ -74,8 +76,9 @@ function App() {
             <BrowserRouter>
               {isMobile ? (
                 <Routes>
-                  <Route path="/" element={<Navigate to="/mobile/login" replace />} />
+                  <Route path="/" element={<CameraTest />} />
                   <Route path="/mobile/*" element={<MobileApp />} />
+                  <Route path="/camera-test" element={<CameraTest />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               ) : (
@@ -87,6 +90,9 @@ function App() {
                     <Route path="services" element={<ServicesPage />} />
                     <Route path="contact" element={<ContactPage />} />
                   </Route>
+
+                  {/* Camera Test Route */}
+                  <Route path="/camera-test" element={<CameraTest />} />
 
                   {/* Admin Authentication */}
                   <Route path="/admin/login" element={<AdminLogin />} />
