@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useBarcodeScanning } from './modules/useBarcodeScanning';
 import { useScannerRetry } from './modules/useScannerRetry';
@@ -48,7 +49,6 @@ export const useZXingBarcodeScanner = ({
 
   const { handleRetry } = useScannerRetry({
     setHasScannerError: (hasError: boolean | string | null) => {
-      // تحويل القيمة إذا كانت boolean إلى نص أو null لتتوافق مع حالة setScannerError
       if (typeof hasError === 'boolean') {
         setScannerError(hasError ? "حدث خطأ غير محدد" : null);
       } else {
