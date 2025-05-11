@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 
 /**
- * خدمة فتح إعدادات التطبيق للحصول على الأذونات
+ * خدمة فتح إعدادات التطبيق
  */
 export class AppSettingsOpener {
   /**
@@ -13,85 +13,78 @@ export class AppSettingsOpener {
    */
   public static async openAppSettings(): Promise<boolean> {
     try {
-      console.log('AppSettingsOpener: محاولة فتح إعدادات التطبيق');
+      console.log('[AppSettingsOpener] محاولة فتح إعدادات التطبيق');
       
-      // التحقق من المنصة
-      const platform = Capacitor.getPlatform();
-      console.log('AppSettingsOpener: المنصة الحالية:', platform);
-      
-      if (platform === 'android') {
-        // على Android، نفتح إعدادات التطبيق باستخدام نية مخصصة
-        const appInfo = await App.getInfo();
-        console.log('AppSettingsOpener: معلومات التطبيق:', appInfo);
-        
-        // عرض رسالة للمستخدم
+      // على المنصات غير المحمولة
+      if (!Capacitor.isNativePlatform()) {
+        console.log('[AppSettingsOpener] ليست منصة محمولة، لا يمكن فتح الإعدادات');
         await Toast.show({
-          text: 'سيتم فتح إعدادات التطبيق. يرجى تفعيل أذونات الكاميرا',
+          text: 'يرجى فتح إعدادات المتصفح لتمكين إذن الكاميرا',
           duration: 'long'
         });
-        
-        // فتح إعدادات التطبيق الخاصة
-        await Browser.open({
-          url: `package:${appInfo.id}`
-        });
-        
-        // فتح إعدادات الكاميرا مباشرة إذا كانت متاحة (محاولة ثانية)
-        try {
-          await Browser.open({
-            url: 'package:com.android.settings/.applications.InstalledAppDetailsSettings'
-          });
-        } catch (e) {
-          console.log('AppSettingsOpener: لا يمكن فتح إعدادات التطبيق المفصلة:', e);
-        }
-        
-        return true;
-      } else if (platform === 'ios') {
-        // على iOS، نفتح إعدادات التطبيق باستخدام URL مخصص
-        console.log('AppSettingsOpener: فتح إعدادات iOS');
-        
-        // عرض رسالة للمستخدم
-        await Toast.show({
-          text: 'سيتم فتح إعدادات التطبيق. يرجى تفعيل أذونات الكاميرا',
-          duration: 'long'
-        });
-        
-        await Browser.open({
-          url: 'app-settings:'
-        });
-        return true;
-      } else {
-        // على الويب، نظهر رسالة توجيه للمستخدم
-        console.log('AppSettingsOpener: هذه المنصة لا تدعم فتح الإعدادات تلقائيًا');
-        
-        // عرض إشعار للمستخدم
-        if (Capacitor.isNativePlatform()) {
-          await Toast.show({
-            text: 'يرجى فتح إعدادات جهازك وتمكين أذونات الكاميرا للتطبيق',
-            duration: 'long'
-          });
-        } else {
-          // في بيئة الويب
-          await Toast.show({
-            text: 'يرجى السماح للكاميرا من إعدادات المتصفح',
-            duration: 'long'
-          });
-        }
-        
         return false;
       }
-    } catch (error) {
-      console.error('AppSettingsOpener: خطأ في فتح إعدادات التطبيق', error);
       
-      // محاولة بديلة في حالة الفشل
-      try {
-        await Toast.show({
-          text: 'يرجى فتح إعدادات جهازك يدويًا وتمكين أذونات الكاميرا للتطبيق',
-          duration: 'long'
-        });
-      } catch (e) {
-        console.error('AppSettingsOpener: خطأ في عرض الرسالة', e);
+      // عرض رسالة توضيحية
+      await Toast.show({
+        text: 'سيتم توجيهك إلى إعدادات التطبيق لتمكين إذن الكاميرا',
+        duration: 'short'
+      });
+      
+      const platform = Capacitor.getPlatform();
+      console.log('[AppSettingsOpener] المنصة:', platform);
+      
+      // على نظام Android
+      if (platform === 'android') {
+        try {
+          // استخدام BarcodeScanner إذا أمكن
+          if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+            // @ts-ignore: Calling openSettings method
+            const BarcodeScanner = require('@capacitor-mlkit/barcode-scanning').BarcodeScanner;
+            if (typeof BarcodeScanner.openSettings === 'function') {
+              await BarcodeScanner.openSettings();
+              return true;
+            }
+          }
+          
+          // طريقة بديلة باستخدام معرف التطبيق
+          const appInfo = await App.getInfo();
+          await Browser.open({
+            url: 'package:' + appInfo.id
+          });
+          return true;
+        } catch (error) {
+          console.error('[AppSettingsOpener] خطأ في فتح الإعدادات على Android:', error);
+        }
+      } 
+      // على نظام iOS
+      else if (platform === 'ios') {
+        try {
+          await Browser.open({
+            url: 'app-settings:'
+          });
+          return true;
+        } catch (error) {
+          console.error('[AppSettingsOpener] خطأ في فتح الإعدادات على iOS:', error);
+        }
       }
       
+      // في حال فشل الطرق السابقة، عرض رسالة إرشادية
+      if (platform === 'ios') {
+        await Toast.show({
+          text: 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا، وتمكين إذن الكاميرا للتطبيق',
+          duration: 'long'
+        });
+      } else if (platform === 'android') {
+        await Toast.show({
+          text: 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات، وتمكين إذن الكاميرا',
+          duration: 'long'
+        });
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[AppSettingsOpener] خطأ في فتح إعدادات التطبيق:', error);
       return false;
     }
   }
