@@ -60,7 +60,7 @@ export class ScannerCameraService {
         return false;
       }
       
-      // تحضير الكاميرا - تصحيح الاستدعاء بإزالة الوسيط
+      // تحضير الكاميرا - استدعاء بدون وسائط
       console.log('[ScannerCameraService] تحضير الكاميرا');
       await BarcodeScanner.prepare();
       console.log('[ScannerCameraService] تم تحضير الكاميرا');

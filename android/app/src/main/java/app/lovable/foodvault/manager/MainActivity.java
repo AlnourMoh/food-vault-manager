@@ -25,8 +25,13 @@ public class MainActivity extends BridgeActivity {
         
         Log.d(TAG, "onCreate: بدء تشغيل التطبيق");
         
-        // عند بدء التشغيل نتحقق من وجود إذن الكاميرا
-        checkAndRequestCameraPermission();
+        // عند بدء التشغيل نتحقق مباشرة من وجود إذن الكاميرا كما طلبت
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+            Log.d(TAG, "onCreate: طلب إذن الكاميرا مباشرة عند بدء التطبيق");
+        } else {
+            Log.d(TAG, "onCreate: إذن الكاميرا ممنوح بالفعل");
+        }
     }
 
     @Override
