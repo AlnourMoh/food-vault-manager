@@ -23,7 +23,7 @@ const config: CapacitorConfig = {
     },
     Camera: {
       promptLabelHeader: "الوصول إلى الكاميرا",
-      promptLabelText: "يحتاج التطبيق إلى إذن الكاميرا لمسح الباركود",
+      promptLabelText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
       promptLabelCancel: "إلغاء",
       promptLabelConfirm: "السماح"
     },
@@ -34,7 +34,11 @@ const config: CapacitorConfig = {
     MLKitBarcodeScanner: {
       formats: ["QR_CODE", "EAN_13", "CODE_128", "CODE_39", "UPC_A", "UPC_E"],
       detectionSpeed: "fast",
-      cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود"
+      cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+      beepOnSuccess: true,
+      vibrateOnSuccess: true,
+      lockOrientation: true,
+      drawFocusRect: true
     }
   },
   android: {
