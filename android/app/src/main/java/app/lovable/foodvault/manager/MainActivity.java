@@ -64,7 +64,8 @@ public class MainActivity extends BridgeActivity {
             } else {
                 permissions = new String[] {
                     Manifest.permission.CAMERA,
-                    Manifest.permission.READ_MEDIA_IMAGES
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.RECORD_AUDIO
                 };
             }
             
