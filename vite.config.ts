@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       external: [
+        // تعريف المكتبات الخارجية بشكل صحيح
         "next-themes",
         "@capacitor/device",
         "@capacitor/app",
@@ -33,5 +34,9 @@ export default defineConfig(({ mode }) => ({
         "@capacitor/browser"
       ],
     },
+    // تحسين بناء المشروع
+    outDir: "dist",
+    emptyOutDir: true,
+    sourcemap: true,
   },
 }));

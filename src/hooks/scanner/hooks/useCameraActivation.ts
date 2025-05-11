@@ -27,9 +27,9 @@ export const useCameraActivation = () => {
           await Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: CameraResultType.Uri, // استخدام القيمة الصحيحة من التعداد
-            source: CameraSource.Camera, // استخدام القيمة الصحيحة من التعداد
-            direction: CameraDirection.Rear // استخدام القيمة الصحيحة من التعداد
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            direction: CameraDirection.Rear
           });
           
           setCameraActive(true);
