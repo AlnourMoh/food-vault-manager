@@ -1,0 +1,14 @@
+
+{
+  "appId": "app.lovable.foodvault.manager",
+  "appName": "FoodVault Manager",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
