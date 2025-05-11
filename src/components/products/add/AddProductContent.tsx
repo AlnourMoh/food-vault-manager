@@ -4,8 +4,18 @@ import { PermissionErrorCard } from './PermissionErrorCard';
 import { ScanButton } from './ScanButton';
 import { useProductScannerPermissions } from './useProductScannerPermissions';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+
+// Define types to avoid direct import of @capacitor/camera
+type CameraResultType = 'uri' | 'base64' | 'dataUrl';
+type CameraSource = 'prompt' | 'camera' | 'photos';
+type CameraDirection = 'rear' | 'front';
+
+interface CameraPhoto {
+  path?: string;
+  webPath?: string;
+  format?: string;
+}
 
 interface AddProductContentProps {
   isRestaurantRoute: boolean;
@@ -48,12 +58,15 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
       // فتح كاميرا الجهاز مباشرة بدون مسح الباركود
       if (Capacitor.isPluginAvailable('Camera')) {
         try {
-          await Camera.getPhoto({
+          // استخدام dynamic import لتجنب مشاكل الاستيراد
+          const cameraModule = await import('@capacitor/camera');
+          
+          await cameraModule.Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: CameraResultType.Uri,
-            source: CameraSource.Camera,
-            direction: CameraDirection.Rear
+            resultType: 'uri',
+            source: 'camera',
+            direction: 'rear'
           });
           
           toast({

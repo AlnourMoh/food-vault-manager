@@ -1,9 +1,29 @@
 
 import { useState } from 'react';
 import { Toast } from '@capacitor/toast';
-import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
+
+// Import types only to avoid the direct dependency in the web build
+type CameraResultType = 'uri' | 'base64' | 'dataUrl';
+type CameraSource = 'prompt' | 'camera' | 'photos';
+type CameraDirection = 'rear' | 'front';
+
+interface CameraPhoto {
+  path?: string;
+  webPath?: string;
+  format?: string;
+}
+
+// Define an interface for the Camera API we need
+interface CameraInterface {
+  getPhoto(options: {
+    quality?: number;
+    allowEditing?: boolean;
+    resultType?: CameraResultType;
+    source?: CameraSource;
+    direction?: CameraDirection;
+  }): Promise<CameraPhoto>;
+}
 
 export const useCameraActivation = () => {
   const [cameraInitializing, setCameraInitializing] = useState(false);
@@ -23,13 +43,16 @@ export const useCameraActivation = () => {
 
       if (Capacitor.isPluginAvailable('Camera')) {
         try {
-          // استخدام القيم الصحيحة من التعدادات
+          // استخدام dynamic import لتجنب مشاكل الاستيراد
+          const cameraModule = await import('@capacitor/camera');
+          const Camera: CameraInterface = cameraModule.Camera;
+          
           await Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: CameraResultType.Uri,
-            source: CameraSource.Camera,
-            direction: CameraDirection.Rear
+            resultType: 'uri',
+            source: 'camera',
+            direction: 'rear'
           });
           
           setCameraActive(true);
@@ -48,6 +71,9 @@ export const useCameraActivation = () => {
       
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
+          // استخدام dynamic import لتجنب مشاكل الاستيراد
+          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+          
           // استخدام BarcodeScanner للتحقق من دعم مسح الباركود وتفعيله
           const isSupported = await BarcodeScanner.isSupported();
           if (isSupported.supported) {

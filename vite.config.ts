@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
         "@capacitor/core",
         "@capacitor/toast",
         "@capacitor-mlkit/barcode-scanning",
-        "@capacitor/camera",
+        "@capacitor/camera", // ensure @capacitor/camera is included
         "@capacitor/browser"
       ],
     },
