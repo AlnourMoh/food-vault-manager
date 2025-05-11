@@ -21,24 +21,7 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
   const [hasError, setHasError] = useState(false);
   const { toast } = useToast();
   
-  // زر المحاكاة للاختبار في بيئات بدون كاميرا
-  const handleMockBarcodeScan = () => {
-    const mockBarcodes = [
-      '123456789012',
-      '789012345678',
-      '978020137962',
-      '4006381333931'
-    ];
-    
-    const randomBarcode = mockBarcodes[Math.floor(Math.random() * mockBarcodes.length)];
-    
-    toast({
-      title: "تم مسح باركود وهمي",
-      description: `الرمز: ${randomBarcode}`,
-    });
-    
-    onScan(randomBarcode);
-  };
+  // إزالة زر المحاكاة
   
   // تفعيل المسح المستمر للباركود
   const scanBarcode = async () => {
@@ -94,12 +77,7 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
       try {
         setHasError(false);
         
-        // التحقق من وضع المحاكاة
-        if (scannerCameraService.isMockMode()) {
-          console.log('[WebScanner] وضع المحاكاة نشط، لا حاجة لتفعيل الكاميرا');
-          return;
-        }
-        
+        // إلغاء التحقق من وضع المحاكاة والتأكيد على استخدام الكاميرا الحقيقية
         console.log('[WebScanner] بدء تهيئة كاميرا الويب...');
         
         // التحقق من دعم BarcodeDetector
@@ -143,13 +121,12 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
         console.error('[WebScanner] خطأ في تفعيل الكاميرا:', error);
         setHasError(true);
         
-        // تفعيل وضع المحاكاة تلقائياً عند فشل الكاميرا
-        console.log('[WebScanner] تفعيل وضع المحاكاة لعدم توفر الكاميرا');
-        scannerCameraService.enableMockMode(true);
+        // لا نفعل وضع المحاكاة تلقائياً عند فشل الكاميرا، بل نظهر فقط رسالة خطأ
+        console.log('[WebScanner] فشل في تفعيل الكاميرا، يرجى التأكد من الأذونات');
         
         toast({
           title: "الكاميرا غير متاحة",
-          description: "تم تفعيل وضع المحاكاة لتجربة المسح بشكل افتراضي",
+          description: "يرجى التأكد من إعطاء إذن الوصول للكاميرا وإعادة المحاولة",
           variant: "destructive"
         });
       }
@@ -178,36 +155,25 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
-      {hasError || scannerCameraService.isMockMode() ? (
+      {hasError ? (
         <div className="flex flex-col items-center justify-center h-full p-6 text-center">
           <div className="bg-red-100 text-red-700 p-4 rounded-full mb-6">
             <Camera className="h-12 w-12" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-4">
-            {scannerCameraService.isMockMode() ? 'وضع المحاكاة نشط' : 'الكاميرا غير متاحة'}
+            الكاميرا غير متاحة
           </h2>
           <p className="text-white/70 mb-8">
-            {scannerCameraService.isMockMode() 
-              ? 'يمكنك تجربة المسح باستخدام باركود افتراضي'
-              : 'تعذر الوصول إلى كاميرا الجهاز. يرجى التحقق من الأذونات وإعادة المحاولة.'}
+            تعذر الوصول إلى كاميرا الجهاز. يرجى التحقق من الأذونات وإعادة المحاولة.
           </p>
           <div className="space-y-3 w-full max-w-md">
             <Button 
-              onClick={handleMockBarcodeScan}
+              onClick={() => window.location.reload()}
               className="w-full"
-              variant="default"
             >
-              مسح باركود وهمي للاختبار
+              <RefreshCw className="h-4 w-4 ml-2" />
+              إعادة تحميل الصفحة
             </Button>
-            {hasError && (
-              <Button 
-                onClick={() => window.location.reload()}
-                className="w-full"
-              >
-                <RefreshCw className="h-4 w-4 ml-2" />
-                إعادة تحميل الصفحة
-              </Button>
-            )}
             <Button onClick={onClose} variant="outline" className="w-full">
               <X className="h-4 w-4 ml-2" />
               إغلاق
@@ -223,6 +189,7 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
               playsInline
               muted
               className="absolute inset-0 h-full w-full object-cover"
+              id="scanner-video-element"
             />
             <canvas ref={canvasRef} className="absolute inset-0 h-full w-full hidden" />
             
@@ -250,14 +217,8 @@ export const WebScanner: React.FC<WebScannerProps> = ({ onScan, onClose }) => {
             </Button>
           </div>
           
-          {/* أزرار التحكم */}
+          {/* أزرار التحكم - إزالة زر محاكاة المسح */}
           <div className="bg-black p-4 space-y-3">
-            <Button 
-              onClick={handleMockBarcodeScan}
-              className="w-full"
-            >
-              محاكاة المسح (للاختبار)
-            </Button>
             <Button 
               onClick={onClose} 
               variant="outline"

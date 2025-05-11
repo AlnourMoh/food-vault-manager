@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { ZXingScannerContent } from './scanner/ZXingScannerContent';
 import { useScannerPermissions } from '@/hooks/scanner/hooks/useScannerPermissions';
@@ -34,8 +33,8 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
   useEffect(() => {
     // استخدام ماسح الويب في بيئة المتصفح أو عندما لا تتوفر ملحقات الماسح المحلي
     const shouldUseWebScanner = !Capacitor.isNativePlatform() || 
-                               !Capacitor.isPluginAvailable('MLKitBarcodeScanner') ||
-                               scannerCameraService.isMockMode();
+                               !Capacitor.isPluginAvailable('MLKitBarcodeScanner');
+    
     console.log(`[ZXingBarcodeScanner] استخدام ماسح الويب: ${shouldUseWebScanner}`);
     setUseWebScanner(shouldUseWebScanner);
   }, []);

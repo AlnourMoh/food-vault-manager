@@ -7,7 +7,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
  */
 export class ScannerCameraService {
   private static instance: ScannerCameraService;
-  private mockMode = false;
+  private mockMode = false; // تغيير القيمة الافتراضية إلى false
   
   private constructor() {
     console.log('[ScannerCameraService] تهيئة خدمة الكاميرا');
@@ -63,7 +63,7 @@ export class ScannerCameraService {
         console.log('[ScannerCameraService] محاولة تحضير الكاميرا الحقيقية');
         
         try {
-          // تهيئة الكاميرا - بدون وسائط (الخطأ كان في هذا السطر)
+          // تهيئة الكاميرا - بدون وسائط (تصحيح الخطأ)
           await BarcodeScanner.prepare();
           console.log('[ScannerCameraService] تم تحضير الكاميرا بنجاح');
           return true;

@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef } from 'react';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
@@ -10,17 +9,12 @@ export const useBarcodeDetection = (
   hasScannerError: boolean,
   cameraActive: boolean
 ) => {
-  // استخدام مرجع للتحكم في توقيت المحاكاة
-  const simulationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // مرجع للمؤقت الدوري للتحقق من حالة الكاميرا
+  // استخدام مرجع للتحكم في توقيت المحاكاة - سنزيل المحاكاة
   const cameraCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // تنظيف عند إلغاء تحميل المكون
   useEffect(() => {
     return () => {
-      if (simulationTimeoutRef.current) {
-        clearTimeout(simulationTimeoutRef.current);
-      }
       if (cameraCheckIntervalRef.current) {
         clearInterval(cameraCheckIntervalRef.current);
       }
@@ -91,33 +85,7 @@ export const useBarcodeDetection = (
     };
   }, [isScanningActive, cameraActive]);
   
-  // وظيفة محاكية للكشف عن باركود مع تأخير أطول
-  useEffect(() => {
-    if (isScanningActive && !hasScannerError && cameraActive) {
-      console.log('[useBarcodeDetection] الماسح والكاميرا نشطان، بدء محاكاة الكشف عن باركود...');
-      
-      // إلغاء أي محاكاة سابقة
-      if (simulationTimeoutRef.current) {
-        clearTimeout(simulationTimeoutRef.current);
-      }
-      
-      // محاكاة وقت المسح - تم تعيينه إلى 30 ثانية لسماح وقت كافٍ للمستخدم بالمسح
-      simulationTimeoutRef.current = setTimeout(() => {
-        // التحقق مرة أخرى أن المسح لا يزال نشطًا
-        if (isScanningActive && cameraActive) {
-          const simulatedBarcode = `DEMO-${Math.floor(Math.random() * 9000) + 1000}`;
-          console.log('[useBarcodeDetection] محاكاة اكتشاف باركود بعد 30 ثانية:', simulatedBarcode);
-          handleBarcodeDetected(simulatedBarcode);
-        }
-      }, 30000);  // 30 ثانية
-
-      return () => {
-        if (simulationTimeoutRef.current) {
-          clearTimeout(simulationTimeoutRef.current);
-        }
-      };
-    }
-  }, [isScanningActive, hasScannerError, cameraActive, handleBarcodeDetected]);
+  // إزالة وظيفة محاكاة للكشف عن باركود
 
   return {
     handleBarcodeDetected
