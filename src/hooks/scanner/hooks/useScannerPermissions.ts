@@ -189,8 +189,8 @@ export const useScannerPermissions = () => {
           setTimeout(async () => {
             try {
               if (Capacitor.isPluginAvailable('App')) {
-                // التصحيح - استخدام App.openSettingsApp() بدلاً من openSettings
-                await App.openSettingsApp();
+                // استخدام App.openSettings() (المنهج الصحيح)
+                await App.openSettings();
               }
             } catch (settingsError) {
               console.error('[useScannerPermissions] خطأ في فتح الإعدادات:', settingsError);
