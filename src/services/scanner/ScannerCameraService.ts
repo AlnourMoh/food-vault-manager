@@ -62,7 +62,7 @@ export class ScannerCameraService {
       
       // تحضير الكاميرا
       console.log('[ScannerCameraService] تحضير الكاميرا');
-      // تم تصحيح استدعاء الدالة بدون وسائط
+      // تصحيح استدعاء الدالة بدون وسائط
       await BarcodeScanner.prepare();
       console.log('[ScannerCameraService] تم تحضير الكاميرا');
       
@@ -127,6 +127,27 @@ export class ScannerCameraService {
       console.error('[ScannerCameraService] خطأ في إعادة تعيين الكاميرا:', error);
       return false;
     }
+  }
+  
+  /**
+   * الحصول على خيارات تنسيق المسح
+   */
+  public getScanFormatOptions() {
+    return {
+      formats: [
+        'QR_CODE',
+        'DATA_MATRIX',
+        'UPC_A',
+        'UPC_E',
+        'EAN_8',
+        'EAN_13',
+        'CODE_39',
+        'CODE_93',
+        'CODE_128',
+        'ITF',
+        'CODABAR'
+      ]
+    };
   }
 }
 
