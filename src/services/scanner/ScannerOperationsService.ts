@@ -3,7 +3,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from './ScannerPermissionService';
 import { scannerUIService } from './ScannerUIService';
-import { scannerCameraService } from './ScannerCameraService';
+import { scannerCameraService } from './ScannerCameraService'; // Now importing the correctly exported constant
 import { scannerResultService } from './ScannerResultService';
 
 /**

@@ -47,11 +47,11 @@ export class ScannerCameraService {
         return false;
       }
       
-      // إعداد الكاميرا وتهيئتها
-      await this.uiService.prepareBackground();
+      // إعداد الكاميرا وتهيئتها - استخدام createVideoElement بدلاً من prepareBackground
+      const videoElement = this.uiService.createVideoElement();
+      this.uiService.activateScanningUI(videoElement);
       
       // تهيئة الكاميرا
-      // تم إزالة المعاملات لأن prepare لا يتوقع أي معاملات
       await BarcodeScanner.prepare();
       
       console.log('[ScannerCameraService] تمت تهيئة الكاميرا بنجاح');
@@ -80,8 +80,9 @@ export class ScannerCameraService {
         await BarcodeScanner.stopScan().catch(e => console.error('[ScannerCameraService] خطأ في إيقاف المسح:', e));
       }
       
-      // إعادة ضبط واجهة المستخدم
-      await this.uiService.restoreBackground();
+      // إعادة ضبط واجهة المستخدم - استخدام deactivateScanningUI بدلاً من restoreBackground
+      this.uiService.deactivateScanningUI();
+      this.uiService.removeVideoElement();
       
       // تحديث الحالة
       this.isActive = false;
@@ -93,3 +94,6 @@ export class ScannerCameraService {
     }
   }
 }
+
+// تصدير نسخة واحدة من الخدمة للاستخدام في جميع أنحاء التطبيق
+export const scannerCameraService = ScannerCameraService.getInstance();
