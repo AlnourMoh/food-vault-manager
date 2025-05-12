@@ -8,7 +8,7 @@ import NetworkErrorView from './NetworkErrorView';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
-import { Camera } from '@capacitor/camera';
+import { Camera, CameraResultType } from '@capacitor/camera';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { App } from '@capacitor/app';
 
@@ -60,7 +60,7 @@ const MobileApp: React.FC = () => {
                 await Camera.getPhoto({
                   quality: 30,
                   allowEditing: false,
-                  resultType: 'uri'
+                  resultType: CameraResultType.Uri // استخدام النوع الصحيح من CameraResultType
                 });
               } catch (e) {
                 console.log('MobileApp: تم إلغاء التقاط الصورة:', e);
