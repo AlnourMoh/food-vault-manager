@@ -14,7 +14,7 @@ export const DesktopRoutes = () => {
       {WebsiteRoutes}
       
       {/* Admin Routes */}
-      <AdminRoutes />
+      {AdminRoutes}
       
       {/* Restaurant Routes */}
       <RestaurantRoutes />
