@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { WebsiteRoutes } from './website/WebsiteRoutes';
 import { AdminRoutes } from './admin/AdminRoutes';
@@ -11,13 +11,19 @@ export const DesktopRoutes = () => {
   return (
     <Routes>
       {/* Website Routes */}
-      {WebsiteRoutes}
+      {WebsiteRoutes.map((route, index) => (
+        <Fragment key={`website-route-${index}`}>{route}</Fragment>
+      ))}
       
       {/* Admin Routes */}
-      {AdminRoutes}
+      {AdminRoutes.map((route, index) => (
+        <Fragment key={`admin-route-${index}`}>{route}</Fragment>
+      ))}
       
       {/* Restaurant Routes */}
-      {RestaurantRoutes}
+      {RestaurantRoutes.map((route, index) => (
+        <Fragment key={`restaurant-route-${index}`}>{route}</Fragment>
+      ))}
       
       {/* Mobile route for desktop testing */}
       <Route path="/mobile/*" element={<MobileApp />} />
