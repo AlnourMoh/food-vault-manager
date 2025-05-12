@@ -30,6 +30,13 @@ export const AppRoutes: React.FC = () => {
         </ProtectedRoute>
       } />
       
+      {/* Add the new route with redirect to /scan */}
+      <Route path="/scan-product" element={
+        <ProtectedRoute>
+          <Navigate to="/scan" replace />
+        </ProtectedRoute>
+      } />
+      
       <Route path="/products/add" element={
         <ProtectedRoute>
           <MobileLayout>

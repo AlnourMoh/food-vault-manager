@@ -1,3 +1,4 @@
+
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -76,6 +77,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Navigate to="/mobile/login" replace />} />
                   <Route path="/mobile/*" element={<MobileApp />} />
+                  <Route path="/scan-product" element={<Navigate to="/mobile/scan" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               ) : (
@@ -166,6 +168,13 @@ function App() {
                   <Route path="/restaurant/products/:productId/edit" element={
                     <RestaurantRoute>
                       <EditProduct />
+                    </RestaurantRoute>
+                  } />
+                  
+                  {/* New route for scan-product redirecting to restaurant scan page */}
+                  <Route path="/scan-product" element={
+                    <RestaurantRoute>
+                      <Navigate to="/restaurant/scan" replace />
                     </RestaurantRoute>
                   } />
                   
