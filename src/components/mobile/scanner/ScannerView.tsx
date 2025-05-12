@@ -28,7 +28,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   onClose,
   onToggleFlash
 }) => {
-  // عند تحميل المكون، نبدأ المسح تلقائيًا إذا كانت الكاميرا نشطة
+  // تحسين: بدء المسح تلقائيًا بمجرد أن تكون الكاميرا نشطة
   useEffect(() => {
     const initScan = async () => {
       if (cameraActive && !isActive && !hasError) {
@@ -43,7 +43,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     };
     
     // تأخير قصير قبل بدء المسح لضمان جاهزية الواجهة
-    const timer = setTimeout(initScan, 800);
+    const timer = setTimeout(initScan, 300);
     
     return () => clearTimeout(timer);
   }, [cameraActive, isActive, hasError, onStartScan]);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +11,6 @@ export const useProductScanLogic = () => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [autoOpenAttempted, setAutoOpenAttempted] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   
   const { toast } = useToast();
@@ -20,29 +18,16 @@ export const useProductScanLogic = () => {
   
   const { checkPermission, requestPermission, openAppSettings } = useScannerPermissions();
   const { fetchProductByCode, logProductScan } = useScanProduct();
-  
-  // فتح الماسح تلقائياً عند تحميل الصفحة
-  useEffect(() => {
-    if (!autoOpenAttempted) {
-      console.log('ProductScan: فتح الماسح تلقائياً عند تحميل الصفحة');
-      setAutoOpenAttempted(true);
-      // تأخير قصير قبل فتح الماسح لضمان تحميل الصفحة بالكامل
-      setTimeout(() => {
-        handleOpenScanner();
-      }, 1000);
-    }
-  }, []);
 
   const handleOpenScanner = async () => {
     try {
-      console.log('ProductScan: فتح الماسح الضوئي');
+      console.log('ProductScanLogic: فتح الماسح الضوئي');
       setScanError(null);
       setIsLoading(true);
       
       // في بيئة الويب، نفتح الماسح مباشرة بدون التحقق من الإذن
-      // سيقوم المتصفح بطلب الإذن عند محاولة الوصول إلى الكاميرا
       if (!Capacitor.isNativePlatform()) {
-        console.log('ProductScan: نحن في بيئة الويب، فتح الماسح مباشرة');
+        console.log('ProductScanLogic: بيئة الويب، فتح الماسح مباشرة');
         setIsScannerOpen(true);
         setIsLoading(false);
         return;
@@ -52,9 +37,8 @@ export const useProductScanLogic = () => {
       let permissionGranted = await checkPermission();
       
       if (!permissionGranted) {
-        console.log('ProductScan: لا يوجد إذن للكاميرا، سيتم طلبه الآن');
+        console.log('ProductScanLogic: طلب إذن الكاميرا');
         
-        // إظهار إشعار للمستخدم
         toast({
           title: "طلب إذن الكاميرا",
           description: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
@@ -63,10 +47,9 @@ export const useProductScanLogic = () => {
         permissionGranted = await requestPermission();
         
         if (!permissionGranted) {
-          console.log('ProductScan: تم رفض إذن الكاميرا');
+          console.log('ProductScanLogic: تم رفض إذن الكاميرا');
           setScanError('تم رفض إذن الكاميرا، لا يمكن استخدام الماسح الضوئي');
           
-          // محاولة إضافية من خلال فتح إعدادات التطبيق
           const openSettings = await openAppSettings();
           if (!openSettings) {
             toast({
@@ -81,12 +64,12 @@ export const useProductScanLogic = () => {
         }
       }
       
-      // الآن بعد أن أصبح لدينا إذن، نفتح الماسح مباشرة
-      console.log('ProductScan: فتح الماسح الضوئي مباشرة');
+      // فتح الماسح بمجرد حصولنا على الإذن اللازم
+      console.log('ProductScanLogic: فتح الماسح الضوئي بعد التحقق من الإذن');
       setIsScannerOpen(true);
       
     } catch (error) {
-      console.error('ProductScan: خطأ في فتح الماسح:', error);
+      console.error('ProductScanLogic: خطأ في فتح الماسح:', error);
       setScanError('حدث خطأ أثناء محاولة فتح الماسح الضوئي');
       
       toast({
@@ -153,7 +136,7 @@ export const useProductScanLogic = () => {
     isLoading,
     scanError,
     handleOpenScanner,
-    handleCloseScanner,
+    handleCloseScanner: () => setIsScannerOpen(false),
     handleScanResult,
     handleScanAnother,
     viewProductDetails

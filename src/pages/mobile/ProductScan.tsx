@@ -19,17 +19,11 @@ const ProductScan = () => {
     viewProductDetails
   } = useProductScanLogic();
   
-  // فتح الماسح تلقائياً عند تحميل الصفحة بدون تأخير
+  // تعديل: فتح الماسح تلقائياً عند تحميل الصفحة بدون أي تأخير
   useEffect(() => {
-    console.log('ProductScan: Opening scanner immediately without delay');
-    // فتح الماسح فوراً عند تحميل الصفحة بدون أي تأخير
-    const timer = setTimeout(() => {
-      if (!isScannerOpen && !scannedProduct) {
-        handleOpenScanner();
-      }
-    }, 100); // تأخير قصير جدًا للسماح بتحميل الصفحة
-    
-    return () => clearTimeout(timer);
+    console.log('ProductScan: فتح الماسح فوراً بدون تأخير');
+    // فتح الماسح مباشرة عند تحميل الصفحة
+    handleOpenScanner();
   }, []);
 
   // إذا تم مسح المنتج، نعرض معلوماته
