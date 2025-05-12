@@ -30,7 +30,9 @@ export const RestaurantRoutes = () => {
       } />
       <Route path="/restaurant" element={
         <RestaurantGuard>
-          <RestaurantLayout />
+          <RestaurantLayout>
+            <></>
+          </RestaurantLayout>
         </RestaurantGuard>
       }>
         <Route index element={<Dashboard />} />
