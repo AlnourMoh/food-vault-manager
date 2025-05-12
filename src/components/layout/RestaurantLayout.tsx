@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -11,7 +10,8 @@ import {
   Home,
   LogOut,
   ArrowRight,
-  User
+  User,
+  BarChart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -57,7 +57,7 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
     { 
       name: 'التقارير', 
       path: '/restaurant/reports', 
-      icon: <Check className="ml-2 h-5 w-5" /> 
+      icon: <BarChart className="ml-2 h-5 w-5" /> 
     },
   ];
 

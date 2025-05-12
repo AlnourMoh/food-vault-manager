@@ -12,6 +12,7 @@ import RestaurantLogin from '@/pages/RestaurantLogin';
 import RestaurantSetupPassword from '@/pages/RestaurantSetupPassword';
 import EditProduct from '@/pages/EditProduct';
 import ProductBarcodes from '@/pages/ProductBarcodes';
+import RestaurantReports from '@/pages/restaurant/Reports';
 import { RestaurantRoute } from '@/routes/guards/RouteGuards';
 
 export const RestaurantRoutes = () => {
@@ -61,6 +62,11 @@ export const RestaurantRoutes = () => {
       <Route path="/restaurant/expired" element={
         <RestaurantRoute>
           <Expired />
+        </RestaurantRoute>
+      } />
+      <Route path="/restaurant/reports" element={
+        <RestaurantRoute>
+          <RestaurantReports />
         </RestaurantRoute>
       } />
       <Route path="/restaurant/products/:productId/edit" element={
