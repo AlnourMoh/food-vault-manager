@@ -19,7 +19,7 @@ interface ScannerContainerProps {
   stopScan: () => Promise<boolean>;
   handleManualEntry: () => void;
   handleManualCancel: () => void;
-  handleRequestPermission: () => Promise<boolean>;
+  handleRequestPermission: () => Promise<boolean>; // Make sure the type matches
   handleRetry: () => void;
 }
 

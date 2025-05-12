@@ -170,6 +170,6 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     handleRetry,
     isMockScanActive,
     handleManualInput,
-    requestPermission // Add the missing property
+    requestPermission // Ensure we export this function with the correct name
   };
 };

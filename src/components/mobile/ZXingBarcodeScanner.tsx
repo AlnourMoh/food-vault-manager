@@ -25,7 +25,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     stopScan,
     handleManualEntry,
     handleManualCancel,
-    handleRequestPermission,
+    requestPermission, // Changed from handleRequestPermission to match the hook return value
     handleRetry
   } = useScannerControls({ onScan, onClose });
 
@@ -60,7 +60,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       stopScan={stopScan}
       handleManualEntry={handleManualEntry}
       handleManualCancel={handleManualCancel}
-      handleRequestPermission={handleRequestPermission}
+      handleRequestPermission={requestPermission} // Pass the renamed function to ScannerContainer
       handleRetry={handleRetry}
     />
   );
