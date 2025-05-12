@@ -1,30 +1,38 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera } from 'lucide-react';
+import { ScanIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ScanButtonProps {
-  onClick: () => Promise<void>; 
-  isLoading: boolean;
-  loadingText?: string;
-  defaultText?: string;
+  className?: string;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  disabled?: boolean;
 }
 
-export const ScanButton: React.FC<ScanButtonProps> = ({
-  onClick,
-  isLoading,
-  loadingText = 'جاري فتح الكاميرا...',
-  defaultText = 'امسح لادخال المنتج'
+const ScanButton: React.FC<ScanButtonProps> = ({ 
+  className = "", 
+  variant = "default",
+  disabled = false
 }) => {
+  const navigate = useNavigate();
+  
+  const handleScan = () => {
+    // Navigate directly to the scan page
+    navigate('/scan');
+  };
+  
   return (
     <Button 
-      size="lg" 
-      onClick={onClick}
-      className="w-full gap-2"
-      disabled={isLoading}
+      onClick={handleScan} 
+      className={className}
+      variant={variant}
+      disabled={disabled}
     >
-      <Camera className="w-5 h-5" />
-      {isLoading ? loadingText : defaultText}
+      <ScanIcon className="mr-2 h-4 w-4" />
+      مسح الباركود
     </Button>
   );
 };
+
+export default ScanButton;
