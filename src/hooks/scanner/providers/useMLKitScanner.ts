@@ -31,7 +31,7 @@ export const useMLKitScanner = () => {
       try {
         console.log('[useMLKitScanner] تهيئة وبدء المسح...');
         
-        // استخدام تهيئة أسرع للكاميرا
+        // استخدام تهيئة أسرع للكاميرا - تم إزالة المعاملات لأن prepare لا يتوقع أي معاملات
         await BarcodeScanner.prepare();
         
         // بدء المسح الفعلي فورًا

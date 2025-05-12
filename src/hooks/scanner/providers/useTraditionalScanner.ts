@@ -41,6 +41,7 @@ export const useTraditionalScanner = () => {
       // إخفاء خلفية الماسح وإعداده
       console.log("[useTraditionalScanner] إخفاء الخلفية وتجهيز الماسح");
       await BarcodeScanner.hideBackground();
+      // تم إزالة المعاملات لأن prepare لا يتوقع أي معاملات
       await BarcodeScanner.prepare();
       
       console.log("[useTraditionalScanner] بدء عملية المسح");

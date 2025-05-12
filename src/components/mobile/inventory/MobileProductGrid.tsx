@@ -6,6 +6,7 @@ import MobileProductCard from './MobileProductCard';
 import MobileProductDetailsDialog from './MobileProductDetailsDialog';
 import BarcodeScanner from '@/components/mobile/BarcodeScanner';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface MobileProductGridProps {
   products: Product[];
@@ -18,6 +19,7 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [productToRemove, setProductToRemove] = useState<Product | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // ترتيب المنتجات حسب حالة انتهاء الصلاحية
   const sortedProducts = useMemo(() => {
@@ -53,21 +55,16 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
     setIsDialogOpen(true);
   };
 
-  const handleRemoveProduct = (product: Product) => {
-    console.log('تحضير لمسح منتج:', product.name);
-    setProductToRemove(product);
-    
-    // تأخير قصير قبل فتح الماسح لضمان تنظيف أي موارد سابقة
-    setTimeout(() => {
-      console.log('فتح الماسح لمنتج:', product.name);
-      setIsScannerOpen(true);
-    }, 100);
+  const handleScanProduct = (product: Product) => {
+    console.log('فتح الماسح الضوئي للمنتج:', product.name);
+    // بدلاً من إعداد productToRemove، سنفتح صفحة مسح منتج جديدة
+    navigate('/scan-product');
   };
 
   const handleScanComplete = async (code: string) => {
     try {
       // معالجة نتيجة المسح
-      console.log('تم المسح بنجاح:', code, 'للمنتج:', productToRemove?.name);
+      console.log('تم المسح بنجاح:', code);
       
       toast({
         title: "تم المسح بنجاح",
@@ -110,7 +107,7 @@ const MobileProductGrid: React.FC<MobileProductGridProps> = ({ products, onProdu
             <MobileProductCard 
               product={product}
               onSelect={handleProductSelect}
-              onRemove={handleRemoveProduct}
+              onScan={handleScanProduct} // تغيير اسم الدالة لتكون أكثر وضوحاً
             />
           </div>
         ))}

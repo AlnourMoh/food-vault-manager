@@ -10,13 +10,13 @@ import { Product } from '@/types';
 interface MobileProductCardProps {
   product: Product;
   onSelect: (product: Product) => void;
-  onRemove?: (product: Product) => void;
+  onScan: (product: Product) => void; // تغيير من onRemove إلى onScan لوضوح أكبر
 }
 
 const MobileProductCard: React.FC<MobileProductCardProps> = ({ 
   product,
   onSelect,
-  onRemove
+  onScan
 }) => {
   const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
   const isExpiring = daysUntilExpiry <= 30;
@@ -89,7 +89,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
               <Button
                 variant="outline"
                 className="flex-1 bg-background hover:bg-secondary transition-colors duration-300"
-                onClick={() => onRemove?.(product)}
+                onClick={() => onScan(product)} // تم تغيير onRemove إلى onScan
               >
                 <ScanBarcode className="ml-2 h-4 w-4" />
                 امسح
