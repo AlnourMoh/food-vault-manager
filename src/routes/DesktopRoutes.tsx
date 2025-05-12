@@ -11,7 +11,7 @@ export const DesktopRoutes = () => {
   return (
     <Routes>
       {/* Website Routes */}
-      <WebsiteRoutes />
+      {WebsiteRoutes}
       
       {/* Admin Routes */}
       <AdminRoutes />

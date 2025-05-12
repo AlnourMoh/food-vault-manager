@@ -7,13 +7,11 @@ import ServicesPage from '@/pages/website/ServicesPage';
 import ContactPage from '@/pages/website/ContactPage';
 import WebsiteLayout from '@/components/website/WebsiteLayout';
 
-export const WebsiteRoutes = () => {
-  return (
-    <Route path="/" element={<WebsiteLayout><Outlet /></WebsiteLayout>}>
-      <Route index element={<WelcomePage />} />
-      <Route path="about" element={<AboutPage />} />
-      <Route path="services" element={<ServicesPage />} />
-      <Route path="contact" element={<ContactPage />} />
-    </Route>
-  );
-};
+export const WebsiteRoutes = [
+  <Route key="website-root" path="/" element={<WebsiteLayout><Outlet /></WebsiteLayout>}>
+    <Route index element={<WelcomePage />} />
+    <Route path="about" element={<AboutPage />} />
+    <Route path="services" element={<ServicesPage />} />
+    <Route path="contact" element={<ContactPage />} />
+  </Route>
+];
