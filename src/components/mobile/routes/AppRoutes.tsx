@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MobileLayout from '@/components/layout/MobileLayout';
@@ -7,6 +8,7 @@ import MobileAccount from '@/pages/mobile/MobileAccount';
 import MobileInventory from '@/pages/mobile/MobileInventory';
 import { ProtectedRoute } from '@/components/mobile/auth/ProtectedRoute';
 import CameraTest from '@/pages/CameraTest';
+import NotFound from '@/pages/NotFound';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -56,7 +58,8 @@ export const AppRoutes: React.FC = () => {
       {/* إضافة مسار جديد لاختبار الكاميرا */}
       <Route path="/camera-test" element={<CameraTest />} />
       
-      <Route path="*" element={<Navigate to="/mobile/inventory" replace />} />
+      {/* Add a catch-all route for handling 404 errors within the mobile routes */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

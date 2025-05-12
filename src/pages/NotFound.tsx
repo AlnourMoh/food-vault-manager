@@ -17,7 +17,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   const handleRetry = () => {
-    window.location.reload();
+    window.location.href = "/mobile/inventory";
   };
 
   if (isMobile) {
