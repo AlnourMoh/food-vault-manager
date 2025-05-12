@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { PermissionErrorCard } from './PermissionErrorCard';
-import { ScanButton } from './ScanButton';
+import ScanButton from './ScanButton';
 import { useProductScannerPermissions } from './useProductScannerPermissions';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
