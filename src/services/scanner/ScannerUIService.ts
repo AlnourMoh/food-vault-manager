@@ -1,11 +1,10 @@
 
 /**
- * خدمة لإدارة واجهة المستخدم المتعلقة بالماسح الضوئي
+ * خدمة إدارة واجهة المستخدم للماسح الضوئي
  */
 export class ScannerUIService {
   private static instance: ScannerUIService;
-  private addedElements: HTMLElement[] = [];
-  private addedClasses: {element: HTMLElement, classes: string[]}[] = [];
+  private videoElement: HTMLVideoElement | null = null;
   
   private constructor() {}
   
@@ -17,120 +16,101 @@ export class ScannerUIService {
   }
   
   /**
-   * إعداد واجهة المستخدم للمسح الضوئي
+   * إنشاء عنصر فيديو للمسح
+   */
+  public createVideoElement(): HTMLVideoElement {
+    if (this.videoElement) {
+      return this.videoElement;
+    }
+    
+    const video = document.createElement('video');
+    video.id = 'zxing-scanner-video';
+    video.style.position = 'absolute';
+    video.style.top = '0';
+    video.style.left = '0';
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.style.objectFit = 'cover';
+    video.style.opacity = '0'; // جعله مخفياً
+    video.style.pointerEvents = 'none'; // لا يتفاعل مع النقرات
+    video.setAttribute('playsinline', 'true'); // ضروري لـ iOS
+    video.setAttribute('muted', 'true');
+    video.muted = true;
+    
+    // إضافة العنصر مؤقتًا إلى DOM
+    document.body.appendChild(video);
+    
+    this.videoElement = video;
+    return video;
+  }
+  
+  /**
+   * تفعيل نمط المسح في واجهة المستخدم
+   */
+  public activateScanningUI(videoElement: HTMLVideoElement): void {
+    document.body.classList.add('zxing-scanning');
+    if (videoElement) {
+      videoElement.style.opacity = '1';
+    }
+  }
+  
+  /**
+   * إزالة نمط المسح من واجهة المستخدم
+   */
+  public deactivateScanningUI(): void {
+    document.body.classList.remove('zxing-scanning');
+    if (this.videoElement) {
+      this.videoElement.style.opacity = '0';
+    }
+  }
+  
+  /**
+   * إزالة عنصر الفيديو
+   */
+  public removeVideoElement(): void {
+    if (this.videoElement && document.body.contains(this.videoElement)) {
+      document.body.removeChild(this.videoElement);
+      this.videoElement = null;
+    }
+  }
+  
+  /**
+   * إعداد واجهة المستخدم لعملية المسح
    */
   public setupUIForScanning(): void {
-    try {
-      console.log('[ScannerUIService] إعداد واجهة المستخدم للمسح');
-      
-      // تنظيف أي آثار سابقة
-      this.cleanup();
-      
-      // إضافة فئة للجسم للإشارة إلى أن الماسح نشط
-      document.body.classList.add('scanner-active');
-      
-      // إخفاء الهيدر والفوتر أثناء المسح
-      document.querySelectorAll('header, footer, nav').forEach(element => {
-        if (element instanceof HTMLElement && !element.classList.contains('scanner-element')) {
-          // تخزين الأنماط الأصلية لاستعادتها لاحقًا
-          const originalDisplay = element.style.display;
-          const originalVisibility = element.style.visibility;
-          const originalOpacity = element.style.opacity;
-          
-          // تطبيق أنماط الإخفاء
-          element.style.display = 'none';
-          element.style.visibility = 'hidden';
-          element.style.opacity = '0';
-          
-          if (element.classList && element.classList.contains) {
-            element.classList.add('hidden-during-scan');
-            
-            // تسجيل العنصر لإزالة الفئة لاحقًا
-            this.addedClasses.push({
-              element,
-              classes: ['hidden-during-scan']
-            });
-          }
-          
-          // تسجيل العنصر لاستعادة الأنماط لاحقًا
-          this.addedElements.push(element);
-        }
-      });
-      
-      // تعيين الخلفية للجسم والتوثيق بشكل مؤقت للمسح
-      document.body.style.background = 'transparent';
-      document.body.style.backgroundColor = 'transparent';
-    } catch (error) {
-      console.error('[ScannerUIService] خطأ في إعداد واجهة المستخدم للمسح:', error);
-    }
+    document.body.classList.add('scanner-active');
+    document.documentElement.style.backgroundColor = 'transparent';
   }
   
   /**
    * استعادة واجهة المستخدم بعد المسح
    */
   public restoreUIAfterScanning(): void {
-    try {
-      console.log('[ScannerUIService] استعادة واجهة المستخدم بعد المسح');
-      
-      // إزالة فئة الماسح النشط من الجسم
-      document.body.classList.remove('scanner-active');
-      
-      // استعادة الأنماط الأصلية للعناصر
-      for (const element of this.addedElements) {
-        try {
-          if (element) {
-            element.style.display = '';
-            element.style.visibility = 'visible';
-            element.style.opacity = '1';
-          }
-        } catch (e) {
-          console.error('[ScannerUIService] خطأ في استعادة الأنماط الأصلية للعنصر:', e);
-        }
-      }
-      
-      // إزالة الفئات المضافة
-      for (const item of this.addedClasses) {
-        try {
-          if (item.element && item.element.classList) {
-            for (const className of item.classes) {
-              if (className) {
-                item.element.classList.remove(className);
-              }
-            }
-          }
-        } catch (e) {
-          console.error('[ScannerUIService] خطأ في إزالة الفئات المضافة:', e);
-        }
-      }
-      
-      // إعادة تعيين المصفوفات
-      this.addedElements = [];
-      this.addedClasses = [];
-      
-      // استعادة الخلفية الأصلية للجسم
-      document.body.style.background = '';
-      document.body.style.backgroundColor = '';
-      
-      // تأكيد إظهار الهيدر والفوتر
-      setTimeout(() => {
-        document.querySelectorAll('header, footer, nav, .app-header').forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.display = '';
-            el.style.visibility = 'visible';
-            el.style.opacity = '1';
-          }
-        });
-      }, 200);
-    } catch (error) {
-      console.error('[ScannerUIService] خطأ في استعادة واجهة المستخدم بعد المسح:', error);
-    }
+    document.body.classList.remove('scanner-active');
+    document.documentElement.style.backgroundColor = '';
   }
   
   /**
    * تنظيف الموارد
    */
-  public cleanup(): void {
+  public dispose(): void {
+    this.deactivateScanningUI();
+    this.removeVideoElement();
     this.restoreUIAfterScanning();
+  }
+  
+  /**
+   * تحويل صورة HTML canvas إلى ImageData
+   */
+  public static canvasToImageData(canvas: HTMLCanvasElement): ImageData | null {
+    try {
+      const context = canvas.getContext('2d');
+      if (!context) return null;
+      return context.getImageData(0, 0, canvas.width, canvas.height);
+    } catch (error) {
+      console.error('[ScannerUIService] خطأ في تحويل Canvas إلى ImageData:', error);
+      return null;
+    }
   }
 }
 

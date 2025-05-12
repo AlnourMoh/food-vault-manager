@@ -95,8 +95,8 @@ export class ScannerOperationsService {
       // إعداد الواجهة للمسح
       scannerUIService.setupUIForScanning();
       
-      // تحضير الكاميرا
-      await scannerCameraService.prepareCamera();
+      // تحضير الكاميرا - استخدام initialize بدلاً من prepareCamera
+      await scannerCameraService.initialize();
       
       // بدء المسح الفعلي مع محاولات متعددة
       const MAX_RETRIES = 2;
@@ -105,8 +105,8 @@ export class ScannerOperationsService {
         try {
           console.log(`[ScannerOperationsService] محاولة المسح ${attempt}/${MAX_RETRIES}...`);
           
-          // استخدام قيم enum للتنسيقات من خدمة الكاميرا
-          const result = await BarcodeScanner.scan(scannerCameraService.getScanFormatOptions());
+          // استخدام القيم الافتراضية للتنسيقات بدلاً من استدعاء دالة غير موجودة
+          const result = await BarcodeScanner.scan();
           
           // معالجة النتيجة باستخدام خدمة النتائج
           const scanSuccess = await scannerResultService.processScanResult(result, onSuccess);
@@ -170,8 +170,8 @@ export class ScannerOperationsService {
       // استعادة الواجهة إلى حالتها الطبيعية
       scannerUIService.restoreUIAfterScanning();
       
-      // تنظيف موارد الكاميرا
-      await scannerCameraService.cleanupCamera();
+      // تنظيف موارد الكاميرا - استخدام stopScanning بدلاً من cleanupCamera
+      await scannerCameraService.stopScanning();
       
       // تعيين حالة المسح إلى غير نشط
       this.isScanning = false;
