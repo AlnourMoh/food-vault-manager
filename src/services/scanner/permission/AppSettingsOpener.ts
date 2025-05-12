@@ -41,8 +41,8 @@ export class AppSettingsOpener {
         const appInfo = await App.getInfo();
         console.log(`[AppSettingsOpener] معلومات التطبيق: ${JSON.stringify(appInfo)}`);
         
-        // فتح صفحة إعدادات التطبيق
-        await App.openUrl({
+        // Using App.openUrl has been replaced with Browser.open for opening app settings
+        await Browser.open({
           url: `package:${appInfo.id}`
         });
         return true;
