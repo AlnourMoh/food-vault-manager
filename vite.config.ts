@@ -24,14 +24,14 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       external: [
         // تعريف المكتبات الخارجية بشكل صحيح
-        "next-themes",
         "@capacitor/device",
         "@capacitor/app",
         "@capacitor/core",
         "@capacitor/toast",
         "@capacitor-mlkit/barcode-scanning",
-        "@capacitor/camera", // ensure @capacitor/camera is included
+        "@capacitor/camera",
         "@capacitor/browser"
+        // حذفنا "next-themes" من هنا لأننا نريد أن يتم تضمينها في البناء
       ],
     },
     // تحسين بناء المشروع
