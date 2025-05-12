@@ -8,6 +8,7 @@ const ScanProductRedirect: React.FC = () => {
   
   useEffect(() => {
     // Redirect immediately to the scan page
+    console.log('ScanProductRedirect: Redirecting to /scan immediately');
     navigate('/scan', { replace: true });
   }, [navigate]);
   
