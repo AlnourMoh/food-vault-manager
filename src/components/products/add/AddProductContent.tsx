@@ -61,7 +61,10 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
           // استخدام dynamic import لتجنب مشاكل الاستيراد
           const cameraModule = await import('@capacitor/camera');
           
-          await cameraModule.Camera.getPhoto({
+          // إضافة تسجيل إضافي للتشخيص
+          console.log("بدء استدعاء Camera.getPhoto...");
+          
+          const photo = await cameraModule.Camera.getPhoto({
             quality: 90,
             allowEditing: false,
             resultType: cameraModule.CameraResultType.Uri,
@@ -69,19 +72,37 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
             direction: cameraModule.CameraDirection.Rear
           });
           
+          console.log("تم استدعاء Camera.getPhoto بنجاح:", photo);
+          
           toast({
             title: "تم فتح الكاميرا بنجاح",
           });
         } catch (error) {
           console.error("خطأ في فتح الكاميرا:", error);
+          
+          // تحسين رسالة الخطأ لتكون أكثر تفصيلاً
+          let errorMessage = "يرجى التحقق من أذونات الكاميرا والمحاولة مرة أخرى";
+          
+          if (error instanceof Error) {
+            // إضافة رسائل مخصصة حسب نوع الخطأ
+            if (error.message.includes("cancelled")) {
+              errorMessage = "تم إلغاء العملية بواسطة المستخدم";
+            } else if (error.message.includes("denied") || error.message.includes("permission")) {
+              errorMessage = "تم رفض إذن الكاميرا. يرجى تمكينه من إعدادات جهازك";
+              // محاولة فتح إعدادات التطبيق
+              handleOpenSettings();
+            }
+          }
+          
           toast({
             title: "تعذر فتح الكاميرا",
-            description: "يرجى التحقق من أذونات الكاميرا والمحاولة مرة أخرى",
+            description: errorMessage,
             variant: "destructive"
           });
         }
       } else {
         // في بيئة الويب أو إذا لم يكن الملحق متاحًا
+        console.log("الكاميرا غير متاحة على هذا الجهاز");
         toast({
           title: "محاكاة فتح الكاميرا",
           description: "هذه الميزة تعمل بشكل أفضل على الهاتف المحمول",
