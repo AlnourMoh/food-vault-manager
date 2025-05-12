@@ -1,246 +1,259 @@
 
 import React, { useState } from 'react';
-import RestaurantLayout from '@/components/layout/RestaurantLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
-} from '@/components/ui/table';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, ChevronDown, Download, FileSpreadsheet } from 'lucide-react';
-import { format } from "date-fns";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import RestaurantLayout from '@/components/layout/RestaurantLayout';
 
-// بيانات تجريبية للعرض
-const sampleInventoryData = [
-  { id: 1, name: 'طماطم', category: 'خضروات', initialQuantity: 50, currentQuantity: 30, unit: 'كجم', status: 'متوفر' },
-  { id: 2, name: 'بطاطس', category: 'خضروات', initialQuantity: 40, currentQuantity: 15, unit: 'كجم', status: 'منخفض' },
-  { id: 3, name: 'دجاج', category: 'لحوم', initialQuantity: 30, currentQuantity: 10, unit: 'كجم', status: 'منخفض' },
-  { id: 4, name: 'لحم بقري', category: 'لحوم', initialQuantity: 25, currentQuantity: 20, unit: 'كجم', status: 'متوفر' },
-  { id: 5, name: 'أرز', category: 'حبوب', initialQuantity: 100, currentQuantity: 80, unit: 'كجم', status: 'متوفر' },
+// Mock data for the charts
+const inventoryData = [
+  { name: 'يناير', inventory: 400 },
+  { name: 'فبراير', inventory: 300 },
+  { name: 'مارس', inventory: 600 },
+  { name: 'أبريل', inventory: 800 },
+  { name: 'مايو', inventory: 500 },
+  { name: 'يونيو', inventory: 700 },
 ];
 
-const sampleUsageData = [
-  { name: 'طماطم', usage: 20, category: 'خضروات' },
-  { name: 'بطاطس', usage: 25, category: 'خضروات' },
-  { name: 'دجاج', usage: 20, category: 'لحوم' },
-  { name: 'لحم بقري', usage: 5, category: 'لحوم' },
-  { name: 'أرز', usage: 20, category: 'حبوب' },
+const usageData = [
+  { name: 'اللحوم', value: 30 },
+  { name: 'الخضروات', value: 25 },
+  { name: 'الحبوب', value: 15 },
+  { name: 'الألبان', value: 20 },
+  { name: 'التوابل', value: 10 },
 ];
 
-const sampleChartData = [
-  { name: 'يناير', خضروات: 40, لحوم: 30, حبوب: 20 },
-  { name: 'فبراير', خضروات: 35, لحوم: 25, حبوب: 15 },
-  { name: 'مارس', خضروات: 45, لحوم: 35, حبوب: 25 },
-  { name: 'أبريل', خضروات: 50, لحوم: 40, حبوب: 30 },
-  { name: 'مايو', خضروات: 55, لحوم: 45, حبوب: 35 },
+const trendData = [
+  { name: 'يناير', استهلاك: 400, مخزون: 240 },
+  { name: 'فبراير', استهلاك: 300, مخزون: 139 },
+  { name: 'مارس', استهلاك: 200, مخزون: 980 },
+  { name: 'أبريل', استهلاك: 278, مخزون: 390 },
+  { name: 'مايو', استهلاك: 189, مخزون: 480 },
+  { name: 'يونيو', استهلاك: 239, مخزون: 380 },
+  { name: 'يوليو', استهلاك: 349, مخزون: 430 },
 ];
+
+const expiryData = [
+  { name: 'هذا الشهر', value: 12 },
+  { name: 'الشهر القادم', value: 19 },
+  { name: 'بعد شهرين', value: 33 },
+  { name: 'بعد ثلاثة أشهر', value: 45 },
+];
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const Reports = () => {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [isLoading, setIsLoading] = useState(false);
-
-  const chartConfig = {
-    خضروات: { 
-      label: 'خضروات', 
-      color: '#22c55e'
-    },
-    لحوم: { 
-      label: 'لحوم', 
-      color: '#ef4444'
-    },
-    حبوب: { 
-      label: 'حبوب',
-      color: '#f59e0b'
-    },
-  };
-
-  const handleGenerateReport = () => {
-    setIsLoading(true);
-    // محاكاة عملية توليد التقرير
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  const formatDate = (date?: Date) => {
-    return date ? format(date, "yyyy-MM-dd") : "";
-  };
+  const [activeTab, setActiveTab] = useState('inventory');
 
   return (
     <RestaurantLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">تقارير المخزون</h1>
-          <div className="flex items-center gap-2">
-            <DatePickerWithRange />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  <span>تصدير التقرير</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  <span>اكسل (XLSX)</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  <span>CSV</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  <span>PDF</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">التقارير والإحصائيات</h1>
+            <p className="text-muted-foreground">تتبع حالة المخزون والاستهلاك</p>
           </div>
+          <DatePickerWithRange className="w-full md:w-auto" />
         </div>
 
-        <Tabs defaultValue="inventory" className="w-full">
-          <TabsList>
-            <TabsTrigger value="inventory">تقرير المخزون</TabsTrigger>
-            <TabsTrigger value="usage">استهلاك المواد</TabsTrigger>
-            <TabsTrigger value="trend">اتجاهات الاستهلاك</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4 mb-8">
+            <TabsTrigger value="inventory">المخزون</TabsTrigger>
+            <TabsTrigger value="usage">الاستهلاك</TabsTrigger>
+            <TabsTrigger value="trends">الاتجاهات</TabsTrigger>
+            <TabsTrigger value="expiry">الصلاحية</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="inventory" className="mt-4">
+          <TabsContent value="inventory" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>تقرير المخزون الحالي</CardTitle>
-                <CardDescription>
-                  عرض حالة المخزون الحالية والكميات المتبقية من كل صنف
-                </CardDescription>
+                <CardTitle>تقرير المخزون الشهري</CardTitle>
+                <CardDescription>عرض تغيرات المخزون خلال الأشهر الستة الماضية</CardDescription>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>الصنف</TableHead>
-                        <TableHead>الفئة</TableHead>
-                        <TableHead>الكمية الأولية</TableHead>
-                        <TableHead>الكمية الحالية</TableHead>
-                        <TableHead>الوحدة</TableHead>
-                        <TableHead>الحالة</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sampleInventoryData.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.category}</TableCell>
-                          <TableCell>{item.initialQuantity}</TableCell>
-                          <TableCell>{item.currentQuantity}</TableCell>
-                          <TableCell>{item.unit}</TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              item.status === 'متوفر' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {item.status}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="usage" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>تقرير استهلاك المواد</CardTitle>
-                <CardDescription>
-                  عرض استهلاك المواد الغذائية خلال الفترة المحددة
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>الصنف</TableHead>
-                        <TableHead>الفئة</TableHead>
-                        <TableHead>الكمية المستهلكة</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sampleUsageData.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.category}</TableCell>
-                          <TableCell>{item.usage} كجم</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="trend" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>اتجاهات استهلاك المواد</CardTitle>
-                <CardDescription>
-                  عرض اتجاهات استهلاك المواد الغذائية حسب الفئة
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {isLoading ? (
-                  <Skeleton className="h-80 w-full" />
-                ) : (
-                  <ChartContainer className="h-80" config={chartConfig}>
-                    <BarChart data={sampleChartData}>
+                <div className="h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={inventoryData}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <ChartTooltip
-                        content={props => <ChartTooltipContent className="w-fit" {...props} />}
+                      <Tooltip
+                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                        formatter={(value) => [`${value} وحدة`, 'المخزون']}
                       />
-                      <Bar dataKey="خضروات" fill="#22c55e" />
-                      <Bar dataKey="لحوم" fill="#ef4444" />
-                      <Bar dataKey="حبوب" fill="#f59e0b" />
+                      <Legend />
+                      <Bar dataKey="inventory" name="المخزون" fill="#3b82f6" />
                     </BarChart>
-                  </ChartContainer>
-                )}
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="usage" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>توزيع الاستهلاك حسب الفئة</CardTitle>
+                <CardDescription>نسب استهلاك المواد الغذائية حسب فئاتها</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={usageData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={140}
+                        fill="#8884d8"
+                        dataKey="value"
+                        nameKey="name"
+                        label={({
+                          cx,
+                          cy,
+                          midAngle,
+                          innerRadius,
+                          outerRadius,
+                          percent,
+                          name,
+                        }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = innerRadius + (outerRadius - innerRadius) * 1.1;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                          return (
+                            <text
+                              x={x}
+                              y={y}
+                              fill="#333"
+                              textAnchor={x > cx ? 'start' : 'end'}
+                              dominantBaseline="central"
+                            >
+                              {`${name}: ${(percent * 100).toFixed(0)}%`}
+                            </text>
+                          );
+                        }}
+                      >
+                        {usageData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => [`${value} %`, 'النسبة']}
+                      />
+                      <Legend
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="trends" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>اتجاهات المخزون والاستهلاك</CardTitle>
+                <CardDescription>مقارنة بين معدلات الاستهلاك والمخزون</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={trendData}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                      />
+                      <Legend verticalAlign="top" height={36} />
+                      <Line
+                        type="monotone"
+                        dataKey="استهلاك"
+                        stroke="#8884d8"
+                        strokeWidth={2}
+                        activeDot={{ r: 8 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="مخزون"
+                        stroke="#82ca9d"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="expiry" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>تقرير انتهاء الصلاحية</CardTitle>
+                <CardDescription>المنتجات التي ستنتهي صلاحيتها قريباً</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-96">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={expiryData}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                      barSize={50}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                        formatter={(value) => [`${value} منتج`, 'العدد']}
+                      />
+                      <Legend />
+                      <Bar dataKey="value" name="عدد المنتجات" fill="#f97316" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
