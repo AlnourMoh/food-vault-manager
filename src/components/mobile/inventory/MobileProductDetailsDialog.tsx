@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Product } from '@/types';
 import { format, differenceInDays } from 'date-fns';

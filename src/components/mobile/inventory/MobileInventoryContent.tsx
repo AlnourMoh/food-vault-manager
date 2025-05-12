@@ -55,7 +55,7 @@ const MobileInventoryContent: React.FC<MobileInventoryContentProps> = ({
   }
 
   if (!displayedProducts.length) {
-    return <MobileInventoryEmpty onRefresh={onProductUpdate} />;
+    return <MobileInventoryEmpty onAddProduct={onProductUpdate} />;
   }
 
   return (
@@ -74,8 +74,9 @@ const MobileInventoryContent: React.FC<MobileInventoryContentProps> = ({
       {selectedProduct && (
         <MobileProductDetailsDialog
           open={!!selectedProduct}
-          onClose={handleCloseDialog}
+          onOpenChange={handleCloseDialog}
           product={selectedProduct}
+          onProductUpdate={onProductUpdate}
         />
       )}
     </>

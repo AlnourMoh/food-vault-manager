@@ -17,7 +17,7 @@ const MobileInventoryEmpty: React.FC<MobileInventoryEmptyProps> = ({ onAddProduc
       <h3 className="text-lg font-medium mb-2">لا توجد منتجات</h3>
       <p className="text-gray-500 mb-4">قم بإضافة منتجات جديدة للبدء</p>
       <Button 
-        onClick={() => navigate('/mobile/products/add')}
+        onClick={() => navigate('/products/add')}
         className="gap-2 mb-2"
       >
         <Plus className="h-4 w-4" />
