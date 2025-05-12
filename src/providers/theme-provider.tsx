@@ -13,7 +13,7 @@ export function ThemeProvider({
   storageKey = 'ui-theme',
 }: ThemeProviderProps) {
   return (
-    <NextThemesProvider defaultTheme={defaultTheme} storageKey={storageKey}>
+    <NextThemesProvider defaultTheme={defaultTheme} storageKey={storageKey} attribute="class">
       {children}
     </NextThemesProvider>
   );
