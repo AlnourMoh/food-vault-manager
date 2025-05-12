@@ -7,7 +7,6 @@ import ProductManagement from '@/pages/mobile/ProductManagement';
 import MobileAccount from '@/pages/mobile/MobileAccount';
 import MobileInventory from '@/pages/mobile/MobileInventory';
 import { ProtectedRoute } from '@/components/mobile/auth/ProtectedRoute';
-import CameraTest from '@/pages/CameraTest';
 import NotFound from '@/pages/NotFound';
 
 export const AppRoutes: React.FC = () => {
@@ -54,8 +53,6 @@ export const AppRoutes: React.FC = () => {
           </MobileLayout>
         </ProtectedRoute>
       } />
-      
-      <Route path="/camera-test" element={<CameraTest />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

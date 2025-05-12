@@ -19,39 +19,50 @@ const ProductScan = () => {
     viewProductDetails
   } = useProductScanLogic();
   
-  // فتح الماسح تلقائياً عند تحميل الصفحة
+  // فتح الماسح تلقائياً عند تحميل الصفحة بدون تأخير
   React.useEffect(() => {
-    // تأخير قصير ثم فتح الماسح تلقائيًا
-    const timer = setTimeout(() => {
-      if (!isScannerOpen && !scannedProduct) {
-        handleOpenScanner();
-      }
-    }, 500);
-    
-    return () => clearTimeout(timer);
+    // فتح الماسح فوراً عند تحميل الصفحة
+    if (!isScannerOpen && !scannedProduct) {
+      handleOpenScanner();
+    }
   }, []);
 
-  return (
-    <div className="container py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
-      
-      {scanError && (
-        <ErrorDisplay 
-          error={scanError} 
-          onRetry={handleOpenScanner} 
-        />
-      )}
-      
-      {!scannedProduct ? (
-        <InitialScanCard 
-          onOpenScanner={handleOpenScanner}
-          isLoading={isLoading}
-        />
-      ) : (
+  // إذا تم مسح المنتج، نعرض معلوماته
+  if (scannedProduct) {
+    return (
+      <div className="container py-6 space-y-6">
+        <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
         <ScannedProductCard
           product={scannedProduct}
           onScanAnother={handleScanAnother}
           onViewDetails={viewProductDetails}
+        />
+      </div>
+    );
+  }
+
+  // إذا كان هناك خطأ في المسح
+  if (scanError) {
+    return (
+      <div className="container py-6 space-y-6">
+        <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
+        <ErrorDisplay 
+          error={scanError} 
+          onRetry={handleOpenScanner} 
+        />
+      </div>
+    );
+  }
+
+  // إظهار الماسح أو شاشة التحميل
+  return (
+    <div className="container py-6 space-y-6">
+      <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
+      
+      {!isScannerOpen && (
+        <InitialScanCard 
+          onOpenScanner={handleOpenScanner}
+          isLoading={isLoading}
         />
       )}
       

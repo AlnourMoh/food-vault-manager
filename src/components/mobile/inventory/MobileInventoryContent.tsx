@@ -40,7 +40,8 @@ const MobileInventoryContent: React.FC<MobileInventoryContentProps> = ({
     if (onScan) {
       onScan(product);
     } else {
-      navigate('/scan');
+      // مباشرة إلى صفحة المسح دون وجود صفحة وسيطة
+      navigate('/scan', { replace: true });
     }
   };
 
