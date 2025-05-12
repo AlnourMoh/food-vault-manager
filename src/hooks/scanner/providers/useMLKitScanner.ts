@@ -51,7 +51,7 @@ export const useMLKitScanner = () => {
         try {
           // استخدام stopScan لإيقاف الكاميرا
           await BarcodeScanner.stopScan().catch(() => {});
-          await BarcodeScanner.disableTorch();
+          await BarcodeScanner.enableTorch({ value: false }).catch(() => {});
         } catch (e) {
           console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا:', e);
         }
@@ -79,7 +79,7 @@ export const useMLKitScanner = () => {
         try {
           // التأكد من إخفاء الكاميرا في حالة الخطأ
           await BarcodeScanner.stopScan().catch(() => {});
-          await BarcodeScanner.disableTorch();
+          await BarcodeScanner.enableTorch({ value: false }).catch(() => {});
         } catch (e) {
           console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
         }
@@ -93,7 +93,7 @@ export const useMLKitScanner = () => {
       try {
         // التأكد من إخفاء الكاميرا في حالة الخطأ
         await BarcodeScanner.stopScan().catch(() => {});
-        await BarcodeScanner.disableTorch();
+        await BarcodeScanner.enableTorch({ value: false }).catch(() => {});
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
       }
@@ -109,7 +109,7 @@ export const useMLKitScanner = () => {
       console.log('[useMLKitScanner] إيقاف المسح...');
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        await BarcodeScanner.disableTorch().catch(() => {});
+        await BarcodeScanner.enableTorch({ value: false }).catch(() => {});
         await BarcodeScanner.stopScan().catch(() => {});
       }
       
