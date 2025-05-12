@@ -17,7 +17,7 @@ export const DesktopRoutes = () => {
       {AdminRoutes}
       
       {/* Restaurant Routes */}
-      <RestaurantRoutes />
+      {RestaurantRoutes}
       
       {/* Mobile route for desktop testing */}
       <Route path="/mobile/*" element={<MobileApp />} />

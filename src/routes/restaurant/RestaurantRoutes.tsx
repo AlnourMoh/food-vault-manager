@@ -15,36 +15,45 @@ import Reports from '@/pages/restaurant/Reports';
 import { RestaurantGuard, RestaurantLoginGuard, RestaurantSetupGuard } from '@/routes/guards/RouteGuards';
 import Expired from '@/pages/Expired';
 
-export const RestaurantRoutes = () => {
-  return (
-    <>
-      <Route path="/restaurant/login" element={
-        <RestaurantLoginGuard>
-          <RestaurantLogin />
-        </RestaurantLoginGuard>
-      } />
-      <Route path="/restaurant/setup/:token" element={
-        <RestaurantSetupGuard>
-          <RestaurantSetupPassword />
-        </RestaurantSetupGuard>
-      } />
-      <Route path="/restaurant" element={
-        <RestaurantGuard>
-          <RestaurantLayout>
-            <></>
-          </RestaurantLayout>
-        </RestaurantGuard>
-      }>
-        <Route index element={<Dashboard />} />
-        <Route path="inventory" element={<Inventory />} />
-        <Route path="products/add" element={<AddProducts />} />
-        <Route path="products/:id/edit" element={<EditProduct />} />
-        <Route path="products/remove" element={<RemoveProducts />} />
-        <Route path="products/barcodes" element={<ProductBarcodes />} />
-        <Route path="team" element={<StorageTeam />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="expired" element={<Expired />} />
-      </Route>
-    </>
-  );
-};
+// Changed to export an array of routes instead of a component
+export const RestaurantRoutes = [
+  <Route 
+    key="restaurant-login"
+    path="/restaurant/login" 
+    element={
+      <RestaurantLoginGuard>
+        <RestaurantLogin />
+      </RestaurantLoginGuard>
+    } 
+  />,
+  <Route 
+    key="restaurant-setup"
+    path="/restaurant/setup/:token" 
+    element={
+      <RestaurantSetupGuard>
+        <RestaurantSetupPassword />
+      </RestaurantSetupGuard>
+    } 
+  />,
+  <Route 
+    key="restaurant-root"
+    path="/restaurant" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <></>
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  >
+    <Route index element={<Dashboard />} />
+    <Route path="inventory" element={<Inventory />} />
+    <Route path="products/add" element={<AddProducts />} />
+    <Route path="products/:id/edit" element={<EditProduct />} />
+    <Route path="products/remove" element={<RemoveProducts />} />
+    <Route path="products/barcodes" element={<ProductBarcodes />} />
+    <Route path="team" element={<StorageTeam />} />
+    <Route path="reports" element={<Reports />} />
+    <Route path="expired" element={<Expired />} />
+  </Route>
+];
