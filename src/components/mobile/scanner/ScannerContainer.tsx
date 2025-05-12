@@ -19,8 +19,9 @@ interface ScannerContainerProps {
   stopScan: () => Promise<boolean>;
   handleManualEntry: () => void;
   handleManualCancel: () => void;
-  handleRequestPermission: () => Promise<boolean>; // Make sure the type matches
+  handleRequestPermission: () => Promise<boolean>;
   handleRetry: () => void;
+  cameraActive?: boolean;
 }
 
 export const ScannerContainer: React.FC<ScannerContainerProps> = ({
@@ -37,7 +38,8 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   handleManualEntry,
   handleManualCancel,
   handleRequestPermission,
-  handleRetry
+  handleRetry,
+  cameraActive = false
 }) => {
   // تطبيق حماية على عناصر الواجهة أثناء تشغيل الماسح
   useEffect(() => {
@@ -86,11 +88,11 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
     return <ScannerLoading onClose={onClose} />;
   }
 
-  if (isScanningActive) {
+  if (isScanningActive || cameraActive) {
     return (
       <ScannerView 
-        isActive={true}
-        cameraActive={true}
+        isActive={isScanningActive}
+        cameraActive={cameraActive || false}
         hasError={hasScannerError}
         onStartScan={startScan}
         onStopScan={stopScan}

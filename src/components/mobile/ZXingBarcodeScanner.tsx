@@ -25,8 +25,9 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     stopScan,
     handleManualEntry,
     handleManualCancel,
-    requestPermission, // Changed from handleRequestPermission to match the hook return value
-    handleRetry
+    requestPermission,
+    handleRetry,
+    cameraActive
   } = useScannerControls({ onScan, onClose });
 
   const [isInitialized, setIsInitialized] = useState(false);
@@ -46,6 +47,16 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     }
   }, [autoStart, isInitialized, isLoading, hasPermission]);
 
+  // إضافة تفعيل المسح عندما تصبح الكاميرا نشطة
+  useEffect(() => {
+    if (cameraActive && !isScanningActive && !hasScannerError && !isManualEntry) {
+      console.log('ZXingBarcodeScanner: الكاميرا نشطة الآن، جاري تفعيل المسح');
+      startScan().catch(error => {
+        console.error('ZXingBarcodeScanner: خطأ عند بدء المسح تلقائياً بعد تنشيط الكاميرا:', error);
+      });
+    }
+  }, [cameraActive, isScanningActive, hasScannerError, isManualEntry]);
+
   return (
     <ScannerContainer
       isManualEntry={isManualEntry}
@@ -60,8 +71,9 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
       stopScan={stopScan}
       handleManualEntry={handleManualEntry}
       handleManualCancel={handleManualCancel}
-      handleRequestPermission={requestPermission} // Pass the renamed function to ScannerContainer
+      handleRequestPermission={requestPermission}
       handleRetry={handleRetry}
+      cameraActive={cameraActive}
     />
   );
 };

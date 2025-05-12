@@ -111,7 +111,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
             <h3 className="text-xl font-semibold mb-3">جاري تحضير المسح</h3>
             <p className="text-sm text-gray-300 mb-4">يرجى تثبيت الكاميرا على الباركود...</p>
           </div>
-          <Button onClick={() => onStartScan()} className="bg-white text-black hover:bg-gray-200 w-full mb-2">
+          <Button 
+            onClick={() => onStartScan()} 
+            className="bg-white text-black hover:bg-gray-200 w-full mb-2"
+            autoFocus
+          >
             <RefreshCw className="h-4 w-4 ml-2" />
             بدء المسح
           </Button>

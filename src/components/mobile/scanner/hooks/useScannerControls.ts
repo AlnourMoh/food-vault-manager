@@ -13,6 +13,7 @@ interface UseScannerControlsProps {
 export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps) => {
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
   const { toast } = useToast();
   
   // Get scanner permissions
@@ -63,11 +64,19 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     };
   }, [isActive, isManualEntry]);
 
+  // إضافة تفعيل حالة الكاميرا عند بدء المسح
+  useEffect(() => {
+    if (isScanningActive) {
+      setCameraActive(true);
+    }
+  }, [isScanningActive]);
+
   // وظيفة بدء المسح مع تعزيز معالجة الأخطاء ومحاولات إعادة المحاولة
   const startScan = async () => {
     try {
       console.log('[useScannerControls] محاولة بدء المسح...');
       setIsActive(true);
+      setCameraActive(true);
       
       // محاولة أولى
       try {
@@ -170,6 +179,8 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     handleRetry,
     isMockScanActive,
     handleManualInput,
-    requestPermission // Ensure we export this function with the correct name
+    requestPermission,
+    cameraActive,
+    setCameraActive
   };
 };
