@@ -77,6 +77,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Navigate to="/mobile/login" replace />} />
                   <Route path="/mobile/*" element={<MobileApp />} />
+                  {/* Direct root scan-product path for mobile */}
                   <Route path="/scan-product" element={<Navigate to="/mobile/scan" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

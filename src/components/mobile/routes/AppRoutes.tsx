@@ -3,6 +3,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MobileLayout from '@/components/layout/MobileLayout';
 import ProductScan from '@/pages/mobile/ProductScan';
+import ScanProductRedirect from '@/pages/mobile/ScanProductRedirect';
 import ProductManagement from '@/pages/mobile/ProductManagement';
 import MobileAccount from '@/pages/mobile/MobileAccount';
 import MobileInventory from '@/pages/mobile/MobileInventory';
@@ -30,10 +31,12 @@ export const AppRoutes: React.FC = () => {
         </ProtectedRoute>
       } />
       
-      {/* Add the new route with redirect to /scan */}
+      {/* Add the scan-product route that uses the redirect component */}
       <Route path="/scan-product" element={
         <ProtectedRoute>
-          <Navigate to="/scan" replace />
+          <MobileLayout>
+            <ScanProductRedirect />
+          </MobileLayout>
         </ProtectedRoute>
       } />
       

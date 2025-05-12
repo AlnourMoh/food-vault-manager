@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useProductScanLogic } from '@/hooks/mobile/scan/useProductScanLogic';
 import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScanCard';
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
@@ -20,11 +20,16 @@ const ProductScan = () => {
   } = useProductScanLogic();
   
   // فتح الماسح تلقائياً عند تحميل الصفحة بدون تأخير
-  React.useEffect(() => {
-    // فتح الماسح فوراً عند تحميل الصفحة
-    if (!isScannerOpen && !scannedProduct) {
-      handleOpenScanner();
-    }
+  useEffect(() => {
+    console.log('ProductScan: Opening scanner immediately without delay');
+    // فتح الماسح فوراً عند تحميل الصفحة بدون أي تأخير
+    const timer = setTimeout(() => {
+      if (!isScannerOpen && !scannedProduct) {
+        handleOpenScanner();
+      }
+    }, 100); // تأخير قصير جدًا للسماح بتحميل الصفحة
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // إذا تم مسح المنتج، نعرض معلوماته

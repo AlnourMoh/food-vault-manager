@@ -7,12 +7,8 @@ const ScanProductRedirect: React.FC = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Redirect to the scan page after a brief delay
-    const redirectTimer = setTimeout(() => {
-      navigate('/scan', { replace: true });
-    }, 1500);
-    
-    return () => clearTimeout(redirectTimer);
+    // Redirect immediately to the scan page
+    navigate('/scan', { replace: true });
   }, [navigate]);
   
   return (
