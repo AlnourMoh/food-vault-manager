@@ -18,6 +18,18 @@ const ProductScan = () => {
     handleScanAnother,
     viewProductDetails
   } = useProductScanLogic();
+  
+  // فتح الماسح تلقائياً عند تحميل الصفحة
+  React.useEffect(() => {
+    // تأخير قصير ثم فتح الماسح تلقائيًا
+    const timer = setTimeout(() => {
+      if (!isScannerOpen && !scannedProduct) {
+        handleOpenScanner();
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="container py-6 space-y-6">

@@ -6,11 +6,13 @@ import MobileInventoryHeader from '@/components/mobile/inventory/MobileInventory
 import MobileInventoryContent from '@/components/mobile/inventory/MobileInventoryContent';
 import { InventoryProvider, useInventory } from '@/contexts/InventoryContext';
 import { useMobileProducts } from '@/hooks/products/useMobileProducts';
+import { useNavigate } from 'react-router-dom';
 
 const InventoryContent = () => {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [hasError, setHasError] = useState(false);
   const { forceReconnect } = useServerConnection();
+  const navigate = useNavigate();
   
   const {
     searchQuery,
@@ -76,10 +78,11 @@ const InventoryContent = () => {
       });
     }
   };
-
-  console.log('Inventory render - products:', products);
-  console.log('Inventory render - filteredProducts:', filteredProducts);
-  console.log('Inventory render - categories:', categories);
+  
+  // معالج فتح المسح الضوئي
+  const handleScan = (product) => {
+    navigate('/scan');
+  };
 
   return (
     <div className="pb-16">
@@ -96,6 +99,7 @@ const InventoryContent = () => {
         isLoading={isLoading}
         onProductUpdate={handleRetry}
         filteredProducts={filteredProducts}
+        onScan={handleScan}
       />
     </div>
   );

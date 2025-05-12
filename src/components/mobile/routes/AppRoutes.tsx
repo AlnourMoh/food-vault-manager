@@ -13,7 +13,7 @@ import NotFound from '@/pages/NotFound';
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<Navigate to="/mobile/inventory" replace />} />
+      <Route path="/login" element={<Navigate to="/inventory" replace />} />
       
       <Route path="/" element={
         <ProtectedRoute>
@@ -55,10 +55,8 @@ export const AppRoutes: React.FC = () => {
         </ProtectedRoute>
       } />
       
-      {/* إضافة مسار جديد لاختبار الكاميرا */}
       <Route path="/camera-test" element={<CameraTest />} />
       
-      {/* Add a catch-all route for handling 404 errors within the mobile routes */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -6,11 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/types';
+import { useNavigate } from 'react-router-dom';
 
 interface MobileProductCardProps {
   product: Product;
   onSelect: (product: Product) => void;
-  onScan: (product: Product) => void; // تغيير من onRemove إلى onScan لوضوح أكبر
+  onScan?: (product: Product) => void; 
 }
 
 const MobileProductCard: React.FC<MobileProductCardProps> = ({ 
@@ -18,6 +19,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
   onSelect,
   onScan
 }) => {
+  const navigate = useNavigate();
   const daysUntilExpiry = differenceInDays(new Date(product.expiryDate), new Date());
   const isExpiring = daysUntilExpiry <= 30;
   const isExpired = daysUntilExpiry < 0;
@@ -30,6 +32,15 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
       return "bg-yellow-50/80 border-yellow-200 hover:bg-yellow-100/80";
     }
     return "bg-background hover:bg-secondary/5";
+  };
+  
+  const handleScan = () => {
+    if (onScan) {
+      onScan(product);
+    } else {
+      // إذا لم يتم توفير onScan، ننتقل مباشرة إلى صفحة المسح
+      navigate('/scan');
+    }
   };
 
   return (
@@ -89,7 +100,7 @@ const MobileProductCard: React.FC<MobileProductCardProps> = ({
               <Button
                 variant="outline"
                 className="flex-1 bg-background hover:bg-secondary transition-colors duration-300"
-                onClick={() => onScan(product)} // تم تغيير onRemove إلى onScan
+                onClick={handleScan}
               >
                 <ScanBarcode className="ml-2 h-4 w-4" />
                 امسح
