@@ -21,14 +21,13 @@ export const useZXingBarcodeScanner = ({
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
-  const [cameraActive, setCameraActive] = useState(false);
 
   const { 
-    cameraActive: isCameraActive,
+    cameraActive,
     isScanningActive,
     startScan,
     stopScan,
-    hasScannerError
+    setCameraActive,
   } = useBarcodeScanning({
     onScan,
     onScanError: (error: string) => {
@@ -42,19 +41,9 @@ export const useZXingBarcodeScanner = ({
     }
   });
 
-  // ضبط حالة تنشيط الكاميرا بناءً على الحالة المشتركة
-  useEffect(() => {
-    setCameraActive(isCameraActive);
-  }, [isCameraActive]);
-
   const { handleRetry } = useScannerRetry({
-    setHasScannerError: (hasError: boolean | string | null) => {
-      if (typeof hasError === 'boolean') {
-        setScannerError(hasError ? "حدث خطأ غير محدد" : null);
-      } else {
-        setScannerError(hasError);
-      }
-    },
+    setHasScannerError: setScannerError,
+    setCameraActive,
     activateCamera: async () => {
       return await startScan();
     },
@@ -166,26 +155,11 @@ export const useZXingBarcodeScanner = ({
     isLoading,
     hasPermission,
     cameraActive,
-    setCameraActive, 
     isScanningActive,
     scannerError,
-    hasScannerError, 
-    requestPermission: async () => {
-      // Implementation of requestPermission
-      try {
-        const granted = await scannerPermissionService.requestPermission();
-        setHasPermission(granted);
-        return granted;
-      } catch (error) {
-        console.error("Error requesting permission:", error);
-        return false;
-      }
-    },
+    requestPermission,
     handleRetry,
-    openAppSettings: async () => {
-      // Implementation of openAppSettings
-      return false; // Placeholder implementation
-    },
-    startScan
+    openAppSettings,
+    startScan // إضافة للتحكم المباشر ببدء المسح
   };
 };

@@ -1,10 +1,14 @@
-import React, { useEffect, useRef } from 'react';
-import { ZXingScannerContent } from './scanner/ZXingScannerContent';
-import { useScannerPermissions } from '@/hooks/scanner/hooks/useScannerPermissions';
-import { Capacitor } from '@capacitor/core';
+import React, { useEffect, useState } from 'react';
+import { useZXingBarcodeScanner } from '@/hooks/scanner/useZXingBarcodeScanner';
+import { ScannerLoadingView } from './scanner/components/ScannerLoadingView';
+import { PermissionRequestView } from './scanner/components/PermissionRequestView';
+import { ScannerErrorView } from './scanner/components/ScannerErrorView';
+import { ActiveScannerView } from './scanner/components/ActiveScannerView';
 import { Toast } from '@capacitor/toast';
-import { scannerCameraService } from '@/services/scanner/ScannerCameraService';
-import { WebScanner } from './scanner/WebScanner';
+import { Capacitor } from '@capacitor/core';
+import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
+import { NoPermissionView } from './scanner/NoPermissionView';
+import { Button } from '@/components/ui/button';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -12,164 +16,173 @@ interface ZXingBarcodeScannerProps {
   autoStart?: boolean;
 }
 
-const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
-  onScan,
-  onClose,
-  autoStart = false
+const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ 
+  onScan, 
+  onClose, 
+  autoStart = true 
 }) => {
-  // استدعاء خطاف أذونات الماسح
-  const { isLoading, hasPermission, requestPermission, setHasPermission } = useScannerPermissions();
-  const [isScanningActive, setIsScanningActive] = React.useState(false);
-  const [hasScannerError, setHasScannerError] = React.useState(false);
-  const [cameraActive, setCameraActive] = React.useState(false);
-  const [useWebScanner, setUseWebScanner] = React.useState(false);
+  const [debugMode, setDebugMode] = useState(false);
   
-  // تتبع ما إذا تم تجهيز الكاميرا بنجاح
-  const scannerPrepared = useRef(false);
-  // منع الإغلاق التلقائي
-  const scanTimeoutRef = useRef<number | null>(null);
+  const {
+    isLoading,
+    hasPermission,
+    cameraActive,
+    isScanningActive,
+    scannerError,
+    requestPermission,
+    handleRetry,
+    openAppSettings,
+    startScan
+  } = useZXingBarcodeScanner({ onScan, onClose, autoStart });
 
-  // تحديد ما إذا كنا سنستخدم الماسح المحلي أو ماسح الويب
+  // إضافة سجل تشخيصي لتتبع حالة المكون
   useEffect(() => {
-    // استخدام ماسح الويب في بيئة المتصفح أو عندما لا تتوفر ملحقات الماسح المحلي
-    const shouldUseWebScanner = !Capacitor.isNativePlatform() || 
-                               !Capacitor.isPluginAvailable('MLKitBarcodeScanner');
-    
-    console.log(`[ZXingBarcodeScanner] استخدام ماسح الويب: ${shouldUseWebScanner}`);
-    setUseWebScanner(shouldUseWebScanner);
-  }, []);
-
-  // تفعيل الماسح تلقائياً إذا كانت الخاصية autoStart مضبوطة على true
-  useEffect(() => {
-    if (autoStart && hasPermission && !isLoading && !scannerPrepared.current) {
-      console.log('[ZXingBarcodeScanner] تفعيل الماسح تلقائياً');
-      scannerPrepared.current = true;
-      startScan();
-    }
-  }, [autoStart, hasPermission, isLoading]);
-
-  // تنظيف عند إلغاء تحميل المكون
-  useEffect(() => {
-    return () => {
-      console.log('[ZXingBarcodeScanner] تنظيف المكون...');
-      // إلغاء أي مهلات زمنية
-      if (scanTimeoutRef.current !== null) {
-        clearTimeout(scanTimeoutRef.current);
-        scanTimeoutRef.current = null;
+    const logDiagnostic = async () => {
+      try {
+        const platform = Capacitor.getPlatform();
+        const isNative = Capacitor.isNativePlatform();
+        const message = `حالة الماسح الضوئي - المنصة: ${platform}, أصلي: ${isNative ? 'نعم' : 'لا'}, الإذن: ${hasPermission === true ? 'ممنوح' : hasPermission === false ? 'مرفوض' : 'غير معروف'}, الكاميرا نشطة: ${cameraActive ? 'نعم' : 'لا'}, المسح نشط: ${isScanningActive ? 'نعم' : 'لا'}`;
+        
+        console.log(message);
+        
+        if (isNative) {
+          await Toast.show({
+            text: message,
+            duration: 'long'
+          });
+        }
+      } catch (error) {
+        console.error("خطأ في سجل التشخيص:", error);
       }
-      
-      // التأكد من إيقاف المسح وتنظيف موارد الكاميرا
-      stopScan().catch(e => 
-        console.error('[ZXingBarcodeScanner] خطأ في تنظيف الموارد:', e)
-      );
     };
-  }, []);
-
-  // بدء المسح الضوئي
-  const startScan = async () => {
-    try {
-      console.log('[ZXingBarcodeScanner] بدء المسح...');
-      
-      if (useWebScanner) {
-        console.log('[ZXingBarcodeScanner] استخدام ماسح الويب');
-        setIsScanningActive(true);
-        setCameraActive(true);
-        return true;
-      }
-      
-      // تحضير الكاميرا
-      const prepared = await scannerCameraService.prepareCamera();
-      if (!prepared) {
-        console.error('[ZXingBarcodeScanner] فشل في تحضير الكاميرا');
-        setHasScannerError(true);
-        
-        // عرض رسالة خطأ
-        await Toast.show({
-          text: 'فشل في تفعيل الكاميرا. يرجى التحقق من الأذونات وإعادة المحاولة.',
-          duration: 'long'
-        });
-        
-        return false;
-      }
-      
-      setCameraActive(true);
-      setIsScanningActive(true);
-      
-      // تسجيل أن الماسح نشط الآن
-      console.log('[ZXingBarcodeScanner] الماسح نشط الآن');
-      return true;
-    } catch (error) {
-      console.error('[ZXingBarcodeScanner] خطأ في بدء المسح:', error);
-      setHasScannerError(true);
-      return false;
-    }
-  };
-
-  // إيقاف المسح الضوئي
-  const stopScan = async () => {
-    try {
-      console.log('[ZXingBarcodeScanner] إيقاف المسح...');
-      setIsScanningActive(false);
-      
-      if (useWebScanner) {
-        console.log('[ZXingBarcodeScanner] إيقاف ماسح الويب');
-        setCameraActive(false);
-        return true;
-      }
-      
-      // تنظيف موارد الكاميرا
-      await scannerCameraService.cleanupCamera();
-      setCameraActive(false);
-      
-      return true;
-    } catch (error) {
-      console.error('[ZXingBarcodeScanner] خطأ في إيقاف المسح:', error);
-      return false;
-    }
-  };
-
-  // إعادة المحاولة في حال حدوث خطأ
-  const handleRetry = async () => {
-    console.log('[ZXingBarcodeScanner] إعادة المحاولة بعد الخطأ');
-    setHasScannerError(false);
     
-    // إعادة تعيين الكاميرا بالكامل
-    const reset = await scannerCameraService.resetCamera();
-    if (reset) {
-      // محاولة بدء المسح مرة أخرى
-      await startScan();
-    } else {
-      console.error('[ZXingBarcodeScanner] فشلت إعادة تعيين الكاميرا');
-      setHasScannerError(true);
+    logDiagnostic();
+  }, [hasPermission, cameraActive, isScanningActive]);
+  
+  // تجربة تفعيل الكاميرا بشكل مباشر بعد الحصول على الإذن
+  useEffect(() => {
+    const activateCamera = async () => {
+      if (hasPermission === true && autoStart && !cameraActive) {
+        console.log("ZXingBarcodeScanner: تم منح الإذن، تجربة تفعيل الكاميرا مباشرة");
+        try {
+          // فرض تأخير قصير قبل تفعيل الكاميرا لضمان استقرار حالة الإذن
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // تجربة بدء المسح مباشرة
+          const started = await startScan();
+          console.log("ZXingBarcodeScanner: نتيجة محاولة تفعيل الكاميرا:", started);
+          
+          if (!started) {
+            console.warn("ZXingBarcodeScanner: فشل تفعيل الكاميرا، محاولة مرة أخرى بعد تأخير");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await startScan();
+          }
+        } catch (error) {
+          console.error("ZXingBarcodeScanner: خطأ في تفعيل الكاميرا:", error);
+        }
+      }
+    };
+    
+    activateCamera();
+  }, [hasPermission, autoStart, cameraActive, startScan]);
+  
+  // محاولة طلب الأذونات عند بدء التشغيل
+  useEffect(() => {
+    if (hasPermission === false && autoStart) {
+      console.log("محاولة طلب الأذونات عند بدء التشغيل");
+      
+      // استخدام خدمة الأذونات المحسّنة
+      const attemptPermission = async () => {
+        try {
+          const result = await scannerPermissionService.requestPermission();
+          return result;
+        } catch (error) {
+          console.error("خطأ في طلب الإذن التلقائي:", error);
+          return false;
+        }
+      };
+      
+      attemptPermission();
     }
-  };
+  }, [hasPermission, autoStart]);
 
-  // معالج المسح الناجح
-  const handleScan = (code: string) => {
-    console.log('[ZXingBarcodeScanner] تم مسح الكود:', code);
-    onScan(code);
+  // تبديل وضع التصحيح
+  const toggleDebugMode = () => {
+    setDebugMode(!debugMode);
   };
-
-  // استخدام ماسح الويب إذا كنا في بيئة الويب
-  if (useWebScanner) {
-    return <WebScanner onScan={handleScan} onClose={onClose} />;
+  
+  // عرض شاشة التحميل
+  if (isLoading) {
+    return <ScannerLoadingView onClose={onClose} />;
   }
-
-  // استخدام الماسح الأصلي في الأجهزة الجوالة
-  return (
-    <ZXingScannerContent
-      isLoading={isLoading}
-      hasPermission={hasPermission}
-      isScanningActive={isScanningActive}
-      hasScannerError={hasScannerError}
-      cameraActive={cameraActive}
-      onScan={handleScan}
+  
+  // عرض شاشة طلب الإذن
+  if (hasPermission === false) {
+    return <NoPermissionView 
+      onRequestPermission={async () => {
+        const granted = await requestPermission();
+        console.log("نتيجة طلب الإذن:", granted);
+        return granted;
+      }}
       onClose={onClose}
-      startScan={startScan}
-      stopScan={stopScan}
-      requestPermission={requestPermission}
-      handleRetry={handleRetry}
-    />
+      onManualEntry={() => {
+        // يمكن إضافة الإدخال اليدوي هنا في المستقبل
+        console.log("طلب الإدخال اليدوي");
+      }}
+    />;
+  }
+  
+  // عرض شاشة الخطأ
+  if (scannerError) {
+    return <ScannerErrorView 
+      errorMessage={scannerError} 
+      onRetry={handleRetry} 
+      onClose={onClose} 
+    />;
+  }
+  
+  // عرض معلومات التصحيح
+  if (debugMode) {
+    return (
+      <div className="fixed inset-0 bg-white z-50 p-6 overflow-auto">
+        <h2 className="text-2xl font-bold mb-4">معلومات التصحيح</h2>
+        <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
+          {JSON.stringify({
+            hasPermission,
+            cameraActive,
+            isScanningActive,
+            scannerError,
+            platform: Capacitor.getPlatform(),
+            isNative: Capacitor.isNativePlatform(),
+            autoStart,
+          }, null, 2)}
+        </pre>
+        <div className="mt-4 space-y-2">
+          <Button onClick={toggleDebugMode} className="w-full">إغلاق</Button>
+          <Button onClick={handleRetry} className="w-full">إعادة المحاولة</Button>
+          <Button onClick={onClose} className="w-full">إغلاق الماسح</Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // عرض الكاميرا النشطة
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col">
+      <ActiveScannerView 
+        cameraActive={cameraActive} 
+        isScanningActive={isScanningActive}
+        onClose={onClose} 
+      />
+      
+      {/* زر للتحويل إلى وضع التصحيح - يمكن إخفاؤه في الإنتاج */}
+      <button 
+        className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full text-xs"
+        onClick={toggleDebugMode}
+      >
+        تصحيح
+      </button>
+    </div>
   );
 };
 

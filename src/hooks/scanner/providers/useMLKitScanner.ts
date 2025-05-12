@@ -31,7 +31,7 @@ export const useMLKitScanner = () => {
       try {
         console.log('[useMLKitScanner] تهيئة وبدء المسح...');
         
-        // استخدام تهيئة أسرع للكاميرا - بدون معلمات
+        // استخدام تهيئة أسرع للكاميرا
         await BarcodeScanner.prepare();
         
         // بدء المسح الفعلي فورًا
@@ -50,8 +50,8 @@ export const useMLKitScanner = () => {
         // تنظيف وإخفاء الكاميرا بعد المسح
         try {
           // استخدام stopScan لإيقاف الكاميرا
-          await BarcodeScanner.stopScan();
-          await BarcodeScanner.enableTorch({ value: false });
+          await BarcodeScanner.stopScan().catch(() => {});
+          await BarcodeScanner.disableTorch();
         } catch (e) {
           console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا:', e);
         }
@@ -78,8 +78,8 @@ export const useMLKitScanner = () => {
         
         try {
           // التأكد من إخفاء الكاميرا في حالة الخطأ
-          await BarcodeScanner.stopScan();
-          await BarcodeScanner.enableTorch({ value: false });
+          await BarcodeScanner.stopScan().catch(() => {});
+          await BarcodeScanner.disableTorch();
         } catch (e) {
           console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
         }
@@ -92,8 +92,8 @@ export const useMLKitScanner = () => {
       
       try {
         // التأكد من إخفاء الكاميرا في حالة الخطأ
-        await BarcodeScanner.stopScan();
-        await BarcodeScanner.enableTorch({ value: false });
+        await BarcodeScanner.stopScan().catch(() => {});
+        await BarcodeScanner.disableTorch();
       } catch (e) {
         console.error('[useMLKitScanner] خطأ في إيقاف الكاميرا بعد خطأ المسح:', e);
       }
@@ -109,7 +109,7 @@ export const useMLKitScanner = () => {
       console.log('[useMLKitScanner] إيقاف المسح...');
       
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        await BarcodeScanner.enableTorch({ value: false }).catch(() => {});
+        await BarcodeScanner.disableTorch().catch(() => {});
         await BarcodeScanner.stopScan().catch(() => {});
       }
       

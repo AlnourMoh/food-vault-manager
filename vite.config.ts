@@ -22,21 +22,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
-      external: [
-        // تعريف المكتبات الخارجية بشكل صحيح
-        "@capacitor/device",
-        "@capacitor/app",
-        "@capacitor/core",
-        "@capacitor/toast",
-        "@capacitor-mlkit/barcode-scanning",
-        "@capacitor/camera",
-        "@capacitor/browser"
-        // حذفنا "next-themes" من هنا لأننا نريد أن يتم تضمينها في البناء
-      ],
+      external: ["next-themes"],
     },
-    // تحسين بناء المشروع
-    outDir: "dist",
-    emptyOutDir: true,
-    sourcemap: true,
   },
 }));

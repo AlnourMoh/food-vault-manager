@@ -2,8 +2,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Capacitor } from '@capacitor/core';
 
 interface UseBarcodeScannerControls {
   onScan: (code: string) => void;
@@ -19,7 +17,9 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
     try {
       setIsScanningActive(true);
       
-      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        
         // Request permissions
         const { camera } = await BarcodeScanner.requestPermissions();
         if (camera !== 'granted') {
@@ -31,9 +31,6 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
           stopScan();
           return;
         }
-        
-        // Prepare scanner
-        await BarcodeScanner.prepare();
         
         // Start scanning
         const result = await BarcodeScanner.scan();
@@ -67,13 +64,6 @@ export const useBarcodeScannerControls = ({ onScan, onClose }: UseBarcodeScanner
   };
   
   const stopScan = async () => {
-    if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-      try {
-        await BarcodeScanner.stopScan();
-      } catch (error) {
-        console.error('Error stopping scan:', error);
-      }
-    }
     setIsScanningActive(false);
   };
   

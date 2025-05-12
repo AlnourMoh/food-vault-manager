@@ -34,11 +34,10 @@ export class ScannerPermissionService {
   /**
    * طلب إذن الكاميرا
    */
-  public async requestPermission(): Promise<boolean> {
+  public async requestPermission(): Promise<{ granted: boolean; error?: string }> {
     try {
       if (!await this.isSupported()) {
-        console.error('[ScannerPermissionService] الجهاز لا يدعم الماسح الضوئي');
-        return false;
+        return { granted: false, error: 'الجهاز لا يدعم الماسح الضوئي' };
       }
       
       // محاولة الوصول إلى الكاميرا
@@ -51,7 +50,7 @@ export class ScannerPermissionService {
       
       console.log('[ScannerPermissionService] تم الحصول على إذن الكاميرا بنجاح');
       
-      return true;
+      return { granted: true };
     } catch (error: any) {
       console.error('[ScannerPermissionService] خطأ في طلب إذن الكاميرا:', error);
       
@@ -66,8 +65,7 @@ export class ScannerPermissionService {
         errorMessage = 'الكاميرا قيد الاستخدام بالفعل من قبل تطبيق آخر';
       }
       
-      console.error('[ScannerPermissionService] رسالة الخطأ:', errorMessage);
-      return false;
+      return { granted: false, error: errorMessage };
     }
   }
 }

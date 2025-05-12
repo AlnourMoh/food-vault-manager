@@ -1,7 +1,6 @@
 
 import { useToast } from '@/hooks/use-toast';
 import { useScannerUI } from '../useScannerUI';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 export const useTraditionalScanner = () => {
   const { toast } = useToast();
@@ -9,35 +8,58 @@ export const useTraditionalScanner = () => {
 
   const startTraditionalScan = async (onSuccess: (code: string) => void) => {
     try {
-      console.log("[useTraditionalScanner] استخدام MLKit كبديل للماسح التقليدي");
+      console.log("[useTraditionalScanner] استخدام BarcodeScanner التقليدي");
       
       // التأكد من أن BarcodeScanner متوفر
-      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log("[useTraditionalScanner] ماسح الباركود غير متاح");
+      if (!window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+        console.log("[useTraditionalScanner] ماسح الباركود التقليدي غير متاح");
         throw new Error("ماسح الباركود غير متاح");
       }
       
-      // إعداد خلفية الماسح
+      const BSModule = await import('@capacitor-community/barcode-scanner');
+      const { BarcodeScanner } = BSModule;
+      
+      // التحقق من الأذونات
+      console.log("[useTraditionalScanner] التحقق من إذن الكاميرا");
+      const permissionStatus = await BarcodeScanner.checkPermission({ force: false });
+      console.log("[useTraditionalScanner] حالة إذن الكاميرا:", permissionStatus);
+      
+      if (!permissionStatus.granted) {
+        console.log("[useTraditionalScanner] طلب إذن الكاميرا");
+        const newStatus = await BarcodeScanner.checkPermission({ force: true });
+        console.log("[useTraditionalScanner] نتيجة طلب الإذن:", newStatus);
+        
+        if (!newStatus.granted) {
+          throw new Error("تم رفض إذن الكاميرا");
+        }
+      }
+
+      // إعداد خلفية الماسح وإخفاء الخلفية
       console.log("[useTraditionalScanner] إعداد خلفية الماسح");
       await setupScannerBackground();
       
-      console.log("[useTraditionalScanner] بدء عملية المسح");
+      // إخفاء خلفية الماسح وإعداده
+      console.log("[useTraditionalScanner] إخفاء الخلفية وتجهيز الماسح");
+      await BarcodeScanner.hideBackground();
       await BarcodeScanner.prepare();
       
-      const result = await BarcodeScanner.scan({
-        formats: ["QR_CODE", "EAN_13", "CODE_128", "CODE_39", "UPC_A", "UPC_E"]
+      console.log("[useTraditionalScanner] بدء عملية المسح");
+      const result = await BarcodeScanner.startScan({ 
+        targetedFormats: ['QR_CODE', 'EAN_13', 'CODE_128'] 
       });
       
-      // تنظيف الموارد بعد المسح
+      // إظهار الخلفية وتنظيف الموارد بعد المسح
       console.log("[useTraditionalScanner] انتهاء المسح، تنظيف الموارد");
+      await BarcodeScanner.showBackground().catch(() => {
+        console.log("[useTraditionalScanner] تعذر إظهار الخلفية، تجاهل الخطأ");
+      });
+      // استخدام restoreUIAfterScanning بدلاً من cleanupScannerBackground
       await restoreUIAfterScanning();
       
-      if (result.barcodes && result.barcodes.length > 0) {
-        console.log("[useTraditionalScanner] تم العثور على محتوى:", result.barcodes[0].rawValue);
-        if (result.barcodes[0].rawValue) {
-          onSuccess(result.barcodes[0].rawValue);
-          return true;
-        }
+      if (result.hasContent) {
+        console.log("[useTraditionalScanner] تم العثور على محتوى:", result.content);
+        onSuccess(result.content);
+        return true;
       }
       
       console.log("[useTraditionalScanner] لم يتم العثور على محتوى");
@@ -46,10 +68,13 @@ export const useTraditionalScanner = () => {
       console.error("[useTraditionalScanner] خطأ في عملية المسح:", error);
       
       // تنظيف الموارد في حالة الخطأ
+      // استخدام restoreUIAfterScanning بدلاً من cleanupScannerBackground
       await restoreUIAfterScanning();
       
-      // محاولة إيقاف المسح في حالة الخطأ
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+      // محاولة إظهار الخلفية وإيقاف المسح في حالة الخطأ
+      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+        await BarcodeScanner.showBackground().catch(() => {});
         await BarcodeScanner.stopScan().catch(() => {});
       }
       
@@ -58,12 +83,20 @@ export const useTraditionalScanner = () => {
   };
 
   const stopTraditionalScan = async () => {
-    console.log("[useTraditionalScanner] إيقاف عملية المسح");
+    console.log("[useTraditionalScanner] إيقاف عملية المسح التقليدية");
     try {
       // محاولة إيقاف المسح فقط إذا كانت الوحدة متاحة
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        await BarcodeScanner.enableTorch({ value: false }).catch(() => {});
-        await BarcodeScanner.stopScan().catch(() => {});
+      if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
+        const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
+        
+        // إظهار الخلفية وإيقاف المسح
+        console.log("[useTraditionalScanner] إظهار الخلفية وإيقاف المسح");
+        await BarcodeScanner.showBackground().catch((e) => {
+          console.log("[useTraditionalScanner] تعذر إظهار الخلفية:", e);
+        });
+        await BarcodeScanner.stopScan().catch((e) => {
+          console.log("[useTraditionalScanner] تعذر إيقاف المسح:", e);
+        });
       }
     } catch (error) {
       console.error('[useTraditionalScanner] خطأ في إيقاف المسح:', error);

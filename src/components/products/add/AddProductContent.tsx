@@ -4,18 +4,8 @@ import { PermissionErrorCard } from './PermissionErrorCard';
 import { ScanButton } from './ScanButton';
 import { useProductScannerPermissions } from './useProductScannerPermissions';
 import { useToast } from '@/hooks/use-toast';
+import { Camera, CameraResultType, CameraSource, CameraDirection } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
-
-// Define types to avoid direct import of @capacitor/camera
-type CameraResultType = 'uri' | 'base64' | 'dataUrl';
-type CameraSource = 'prompt' | 'camera' | 'photos';
-type CameraDirection = 'rear' | 'front';
-
-interface CameraPhoto {
-  path?: string;
-  webPath?: string;
-  format?: string;
-}
 
 interface AddProductContentProps {
   isRestaurantRoute: boolean;
@@ -58,51 +48,27 @@ export const AddProductContent: React.FC<AddProductContentProps> = ({
       // فتح كاميرا الجهاز مباشرة بدون مسح الباركود
       if (Capacitor.isPluginAvailable('Camera')) {
         try {
-          // استخدام dynamic import لتجنب مشاكل الاستيراد
-          const cameraModule = await import('@capacitor/camera');
-          
-          // إضافة تسجيل إضافي للتشخيص
-          console.log("بدء استدعاء Camera.getPhoto...");
-          
-          const photo = await cameraModule.Camera.getPhoto({
+          await Camera.getPhoto({
             quality: 90,
             allowEditing: false,
-            resultType: cameraModule.CameraResultType.Uri,
-            source: cameraModule.CameraSource.Camera,
-            direction: cameraModule.CameraDirection.Rear
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            direction: CameraDirection.Rear
           });
-          
-          console.log("تم استدعاء Camera.getPhoto بنجاح:", photo);
           
           toast({
             title: "تم فتح الكاميرا بنجاح",
           });
         } catch (error) {
           console.error("خطأ في فتح الكاميرا:", error);
-          
-          // تحسين رسالة الخطأ لتكون أكثر تفصيلاً
-          let errorMessage = "يرجى التحقق من أذونات الكاميرا والمحاولة مرة أخرى";
-          
-          if (error instanceof Error) {
-            // إضافة رسائل مخصصة حسب نوع الخطأ
-            if (error.message.includes("cancelled")) {
-              errorMessage = "تم إلغاء العملية بواسطة المستخدم";
-            } else if (error.message.includes("denied") || error.message.includes("permission")) {
-              errorMessage = "تم رفض إذن الكاميرا. يرجى تمكينه من إعدادات جهازك";
-              // محاولة فتح إعدادات التطبيق
-              handleOpenSettings();
-            }
-          }
-          
           toast({
             title: "تعذر فتح الكاميرا",
-            description: errorMessage,
+            description: "يرجى التحقق من أذونات الكاميرا والمحاولة مرة أخرى",
             variant: "destructive"
           });
         }
       } else {
         // في بيئة الويب أو إذا لم يكن الملحق متاحًا
-        console.log("الكاميرا غير متاحة على هذا الجهاز");
         toast({
           title: "محاكاة فتح الكاميرا",
           description: "هذه الميزة تعمل بشكل أفضل على الهاتف المحمول",

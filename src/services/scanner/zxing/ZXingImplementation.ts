@@ -1,3 +1,4 @@
+
 /**
  * تنفيذ خدمة الماسح الضوئي باستخدام مكتبة ZXing
  */
@@ -62,20 +63,9 @@ export class ZXingImplementation extends BaseScannerService {
    * طلب إذن الكاميرا
    */
   public async requestPermission(): Promise<{ granted: boolean; error?: string }> {
-    try {
-      const permissionResult = await this.permissionService.requestPermission();
-      this.hasPermission = permissionResult;
-      
-      return { 
-        granted: permissionResult, 
-        error: permissionResult ? undefined : 'تم رفض إذن الكاميرا'
-      };
-    } catch (error: any) {
-      return {
-        granted: false,
-        error: error?.message || 'حدث خطأ أثناء طلب إذن الكاميرا'
-      };
-    }
+    const result = await this.permissionService.requestPermission();
+    this.hasPermission = result.granted;
+    return result;
   }
   
   /**

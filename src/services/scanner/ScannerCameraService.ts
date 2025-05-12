@@ -1,72 +1,70 @@
 
-import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
+import { BarcodeScannerPlugin } from '@/types/barcode-scanner';
+
+// Import the augmentation to ensure TypeScript recognizes the extended methods
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 /**
- * خدمة إدارة الكاميرا للماسح الضوئي
+ * خدمة تتحكم في وظائف كاميرا الماسح الضوئي
  */
 export class ScannerCameraService {
   private static instance: ScannerCameraService;
-  private isMockModeEnabled = false;
-
-  private constructor() {
-    console.log('[ScannerCameraService] تهيئة خدمة الكاميرا');
-  }
+  private isCameraReady: boolean = false;
   
-  /**
-   * الحصول على مثيل الخدمة (Singleton)
-   */
+  private constructor() {}
+  
   public static getInstance(): ScannerCameraService {
-    if (!this.instance) {
-      this.instance = new ScannerCameraService();
+    if (!ScannerCameraService.instance) {
+      ScannerCameraService.instance = new ScannerCameraService();
     }
-    return this.instance;
+    return ScannerCameraService.instance;
   }
   
   /**
-   * تحقق مما إذا كان التطبيق في وضع المحاكاة
+   * التحقق من دعم الجهاز للماسح
    */
-  public isMockMode(): boolean {
-    return this.isMockModeEnabled;
-  }
-  
-  /**
-   * تمكين أو تعطيل وضع المحاكاة
-   */
-  public setMockMode(enabled: boolean): void {
-    this.isMockModeEnabled = enabled;
-    console.log(`[ScannerCameraService] تم ${enabled ? 'تمكين' : 'تعطيل'} وضع المحاكاة`);
-  }
-  
-  /**
-   * تحضير الكاميرا
-   */
-  public async prepareCamera(): Promise<boolean> {
+  public async isScannerSupported(): Promise<boolean> {
     try {
-      // إذا كان في وضع المحاكاة، نتظاهر بأن الكاميرا جاهزة
-      if (this.isMockMode()) {
-        console.log('[ScannerCameraService] وضع المحاكاة: تجاوز تحضير الكاميرا');
-        return true;
-      }
-      
-      // في بيئة الويب، نفترض أن الكاميرا ستكون جاهزة
-      if (!Capacitor.isNativePlatform()) {
-        return true;
-      }
-      
-      // التأكد من أن MLKit متاح
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.error('[ScannerCameraService] ملحق MLKitBarcodeScanner غير متاح');
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         return false;
       }
       
-      // تحضير الكاميرا - استدعاء بدون وسائط
-      console.log('[ScannerCameraService] تحضير الكاميرا');
-      await BarcodeScanner.prepare();
-      console.log('[ScannerCameraService] تم تحضير الكاميرا');
+      const result = await BarcodeScanner.isSupported();
+      return result.supported;
+    } catch (error) {
+      console.error('[ScannerCameraService] خطأ في التحقق من دعم الماسح:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * تحضير وإعداد الكاميرا للمسح - تم تحسينها للاستجابة السريعة
+   */
+  public async prepareCamera(): Promise<boolean> {
+    try {
+      console.log('[ScannerCameraService] تحضير الكاميرا...');
       
-      return true;
+      if (this.isCameraReady) {
+        console.log('[ScannerCameraService] الكاميرا جاهزة بالفعل');
+        return true;
+      }
+      
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.error('[ScannerCameraService] MLKit غير متوفر على هذا الجهاز');
+        return false;
+      }
+
+      try {
+        // تهيئة سريعة للكاميرا بدون انتظار
+        await BarcodeScanner.prepare();
+        this.isCameraReady = true;
+      } catch (error) {
+        console.error('[ScannerCameraService] خطأ في تفعيل الكاميرا:', error);
+      }
+      
+      return this.isCameraReady;
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في تحضير الكاميرا:', error);
       return false;
@@ -74,82 +72,67 @@ export class ScannerCameraService {
   }
   
   /**
-   * تنظيف موارد الكاميرا
+   * إيقاف الكاميرا وتنظيف الموارد - تم تحسينها للعمل بشكل أسرع
    */
-  public async cleanupCamera(): Promise<boolean> {
+  public async cleanupCamera(): Promise<void> {
     try {
-      // في وضع المحاكاة أو الويب، لا حاجة لتنظيف الموارد
-      if (this.isMockMode() || !Capacitor.isNativePlatform()) {
-        return true;
+      console.log('[ScannerCameraService] تنظيف موارد الكاميرا...');
+      
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        return;
       }
       
-      // التأكد من أن MLKit متاح
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        return true;
-      }
+      // إيقاف الكاميرا بشكل سريع بدون انتظار طويل
+      await Promise.all([
+        BarcodeScanner.disableTorch().catch(() => {}),
+        BarcodeScanner.stopScan().catch(() => {})
+      ]);
       
-      // تنظيف الكاميرا
-      console.log('[ScannerCameraService] تنظيف موارد الكاميرا');
-      
-      // إيقاف الكاميرا باستخدام 'enableTorch' لإغلاق الفلاش أولاً إذا كان مفعلاً
-      try {
-        await BarcodeScanner.enableTorch({ value: false });
-      } catch {
-        // تجاهل أي خطأ هنا
-      }
-      
-      // ثم إطلاق موارد الكاميرا
-      await BarcodeScanner.stopScan();
-      
-      console.log('[ScannerCameraService] تم تنظيف موارد الكاميرا');
-      
-      return true;
+      this.isCameraReady = false;
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في تنظيف موارد الكاميرا:', error);
-      return false;
+      this.isCameraReady = false;
     }
   }
   
   /**
-   * إعادة تعيين الكاميرا بالكامل
-   */
-  public async resetCamera(): Promise<boolean> {
-    try {
-      // تنظيف الموارد أولاً
-      await this.cleanupCamera();
-      
-      // انتظار لحظة قبل إعادة التهيئة
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // إعادة تحضير الكاميرا
-      return await this.prepareCamera();
-    } catch (error) {
-      console.error('[ScannerCameraService] خطأ في إعادة تعيين الكاميرا:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * الحصول على خيارات تنسيق المسح
+   * الحصول على خيارات التنسيقات المدعومة للمسح
    */
   public getScanFormatOptions() {
     return {
       formats: [
-        'QR_CODE',
-        'DATA_MATRIX',
-        'UPC_A',
-        'UPC_E',
-        'EAN_8',
-        'EAN_13',
-        'CODE_39',
-        'CODE_93',
-        'CODE_128',
-        'ITF',
-        'CODABAR'
+        BarcodeFormat.QrCode,
+        BarcodeFormat.UpcA,
+        BarcodeFormat.UpcE,
+        BarcodeFormat.Ean8,
+        BarcodeFormat.Ean13,
+        BarcodeFormat.Code39,
+        BarcodeFormat.Code128,
+        BarcodeFormat.Itf,
+        BarcodeFormat.Codabar
       ]
     };
   }
+  
+  /**
+   * التبديل بين وضع الإضاءة بشكل فوري
+   */
+  public async toggleTorch(): Promise<void> {
+    try {
+      const torchAvailable = await BarcodeScanner.isTorchAvailable();
+      if (torchAvailable.available) {
+        await BarcodeScanner.toggleTorch();
+      } else {
+        await Toast.show({
+          text: 'الفلاش غير متوفر على هذا الجهاز',
+          duration: 'short'
+        });
+      }
+    } catch (error) {
+      console.error('[ScannerCameraService] خطأ في تبديل وضع الفلاش:', error);
+    }
+  }
 }
 
-// تصدير مثيل الخدمة
+// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerCameraService = ScannerCameraService.getInstance();

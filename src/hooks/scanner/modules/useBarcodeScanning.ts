@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeScanner, BarcodeFormat, LensFacing } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
@@ -111,7 +111,7 @@ export const useBarcodeScanning = ({
   }, [onScanError]);
   
   // وظيفة طلب تصاريح الكاميرا
-  const requestPermission = useCallback(async (): Promise<boolean> => {
+  const requestCameraPermission = useCallback(async (): Promise<boolean> => {
     try {
       console.log('[useBarcodeScanning] طلب تصريح الكاميرا');
       
@@ -160,7 +160,7 @@ export const useBarcodeScanning = ({
       
       if (!hasPermission) {
         console.log('[useBarcodeScanning] لا يوجد تصريح للكاميرا، محاولة طلب التصريح');
-        const granted = await requestPermission();
+        const granted = await requestCameraPermission();
         if (!granted) {
           console.warn('[useBarcodeScanning] لم يتم منح تصريح الكاميرا');
           return false;
@@ -298,15 +298,15 @@ export const useBarcodeScanning = ({
           }
         });
         
-        // بدء المسح - استخدام القيم الحرفية مباشرةً بدلاً من الثوابت
+        // بدء المسح
         await BarcodeScanner.startScan({
           formats: [
-            "qr_code",    // بدلاً من BarcodeFormat.QrCode
-            "ean_13",     // بدلاً من BarcodeFormat.Ean13
-            "ean_8",      // بدلاً من BarcodeFormat.Ean8
-            "code_128"    // بدلاً من BarcodeFormat.Code128
+            BarcodeFormat.QrCode, 
+            BarcodeFormat.Ean13, 
+            BarcodeFormat.Ean8, 
+            BarcodeFormat.Code128
           ],
-          lensFacing: "back", // بدلاً من LensFacing.Back
+          lensFacing: LensFacing.Back,
         });
         
         setCameraActive(true);
@@ -348,7 +348,7 @@ export const useBarcodeScanning = ({
     onScanError, 
     onScanComplete, 
     prepareWebRTC, 
-    requestPermission
+    requestCameraPermission
   ]);
 
   // وظيفة إيقاف المسح
@@ -368,19 +368,16 @@ export const useBarcodeScanning = ({
         if (webStreamRef) {
           console.log('[useBarcodeScanning] إيقاف بث الكاميرا في بيئة الويب');
           webStreamRef.getTracks().forEach(track => {
-            try {
-              track.stop();
-            } catch (e) {
-              console.error('[useBarcodeScanning] خطأ في إيقاف مسار الكاميرا:', e);
-            }
+            console.log(`[useBarcodeScanning] إيقاف مسار ${track.kind}`);
+            track.stop();
           });
           setWebStreamRef(null);
         }
         
-        // إزالة عنصر الفيديو من الصفحة
-        const scannerView = document.getElementById('barcode-scanner-view');
-        if (scannerView) {
-          scannerView.querySelectorAll('video').forEach(v => v.remove());
+        // إزالة عنصر الفيديو
+        const videoElement = document.getElementById('scanner-video-element');
+        if (videoElement && videoElement.parentNode) {
+          videoElement.parentNode.removeChild(videoElement);
         }
         
         setCameraActive(false);
@@ -389,70 +386,57 @@ export const useBarcodeScanning = ({
       }
       
       // في بيئة التطبيق الأصلي
-      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('[useBarcodeScanning] إيقاف المسح باستخدام BarcodeScanner في بيئة التطبيق');
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        // التحقق قبل الاستدعاء لتجنب الأخطاء
+        console.log('[useBarcodeScanning] إيقاف BarcodeScanner، حالة المسح:', isScanningActive);
         
-        try {
-          // إزالة المستمع
+        if (isScanningActive) {
           await BarcodeScanner.removeAllListeners();
-          
-          // لإيقاف المسح بالترتيب الصحيح
-          await BarcodeScanner.disableTorch().catch(() => {});
-          await BarcodeScanner.stopScan().catch(() => {});
-          await BarcodeScanner.showBackground().catch(() => {});
-          
-          setCameraActive(false);
-          setIsScanningActive(false);
-          
-          return true;
-        } catch (error) {
-          console.error('[useBarcodeScanning] خطأ في إيقاف المسح:', error);
-          return false;
+          await BarcodeScanner.stopScan();
+          console.log('[useBarcodeScanning] تم إيقاف BarcodeScanner بنجاح');
         }
+        
+        setCameraActive(false);
+        setIsScanningActive(false);
       }
-      
-      // إعادة تعيين الحالة في كل الحالات
-      setCameraActive(false);
-      setIsScanningActive(false);
       
       return true;
     } catch (error) {
       console.error('[useBarcodeScanning] خطأ في إيقاف المسح:', error);
-      
-      // إعادة تعيين الحالة في حالة الخطأ أيضًا
-      setCameraActive(false);
-      setIsScanningActive(false);
-      
       return false;
     }
-  }, [webStreamRef]);
+  }, [isScanningActive, webStreamRef]);
 
-  // وظيفة لإعادة المحاولة في حالة الأخطاء
+  // وظيفة إعادة المحاولة - تقوم بإعادة تعيين الحالات وإعادة بدء المسح
   const retryScanning = useCallback(async (): Promise<boolean> => {
     console.log('[useBarcodeScanning] إعادة محاولة المسح');
     
     try {
-      // إيقاف المسح القائم أولاً
+      // إعادة تعيين الحالات
+      setHasScannerError(false);
+      setHasPermissionError(false);
+      
+      // إيقاف أي مسح نشط
       await stopScan();
       
-      // انتظار لحظة قبل بدء المسح مرة أخرى
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // في بيئة الويب، نعيد إعداد WebRTC
+      if (!Capacitor.isNativePlatform()) {
+        await prepareWebRTC();
+      }
       
-      // إعادة تعيين حالات الأخطاء
-      setHasScannerError(false);
-      
-      // بدء المسح مرة أخرى
+      // بدء المسح من جديد
       return await startScan();
     } catch (error) {
       console.error('[useBarcodeScanning] خطأ في إعادة محاولة المسح:', error);
       return false;
     }
-  }, [startScan, stopScan]);
+  }, [stopScan, startScan, prepareWebRTC]);
 
-  // وظيفة لفتح إعدادات التطبيق
+  // وظيفة فتح إعدادات التطبيق للتصاريح
   const openAppSettings = useCallback(async (): Promise<boolean> => {
+    console.log('[useBarcodeScanning] فتح إعدادات التطبيق');
+    
     try {
-      console.log('[useBarcodeScanning] محاولة فتح إعدادات التطبيق');
       return await scannerPermissionService.openAppSettings();
     } catch (error) {
       console.error('[useBarcodeScanning] خطأ في فتح إعدادات التطبيق:', error);
@@ -462,14 +446,16 @@ export const useBarcodeScanning = ({
 
   return {
     cameraActive,
+    setCameraActive,
     isScanningActive,
     lastScannedCode,
     startScan,
     stopScan,
+    isWebRTCReady,
     hasScannerError,
     hasPermissionError,
     retryScanning,
-    requestPermission,
+    requestCameraPermission,
     openAppSettings
   };
 };

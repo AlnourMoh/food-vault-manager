@@ -1,20 +1,4 @@
 
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeProvider } from "@/hooks/use-theme";
 
-type ThemeProviderProps = {
-  children: React.ReactNode;
-  defaultTheme?: string;
-  storageKey?: string;
-};
-
-export function ThemeProvider({
-  children,
-  defaultTheme = 'system',
-  storageKey = 'ui-theme',
-}: ThemeProviderProps) {
-  return (
-    <NextThemesProvider defaultTheme={defaultTheme} storageKey={storageKey} attribute="class">
-      {children}
-    </NextThemesProvider>
-  );
-}
+export { ThemeProvider };

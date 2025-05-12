@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.foodvault.manager',
-  appName: 'FoodVault Manager',
+  appName: 'مخزن الطعام',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
@@ -23,7 +23,7 @@ const config: CapacitorConfig = {
     },
     Camera: {
       promptLabelHeader: "الوصول إلى الكاميرا",
-      promptLabelText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+      promptLabelText: "يحتاج التطبيق إلى إذن الكاميرا لمسح الباركود",
       promptLabelCancel: "إلغاء",
       promptLabelConfirm: "السماح"
     },
@@ -34,14 +34,7 @@ const config: CapacitorConfig = {
     MLKitBarcodeScanner: {
       formats: ["QR_CODE", "EAN_13", "CODE_128", "CODE_39", "UPC_A", "UPC_E"],
       detectionSpeed: "fast",
-      cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
-      beepOnSuccess: true,
-      vibrateOnSuccess: true,
-      lockOrientation: true,
-      drawFocusRect: true,
-      // إضافة خيارات جديدة
-      isCaptureEnabled: true,
-      detectionTimeout: 1500
+      cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود"
     }
   },
   android: {

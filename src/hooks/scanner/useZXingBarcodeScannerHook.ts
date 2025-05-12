@@ -33,13 +33,13 @@ export const useZXingBarcodeScannerHook = ({
     onError: (error) => setScannerError(error)
   });
   
-  // استخدام خطاف المسح الضوئي للباركود
+  // استخدام خطاف المسح الضوئي للباركود - Remove isScanningActive from props as it's not in the interface
   const { startScan, stopScan } = useBarcodeScanning({
     onScan,
     onScanError: (error) => setScannerError(error ? "حدث خطأ في الماسح الضوئي" : null),
     onScanComplete: () => {
       console.log('Scan completed successfully');
-      setIsScanningActive(false);
+      setIsScanningActive(false); // We can handle this state internally
     }
   });
   
@@ -58,6 +58,7 @@ export const useZXingBarcodeScannerHook = ({
   // استخدام خطاف إعادة المحاولة للماسح
   const { handleRetry } = useScannerRetry({
     setHasScannerError: (error) => setScannerError(error ? "حدث خطأ في الماسح الضوئي" : null),
+    setCameraActive,
     activateCamera,
     startScan
   });

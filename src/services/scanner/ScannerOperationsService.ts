@@ -105,9 +105,8 @@ export class ScannerOperationsService {
         try {
           console.log(`[ScannerOperationsService] محاولة المسح ${attempt}/${MAX_RETRIES}...`);
           
-          // استخدام خيارات التنسيق من خدمة الكاميرا
-          const options = scannerCameraService.getScanFormatOptions();
-          const result = await BarcodeScanner.scan(options);
+          // استخدام قيم enum للتنسيقات من خدمة الكاميرا
+          const result = await BarcodeScanner.scan(scannerCameraService.getScanFormatOptions());
           
           // معالجة النتيجة باستخدام خدمة النتائج
           const scanSuccess = await scannerResultService.processScanResult(result, onSuccess);
