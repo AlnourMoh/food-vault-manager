@@ -28,7 +28,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
       setDialogForceOpen(true);
       
       // إذا كنا في بيئة الجوال وليس الويب، نعرض رسالة تأكيد
-      if (environment.isNativePlatform || environment.isWebView) {
+      if (environment.isNativePlatform || environment.isInAppWebView) {
         toast({
           title: "تفعيل الماسح الضوئي",
           description: "جاري تشغيل الماسح الضوئي للباركود..."
@@ -71,7 +71,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   
   // تفعيل الماسح تلقائياً عند فتح مربع الحوار في بيئة الأجهزة
   useEffect(() => {
-    if (open && !showScanner && (environment.isNativePlatform || environment.isWebView)) {
+    if (open && !showScanner && (environment.isNativePlatform || environment.isInAppWebView)) {
       console.log('ScanProductDialog: تفعيل الماسح تلقائياً في بيئة الجوال/WebView');
       // تأخير قصير لضمان استقرار واجهة المستخدم
       const timer = setTimeout(() => {
@@ -83,7 +83,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   }, [open, showScanner, setShowScanner, environment]);
 
   // في بيئة الويب الخالصة (ليس WebView)، نعرض رسالة بدلاً من الماسح
-  if (!environment.isNativePlatform && !environment.isWebView) {
+  if (!environment.isNativePlatform && !environment.isInAppWebView) {
     return (
       <Dialog 
         open={open} 

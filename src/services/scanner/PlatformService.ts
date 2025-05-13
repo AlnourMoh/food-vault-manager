@@ -51,4 +51,14 @@ export class PlatformService {
     const userAgent = navigator.userAgent.toLowerCase();
     return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
   }
+
+  /**
+   * التحقق من توفر إضافة معينة
+   */
+  static isPluginAvailable(pluginName: string): boolean {
+    return Capacitor.isPluginAvailable(pluginName);
+  }
 }
+
+// تصدير نسخة واحدة من الخدمة للاستخدام في جميع أرجاء التطبيق
+export const platformService = PlatformService;

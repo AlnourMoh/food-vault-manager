@@ -48,6 +48,9 @@ export const useScannerEnvironment = () => {
     isInAppWebView,
     isBrowserOnly: isBrowser,
     isSupported,
-    platformName: Capacitor.getPlatform()
+    platformName: Capacitor.getPlatform(),
+    // إضافة الخصائص المفقودة
+    isWebView: isInAppWebView,
+    platform: Capacitor.getPlatform()
   };
 };

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { platformService } from '@/services/scanner/PlatformService';
+import { PlatformService } from '@/services/scanner/PlatformService';
 import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
 
 /**
@@ -14,16 +14,16 @@ const CapacitorTester: React.FC = () => {
   useEffect(() => {
     // محاولة اكتشاف إذا كنا في WebView
     const userAgent = navigator.userAgent;
-    const isWebView = platformService.isWebView();
-    const isNative = platformService.isNativePlatform();
+    const isWebView = PlatformService.isInAppWebView();
+    const isNative = PlatformService.isNativePlatform();
       
     // جمع معلومات التشخيص
     const diagnosticInfo = [
       { key: "Capacitor.isNativePlatform()", value: `${Capacitor.isNativePlatform()}` },
-      { key: "platformService.isNativePlatform()", value: `${isNative}` },
+      { key: "PlatformService.isNativePlatform()", value: `${isNative}` },
       { key: "useScannerEnvironment.isNativePlatform", value: `${environment.isNativePlatform}` },
       { key: "Capacitor.platform", value: Capacitor.getPlatform() },
-      { key: "platformService.getPlatform()", value: platformService.getPlatform() },
+      { key: "PlatformService.getPlatform()", value: PlatformService.getPlatform() },
       { key: "WebView (detected)", value: `${isWebView}` },
       { key: "WebView (hook)", value: `${environment.isWebView}` },
       { key: "Window.Capacitor exists", value: `${typeof window !== 'undefined' && !!(window as any).Capacitor}` },

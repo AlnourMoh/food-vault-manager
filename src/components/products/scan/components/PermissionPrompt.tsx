@@ -38,9 +38,9 @@ export const PermissionPrompt: React.FC<PermissionPromptProps> = ({
   // تخصيص الرسالة بناءً على بيئة التشغيل
   const getEnvSpecificInstructions = () => {
     if (environment.isNativePlatform) {
-      if (environment.platform === 'ios') {
+      if (environment.platformName === 'ios') {
         return 'اذهب إلى إعدادات جهازك > الخصوصية > الكاميرا وقم بتمكين الإذن لتطبيق مخزن الطعام';
-      } else if (environment.platform === 'android') {
+      } else if (environment.platformName === 'android') {
         return 'اذهب إلى إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات > الكاميرا وقم بتمكينها';
       }
     }
