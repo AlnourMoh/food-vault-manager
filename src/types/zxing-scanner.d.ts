@@ -36,3 +36,21 @@ export interface ZXingCameraCapabilities {
   hasFlash: boolean;
   availableDevices: ZXingDeviceInfo[];
 }
+
+/**
+ * قيم تنسيقات الباركود المستخدمة في MLKit
+ * 
+ * QR_CODE = 1
+ * AZTEC = 2
+ * CODABAR = 4
+ * CODE_39 = 16
+ * CODE_93 = 32
+ * CODE_128 = 64
+ * DATA_MATRIX = 128
+ * EAN_8 = 256
+ * EAN_13 = 32
+ * ITF = 128
+ * PDF_417 = 2
+ * UPC_A = 512
+ * UPC_E = 1024
+ */

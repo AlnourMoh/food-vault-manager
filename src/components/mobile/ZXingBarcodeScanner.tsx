@@ -121,8 +121,16 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
         console.log('ZXingBarcodeScanner: تعذر عرض رسالة Toast');
       }
       
+      // تحديث: استخدام قيم تعداد BarcodeFormat بدلاً من السلاسل النصية
       const result = await BarcodeScanner.scan({
-        formats: ["QR_CODE", "EAN_13", "CODE_128", "CODE_39", "UPC_A", "UPC_E"]
+        formats: [
+          1, // QR_CODE
+          32, // EAN_13 
+          64, // CODE_128
+          16, // CODE_39
+          512, // UPC_A
+          1024 // UPC_E
+        ]
       });
       
       if (result.barcodes && result.barcodes.length > 0) {

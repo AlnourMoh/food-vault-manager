@@ -32,7 +32,7 @@ const config: CapacitorConfig = {
     },
     // تحسين إعدادات الماسح الضوئي
     MLKitBarcodeScanner: {
-      formats: ["QR_CODE", "EAN_13", "CODE_128", "CODE_39", "UPC_A", "UPC_E"],
+      formats: [1, 32, 64, 16, 512, 1024], // QR_CODE, EAN_13, CODE_128, CODE_39, UPC_A, UPC_E
       detectionSpeed: "fast",
       cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
       lensFacing: "back" // توجيه الكاميرا الخلفية افتراضياً
