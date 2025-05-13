@@ -18,12 +18,12 @@ export const logProductScan = async (code: string, productId: string): Promise<b
     const restaurantId = localStorage.getItem('restaurantId') || 'unknown';
     
     const { error } = await supabase
-      .from('product_scan_logs')
+      .from('product_scans')
       .insert({
         product_id: productId,
         scanned_by: userId,
-        restaurant_id: restaurantId,
-        scan_code: code,
+        qr_code: code,
+        scan_type: 'product_check'
       });
     
     if (error) {
