@@ -1,52 +1,59 @@
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { platformService } from '@/services/scanner/PlatformService';
+import { PlatformService } from '@/services/scanner/PlatformService';
 
 /**
- * هوك للتعرف على منصة التشغيل
+ * هوك للكشف عن منصة التشغيل وبيئة العمل
  */
 export const usePlatformDetection = () => {
-  const [isNativePlatform, setIsNativePlatform] = useState<boolean>(false);
+  const [isNative, setIsNative] = useState<boolean>(false);
+  const [isInAppWebView, setIsInAppWebView] = useState<boolean>(false);
+  const [isBrowser, setIsBrowser] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   const [platform, setPlatform] = useState<string>('web');
-  const [pluginsAvailable, setPluginsAvailable] = useState<Record<string, boolean>>({});
-  const [isWebView, setIsWebView] = useState<boolean>(false);
 
-  // تهيئة عند التحميل
+  // تهيئة البيانات عند التحميل
   useEffect(() => {
-    // تحديد المنصة
-    const nativePlatform = platformService.isNativePlatform();
-    setIsNativePlatform(nativePlatform);
-    setPlatform(platformService.getPlatform());
-    setIsWebView(platformService.isWebView());
-    
-    // التحقق من الملحقات المتاحة
-    const plugins: Record<string, boolean> = {
-      'MLKitBarcodeScanner': Capacitor.isPluginAvailable('MLKitBarcodeScanner'),
-      'BarcodeScanner': Capacitor.isPluginAvailable('BarcodeScanner'),
-      'Camera': Capacitor.isPluginAvailable('Camera'),
-      'Browser': Capacitor.isPluginAvailable('Browser'),
-      'App': Capacitor.isPluginAvailable('App')
-    };
-    
-    setPluginsAvailable(plugins);
-    
-    // طباعة معلومات عن البيئة للتشخيص
-    console.log('[usePlatformDetection] معلومات البيئة:', {
-      isNativePlatform: nativePlatform,
-      platform: platformService.getPlatform(),
-      isWebView: platformService.isWebView(),
-      plugins
-    });
+    try {
+      const native = PlatformService.isNativePlatform();
+      const inAppWebView = PlatformService.isInAppWebView();
+      const browser = PlatformService.isBrowserEnvironment();
+      const mobile = PlatformService.isMobileDevice();
+      
+      setIsNative(native);
+      setIsInAppWebView(inAppWebView);
+      setIsBrowser(browser);
+      setIsMobile(mobile);
+      setPlatform(Capacitor.getPlatform());
+      
+      // طباعة معلومات البيئة للتشخيص
+      console.log('[usePlatformDetection] معلومات البيئة:', {
+        native,
+        inAppWebView,
+        browser,
+        mobile,
+        platform: Capacitor.getPlatform(),
+        userAgent: navigator.userAgent
+      });
+    } catch (error) {
+      console.error('[usePlatformDetection] خطأ في تحديد البيئة:', error);
+    }
   }, []);
 
+  /**
+   * يحدد ما إذا كان يجب معالجة الماسح بشكل خاص بناءً على البيئة
+   */
+  const requiresSpecialScannerHandling = useCallback(() => {
+    return isNative || isInAppWebView;
+  }, [isNative, isInAppWebView]);
+
   return {
-    isNativePlatform,
+    isNativePlatform: isNative,
+    isInAppWebView,
+    isBrowserEnvironment: isBrowser,
+    isMobileDevice: isMobile,
     platform,
-    pluginsAvailable,
-    isAndroid: platform === 'android',
-    isIOS: platform === 'ios',
-    isWeb: platform === 'web',
-    isWebView
+    requiresSpecialScannerHandling
   };
 };

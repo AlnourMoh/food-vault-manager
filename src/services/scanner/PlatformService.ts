@@ -1,175 +1,54 @@
+
 import { Capacitor } from '@capacitor/core';
 
-// Add interface augmentation for Navigator to include the standalone property
-declare global {
-  interface Navigator {
-    standalone?: boolean;
-  }
-}
-
 /**
- * خدمة للتعامل مع اكتشاف المنصة والبيئة
+ * خدمة لتحديد منصة التشغيل وبيئة العمل
  */
 export class PlatformService {
   /**
-   * التحقق من إذا كنا في بيئة تطبيق أصلية (Android/iOS)
+   * التحقق مما إذا كان التطبيق يعمل على منصة أصلية (أندرويد أو iOS)
    */
-  public static isNativePlatform(): boolean {
-    try {
-      // التحقق المباشر من Capacitor
-      const isNative = Capacitor.isNativePlatform();
-      
-      // إذا كان Capacitor يخبرنا أننا في بيئة أصلية، نثق به
-      if (isNative) {
-        console.log('[PlatformService] تم اكتشاف بيئة أصلية عبر Capacitor');
-        return true;
-      }
-      
-      // اكتشاف إضافي للWebView في حالة عدم اكتشاف Capacitor للبيئة الأصلية
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isInWebView = 
-        userAgent.includes('wv') || 
-        userAgent.includes('foodvaultmanage') || 
-        userAgent.includes('capacitor') ||
-        // البحث عن علامات WebView الإضافية في الأجهزة المختلفة
-        (userAgent.includes('android') && userAgent.includes('version')) ||
-        window.navigator.standalone === true;
-      
-      if (isInWebView) {
-        console.log('[PlatformService] تم اكتشاف WebView من خلال وكيل المستخدم:', userAgent);
-        return true;
-      }
-      
-      // إذا كانت البيئة غير واضحة، نتحقق من وجود ملحقات Capacitor كعلامة إضافية
-      if (Capacitor.isPluginAvailable('App') || 
-          Capacitor.isPluginAvailable('Camera') || 
-          Capacitor.isPluginAvailable('BarcodeScanner')) {
-        console.log('[PlatformService] تم اكتشاف بيئة أصلية من خلال توفر ملحقات Capacitor');
-        return true;
-      }
-      
-      console.log('[PlatformService] تم اكتشاف بيئة متصفح عادية');
-      return false;
-    } catch (e) {
-      console.error('[PlatformService] Error checking native platform:', e);
-      return false;
-    }
+  static isNativePlatform(): boolean {
+    return Capacitor.isNativePlatform();
+  }
+
+  /**
+   * التحقق مما إذا كان التطبيق يعمل داخل WebView في تطبيق جوال
+   */
+  static isInAppWebView(): boolean {
+    const userAgent = navigator.userAgent.toLowerCase();
+    return userAgent.includes('wv') || // Android WebView
+           userAgent.includes('safari') && navigator.userAgent.includes('Mobile'); // iOS WebView often includes Safari
+  }
+
+  /**
+   * التحقق مما إذا كان المستخدم في متصفح عادي وليس في تطبيق جوال
+   */
+  static isBrowserEnvironment(): boolean {
+    return !this.isNativePlatform() && !this.isInAppWebView();
   }
 
   /**
    * الحصول على اسم المنصة الحالية
-   * @returns 'ios', 'android', 'web', أو 'electron'
    */
-  public static getPlatform(): string {
-    try {
-      const platform = Capacitor.getPlatform();
-      
-      // التحقق الإضافي من المنصة باستخدام وكيل المستخدم
-      if (platform === 'web') {
-        const userAgent = navigator.userAgent.toLowerCase();
-        
-        if (userAgent.includes('android') || userAgent.includes('huawei')) {
-          console.log('[PlatformService] تصحيح المنصة: تم اكتشاف Android من خلال وكيل المستخدم');
-          return 'android';
-        }
-        
-        if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
-          console.log('[PlatformService] تصحيح المنصة: تم اكتشاف iOS من خلال وكيل المستخدم');
-          return 'ios';
-        }
-      }
-      
-      return platform;
-    } catch (e) {
-      console.error('[PlatformService] Error getting platform:', e);
-      return 'web';
-    }
+  static getPlatform(): string {
+    return Capacitor.getPlatform();
   }
 
   /**
-   * التحقق من توفر إضافة معينة
-   * @param pluginName اسم الإضافة للتحقق منها
+   * التحقق مما إذا كانت بيئة العمل تتطلب معاملة خاصة للماسح
+   * (مثل إخفاء أو إظهار عناصر معينة)
    */
-  public static isPluginAvailable(pluginName: string): boolean {
-    try {
-      const isAvailable = Capacitor.isPluginAvailable(pluginName);
-      console.log(`[PlatformService] Plugin ${pluginName} availability:`, isAvailable);
-      return isAvailable;
-    } catch (e) {
-      console.error(`[PlatformService] Error checking plugin ${pluginName}:`, e);
-      return false;
-    }
+  static requiresSpecialScannerHandling(): boolean {
+    // على أندرويد أو iOS داخل WebView، نحتاج إلى معالجة خاصة
+    return this.isInAppWebView() || this.isNativePlatform();
   }
 
   /**
-   * التحقق من وجود Capacitor قبل محاولة استخدامه
+   * التحقق مما إذا كان الجهاز محمول أم لا
    */
-  public static hasCapacitor(): boolean {
-    return typeof window !== 'undefined' && !!(window as any).Capacitor;
-  }
-
-  /**
-   * اكتشاف إذا كنا في WebView
-   */
-  public static isWebView(): boolean {
-    try {
-      // اكتشاف WebView
-      const userAgent = navigator.userAgent.toLowerCase();
-      
-      // علامات WebView المختلفة
-      const webViewMarkers = [
-        'wv', 'foodvaultmanage', 'capacitor',
-        // Android WebView
-        /android.*version\/[0-9\.]+/,
-        // iOS WebView
-        /iphone|ipad|ipod.*safari/
-      ];
-      
-      // التحقق من كل علامة
-      for (const marker of webViewMarkers) {
-        if (typeof marker === 'string' && userAgent.includes(marker)) {
-          console.log(`[PlatformService] تم اكتشاف WebView باستخدام العلامة: ${marker}`);
-          return true;
-        } else if (marker instanceof RegExp && marker.test(userAgent)) {
-          console.log(`[PlatformService] تم اكتشاف WebView باستخدام النمط: ${marker}`);
-          return true;
-        }
-      }
-      
-      // التحقق من خاصية standalone لـ iOS
-      if (window.navigator.standalone === true) {
-        console.log('[PlatformService] تم اكتشاف تطبيق شاشة رئيسية iOS');
-        return true;
-      }
-      
-      console.log('[PlatformService] لم يتم اكتشاف WebView');
-      return false;
-    } catch (e) {
-      console.error('[PlatformService] خطأ في اكتشاف WebView:', e);
-      return false;
-    }
-  }
-
-  /**
-   * التحقق من إذا كنا في بيئة تطوير
-   */
-  public static isDevelopmentEnvironment(): boolean {
-    return process.env.NODE_ENV === 'development';
-  }
-
-  /**
-   * التحقق من إذا كنا في بيئة اختبار
-   */
-  public static isTestEnvironment(): boolean {
-    return process.env.NODE_ENV === 'test';
-  }
-
-  /**
-   * التحقق من إذا كنا في بيئة إنتاج
-   */
-  public static isProductionEnvironment(): boolean {
-    return process.env.NODE_ENV === 'production';
+  static isMobileDevice(): boolean {
+    const userAgent = navigator.userAgent.toLowerCase();
+    return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
   }
 }
-
-export const platformService = PlatformService;

@@ -1,287 +1,197 @@
 
 import React, { useEffect, useState } from 'react';
 import { useZXingBarcodeScanner } from '@/hooks/scanner/useZXingBarcodeScanner';
-import { BrowserView } from './scanner/components/BrowserView';
-import { PermissionView } from './scanner/components/PermissionView';
-import { LoadingView } from './scanner/components/LoadingView';
-import { ScannerView } from './scanner/components/ScannerView';
-import { Capacitor } from '@capacitor/core';
-import { useToast } from '@/hooks/use-toast';
-import CapacitorTester from './CapacitorTester';
-import { Button } from '../ui/button';
+import { scannerUIService } from '@/services/scanner/ScannerUIService';
 import { ScannerErrorBanner } from './scanner/components/ScannerErrorBanner';
-import { platformService } from '@/services/scanner/PlatformService';
+import { Spinner } from '@/components/ui/spinner';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
   onClose: () => void;
   autoStart?: boolean;
-  onManualEntry?: () => void;
 }
 
-const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry }: ZXingBarcodeScannerProps) => {
-  // التحقق من بيئة التشغيل باستخدام خدمة المنصة المحسنة
-  const [isNativePlatform, setIsNativePlatform] = useState(() => platformService.isNativePlatform() || Capacitor.isNativePlatform());
-  const [isWebView, setIsWebView] = useState(() => platformService.isWebView());
-  
-  // أي علامة تشير إلى أننا في بيئة تطبيق
-  const [isEffectivelyNative, setIsEffectivelyNative] = useState(() => {
-    return platformService.isNativePlatform() || 
-           Capacitor.isNativePlatform() || 
-           platformService.isWebView() ||
-           Capacitor.isPluginAvailable('App') ||
-           Capacitor.isPluginAvailable('Camera');
-  });
-  
-  const [showDebug, setShowDebug] = useState(false);
-  const [mountTime] = useState(Date.now());
-  const { toast } = useToast();
-  
-  // Simple mock scanner for testing UI
-  const [mockActive, setMockActive] = useState(false);
-  const [mockValue, setMockValue] = useState("");
-  
-  useEffect(() => {
-    // عند التحميل، نقوم بفحص البيئة مرة أخرى ونحدث الحالة
-    const checkEnvironment = async () => {
-      const isNative = platformService.isNativePlatform() || Capacitor.isNativePlatform();
-      const isWebViewEnv = platformService.isWebView();
-      
-      // فحص إذا كانت هناك ملحقات متاحة تشير إلى بيئة أصلية
-      const hasNativePlugins = Capacitor.isPluginAvailable('App') || 
-                              Capacitor.isPluginAvailable('Camera') || 
-                              Capacitor.isPluginAvailable('BarcodeScanner');
-      
-      const effectively = isNative || isWebViewEnv || hasNativePlugins;
-      
-      setIsNativePlatform(isNative);
-      setIsWebView(isWebViewEnv);
-      setIsEffectivelyNative(effectively);
-      
-      console.log('ZXingBarcodeScanner: تم فحص البيئة مرة أخرى:', {
-        isNativePlatform: isNative,
-        isWebView: isWebViewEnv,
-        hasNativePlugins,
-        isEffectivelyNative: effectively,
-        platform: Capacitor.getPlatform(),
-        userAgent: navigator.userAgent
-      });
-    };
-    
-    checkEnvironment();
-  }, []);
-  
-  // دالة مخصصة للتعامل مع نتائج المسح لمنع المسح المتكرر
-  const handleScan = (code: string) => {
-    console.log(`ZXingBarcodeScanner: تم المسح بنجاح [${code}]`);
-    toast({
-      title: "تم المسح بنجاح",
-      description: `تم مسح الباركود: ${code}`,
-    });
-    // استخدام تأخير بسيط لمنع مشاكل التأثيرات الجانبية
-    setTimeout(() => {
-      onScan(code);
-    }, 100);
-  };
-  
-  // دالة مخصصة للإغلاق مع تأكيد وتأخير
-  const handleClose = () => {
-    console.log('ZXingBarcodeScanner: إغلاق الماسح');
-    
-    // التحقق من الوقت المنقضي منذ تحميل المكون لمنع الإغلاق المبكر
-    const timeElapsed = Date.now() - mountTime;
-    if (timeElapsed < 1000) {
-      console.log('ZXingBarcodeScanner: تجاهل محاولة الإغلاق المبكرة');
-      return;
-    }
-    
-    // تأخير الإغلاق قليلاً للسماح بإتمام عمليات أخرى إذا كانت جارية
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  };
-  
-  useEffect(() => {
-    console.log('ZXingBarcodeScanner: تم تحميل المكون');
-    
-    // عرض إشعار للمستخدم
-    toast({
-      title: "جاري تهيئة الماسح",
-      description: "يرجى الانتظار..."
-    });
-    
-    // تنظيف عند إزالة المكون
-    return () => {
-      console.log('ZXingBarcodeScanner: إلغاء تحميل المكون والتنظيف');
-    };
-  }, [toast]);
-  
+const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ onScan, onClose, autoStart = false }) => {
   const {
+    isNativePlatform,
     hasPermission,
     scanActive,
     cameraActive,
-    isLoading,
     startScan,
     stopScan,
-    checkAndRequestPermissions
-  } = useZXingBarcodeScanner(autoStart, handleScan, handleClose);
+    checkAndRequestPermissions,
+    isLoading
+  } = useZXingBarcodeScanner(autoStart, onScan, onClose);
+
+  const [isBrowserEnvironment, setIsBrowserEnvironment] = useState(false);
   
-  // تسجيل حالة المسح للتشخيص
+  // تهيئة عناصر الماسح
   useEffect(() => {
-    console.log('ZXingBarcodeScanner: حالة المسح -', { 
-      hasPermission, 
-      scanActive, 
-      cameraActive, 
-      isLoading,
-      isNativePlatform,
-      isWebView,
-      isEffectivelyNative
-    });
-  }, [hasPermission, scanActive, cameraActive, isLoading, isNativePlatform, isWebView, isEffectivelyNative]);
+    // تحقق مما إذا كنا في بيئة متصفح وليس تطبيق جوال
+    const checkEnvironment = () => {
+      const inAppBrowser = navigator.userAgent.includes('wv') || navigator.userAgent.includes('Mobile');
+      const isNative = isNativePlatform;
+      
+      // حدد إذا كان المستخدم في متصفح عادي وليس في تطبيق
+      const isBrowser = !isNative && !inAppBrowser;
+      console.log('ZXingBarcodeScanner: البيئة الحالية:', {
+        isNative,
+        inAppBrowser,
+        isBrowser,
+        userAgent: navigator.userAgent
+      });
+      
+      setIsBrowserEnvironment(false); // نفترض أنه تطبيق جوال (غير متصفح)
+    };
+    
+    checkEnvironment();
+    
+    // تنظيف عند إلغاء التثبيت
+    return () => {
+      stopScan();
+    };
+  }, [stopScan, isNativePlatform]);
   
-  // معالج المسح المزيف للاختبار
-  const handleMockScan = () => {
-    if (mockValue) {
-      handleScan(mockValue);
-    } else {
-      // قيمة افتراضية إذا لم يتم إدخال قيمة
-      handleScan("MOCK-12345");
+  // عندما يتم التحميل وهناك أذونات، نبدأ المسح
+  useEffect(() => {
+    if (autoStart && hasPermission === true) {
+      startScan();
+    }
+  }, [autoStart, hasPermission, startScan]);
+
+  // بدء المسح يدوياً
+  const handleStartScan = async () => {
+    try {
+      // إعداد واجهة المستخدم أولاً
+      scannerUIService.setupUIForScanning();
+      
+      // بدء المسح
+      await startScan();
+    } catch (error) {
+      console.error('ZXingBarcodeScanner: خطأ في بدء المسح:', error);
     }
   };
   
-  // عرض رسالة خطأ إذا كنا في بيئة متصفح ولسنا في بيئة تطبيق
-  // يجب أن نكون متأكدين تمامًا أننا لسنا في أي بيئة أصلية
-  if (!isNativePlatform && !isWebView && !isEffectivelyNative) {
+  // إيقاف المسح يدوياً
+  const handleStopScan = async () => {
+    try {
+      await stopScan();
+      scannerUIService.restoreUIAfterScanning();
+      if (onClose) onClose();
+    } catch (error) {
+      console.error('ZXingBarcodeScanner: خطأ في إيقاف المسح:', error);
+    }
+  };
+
+  // طلب الأذونات المطلوبة
+  const handleRequestPermissions = async () => {
+    await checkAndRequestPermissions();
+  };
+  
+  if (isBrowserEnvironment) {
+    // إذا كنا في متصفح عادي، لا يمكن استخدام الماسح
     return (
-      <div className="scanner-view-container p-4">
+      <div className="p-4 bg-white border rounded-lg shadow">
         <ScannerErrorBanner 
           message="المسح غير متاح في المتصفح" 
           subMessage="يرجى استخدام تطبيق الجوال للقيام بعمليات المسح"
         />
-        <BrowserView onClose={handleClose} />
-      </div>
-    );
-  }
-  
-  // For testing UI in any environment
-  if (mockActive) {
-    return (
-      <div className="scanner-view-container p-6">
-        <h3 className="text-xl text-white mb-4 text-center">وضع المحاكاة - ادخل رمز للمسح</h3>
-        <div className="flex flex-col gap-4">
-          <input 
-            type="text" 
-            value={mockValue} 
-            onChange={(e) => setMockValue(e.target.value)}
-            placeholder="أدخل الباركود هنا" 
-            className="p-2 border rounded"
-          />
-          <Button onClick={handleMockScan}>مسح</Button>
-          <Button variant="outline" onClick={() => setMockActive(false)}>إلغاء</Button>
+        <div className="mt-4 flex justify-center">
+          <button
+            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
+            onClick={onClose}
+          >
+            إغلاق
+          </button>
         </div>
       </div>
     );
   }
-  
-  // إظهار المحاكاة فقط بعد فشل الطرق الأخرى
-  const activateMockScanner = () => {
-    toast({
-      title: "تفعيل وضع المحاكاة",
-      description: "تم تفعيل وضع محاكاة الماسح"
-    });
-    setMockActive(true);
-  };
-  
-  // أثناء التحقق من الإذن أو عملية المسح النشطة
-  if (isLoading || hasPermission === null) {
+
+  // إذا كان هناك تحميل، نظهر مؤشر التحميل
+  if (isLoading) {
     return (
-      <div className="scanner-view-container">
-        <LoadingView hasPermission={hasPermission} scanActive={scanActive} onClose={handleClose} />
-        <Button 
-          onClick={activateMockScanner}
-          variant="default" 
-          className="mt-4 mx-auto block"
-        >
-          استخدام المسح الافتراضي
-        </Button>
-        
-        {showDebug && (
-          <div className="mt-4">
-            <CapacitorTester />
-          </div>
-        )}
+      <div className="flex flex-col items-center justify-center p-8">
+        <Spinner size="lg" className="mb-4" />
+        <p>جاري تهيئة الماسح...</p>
       </div>
     );
   }
-  
-  // إذا لم يكن لدينا إذن الكاميرا
+
+  // إذا لم تكن هناك أذونات، نظهر زر طلب الأذونات
   if (hasPermission === false) {
     return (
-      <div className="scanner-view-container">
-        <PermissionView 
-          handleRequestPermission={async () => {
-            await checkAndRequestPermissions();
-          }} 
-          onClose={handleClose}
-          onManualEntry={onManualEntry}
-        />
-        <Button 
-          onClick={activateMockScanner}
-          variant="default" 
-          className="mt-4 mx-auto block"
-        >
-          استخدام المسح الافتراضي
-        </Button>
-        
-        {showDebug && (
-          <div className="mt-4">
-            <CapacitorTester />
-          </div>
-        )}
-        
-        <button 
-          className="mt-4 text-sm text-gray-500 underline"
-          onClick={() => setShowDebug(prev => !prev)}
-        >
-          {showDebug ? "إخفاء التشخيص" : "عرض التشخيص"}
-        </button>
+      <div className="p-4 bg-white border rounded-lg shadow">
+        <h3 className="text-lg font-medium mb-2">إذن الكاميرا مطلوب</h3>
+        <p className="mb-4">يرجى منح إذن الكاميرا لاستخدام الماسح الضوئي.</p>
+        <div className="flex justify-center gap-2">
+          <button
+            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
+            onClick={handleRequestPermissions}
+          >
+            طلب الإذن
+          </button>
+          <button
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+            onClick={onClose}
+          >
+            إلغاء
+          </button>
+        </div>
       </div>
     );
   }
-  
-  // واجهة المستخدم الرئيسية للماسح
+
   return (
-    <div className="scanner-view-container">
-      <ScannerView 
-        isActive={scanActive}
-        cameraActive={cameraActive || false}
-        hasError={false}
-        onStartScan={startScan}
-        onStopScan={stopScan}
-        onRetry={() => startScan()}
-        onClose={handleClose}
-      />
-      
-      <Button 
-        onClick={activateMockScanner}
-        variant="default" 
-        className="mt-4 mx-auto block"
-      >
-        استخدام المسح الافتراضي
-      </Button>
-      
-      {showDebug && (
-        <div className="mt-4 p-4 bg-black text-white rounded">
-          <CapacitorTester />
+    <div className={`scanner-container ${scanActive ? 'full-screen-scanner' : 'p-4'}`}>
+      {!scanActive ? (
+        <div className="p-4 bg-white border rounded-lg shadow">
+          <h3 className="text-lg font-medium mb-2">الماسح الضوئي</h3>
+          <p className="mb-4">اضغط على الزر أدناه لبدء المسح.</p>
+          <div className="flex justify-center gap-2">
+            <button
+              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
+              onClick={handleStartScan}
+            >
+              بدء المسح
+            </button>
+            <button
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+              onClick={onClose}
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col">
+          <div className="p-4 flex justify-end">
+            <button
+              className="p-2 bg-white/20 text-white rounded-full hover:bg-white/30"
+              onClick={handleStopScan}
+            >
+              <span className="sr-only">إغلاق</span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative w-full max-w-sm aspect-square">
+              <div className="absolute inset-0 border-2 border-white/50 rounded-lg"></div>
+              <div className="animate-scanner-line w-full h-0.5 bg-primary absolute left-0 right-0"></div>
+              {!cameraActive && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                  <Spinner size="lg" className="text-primary" />
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="p-4 text-center text-white">
+            <p>وجه الكاميرا نحو الباركود للمسح</p>
+          </div>
         </div>
       )}
-      
-      <button 
-        className="mt-4 text-sm text-gray-300 underline"
-        onClick={() => setShowDebug(prev => !prev)}
-      >
-        {showDebug ? "إخفاء التشخيص" : "عرض التشخيص"}
-      </button>
     </div>
   );
 };

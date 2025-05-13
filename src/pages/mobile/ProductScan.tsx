@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { ScannerErrorBanner, ScannerErrorCard } from '@/components/mobile/scanner/components/ScannerErrorBanner';
+import { PlatformService } from '@/services/scanner/PlatformService';
 
 const ProductScan = () => {
   const navigate = useNavigate();
@@ -28,15 +29,18 @@ const ProductScan = () => {
     viewProductDetails
   } = useProductScanLogic();
   
-  // التحقق من بيئة التشغيل - تعامل مع البيئة دائماً على أنها تطبيق جوال
-  const isNativePlatform = Capacitor.isNativePlatform();
-  const isWebView = navigator.userAgent.toLowerCase().includes('wv');
-  const isMobileApp = isNativePlatform || isWebView;
+  // التحقق من بيئة التشغيل
+  const isNativePlatform = PlatformService.isNativePlatform();
+  const isInAppWebView = PlatformService.isInAppWebView();
+  const isMobileApp = isNativePlatform || isInAppWebView;
   
   // نطبع معلومات البيئة للتشخيص
   useEffect(() => {
-    console.log('ProductScan: البيئة الحالية:', isNativePlatform ? 'تطبيق جوال' : 'متصفح');
+    console.log('ProductScan: البيئة الحالية:', isMobileApp ? 'تطبيق جوال' : 'متصفح');
     console.log('ProductScan: المنصة:', Capacitor.getPlatform());
+    console.log('ProductScan: User Agent:', navigator.userAgent);
+    console.log('ProductScan: isNativePlatform:', isNativePlatform);
+    console.log('ProductScan: isInAppWebView:', isInAppWebView);
     
     // عرض معلومات بيئة التشغيل في الواجهة للمستخدمين
     try {
@@ -47,7 +51,7 @@ const ProductScan = () => {
     } catch (error) {
       console.error('ProductScan: خطأ في عرض المعلومات:', error);
     }
-  }, []);
+  }, [isMobileApp, isNativePlatform, isInAppWebView]);
   
   // فتح الماسح تلقائياً عند تحميل الصفحة
   useEffect(() => {
@@ -76,8 +80,8 @@ const ProductScan = () => {
     );
   }
 
-  // إذا كان هناك خطأ في المسح أو لسنا في بيئة التطبيق
-  if (!isMobileApp) {
+  // إذا كان هناك خطأ في المسح ولم نكن في بيئة التطبيق
+  if (!isMobileApp && PlatformService.isBrowserEnvironment()) {
     return (
       <div className="container py-6 space-y-6">
         <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
