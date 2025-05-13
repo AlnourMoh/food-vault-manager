@@ -46,6 +46,52 @@ export class ScannerPermissionService {
       return false;
     }
   }
+
+  /**
+   * التحقق من إذن الكاميرا دون طلب الإذن
+   */
+  public async checkPermission(): Promise<boolean> {
+    try {
+      if (!await this.isSupported()) {
+        console.warn('[ScannerPermissionService] الجهاز لا يدعم المسح الضوئي');
+        return false;
+      }
+      
+      // في بيئة التطبيق الأصلي
+      if (Capacitor.isNativePlatform()) {
+        // محاولة استخدام BarcodeScanner أولاً
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          console.log('[ScannerPermissionService] التحقق من الإذن باستخدام MLKitBarcodeScanner');
+          const status = await BarcodeScanner.checkPermissions();
+          return status.camera === 'granted';
+        }
+        
+        // استخدام ملحق الكاميرا العادي
+        if (Capacitor.isPluginAvailable('Camera')) {
+          console.log('[ScannerPermissionService] التحقق من الإذن باستخدام Camera');
+          const status = await Camera.checkPermissions();
+          return status.camera === 'granted';
+        }
+      }
+      
+      // في بيئة المتصفح، نتحقق من إمكانية الوصول إلى الكاميرا
+      // ولكن لا نحاول الوصول إليها فعليًا لتجنب ظهور النافذة المنبثقة للإذن
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        // إذا كانت هناك أجهزة فيديو، فهناك احتمال أن يكون لدينا إذن أو لم يتم طلبه بعد
+        // لا يمكننا معرفة حالة الإذن بدقة بدون محاولة الوصول للكاميرا
+        return videoDevices.length > 0;
+      } catch (error) {
+        console.error('[ScannerPermissionService] خطأ في التحقق من أجهزة الفيديو:', error);
+        return false;
+      }
+    } catch (error) {
+      console.error('[ScannerPermissionService] خطأ في التحقق من إذن الكاميرا:', error);
+      return false;
+    }
+  }
   
   /**
    * طلب إذن الكاميرا
@@ -118,12 +164,27 @@ export class ScannerPermissionService {
       if (Capacitor.isNativePlatform()) {
         // محاولة استخدام واجهة برمجة التطبيق لفتح الإعدادات
         if (Capacitor.isPluginAvailable('App')) {
-          await App.openUrl({
-            url: Capacitor.getPlatform() === 'ios' 
-              ? 'app-settings:' 
-              : 'package:' + (await App.getInfo()).id
-          });
-          return true;
+          // استخدام طريقة آمنة للوصول للإعدادات
+          const appInfo = await App.getInfo();
+          
+          // تحديد عنوان URL حسب المنصة
+          let settingsUrl = '';
+          if (Capacitor.getPlatform() === 'ios') {
+            settingsUrl = 'app-settings:';
+          } else if (Capacitor.getPlatform() === 'android') {
+            settingsUrl = 'package:' + appInfo.id;
+          } else {
+            return false;
+          }
+          
+          // استخدام الطريقة المناسبة للفتح
+          if (typeof App.openUrl === 'function') {
+            await App.openUrl({ url: settingsUrl });
+            return true;
+          } else {
+            console.warn('[ScannerPermissionService] وظيفة App.openUrl غير متاحة');
+            return false;
+          }
         }
       }
       return false;

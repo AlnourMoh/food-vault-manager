@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
@@ -33,7 +32,7 @@ export const useZXingBarcodeScannerHook = ({
     onError: (error) => setScannerError(error)
   });
   
-  // استخدام خطاف المسح الضوئي للباركود - Remove isScanningActive from props as it's not in the interface
+  // استخدام خطاف المسح الضوئي للباركود
   const { startScan, stopScan } = useBarcodeScanning({
     onScan,
     onScanError: (error) => setScannerError(error ? "حدث خطأ في الماسح الضوئي" : null),
@@ -174,7 +173,16 @@ export const useZXingBarcodeScannerHook = ({
     hasPermission,
     cameraActive,
     scannerError,
-    requestPermission,
+    requestPermission: async (): Promise<boolean> => {
+      try {
+        const permission = await scannerPermissionService.requestPermission();
+        setHasPermission(permission);
+        return permission;
+      } catch (error) {
+        console.error('useZXingBarcodeScanner: خطأ في طلب الإذن:', error);
+        return false;
+      }
+    },
     handleRetry
   };
 };

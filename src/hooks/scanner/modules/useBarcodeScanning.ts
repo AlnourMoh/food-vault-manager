@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { BarcodeScanner, BarcodeFormat, LensFacing } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
@@ -393,7 +392,7 @@ export const useBarcodeScanning = ({
         if (isScanningActive) {
           await BarcodeScanner.removeAllListeners();
           await BarcodeScanner.stopScan();
-          console.log('[useBarcodeScanning] تم إيقاف BarcodeScanner بنجاح');
+          console.log('[useBarcodeScanning] تم إيق��ف BarcodeScanner بنجاح');
         }
         
         setCameraActive(false);
