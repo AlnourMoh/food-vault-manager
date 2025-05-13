@@ -9,7 +9,16 @@ export class PlatformService {
    * التحقق من إذا كنا في بيئة تطبيق أصلية (Android/iOS)
    */
   public static isNativePlatform(): boolean {
-    return Capacitor.isNativePlatform();
+    // التأكد من وجود كائن Capacitor وأننا في بيئة أصلية
+    try {
+      const isNative = Capacitor.isNativePlatform();
+      console.log('[PlatformService] isNativePlatform:', isNative);
+      console.log('[PlatformService] Platform:', this.getPlatform());
+      return isNative;
+    } catch (e) {
+      console.error('[PlatformService] Error checking native platform:', e);
+      return false;
+    }
   }
 
   /**
@@ -17,7 +26,12 @@ export class PlatformService {
    * @returns 'ios', 'android', 'web', أو 'electron'
    */
   public static getPlatform(): string {
-    return Capacitor.getPlatform();
+    try {
+      return Capacitor.getPlatform();
+    } catch (e) {
+      console.error('[PlatformService] Error getting platform:', e);
+      return 'web';
+    }
   }
 
   /**
@@ -25,7 +39,21 @@ export class PlatformService {
    * @param pluginName اسم الإضافة للتحقق منها
    */
   public static isPluginAvailable(pluginName: string): boolean {
-    return Capacitor.isPluginAvailable(pluginName);
+    try {
+      const isAvailable = Capacitor.isPluginAvailable(pluginName);
+      console.log(`[PlatformService] Plugin ${pluginName} availability:`, isAvailable);
+      return isAvailable;
+    } catch (e) {
+      console.error(`[PlatformService] Error checking plugin ${pluginName}:`, e);
+      return false;
+    }
+  }
+
+  /**
+   * التحقق من وجود Capacitor قبل محاولة استخدامه
+   */
+  public static hasCapacitor(): boolean {
+    return typeof window !== 'undefined' && !!(window as any).Capacitor;
   }
 
   /**

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Smartphone, X, Info } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { platformService } from '@/services/scanner/PlatformService';
 
 interface BrowserViewProps {
   onClose: () => void;
@@ -10,31 +11,56 @@ interface BrowserViewProps {
 
 export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
   const [isNative, setIsNative] = useState(false);
+  const [platform, setPlatform] = useState('');
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
   
   useEffect(() => {
     // تحقق مما إذا كنا في بيئة تطبيق أصلية
-    const isNativePlatform = Capacitor.isNativePlatform();
+    const isNativePlatform = platformService.isNativePlatform();
+    const currentPlatform = platformService.getPlatform();
+    
     console.log('BrowserView: هل نحن في بيئة أصلية؟', isNativePlatform);
-    console.log('BrowserView: المنصة الحالية:', Capacitor.getPlatform());
+    console.log('BrowserView: المنصة الحالية:', currentPlatform);
+    
+    // جمع معلومات التشخيص
+    const info = [
+      `منصة التشغيل: ${currentPlatform}`,
+      `بيئة أصلية: ${isNativePlatform ? 'نعم' : 'لا'}`,
+      `وجود Capacitor: ${platformService.hasCapacitor() ? 'نعم' : 'لا'}`,
+      `ملحق MLKitBarcodeScanner: ${platformService.isPluginAvailable('MLKitBarcodeScanner') ? 'متاح' : 'غير متاح'}`,
+      `ملحق Camera: ${platformService.isPluginAvailable('Camera') ? 'متاح' : 'غير متاح'}`,
+      `userAgent: ${navigator.userAgent}`
+    ];
+    
     setIsNative(isNativePlatform);
+    setPlatform(currentPlatform);
+    setDebugInfo(info);
   }, []);
   
   // إذا كنا في بيئة أصلية، نغلق هذه الواجهة تلقائياً
+  useEffect(() => {
+    if (isNative) {
+      console.log('BrowserView: تم اكتشاف بيئة أصلية، إغلاق شاشة BrowserView...');
+      const timer = setTimeout(() => {
+        onClose();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isNative, onClose]);
+
   if (isNative) {
-    setTimeout(() => {
-      onClose();
-    }, 100);
     return null;
   }
 
   return (
-    <div className="browser-view-container">
-      <div className="browser-view-icon-container">
-        <Smartphone className="h-10 w-10 text-red-500" />
+    <div className="browser-view-container p-4">
+      <div className="browser-view-icon-container mb-4 flex justify-center">
+        <Smartphone className="h-12 w-12 text-red-500" />
       </div>
       
-      <h2 className="text-xl font-bold mb-2">الماسح الضوئي غير متاح</h2>
-      <p className="text-gray-600 mb-4">
+      <h2 className="text-xl font-bold mb-2 text-center">الماسح الضوئي غير متاح</h2>
+      <p className="text-gray-600 mb-4 text-center">
         ميزة المسح الضوئي متاحة فقط في تطبيق الجوال.
       </p>
       
@@ -50,8 +76,25 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
         </div>
       </div>
       
-      <div className="mt-6">
+      {showDebug && (
+        <div className="bg-gray-100 p-3 rounded-lg mb-4 text-xs text-gray-800 dir-ltr">
+          <h4 className="font-bold mb-1">معلومات تشخيصية:</h4>
+          <pre className="whitespace-pre-wrap">
+            {debugInfo.join('\n')}
+          </pre>
+        </div>
+      )}
+      
+      <div className="mt-4 flex flex-col gap-2">
         <Button onClick={onClose} className="w-full">إغلاق</Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setShowDebug(!showDebug)} 
+          className="text-xs"
+        >
+          {showDebug ? 'إخفاء معلومات التشخيص' : 'عرض معلومات التشخيص'}
+        </Button>
       </div>
     </div>
   );
