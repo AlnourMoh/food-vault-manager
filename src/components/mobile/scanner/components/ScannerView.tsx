@@ -6,9 +6,14 @@ import { X } from 'lucide-react';
 interface ScannerViewProps {
   onStartScan: () => Promise<boolean>;
   onClose: () => void;
+  onManualEntry?: () => void; // Added optional onManualEntry prop
 }
 
-export const ScannerView: React.FC<ScannerViewProps> = ({ onStartScan, onClose }) => {
+export const ScannerView: React.FC<ScannerViewProps> = ({ 
+  onStartScan, 
+  onClose, 
+  onManualEntry 
+}) => {
   const handleScan = async () => {
     try {
       await onStartScan();
@@ -26,6 +31,17 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onStartScan, onClose }
         >
           بدء المسح الضوئي
         </Button>
+        
+        {/* Add manual entry button if the prop is provided */}
+        {onManualEntry && (
+          <Button
+            onClick={onManualEntry}
+            variant="outline"
+            className="w-full text-white border-white/30 hover:bg-white/10"
+          >
+            إدخال الرمز يدوياً
+          </Button>
+        )}
       </div>
       
       <Button

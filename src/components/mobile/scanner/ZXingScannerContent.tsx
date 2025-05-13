@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ScannerView } from './ScannerView';
+import { ScannerView } from './components/ScannerView';
 import { NoPermissionView } from './NoPermissionView';
 import { ScannerLoading } from './ScannerLoading';
 
@@ -48,12 +48,7 @@ export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
 
   return (
     <ScannerView
-      isActive={isScanningActive}
-      cameraActive={cameraActive}
-      hasError={hasScannerError}
       onStartScan={startScan}
-      onStopScan={stopScan}
-      onRetry={handleRetry}
       onClose={onClose}
       onManualEntry={onManualEntry}
     />
