@@ -4,12 +4,12 @@
  * يتم توريثها من قبل خدمات الماسح المحددة
  */
 
-import { ZXingScannerOptions, ZXingScanResult } from '@/types/zxing-scanner';
+import { ZXingScanOptions, ZXingScanResult } from '@/types/zxing-scanner';
 
 export interface ScannerService {
   isSupported(): Promise<boolean>;
   requestPermission(): Promise<{ granted: boolean; error?: string }>;
-  startScan(options: ZXingScannerOptions, onScan: (result: ZXingScanResult) => void): Promise<boolean>;
+  startScan(options: ZXingScanOptions, onScan: (result: ZXingScanResult) => void): Promise<boolean>;
   stopScan(): Promise<void>;
   scanFromImage(imageSource: string | Blob | File): Promise<ZXingScanResult | null>;
   dispose(): void;
@@ -35,7 +35,7 @@ export abstract class BaseScannerService implements ScannerService {
   /**
    * بدء عملية المسح
    */
-  abstract startScan(options: ZXingScannerOptions, onScan: (result: ZXingScanResult) => void): Promise<boolean>;
+  abstract startScan(options: ZXingScanOptions, onScan: (result: ZXingScanResult) => void): Promise<boolean>;
   
   /**
    * إيقاف عملية المسح

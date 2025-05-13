@@ -78,7 +78,7 @@ export const useZXingBarcodeScanner = (
   };
   
   // Check permission and request if not granted
-  const checkAndRequestPermissions = useCallback(async (): Promise<boolean> => {
+  const checkAndRequestPermissions = async (): Promise<boolean> => {
     try {
       const hasPermissionAlready = await checkPermission();
       
@@ -91,10 +91,10 @@ export const useZXingBarcodeScanner = (
       console.error('خطأ في فحص وطلب الأذونات:', error);
       return false;
     }
-  }, []);
+  };
   
   // Start scanning
-  const startScan = useCallback(async (): Promise<boolean> => {
+  const startScan = async (): Promise<boolean> => {
     try {
       // Check we have permission
       const permissionGranted = await checkAndRequestPermissions();
@@ -150,10 +150,10 @@ export const useZXingBarcodeScanner = (
       document.body.classList.remove('scanner-active');
       return false;
     }
-  }, [onScan, toast, checkAndRequestPermissions]);
+  };
   
   // Stop scanning
-  const stopScan = useCallback(async (): Promise<boolean> => {
+  const stopScan = async (): Promise<boolean> => {
     try {
       setScanActive(false);
       document.body.classList.remove('scanner-active');
@@ -172,7 +172,7 @@ export const useZXingBarcodeScanner = (
       console.error('خطأ في إيقاف المسح:', error);
       return false;
     }
-  }, []);
+  };
 
   return {
     isNativePlatform,

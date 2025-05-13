@@ -23,13 +23,18 @@ export interface ZXingScanOptions {
   formats?: ZXingBarcodeFormat[];
   cameraFacing?: 'front' | 'back';
   timeout?: number;
+  tryHarder?: boolean;
+  delayBetweenScanAttempts?: number;
+  constraints?: MediaTrackConstraints;
 }
 
 // نتيجة المسح
 export interface ZXingScanResult {
   text: string;
   format: ZXingBarcodeFormat;
-  cancelled: boolean;
+  resultPoints?: Array<{ x: number; y: number }>;
+  timestamp?: number;
+  cancelled?: boolean;
 }
 
 // حالة إذن الكاميرا

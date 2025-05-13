@@ -4,7 +4,7 @@
  */
 
 import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from '@zxing/library';
-import { ZXingScannerOptions, ZXingScanResult } from '@/types/zxing-scanner';
+import { ZXingScanOptions, ZXingScanResult, ZXingBarcodeFormat } from '@/types/zxing-scanner';
 import { BaseScannerService } from '../base/BaseScannerService';
 import { ScannerPermissionService } from '../permission/ScannerPermissionService';
 import { ScannerUIService } from '../ui/ScannerUIService';
@@ -71,7 +71,7 @@ export class ZXingImplementation extends BaseScannerService {
   /**
    * بدء عملية المسح
    */
-  public async startScan(options: ZXingScannerOptions = {}, onScan: (result: ZXingScanResult) => void): Promise<boolean> {
+  public async startScan(options: ZXingScanOptions = {}, onScan: (result: ZXingScanResult) => void): Promise<boolean> {
     try {
       if (this.isScanning) {
         console.log('[ZXingImplementation] الماسح نشط بالفعل');
@@ -123,7 +123,7 @@ export class ZXingImplementation extends BaseScannerService {
               // استدعاء رد الاتصال بالنتيجة
               onScan({
                 text: result.getText(),
-                format: result.getBarcodeFormat(),
+                format: result.getBarcodeFormat() as unknown as ZXingBarcodeFormat,
                 resultPoints: result.getResultPoints().map(point => ({ 
                   x: point.getX(), 
                   y: point.getY() 
@@ -231,7 +231,7 @@ export class ZXingImplementation extends BaseScannerService {
       if (result) {
         return {
           text: result.getText(),
-          format: result.getBarcodeFormat(),
+          format: result.getBarcodeFormat() as unknown as ZXingBarcodeFormat,
           resultPoints: result.getResultPoints().map(point => ({ 
             x: point.getX(), 
             y: point.getY() 

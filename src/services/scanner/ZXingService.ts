@@ -3,7 +3,7 @@
  * خدمة الماسح الضوئي الرئيسية التي تستخدم نمط Singleton
  */
 
-import { ZXingScannerOptions, ZXingScanResult } from '@/types/zxing-scanner';
+import { ZXingScanOptions, ZXingScanResult } from '@/types/zxing-scanner';
 import { ZXingImplementation } from './zxing/ZXingImplementation';
 import { ScannerService } from './base/BaseScannerService';
 
@@ -46,7 +46,7 @@ export class ZXingService implements ScannerService {
   /**
    * بدء عملية المسح
    */
-  public async startScan(options: ZXingScannerOptions = {}, onScan: (result: ZXingScanResult) => void): Promise<boolean> {
+  public async startScan(options: ZXingScanOptions = {}, onScan: (result: ZXingScanResult) => void): Promise<boolean> {
     return this.implementation.startScan(options, onScan);
   }
   
