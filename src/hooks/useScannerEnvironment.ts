@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { platformService } from '@/services/scanner/PlatformService';
+import { App } from '@capacitor/app';
 
 /**
  * هوك للتعرف على بيئة تشغيل الماسح الضوئي وتوفر المكونات
@@ -45,11 +46,26 @@ export const useScannerEnvironment = () => {
           barcodeScanner: Capacitor.isPluginAvailable('BarcodeScanner'),
           app: Capacitor.isPluginAvailable('App')
         };
+
+        // تجربة استدعاء App.getInfo() للتأكد من أننا في بيئة تطبيق فعلية
+        let isInsideApp = false;
+        if (availablePlugins.app) {
+          try {
+            const appInfo = await App.getInfo();
+            if (appInfo) {
+              isInsideApp = true;
+              console.log('[useScannerEnvironment] App.getInfo() نجح، نحن في بيئة تطبيق:', appInfo);
+            }
+          } catch (error) {
+            console.log('[useScannerEnvironment] فشل استدعاء App.getInfo():', error);
+          }
+        }
         
-        // تعيين حالة البيئة المحسّنة
+        // تعيين حالة البيئة المحسّنة - نعتبر أنفسنا في بيئة أصلية إذا نجح استدعاء App.getInfo()
+        const isEffectivelyNative = isInsideApp || effectivelyNative || hasWebViewMarkers;
+        
         setEnvironment({
-          // اعتبار التطبيق في بيئة أصلية إذا كان في WebView أيضاً
-          isNativePlatform: effectivelyNative,
+          isNativePlatform: isEffectivelyNative,
           platform,
           isWebView: isWebView || hasWebViewMarkers,
           hasCapacitor,
@@ -57,12 +73,13 @@ export const useScannerEnvironment = () => {
         });
         
         console.log('[useScannerEnvironment] تم تشخيص البيئة بالطريقة المحسّنة:', {
-          isNativePlatform: effectivelyNative,
+          isNativePlatform: isEffectivelyNative,
           platform,
           isWebView: isWebView || hasWebViewMarkers,
           userAgent,
           hasCapacitor,
-          availablePlugins
+          availablePlugins,
+          isInsideApp
         });
       } catch (error) {
         console.error('[useScannerEnvironment] خطأ في اكتشاف البيئة:', error);

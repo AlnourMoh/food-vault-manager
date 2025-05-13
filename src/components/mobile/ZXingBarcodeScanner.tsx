@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import CapacitorTester from './CapacitorTester';
 import { Button } from '../ui/button';
 import { ScannerErrorBanner } from './scanner/components/ScannerErrorBanner';
+import { platformService } from '@/services/scanner/PlatformService';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -19,11 +20,17 @@ interface ZXingBarcodeScannerProps {
 }
 
 const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry }: ZXingBarcodeScannerProps) => {
-  // التحقق من بيئة التشغيل
-  const [isNativePlatform, setIsNativePlatform] = useState(() => Capacitor.isNativePlatform());
-  const [isWebView, setIsWebView] = useState(() => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    return userAgent.includes('wv') || userAgent.includes('capacitor');
+  // التحقق من بيئة التشغيل باستخدام خدمة المنصة المحسنة
+  const [isNativePlatform, setIsNativePlatform] = useState(() => platformService.isNativePlatform() || Capacitor.isNativePlatform());
+  const [isWebView, setIsWebView] = useState(() => platformService.isWebView());
+  
+  // أي علامة تشير إلى أننا في بيئة تطبيق
+  const [isEffectivelyNative, setIsEffectivelyNative] = useState(() => {
+    return platformService.isNativePlatform() || 
+           Capacitor.isNativePlatform() || 
+           platformService.isWebView() ||
+           Capacitor.isPluginAvailable('App') ||
+           Capacitor.isPluginAvailable('Camera');
   });
   
   const [showDebug, setShowDebug] = useState(false);
@@ -33,6 +40,36 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
   // Simple mock scanner for testing UI
   const [mockActive, setMockActive] = useState(false);
   const [mockValue, setMockValue] = useState("");
+  
+  useEffect(() => {
+    // عند التحميل، نقوم بفحص البيئة مرة أخرى ونحدث الحالة
+    const checkEnvironment = async () => {
+      const isNative = platformService.isNativePlatform() || Capacitor.isNativePlatform();
+      const isWebViewEnv = platformService.isWebView();
+      
+      // فحص إذا كانت هناك ملحقات متاحة تشير إلى بيئة أصلية
+      const hasNativePlugins = Capacitor.isPluginAvailable('App') || 
+                              Capacitor.isPluginAvailable('Camera') || 
+                              Capacitor.isPluginAvailable('BarcodeScanner');
+      
+      const effectively = isNative || isWebViewEnv || hasNativePlugins;
+      
+      setIsNativePlatform(isNative);
+      setIsWebView(isWebViewEnv);
+      setIsEffectivelyNative(effectively);
+      
+      console.log('ZXingBarcodeScanner: تم فحص البيئة مرة أخرى:', {
+        isNativePlatform: isNative,
+        isWebView: isWebViewEnv,
+        hasNativePlugins,
+        isEffectivelyNative: effectively,
+        platform: Capacitor.getPlatform(),
+        userAgent: navigator.userAgent
+      });
+    };
+    
+    checkEnvironment();
+  }, []);
   
   // دالة مخصصة للتعامل مع نتائج المسح لمنع المسح المتكرر
   const handleScan = (code: string) => {
@@ -95,9 +132,12 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
       hasPermission, 
       scanActive, 
       cameraActive, 
-      isLoading 
+      isLoading,
+      isNativePlatform,
+      isWebView,
+      isEffectivelyNative
     });
-  }, [hasPermission, scanActive, cameraActive, isLoading]);
+  }, [hasPermission, scanActive, cameraActive, isLoading, isNativePlatform, isWebView, isEffectivelyNative]);
   
   // معالج المسح المزيف للاختبار
   const handleMockScan = () => {
@@ -110,7 +150,8 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
   };
   
   // عرض رسالة خطأ إذا كنا في بيئة متصفح ولسنا في بيئة تطبيق
-  if (!isNativePlatform && !isWebView) {
+  // يجب أن نكون متأكدين تمامًا أننا لسنا في أي بيئة أصلية
+  if (!isNativePlatform && !isWebView && !isEffectivelyNative) {
     return (
       <div className="scanner-view-container p-4">
         <ScannerErrorBanner 

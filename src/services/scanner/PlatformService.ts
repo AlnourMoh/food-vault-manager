@@ -1,4 +1,3 @@
-
 import { Capacitor } from '@capacitor/core';
 
 // Add interface augmentation for Navigator to include the standalone property
@@ -41,8 +40,15 @@ export class PlatformService {
         return true;
       }
       
+      // إذا كانت البيئة غير واضحة، نتحقق من وجود ملحقات Capacitor كعلامة إضافية
+      if (Capacitor.isPluginAvailable('App') || 
+          Capacitor.isPluginAvailable('Camera') || 
+          Capacitor.isPluginAvailable('BarcodeScanner')) {
+        console.log('[PlatformService] تم اكتشاف بيئة أصلية من خلال توفر ملحقات Capacitor');
+        return true;
+      }
+      
       console.log('[PlatformService] تم اكتشاف بيئة متصفح عادية');
-      console.log('[PlatformService] Platform:', this.getPlatform());
       return false;
     } catch (e) {
       console.error('[PlatformService] Error checking native platform:', e);

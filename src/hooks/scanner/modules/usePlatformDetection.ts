@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { platformService } from '@/services/scanner/PlatformService';
 
 /**
  * هوك للتعرف على منصة التشغيل
@@ -9,13 +10,15 @@ export const usePlatformDetection = () => {
   const [isNativePlatform, setIsNativePlatform] = useState<boolean>(false);
   const [platform, setPlatform] = useState<string>('web');
   const [pluginsAvailable, setPluginsAvailable] = useState<Record<string, boolean>>({});
+  const [isWebView, setIsWebView] = useState<boolean>(false);
 
   // تهيئة عند التحميل
   useEffect(() => {
     // تحديد المنصة
-    const nativePlatform = Capacitor.isNativePlatform();
+    const nativePlatform = platformService.isNativePlatform();
     setIsNativePlatform(nativePlatform);
-    setPlatform(Capacitor.getPlatform());
+    setPlatform(platformService.getPlatform());
+    setIsWebView(platformService.isWebView());
     
     // التحقق من الملحقات المتاحة
     const plugins: Record<string, boolean> = {
@@ -27,6 +30,14 @@ export const usePlatformDetection = () => {
     };
     
     setPluginsAvailable(plugins);
+    
+    // طباعة معلومات عن البيئة للتشخيص
+    console.log('[usePlatformDetection] معلومات البيئة:', {
+      isNativePlatform: nativePlatform,
+      platform: platformService.getPlatform(),
+      isWebView: platformService.isWebView(),
+      plugins
+    });
   }, []);
 
   return {
@@ -35,6 +46,7 @@ export const usePlatformDetection = () => {
     pluginsAvailable,
     isAndroid: platform === 'android',
     isIOS: platform === 'ios',
-    isWeb: platform === 'web'
+    isWeb: platform === 'web',
+    isWebView
   };
 };
