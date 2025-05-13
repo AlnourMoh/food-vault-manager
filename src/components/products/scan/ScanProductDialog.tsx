@@ -29,6 +29,13 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     onProductAdded, 
     toast 
   });
+  
+  // تفعيل الماسح تلقائياً عند فتح مربع الحوار
+  React.useEffect(() => {
+    if (open && !showScanner) {
+      setShowScanner(true);
+    }
+  }, [open, showScanner, setShowScanner]);
 
   return (
     <Dialog 

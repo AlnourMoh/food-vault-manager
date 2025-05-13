@@ -28,29 +28,17 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   onClose,
   onToggleFlash
 }) => {
-  // تحسين: بدء المسح تلقائيًا بمجرد أن تكون الكاميرا نشطة
+  // بدء المسح فورًا بمجرد أن تكون الكاميرا جاهزة
   useEffect(() => {
-    // بدء المسح تلقائياً عندما تكون الكاميرا نشطة
     if (cameraActive && !isActive && !hasError) {
-      console.log('ScannerView: الكاميرا نشطة الآن، جاري بدء المسح تلقائيًا...');
-      
-      // بدء المسح فورًا بدون تأخير
+      console.log('ScannerView: الكاميرا جاهزة، بدء المسح تلقائيًا');
       onStartScan().catch(error => {
         console.error('ScannerView: خطأ في بدء المسح التلقائي:', error);
       });
     }
   }, [cameraActive, isActive, hasError, onStartScan]);
 
-  // إضافة تسجيل للمكون للتشخيص
-  useEffect(() => {
-    console.log('ScannerView حالة:', { isActive, cameraActive, hasError });
-    
-    return () => {
-      console.log('ScannerView تم إلغاء تحميل المكون');
-    };
-  }, [isActive, cameraActive, hasError]);
-
-  // عرض رسالة خطأ إذا كانت هناك مشكلة في الكاميرا
+  // إذا كان هناك خطأ في الكاميرا
   if (hasError) {
     return (
       <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
@@ -75,7 +63,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     );
   }
   
-  // عرض حالة انتظار تفعيل الكاميرا
+  // انتظار تفعيل الكاميرا
   if (!cameraActive) {
     return (
       <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
@@ -94,8 +82,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     );
   }
 
-  // تم إزالة واجهة "بدء المسح" اليدوية، الكاميرا نشطة الآن والمسح سيبدأ تلقائيًا
-
+  // عرض الماسح النشط - تم إزالة زر "بدء المسح" الإضافي
   return (
     <div className="scanner-view-container relative h-full w-full">
       {/* إطار الماسح */}

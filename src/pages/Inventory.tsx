@@ -8,6 +8,9 @@ import { Product } from '@/types';
 import ProductGrid from '@/components/products/ProductGrid';
 import InventoryHeader from '@/components/inventory/InventoryHeader';
 import EmptyInventory from '@/components/inventory/EmptyInventory';
+import { Button } from '@/components/ui/button';
+import { BarcodeIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Define a type for the raw product data from Supabase
 interface RawProductData {
@@ -28,6 +31,7 @@ const Inventory = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   
   // Determine current route type
   const isRestaurantRoute = window.location.pathname.startsWith('/restaurant/');
@@ -116,6 +120,11 @@ const Inventory = () => {
     }
   };
 
+  // Function to navigate to scanner
+  const goToScanner = () => {
+    navigate('/scan');
+  };
+
   // Choose the appropriate layout based on the route
   const Layout = isRestaurantRoute ? RestaurantLayout : MainLayout;
 
@@ -123,6 +132,17 @@ const Inventory = () => {
     <Layout>
       <div className="rtl space-y-6">
         <InventoryHeader addProductPath={addProductPath} />
+        
+        {/* إضافة زر المسح في أعلى الصفحة */}
+        <div className="flex justify-center mb-4">
+          <Button 
+            onClick={goToScanner} 
+            className="bg-blue-500 hover:bg-blue-600 text-white gap-2"
+          >
+            <BarcodeIcon className="h-5 w-5" />
+            مسح المنتجات
+          </Button>
+        </div>
         
         {isLoading ? (
           <ProductGrid products={[]} isLoading={true} isRestaurantRoute={isRestaurantRoute} />

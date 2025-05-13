@@ -12,7 +12,7 @@ interface ZXingBarcodeScannerProps {
 const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ 
   onScan, 
   onClose,
-  autoStart = true // تعيين القيمة الافتراضية إلى true للبدء التلقائي
+  autoStart = true // Always auto-start by default
 }) => {
   const {
     isManualEntry,
@@ -31,30 +31,27 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     setCameraActive
   } = useScannerControls({ onScan, onClose });
 
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // تفعيل المسح تلقائيًا عند تحميل المكون
+  // Activate camera immediately when component mounts
   useEffect(() => {
-    if (!isInitialized && !isLoading && hasPermission !== false) {
-      console.log('ZXingBarcodeScanner: تهيئة المسح التلقائي');
-      setIsInitialized(true);
-      
-      // تحديد الكاميرا كنشطة بمجرد تحميل المكون
-      setCameraActive(true);
-      
-      // لا نحتاج إلى تأخير هنا، سيتم تفعيل المسح تلقائياً من ScannerView
-    }
-  }, [isInitialized, isLoading, hasPermission, setCameraActive]);
-
-  // تأكيد الاستجابة السريعة للتغييرات في حالة الكاميرا
-  useEffect(() => {
-    if (cameraActive && !isScanningActive && !hasScannerError && !isManualEntry) {
-      console.log('ZXingBarcodeScanner: الكاميرا نشطة الآن، جاري تفعيل المسح');
+    console.log('ZXingBarcodeScanner: تفعيل الكاميرا فورًا عند تحميل المكون');
+    
+    // Set camera as active immediately
+    setCameraActive(true);
+    
+    // Start scan immediately without waiting
+    const timerRef = setTimeout(() => {
       startScan().catch(error => {
-        console.error('ZXingBarcodeScanner: خطأ عند بدء المسح تلقائياً بعد تنشيط الكاميرا:', error);
+        console.error('ZXingBarcodeScanner: خطأ في بدء المسح المباشر:', error);
       });
-    }
-  }, [cameraActive, isScanningActive, hasScannerError, isManualEntry, startScan]);
+    }, 500);
+    
+    return () => {
+      clearTimeout(timerRef);
+      stopScan().catch(error => {
+        console.error('ZXingBarcodeScanner: خطأ في إيقاف المسح عند التنظيف:', error);
+      });
+    };
+  }, []);
 
   return (
     <ScannerContainer

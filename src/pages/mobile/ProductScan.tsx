@@ -19,10 +19,9 @@ const ProductScan = () => {
     viewProductDetails
   } = useProductScanLogic();
   
-  // فتح الماسح تلقائياً عند تحميل الصفحة
+  // فتح الماسح تلقائياً عند تحميل الصفحة بدون تأخير
   useEffect(() => {
     console.log('ProductScan: فتح الماسح فوراً');
-    // فتح الماسح مباشرة عند تحميل الصفحة
     handleOpenScanner();
   }, []);
 
@@ -53,7 +52,7 @@ const ProductScan = () => {
     );
   }
 
-  // إظهار الماسح أو شاشة التحميل
+  // إظهار الماسح مباشرة
   return (
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>

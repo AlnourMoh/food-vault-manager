@@ -16,9 +16,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const [cameraActive, setCameraActive] = useState(false);
   const { toast } = useToast();
   
-  // Get scanner permissions
-  const { requestPermission } = useScannerPermissions();
-  
+  // تحسين: استخدام حالة الكاميرا في أعلى المستوى
   const {
     isLoading,
     hasPermission,
@@ -28,8 +26,11 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     stopScan: _stopScan
   } = useScannerState({ 
     onScan, 
-    onClose 
+    onClose,
+    autoActivateCamera: true // تلميح للماسح ببدء الكاميرا تلقائيًا
   });
+
+  const { requestPermission } = useScannerPermissions();
 
   const {
     startMockScan,
@@ -62,31 +63,42 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     };
   }, [isActive, isManualEntry]);
 
-  // تأكيد تحديث حالة الكاميرا عند تغير حالة المسح
+  // تفعيل الكاميرا تلقائيًا عند التحميل
   useEffect(() => {
-    if (isScanningActive) {
+    if (!cameraActive && !isLoading) {
+      console.log('[useScannerControls] تفعيل الكاميرا تلقائيًا عند التحميل');
       setCameraActive(true);
     }
-  }, [isScanningActive]);
+  }, [cameraActive, isLoading]);
 
-  // وظيفة بدء المسح محسنة مع تعزيز الاعتمادية
+  // تحديث حالة الكاميرا عند تغير حالة المسح
+  useEffect(() => {
+    if (isScanningActive && !cameraActive) {
+      setCameraActive(true);
+    }
+  }, [isScanningActive, cameraActive]);
+
+  // تبسيط بدء المسح بأقل فرص للأخطاء
   const startScan = async () => {
     try {
-      console.log('[useScannerControls] بدء المسح...');
+      console.log('[useScannerControls] بدء المسح بالطريقة المبسطة...');
       setIsActive(true);
       setCameraActive(true);
       
-      // محاولة بدء المسح مباشرة
-      return await _startScan().catch(async error => {
-        console.error('[useScannerControls] خطأ في المحاولة الأولى للمسح:', error);
-        
-        // يونس صغير للسماح بتهدئة الموارد
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        // محاولة ثانية بعد تأخير قصير
-        console.log('[useScannerControls] محاولة ثانية للمسح بعد تأخير قصير');
-        return await _startScan();
-      });
+      // كان هناك مشكلة سابقة في تسلسل التنفيذ، الآن نضمن التسلسل الصحيح
+      const success = await _startScan();
+      
+      if (!success) {
+        console.log('[useScannerControls] فشل بدء المسح، محاولة مرة أخرى بتأخير قصير');
+        // محاولة ثانية بعد فترة قصيرة
+        setTimeout(async () => {
+          await _startScan().catch(error => {
+            console.error('[useScannerControls] فشل في المحاولة الثانية:', error);
+          });
+        }, 500);
+      }
+      
+      return success;
     } catch (error) {
       console.error('[useScannerControls] خطأ غير متوقع عند بدء المسح:', error);
       setHasScannerError(true);
@@ -100,13 +112,17 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     try {
       console.log('[useScannerControls] إيقاف المسح');
       setIsActive(false);
+      // إضافة تأخير قصير قبل إيقاف الكاميرا لتفادي التحولات المرئية المفاجئة
+      setTimeout(() => setCameraActive(false), 100);
       return await _stopScan();
     } catch (error) {
       console.error('[useScannerControls] خطأ عند إيقاف المسح:', error);
+      setCameraActive(false); // تأكيد إيقاف الكاميرا حتى في حالة الخطأ
       return false;
     }
   };
 
+  // تبسيط الانتقال للإدخال اليدوي
   const handleManualEntry = () => {
     console.log('[Scanner] التحويل إلى إدخال الكود يدويًا');
     try {
@@ -119,7 +135,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
       setIsManualEntry(true);
       startMockScan(onScan);
     } catch (error) {
-      console.error('[Scanner] خطأ غير متوقع عند التحويل للإدخال اليدوي:', error);
+      console.error('[Scanner] خطأ عند التحويل للإدخال اليدوي:', error);
       setIsManualEntry(true);
       startMockScan(onScan);
     }
@@ -131,16 +147,19 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     setIsManualEntry(false);
   };
 
+  // تبسيط إعادة المحاولة
   const handleRetry = () => {
     console.log('[Scanner] إعادة المحاولة بعد خطأ');
     setHasScannerError(false);
+    setCameraActive(true);
     
-    startScan().catch(error => {
-      console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
-      setHasScannerError(true);
-      // في حالة فشل المحاولة مجددًا، انتقل إلى الإدخال اليدوي
-      handleManualEntry();
-    });
+    // بدء المسح بشكل تلقائي بعد إزالة الخطأ
+    setTimeout(() => {
+      startScan().catch(error => {
+        console.error('[useScannerControls] خطأ في محاولة إعادة المسح:', error);
+        setHasScannerError(true);
+      });
+    }, 500);
   };
 
   return {
@@ -155,10 +174,10 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     stopScan,
     handleManualEntry,
     handleManualCancel,
+    requestPermission,
     handleRetry,
     isMockScanActive,
     handleManualInput,
-    requestPermission,
     cameraActive,
     setCameraActive
   };
