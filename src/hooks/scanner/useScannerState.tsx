@@ -8,9 +8,10 @@ import { useScannerUI } from './useScannerUI';
 interface UseScannerStateProps {
   onScan: (code: string) => void;
   onClose: () => void;
+  autoActivateCamera?: boolean;
 }
 
-export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
+export const useScannerState = ({ onScan, onClose, autoActivateCamera = false }: UseScannerStateProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const [isScanningActive, setIsScanningActive] = useState(false);
@@ -22,6 +23,16 @@ export const useScannerState = ({ onScan, onClose }: UseScannerStateProps) => {
   const { setupScannerBackground, restoreUIAfterScanning, cleanup } = useScannerUI();
   
   const { toast } = useToast();
+  
+  // تفعيل الكاميرا تلقائيًا إذا تم طلب ذلك
+  useEffect(() => {
+    if (autoActivateCamera && !isScanningActive) {
+      console.log('[useScannerState] تفعيل الكاميرا تلقائيًا حسب الإعداد');
+      startScan().catch(error => {
+        console.error('[useScannerState] خطأ في التفعيل التلقائي للكاميرا:', error);
+      });
+    }
+  }, [autoActivateCamera]);
   
   // بدء المسح
   const startScan = useCallback(async () => {
