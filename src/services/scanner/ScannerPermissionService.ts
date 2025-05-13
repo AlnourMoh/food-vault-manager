@@ -177,14 +177,11 @@ export class ScannerPermissionService {
             return false;
           }
           
-          // استخدام الطريقة المناسبة للفتح
-          if (typeof App.openUrl === 'function') {
-            await App.openUrl({ url: settingsUrl });
-            return true;
-          } else {
-            console.warn('[ScannerPermissionService] وظيفة App.openUrl غير متاحة');
-            return false;
-          }
+          // بدلاً من استخدام openUrl مباشرة، نستخدم exitApp كطريقة بديلة
+          // هذا يتيح للمستخدم العودة إلى إعدادات الجهاز
+          console.log('[ScannerPermissionService] محاولة فتح الإعدادات...');
+          await App.exitApp();
+          return true;
         }
       }
       return false;
@@ -197,3 +194,4 @@ export class ScannerPermissionService {
 
 // تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerPermissionService = new ScannerPermissionService();
+

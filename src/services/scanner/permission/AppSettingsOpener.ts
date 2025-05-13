@@ -69,6 +69,7 @@ export class AppSettingsOpener {
         // محاولة استخدام ملحق App لفتح الإعدادات أولاً
         if (Capacitor.isPluginAvailable('App')) {
           try {
+            // استخدام exitApp بدلاً من openUrl
             await App.exitApp();
             return true;
           } catch (error) {
@@ -123,6 +124,7 @@ export class AppSettingsOpener {
         // محاولة استخدام ملحق App لفتح الإعدادات أولاً
         if (Capacitor.isPluginAvailable('App')) {
           try {
+            // استخدام exitApp بدلاً من openUrl
             await App.exitApp();
             return true;
           } catch (error) {
