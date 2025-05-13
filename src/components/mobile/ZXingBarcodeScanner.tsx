@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useZXingBarcodeScanner } from '@/hooks/scanner/useZXingBarcodeScanner';
 import { BrowserView } from './scanner/components/BrowserView';
 import { PermissionView } from './scanner/components/PermissionView';
@@ -17,7 +17,10 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
     isNativePlatform,
     hasPermission,
     scanActive,
+    cameraActive,
+    isLoading,
     startScan,
+    stopScan,
     checkAndRequestPermissions
   } = useZXingBarcodeScanner(autoStart, onScan, onClose);
   
@@ -32,15 +35,17 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
   }
   
   // أثناء التحقق من الإذن أو عملية المسح النشطة
-  if (hasPermission === null || scanActive) {
+  if (isLoading || hasPermission === null) {
     return <LoadingView hasPermission={hasPermission} scanActive={scanActive} onClose={onClose} />;
   }
   
-  // واجهة المستخدم الرئيسية للماسح - تعديل نوع الإرجاع
-  return <ScannerView onStartScan={async () => { 
-    const result = await startScan(); 
-    return result;
-  }} onClose={onClose} />;
+  // واجهة المستخدم الرئيسية للماسح
+  return (
+    <ScannerView 
+      onStartScan={startScan}
+      onClose={onClose}
+    />
+  );
 };
 
 export default ZXingBarcodeScanner;

@@ -16,6 +16,7 @@ interface ZXingScannerContentProps {
   stopScan: () => Promise<boolean>;
   requestPermission: () => Promise<boolean>;
   handleRetry: () => void;
+  onManualEntry?: () => void;
 }
 
 export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
@@ -28,7 +29,8 @@ export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
   startScan,
   stopScan,
   requestPermission,
-  handleRetry
+  handleRetry,
+  onManualEntry
 }) => {
   if (isLoading) {
     return <ScannerLoading onClose={onClose} />;
@@ -39,6 +41,7 @@ export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
       <NoPermissionView
         onRequestPermission={requestPermission}
         onClose={onClose}
+        onManualEntry={onManualEntry}
       />
     );
   }
@@ -52,6 +55,7 @@ export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
       onStopScan={stopScan}
       onRetry={handleRetry}
       onClose={onClose}
+      onManualEntry={onManualEntry}
     />
   );
 };

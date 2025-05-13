@@ -1,7 +1,9 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { useCapacitorPermission } from './capacitor/useCapacitorPermission';
+import { useCapacitorScanner } from './capacitor/useCapacitorScanner';
+import { useCapacitorUI } from './capacitor/useCapacitorUI';
 import { useToast } from '@/hooks/use-toast';
 
 export const useZXingBarcodeScanner = (
@@ -9,96 +11,55 @@ export const useZXingBarcodeScanner = (
   onScan: (code: string) => void,
   onClose: () => void
 ) => {
+  // الحالة الخاصة بالمنصة
   const [isNativePlatform, setIsNativePlatform] = useState<boolean>(false);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanActive, setScanActive] = useState(false);
+  const [cameraActive, setCameraActive] = useState<boolean>(false);
+  
+  // استخدام الهوك الفرعية
+  const permission = useCapacitorPermission();
+  const scanner = useCapacitorScanner(onScan);
+  const ui = useCapacitorUI();
+  
   const { toast } = useToast();
+  const mountedRef = useRef<boolean>(true);
 
-  // Check if we're on a native platform on component mount
+  // التهيئة عند التحميل
   useEffect(() => {
+    // تحديد نوع المنصة
     const platform = Capacitor.isNativePlatform();
     setIsNativePlatform(platform);
     
-    // If we're on a native platform, check for permissions
+    // إذا كنا على منصة أصلية، نتحقق من الأذونات
     if (platform) {
-      checkPermission().catch(console.error);
+      permission.checkSupportAndPermission().catch(console.error);
     }
     
-    // Cleanup function when component unmounts
+    // عند إلغاء التحميل
     return () => {
-      if (scanActive) {
+      mountedRef.current = false;
+      if (scanner.isScanning) {
         stopScan().catch(console.error);
       }
     };
   }, []);
   
-  // When permission is granted and autoStart is true, start scanning
+  // بدء المسح تلقائيًا عند منح الإذن
   useEffect(() => {
-    if (hasPermission === true && autoStart) {
+    if (permission.hasPermission === true && autoStart) {
       startScan().catch(console.error);
     }
-  }, [hasPermission, autoStart]);
+  }, [permission.hasPermission, autoStart]);
 
-  // Check camera permission
-  const checkPermission = async (): Promise<boolean> => {
+  /**
+   * بدء عملية المسح
+   */
+  const startScan = useCallback(async (): Promise<boolean> => {
     try {
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('ملحق MLKitBarcodeScanner غير متاح');
-        return false;
-      }
+      // التحقق من الإذن
+      const hasPermissionGranted = permission.hasPermission || 
+        await permission.requestPermission();
       
-      const status = await BarcodeScanner.checkPermissions();
-      const granted = status.camera === 'granted';
-      setHasPermission(granted);
-      return granted;
-    } catch (error) {
-      console.error('خطأ في التحقق من إذن الكاميرا:', error);
-      setHasPermission(false);
-      return false;
-    }
-  };
-  
-  // Request camera permission
-  const requestPermission = async (): Promise<boolean> => {
-    try {
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('ملحق MLKitBarcodeScanner غير متاح');
-        return false;
-      }
-      
-      const status = await BarcodeScanner.requestPermissions();
-      const granted = status.camera === 'granted';
-      setHasPermission(granted);
-      return granted;
-    } catch (error) {
-      console.error('خطأ في طلب إذن الكاميرا:', error);
-      setHasPermission(false);
-      return false;
-    }
-  };
-  
-  // Check permission and request if not granted
-  const checkAndRequestPermissions = async (): Promise<boolean> => {
-    try {
-      const hasPermissionAlready = await checkPermission();
-      
-      if (!hasPermissionAlready) {
-        return await requestPermission();
-      }
-      
-      return hasPermissionAlready;
-    } catch (error) {
-      console.error('خطأ في فحص وطلب الأذونات:', error);
-      return false;
-    }
-  };
-  
-  // Start scanning
-  const startScan = async (): Promise<boolean> => {
-    try {
-      // Check we have permission
-      const permissionGranted = await checkAndRequestPermissions();
-      if (!permissionGranted) {
+      if (!hasPermissionGranted) {
         toast({
           title: "فشل في بدء المسح",
           description: "يجب منح إذن الكاميرا لاستخدام الماسح الضوئي",
@@ -107,79 +68,71 @@ export const useZXingBarcodeScanner = (
         return false;
       }
       
-      // Prepare scanner
-      setScanActive(true);
-      document.body.classList.add('scanner-active');
+      // إعداد واجهة المستخدم
+      ui.setupScannerUI();
+      setCameraActive(true);
       
-      try {
-        // Show camera
-        await BarcodeScanner.showBackground();
-        await BarcodeScanner.prepare();
-        
-        // Start scanning
-        const result = await BarcodeScanner.scan({
-          formats: [
-            BarcodeFormat.QrCode,
-            BarcodeFormat.Ean13,
-            BarcodeFormat.Code128,
-            BarcodeFormat.Code39,
-            BarcodeFormat.UpcA,
-            BarcodeFormat.UpcE
-          ]
-        });
-        
-        // Handle scan result
-        if (result.barcodes && result.barcodes.length > 0) {
-          const code = result.barcodes[0].rawValue;
-          if (code) {
-            onScan(code);
-          }
-        }
-        
-        return true;
-      } catch (error) {
-        console.error('خطأ في عملية المسح:', error);
-        return false;
-      } finally {
-        // Always clean up scanner resources
-        await stopScan();
-      }
+      // بدء المسح
+      const result = await scanner.startScan();
+      return result;
     } catch (error) {
       console.error('خطأ في بدء المسح:', error);
-      setScanActive(false);
-      document.body.classList.remove('scanner-active');
+      
+      // استعادة واجهة المستخدم في حالة الخطأ
+      ui.restoreUI();
+      setCameraActive(false);
+      
+      toast({
+        title: "خطأ في بدء المسح",
+        description: "حدث خطأ أثناء محاولة بدء المسح",
+        variant: "destructive"
+      });
+      
       return false;
     }
-  };
-  
-  // Stop scanning
-  const stopScan = async (): Promise<boolean> => {
+  }, [permission.hasPermission, permission.requestPermission, scanner.startScan, ui.setupScannerUI, toast]);
+
+  /**
+   * إيقاف عملية المسح
+   */
+  const stopScan = useCallback(async (): Promise<boolean> => {
     try {
-      setScanActive(false);
-      document.body.classList.remove('scanner-active');
-      
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          await BarcodeScanner.hideBackground();
-          await BarcodeScanner.stopScan();
-        } catch (error) {
-          console.error('خطأ في إيقاف المسح:', error);
-        }
-      }
-      
+      await scanner.stopScan();
+      ui.restoreUI();
+      setCameraActive(false);
       return true;
     } catch (error) {
       console.error('خطأ في إيقاف المسح:', error);
       return false;
     }
-  };
+  }, [scanner.stopScan, ui.restoreUI]);
+
+  /**
+   * التحقق من إذن الكاميرا وطلبه إذا لزم الأمر
+   */
+  const checkAndRequestPermissions = useCallback(async (): Promise<boolean> => {
+    try {
+      const hasPermissionAlready = await permission.checkPermission();
+      
+      if (!hasPermissionAlready) {
+        return await permission.requestPermission();
+      }
+      
+      return hasPermissionAlready;
+    } catch (error) {
+      console.error('خطأ في فحص وطلب الأذونات:', error);
+      return false;
+    }
+  }, [permission.checkPermission, permission.requestPermission]);
 
   return {
     isNativePlatform,
-    hasPermission,
-    scanActive,
+    hasPermission: permission.hasPermission,
+    scanActive: scanner.isScanning,
+    cameraActive,
     startScan,
     stopScan,
-    checkAndRequestPermissions
+    checkAndRequestPermissions,
+    isLoading: permission.isLoading
   };
 };
