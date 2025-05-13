@@ -6,7 +6,7 @@ import { Toast } from '@capacitor/toast';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Smartphone, Scan, AlertCircle } from 'lucide-react';
+import { Smartphone, Scan, AlertCircle, Camera, X } from 'lucide-react';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -19,34 +19,64 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
   const [scanActive, setScanActive] = useState(false);
   const { toast } = useToast();
   
-  // التحقق ما إذا كنا في بيئة المتصفح أو بيئة التطبيق - تحسين التحقق
+  // التحقق ما إذا كنا في بيئة المتصفح أو بيئة التطبيق
   const isNativePlatform = Capacitor.isNativePlatform();
+  
+  console.log('ZXingBarcodeScanner: بيئة التشغيل:', Capacitor.getPlatform());
+  console.log('ZXingBarcodeScanner: هل نحن في بيئة الجوال؟', isNativePlatform);
   
   // وظيفة للتحقق من الأذونات وطلبها إذا لزم الأمر
   const checkAndRequestPermissions = async () => {
     if (!isNativePlatform) {
-      // في بيئة الويب نرجع دائمًا false
+      console.log('ZXingBarcodeScanner: ليست بيئة جوال. الكاميرا غير متاحة.');
       setHasPermission(false);
       return false;
     }
     
     try {
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('ZXingBarcodeScanner: ملحق MLKitBarcodeScanner غير متاح');
+        toast({
+          title: "ملحق الماسح الضوئي غير متاح",
+          description: "الجهاز لا يدعم MLKitBarcodeScanner"
+        });
+        return false;
+      }
+      
       // التحقق من إذن الكاميرا
+      console.log('ZXingBarcodeScanner: التحقق من إذن الكاميرا...');
       const { camera } = await BarcodeScanner.checkPermissions();
       
       if (camera !== 'granted') {
-        console.log('طلب إذن الكاميرا...');
+        console.log('ZXingBarcodeScanner: طلب إذن الكاميرا...');
+        // إظهار رسالة
+        await Toast.show({
+          text: 'يحتاج التطبيق إلى إذن الكاميرا للمسح الضوئي',
+          duration: 'short'
+        });
+        
         // طلب الإذن
         const request = await BarcodeScanner.requestPermissions();
-        setHasPermission(request.camera === 'granted');
-        return request.camera === 'granted';
+        const granted = request.camera === 'granted';
+        
+        console.log('ZXingBarcodeScanner: نتيجة طلب الإذن:', granted ? 'تم منح الإذن' : 'تم رفض الإذن');
+        setHasPermission(granted);
+        return granted;
       } else {
+        console.log('ZXingBarcodeScanner: إذن الكاميرا ممنوح بالفعل');
         setHasPermission(true);
         return true;
       }
     } catch (error) {
-      console.error('خطأ في التحقق من الأذونات:', error);
+      console.error('ZXingBarcodeScanner: خطأ في التحقق من الأذونات:', error);
       setHasPermission(false);
+      
+      toast({
+        title: "خطأ في الأذونات",
+        description: "تعذر التحقق من إذن الكاميرا",
+        variant: "destructive"
+      });
+      
       return false;
     }
   };
@@ -54,6 +84,7 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
   // بدء المسح
   const startScan = async () => {
     if (!isNativePlatform) {
+      console.log('ZXingBarcodeScanner: ليست بيئة جوال، لا يمكن بدء المسح');
       toast({
         title: "المسح غير متاح في المتصفح",
         description: "يرجى استخدام تطبيق الجوال للقيام بعمليات المسح",
@@ -64,9 +95,11 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
     
     try {
       // التحقق من الإذن
+      console.log('ZXingBarcodeScanner: التحقق من الإذن قبل بدء المسح');
       const hasPermission = await checkAndRequestPermissions();
       
       if (!hasPermission) {
+        console.log('ZXingBarcodeScanner: لا يوجد إذن، تعذر بدء المسح');
         toast({
           title: "تم رفض الإذن",
           description: "لا يمكن استخدام الماسح الضوئي بدون إذن الكاميرا.",
@@ -75,25 +108,49 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
         return;
       }
       
+      console.log('ZXingBarcodeScanner: بدء عملية المسح...');
       setScanActive(true);
-      const result = await BarcodeScanner.scan();
+      
+      // نستخدم هذا لتفادي مشكلة تصميم الواجهة
+      try {
+        await Toast.show({
+          text: "جاري تشغيل المسح... وجّه الكاميرا نحو الباركود",
+          duration: "short"
+        });
+      } catch (e) {
+        console.log('ZXingBarcodeScanner: تعذر عرض رسالة Toast');
+      }
+      
+      const result = await BarcodeScanner.scan({
+        formats: ["QR_CODE", "EAN_13", "CODE_128", "CODE_39", "UPC_A", "UPC_E"]
+      });
       
       if (result.barcodes && result.barcodes.length > 0) {
         const code = result.barcodes[0].rawValue;
-        console.log('تم مسح الكود:', code);
+        console.log('ZXingBarcodeScanner: تم مسح الكود:', code);
         
-        toast({
-          title: "تم المسح بنجاح",
-          description: `تم مسح الباركود: ${code}`,
-        });
+        try {
+          await Toast.show({
+            text: `تم مسح الباركود: ${code}`,
+            duration: "short"
+          });
+        } catch (e) {
+          console.log('ZXingBarcodeScanner: تعذر عرض رسالة Toast');
+        }
         
         // استدعاء دالة رد النداء مع الكود الممسوح
         onScan(code);
+      } else {
+        console.log('ZXingBarcodeScanner: لم يتم العثور على باركود');
+        toast({
+          title: "لم يتم العثور على باركود",
+          description: "حاول مجدداً وتأكد من توجيه الكاميرا بشكل صحيح"
+        });
       }
       
       setScanActive(false);
     } catch (error) {
-      console.error('خطأ في المسح:', error);
+      console.error('ZXingBarcodeScanner: خطأ في المسح:', error);
       setScanActive(false);
       
       toast({
@@ -106,28 +163,35 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
   
   // وظيفة تلقائية لبدء المسح عند تحميل المكون إذا كان autoStart = true
   useEffect(() => {
-    if (autoStart) {
+    if (autoStart && isNativePlatform) {
+      console.log('ZXingBarcodeScanner: تفعيل بدء المسح التلقائي');
       // تأخير قصير للتأكد من تحميل الواجهة أولاً
       const timer = setTimeout(() => {
         checkAndRequestPermissions().then((granted) => {
           if (granted) {
+            console.log('ZXingBarcodeScanner: بدء المسح التلقائي');
             startScan();
+          } else {
+            console.log('ZXingBarcodeScanner: تعذر بدء المسح التلقائي - لا يوجد إذن');
           }
         });
       }, 500);
       
       return () => clearTimeout(timer);
     }
-  }, [autoStart]);
+  }, [autoStart, isNativePlatform]);
   
   // تنظيف عند إلغاء تحميل المكون
   useEffect(() => {
     return () => {
       if (scanActive && isNativePlatform) {
-        BarcodeScanner.stopScan().catch(console.error);
+        console.log('ZXingBarcodeScanner: إيقاف المسح عند التنظيف');
+        BarcodeScanner.stopScan().catch(error => 
+          console.error('ZXingBarcodeScanner: خطأ في إيقاف المسح:', error)
+        );
       }
     };
-  }, [scanActive]);
+  }, [scanActive, isNativePlatform]);
   
   // إذا كنا في بيئة المتصفح، نظهر رسالة بدلاً من الماسح
   if (!isNativePlatform) {
@@ -137,7 +201,7 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
         <h2 className="text-xl font-semibold mb-2">المسح غير متاح في المتصفح</h2>
         <p className="text-gray-500 mb-6">
           عملية مسح الباركود متاحة فقط في تطبيق الهاتف المحمول.
-          يرجى استخدام تطبيق الجوال للقيام بعمليات المسح.
+          يرجى تنزيل وفتح تطبيق الجوال للقيام بعمليات المسح.
         </p>
         <Button 
           onClick={onClose} 
@@ -203,10 +267,13 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
     );
   }
   
-  // واجهة الماسح الافتراضية
+  // واجهة المستخدم الرئيسية للماسح
   return (
     <Card className="p-6 flex flex-col items-center text-center max-w-md mx-auto">
-      <Scan className="h-16 w-16 text-blue-500 mb-4" />
+      <div className="bg-blue-100 text-blue-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">
+        <Camera className="h-8 w-8" />
+      </div>
+      
       <h2 className="text-xl font-semibold mb-2">مسح الباركود</h2>
       <p className="text-gray-500 mb-6">
         اضغط على الزر أدناه لبدء عملية المسح

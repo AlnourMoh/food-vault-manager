@@ -6,6 +6,7 @@ import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedP
 import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { ErrorDisplay } from '@/components/mobile/scanner/product/ErrorDisplay';
 import { Capacitor } from '@capacitor/core';
+import { Toast } from '@capacitor/toast';
 
 const ProductScan = () => {
   const {
@@ -22,15 +23,40 @@ const ProductScan = () => {
   
   // التحقق من بيئة التشغيل
   const isNativePlatform = Capacitor.isNativePlatform();
+  const platform = Capacitor.getPlatform();
+  
+  // نطبع معلومات البيئة للتشخيص
+  useEffect(() => {
+    console.log('ProductScan: البيئة الحالية:', isNativePlatform ? 'تطبيق جوال' : 'متصفح');
+    console.log('ProductScan: المنصة:', platform);
+    console.log('ProductScan: المكونات الإضافية المتاحة:', 
+      Capacitor.isPluginAvailable('MLKitBarcodeScanner') ? 'MLKitBarcodeScanner متاح' : 'MLKitBarcodeScanner غير متاح');
+    
+    // عرض معلومات بيئة التشغيل في الواجهة للمستخدمين
+    try {
+      if (isNativePlatform) {
+        Toast.show({
+          text: `تم التشغيل على ${platform === 'android' ? 'أندرويد' : 'آيفون'}`,
+          duration: "short"
+        });
+      }
+    } catch (error) {
+      console.error('ProductScan: خطأ في عرض المعلومات:', error);
+    }
+  }, [isNativePlatform, platform]);
   
   // فتح الماسح تلقائياً عند تحميل الصفحة فقط في بيئة التطبيق الجوال
   useEffect(() => {
-    console.log('ProductScan: البيئة الحالية:', isNativePlatform ? 'تطبيق جوال' : 'متصفح');
-    if (isNativePlatform) {
+    if (isNativePlatform && !isScannerOpen && !scannedProduct) {
       console.log('ProductScan: فتح الماسح فوراً في بيئة التطبيق');
-      handleOpenScanner();
+      // تأخير قصير لضمان تحميل الواجهة أولاً
+      const timer = setTimeout(() => {
+        handleOpenScanner();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
-  }, [isNativePlatform]);
+  }, [isNativePlatform, isScannerOpen, scannedProduct]);
 
   // إذا تم مسح المنتج، نعرض معلوماته
   if (scannedProduct) {
@@ -89,11 +115,15 @@ const ProductScan = () => {
       )}
       
       {isScannerOpen && (
-        <ZXingBarcodeScanner
-          onScan={handleScanResult}
-          onClose={handleCloseScanner}
-          autoStart={true}
-        />
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-md">
+            <ZXingBarcodeScanner
+              onScan={handleScanResult}
+              onClose={handleCloseScanner}
+              autoStart={true}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

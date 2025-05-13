@@ -29,52 +29,57 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     buildTypes {
-        debug {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    
-    // إضافة دعم للتطبيقات متعددة الحزم
+
     packagingOptions {
         resources {
-            excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0', 'META-INF/*.kotlin_module']
+            excludes += ['META-INF/LICENSE', 'META-INF/NOTICE']
         }
     }
 }
 
 repositories {
-    google()
-    mavenCentral()
-    maven {
-        url "https://plugins.gradle.org/m2/"
+    flatDir {
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }
 
+// Ensure to include both capacitor build files
+apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "androidx.appcompat:appcompat:${rootProject.ext.androidxAppCompatVersion}"
-    implementation "androidx.coordinatorlayout:coordinatorlayout:${rootProject.ext.androidxCoordinatorLayoutVersion}"
-    implementation "androidx.core:core-splashscreen:${rootProject.ext.coreSplashScreenVersion}"
-    implementation "androidx.core:core-ktx:${rootProject.ext.androidxCoreVersion}"
-    implementation project(':capacitor-android')
-    testImplementation "junit:junit:${rootProject.ext.junitVersion}"
-    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
+
+    // تحسين الثبات ومعالجة مشاكل الذاكرة
+    implementation "androidx.multidex:multidex:2.0.1"
     
-    // تحسين التعامل مع الذاكرة وحل مشاكل التطبيقات الكبيرة
-    implementation 'androidx.multidex:multidex:2.0.1'
+    // إضافة دعم العمليات الخلفية
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
+    
+    // تحسين دعم دورة حياة التطبيق
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-process:2.6.2"
+    
+    // دعم رؤية الكاميرا
+    implementation "androidx.camera:camera-camera2:1.3.0"
+    implementation "androidx.camera:camera-lifecycle:1.3.0"
+    implementation "androidx.camera:camera-view:1.3.0"
     
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
-
-    // مكتبات Capacitor
+    
+    // Capacitor core
+    implementation project(':capacitor-android')
+    
+    // Capacitor plugins
     implementation project(':capacitor-app')
     implementation project(':capacitor-camera')
     implementation project(':capacitor-mlkit-barcode-scanning')
@@ -83,11 +88,6 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
-afterEvaluate {
-    def servicesJSON = file('google-services.json')
-    if (servicesJSON.exists()) {
-        apply plugin: 'com.google.gms.google-services'
-    } else {
-        logger.info("google-services.json not found, google-services plugin not applied.")
-    }
+if (hasProperty('postBuildExtras')) {
+    postBuildExtras()
 }
