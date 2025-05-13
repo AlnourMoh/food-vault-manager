@@ -9,6 +9,7 @@ import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 import CapacitorTester from './CapacitorTester';
 import { Button } from '../ui/button';
+import { ScannerErrorBanner } from './scanner/components/ScannerErrorBanner';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -18,8 +19,13 @@ interface ZXingBarcodeScannerProps {
 }
 
 const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry }: ZXingBarcodeScannerProps) => {
-  // Always treat as native platform to force scanner UI
-  const [isNativePlatform] = useState(true);
+  // التحقق من بيئة التشغيل
+  const [isNativePlatform, setIsNativePlatform] = useState(() => Capacitor.isNativePlatform());
+  const [isWebView, setIsWebView] = useState(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    return userAgent.includes('wv') || userAgent.includes('capacitor');
+  });
+  
   const [showDebug, setShowDebug] = useState(false);
   const [mountTime] = useState(Date.now());
   const { toast } = useToast();
@@ -102,6 +108,19 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
       handleScan("MOCK-12345");
     }
   };
+  
+  // عرض رسالة خطأ إذا كنا في بيئة متصفح ولسنا في بيئة تطبيق
+  if (!isNativePlatform && !isWebView) {
+    return (
+      <div className="scanner-view-container p-4">
+        <ScannerErrorBanner 
+          message="المسح غير متاح في المتصفح" 
+          subMessage="يرجى استخدام تطبيق الجوال للقيام بعمليات المسح"
+        />
+        <BrowserView onClose={handleClose} />
+      </div>
+    );
+  }
   
   // For testing UI in any environment
   if (mockActive) {
@@ -200,7 +219,6 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
         onStopScan={stopScan}
         onRetry={() => startScan()}
         onClose={handleClose}
-        onManualEntry={onManualEntry}
       />
       
       <Button 

@@ -34,11 +34,18 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
 
   return (
     <div className="browser-view-container p-4">
+      <div className="w-full rounded-md bg-red-500 text-white p-4 mb-4 text-center">
+        <h2 className="text-xl font-bold mb-2">المسح غير متاح في المتصفح</h2>
+        <p className="text-white">
+          يرجى استخدام تطبيق الجوال للقيام بعمليات المسح
+        </p>
+      </div>
+      
       <div className="browser-view-icon-container mb-4 flex justify-center">
         <Smartphone className="h-12 w-12 text-red-500" />
       </div>
       
-      <h2 className="text-xl font-bold mb-2 text-center">الماسح الضوئي غير متاح</h2>
+      <h2 className="text-xl font-bold mb-2 text-center">تعذر تشغيل الماسح</h2>
       <p className="text-gray-600 mb-4 text-center">
         {isInWebView 
           ? "يبدو أنك تستخدم التطبيق داخل متصفح. للحصول على وظائف كاملة، يرجى تثبيت التطبيق من المتجر."
