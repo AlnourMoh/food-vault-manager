@@ -12,3 +12,9 @@ interface Window {
     getPlatform: () => string;
   };
 }
+
+// Add standalone property to Navigator interface
+interface Navigator {
+  standalone?: boolean;
+}
+

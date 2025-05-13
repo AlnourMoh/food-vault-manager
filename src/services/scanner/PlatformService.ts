@@ -1,6 +1,13 @@
 
 import { Capacitor } from '@capacitor/core';
 
+// Add interface augmentation for Navigator to include the standalone property
+declare global {
+  interface Navigator {
+    standalone?: boolean;
+  }
+}
+
 /**
  * خدمة للتعامل مع اكتشاف المنصة والبيئة
  */
