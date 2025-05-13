@@ -126,3 +126,27 @@ body.scanner-active .app-navigation {
   border-radius: 20px;
   font-size: 14px;
 }
+
+/* أنماط واجهة التنبيه في المتصفح */
+.browser-view-alert {
+  background-color: #fff3f3;
+  border: 1px solid #ffcfcf;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 90%;
+  margin: 0 auto;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.browser-view-alert h2 {
+  color: #e53e3e;
+  margin-bottom: 12px;
+  font-size: 20px;
+}
+
+.browser-view-alert p {
+  color: #4a5568;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}

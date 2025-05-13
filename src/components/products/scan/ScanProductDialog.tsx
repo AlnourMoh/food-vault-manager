@@ -6,9 +6,7 @@ import { useScanProductHandler } from './hooks/useScanProductHandler';
 import { ScanProductDialogHeader } from './components/ScanProductDialogHeader';
 import { ScanProductContent } from './components/ScanProductContent';
 import { Capacitor } from '@capacitor/core'; 
-import { Card } from '@/components/ui/card';
-import { Smartphone } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { BrowserView } from '@/components/mobile/scanner/components/BrowserView';
 
 interface ScanProductDialogProps {
   open: boolean;
@@ -61,21 +59,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
         <DialogContent 
           className="bg-white p-6 border shadow-lg rounded-lg max-w-md mx-auto"
         >
-          <Card className="p-6 flex flex-col items-center text-center">
-            <Smartphone className="h-16 w-16 text-blue-500 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">المسح غير متاح في المتصفح</h2>
-            <p className="text-gray-500 mb-6">
-              عملية مسح الباركود متاحة فقط في تطبيق الهاتف المحمول.
-              يرجى تنزيل وفتح تطبيق الجوال للقيام بعمليات المسح.
-            </p>
-            <Button 
-              onClick={() => onOpenChange(false)} 
-              className="w-full"
-              variant="default"
-            >
-              إغلاق
-            </Button>
-          </Card>
+          <BrowserView onClose={() => onOpenChange(false)} />
         </DialogContent>
       </Dialog>
     );

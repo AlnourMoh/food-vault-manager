@@ -1,57 +1,55 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { ArrowLeft, Camera } from 'lucide-react';
 
 interface ScannerViewProps {
-  onStartScan: () => Promise<boolean>;
+  onStartScan: () => void;
   onClose: () => void;
-  onManualEntry?: () => void; // Added optional onManualEntry prop
 }
 
 export const ScannerView: React.FC<ScannerViewProps> = ({ 
-  onStartScan, 
-  onClose, 
-  onManualEntry 
+  onStartScan,
+  onClose
 }) => {
-  const handleScan = async () => {
-    try {
-      await onStartScan();
-    } catch (error) {
-      console.error('Error starting scan:', error);
-    }
-  };
-
+  React.useEffect(() => {
+    // عند تحميل المكون، نبدأ المسح تلقائياً
+    const timer = setTimeout(() => {
+      onStartScan();
+    }, 200);
+    
+    return () => clearTimeout(timer);
+  }, [onStartScan]);
+  
   return (
-    <div className="w-full bg-black rounded-lg overflow-hidden relative">
-      <div className="p-4 flex flex-col items-center">
-        <Button
-          onClick={handleScan}
-          className="w-full mb-2"
+    <div className="scanner-view">
+      <div className="absolute top-4 left-4 z-20">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="bg-white text-black"
+          onClick={onClose}
         >
-          بدء المسح الضوئي
+          <ArrowLeft className="h-4 w-4 ml-1" />
+          رجوع
         </Button>
-        
-        {/* Add manual entry button if the prop is provided */}
-        {onManualEntry && (
-          <Button
-            onClick={onManualEntry}
-            variant="outline"
-            className="w-full text-white border-white/30 hover:bg-white/10"
-          >
-            إدخال الرمز يدوياً
-          </Button>
-        )}
       </div>
       
-      <Button
-        onClick={onClose}
-        className="absolute top-2 right-2 p-1"
-        variant="ghost"
-        size="icon"
-      >
-        <X className="h-5 w-5" />
-      </Button>
+      <div className="scan-frame">
+        <div className="scanner-line" />
+        <div className="corner-top-left scanner-corner" />
+        <div className="corner-top-right scanner-corner" />
+        <div className="corner-bottom-left scanner-corner" />
+        <div className="corner-bottom-right scanner-corner" />
+      </div>
+      
+      <div className="scanner-status">
+        جارٍ تنشيط الكاميرا...
+      </div>
+      
+      <div className="absolute bottom-8 left-0 right-0 text-center text-white text-sm">
+        <p>وجّه الكاميرا إلى الباركود</p>
+      </div>
     </div>
   );
 };

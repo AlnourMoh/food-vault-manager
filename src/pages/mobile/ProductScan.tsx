@@ -7,8 +7,11 @@ import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { ErrorDisplay } from '@/components/mobile/scanner/product/ErrorDisplay';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
+import { BrowserView } from '@/components/mobile/scanner/components/BrowserView';
+import { useNavigate } from 'react-router-dom';
 
 const ProductScan = () => {
+  const navigate = useNavigate();
   const {
     isScannerOpen,
     scannedProduct,
@@ -90,12 +93,8 @@ const ProductScan = () => {
     return (
       <div className="container py-6 space-y-6">
         <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
-        <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">المسح غير متاح في المتصفح</h2>
-          <p className="text-gray-700 mb-4">
-            عملية مسح الباركود متاحة فقط في تطبيق الهاتف المحمول.
-            يرجى استخدام تطبيق الجوال للقيام بعمليات المسح.
-          </p>
+        <div className="p-6 bg-white border rounded-lg">
+          <BrowserView onClose={() => navigate(-1)} />
         </div>
       </div>
     );
