@@ -1,49 +1,23 @@
 
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
-import { useState } from 'react';
-import { formatProductData } from './utils/productFormatter';
-import { logProductScan } from './utils/scanLogger';
 
-/**
- * Hook for scanning and fetching product information
- */
 export const useScanProduct = () => {
-  const [scanError, setScanError] = useState<string | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   /**
-   * Fetches product information by its barcode/QR code
-   * @param code The product's barcode or QR code
-   * @returns Product information if found, null otherwise
+   * البحث عن منتج باستخدام رمز الباركود
    */
   const fetchProductByCode = async (code: string): Promise<Product | null> => {
-    console.log('useScanProduct: جاري البحث عن بيانات المنتج للرمز:', code);
+    setIsLoading(true);
+    setError(null);
     
     try {
-      // التعامل مع الرموز الوهمية في بيئة الاختبار
-      if (code.startsWith('MOCK-') || code.startsWith('DEMO-')) {
-        console.log('useScanProduct: هذا رمز وهمي، إنشاء منتج وهمي للاختبار');
-        
-        // إنشاء منتج وهمي للاختبار
-        const mockProduct: Product = {
-          id: `mock-${Math.random().toString(36).substring(2, 9)}`,
-          name: "منتج تجريبي",
-          category: "خضروات",
-          quantity: 10,
-          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 يوم من الآن
-          entryDate: new Date(),
-          restaurantId: localStorage.getItem('restaurantId') || "unknown",
-          status: "active",
-          imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200",
-          restaurantName: "",
-          addedBy: "",
-          unit: "piece"
-        };
-        
-        return mockProduct;
-      }
+      console.log('البحث عن المنتج باستخدام الرمز:', code);
       
-      // البحث عن معرف المنتج باستخدام الرمز الممسوح
+      // أولاً، نبحث عن الرمز في جدول رموز المنتجات
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')
         .select('product_id')
@@ -51,20 +25,15 @@ export const useScanProduct = () => {
         .maybeSingle();
       
       if (codeError) {
-        console.error('useScanProduct: خطأ في البحث عن رمز المنتج:', codeError);
-        setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
-        throw 'لم يتم العثور على معلومات المنتج لهذا الباركود';
+        console.error('خطأ في البحث عن رمز المنتج:', codeError);
+        throw 'حدث خطأ أثناء البحث عن رمز المنتج';
       }
       
-      if (!productCode?.product_id) {
-        console.error('useScanProduct: لم يتم العثور على معرف المنتج للرمز:', code);
-        setScanError('لم يتم العثور على معلومات المنتج لهذا الباركود');
-        throw 'لم يتم العثور على معلومات المنتج لهذا الباركود';
+      if (!productCode) {
+        throw 'لم يتم العثور على منتج بهذا الرمز';
       }
       
-      console.log('useScanProduct: تم العثور على معرف المنتج:', productCode.product_id);
-      
-      // البحث عن تفاصيل المنتج باستخدام المعرف
+      // ثانيًا، نحصل على تفاصيل المنتج باستخدام المعرف
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('*')
@@ -72,37 +41,60 @@ export const useScanProduct = () => {
         .maybeSingle();
       
       if (productError) {
-        console.error('useScanProduct: خطأ في البحث عن تفاصيل المنتج:', productError);
-        setScanError('حدث خطأ أثناء جلب تفاصيل المنتج');
+        console.error('خطأ في جلب تفاصيل المنتج:', productError);
         throw 'حدث خطأ أثناء جلب تفاصيل المنتج';
       }
       
       if (!product) {
-        console.error('useScanProduct: لم يتم العثور على بيانات المنتج:', productCode.product_id);
-        setScanError('لم يتم العثور على بيانات المنتج');
-        throw 'لم يتم العثور على بيانات المنتج المطلوب';
+        throw 'لم يتم العثور على تفاصيل المنتج';
       }
       
-      console.log('useScanProduct: تم جلب بيانات المنتج:', product);
-      
-      // تنسيق بيانات المنتج واستخدام المرافق المساعدة
-      const formattedProduct = formatProductData(product);
-      
-      // تسجيل عملية المسح في قاعدة البيانات
-      await logProductScan(code, product.id);
-      
-      return formattedProduct;
-    } catch (error) {
-      if (typeof error === 'string') {
-        throw error;
-      }
-      throw 'حدث خطأ أثناء البحث عن المنتج';
+      return product as Product;
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'حدث خطأ غير معروف');
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
+  /**
+   * تسجيل عملية مسح منتج
+   */
+  const logProductScan = async (code: string, productId: string, scanType: 'check' | 'in' | 'out' = 'check') => {
+    try {
+      console.log(`تسجيل عملية مسح من نوع ${scanType} للمنتج:`, productId);
+      
+      const restaurantId = localStorage.getItem('restaurantId');
+      if (!restaurantId) {
+        console.warn('لم يتم العثور على معرف المطعم، لا يمكن تسجيل عملية المسح');
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('product_scans')
+        .insert({
+          product_id: productId,
+          qr_code: code,
+          scan_type: scanType,
+          scanned_by: restaurantId
+        });
+      
+      if (error) {
+        console.error('خطأ في تسجيل عملية المسح:', error);
+      } else {
+        console.log('تم تسجيل عملية المسح بنجاح');
+      }
+    } catch (error) {
+      console.error('خطأ غير متوقع في تسجيل عملية المسح:', error);
+    }
+  };
+
   return {
+    isLoading,
+    error,
     fetchProductByCode,
     logProductScan,
-    scanError
+    setError
   };
 };

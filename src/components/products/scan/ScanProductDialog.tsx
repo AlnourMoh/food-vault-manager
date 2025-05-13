@@ -57,7 +57,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
             <h2 className="text-xl font-semibold mb-2">المسح غير متاح في المتصفح</h2>
             <p className="text-gray-500 mb-6">
               عملية مسح الباركود متاحة فقط في تطبيق الهاتف المحمول.
-              يرجى استخدام تطبيق الجوال للقيام بعمليات المسح.
+              يرجى تنزيل وفتح تطبيق الجوال للقيام بعمليات المسح.
             </p>
             <Button 
               onClick={() => onOpenChange(false)} 

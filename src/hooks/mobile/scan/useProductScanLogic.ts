@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,23 @@ export const useProductScanLogic = () => {
   
   const { checkPermission, requestPermission, openAppSettings } = useScannerPermissions();
   const { fetchProductByCode, logProductScan } = useScanProduct();
+
+  // فتح الماسح تلقائيًا عند تحميل الصفحة بدون تأخير
+  useEffect(() => {
+    console.log('ProductScan: فتح الماسح فوراً');
+    
+    // التأكد من أننا في بيئة تطبيق جوال قبل فتح الماسح تلقائيًا
+    if (Capacitor.isNativePlatform()) {
+      handleOpenScanner();
+    } else {
+      // في بيئة المتصفح، نعرض رسالة للمستخدم
+      toast({
+        title: "المسح غير متاح في المتصفح",
+        description: "يرجى استخدام تطبيق الجوال للقيام بعمليات المسح",
+        variant: "default",
+      });
+    }
+  }, []);
 
   const handleOpenScanner = async () => {
     try {
@@ -45,9 +63,10 @@ export const useProductScanLogic = () => {
       if (!permissionGranted) {
         console.log('ProductScanLogic: طلب إذن الكاميرا');
         
-        toast({
-          title: "طلب إذن الكاميرا",
-          description: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+        // عرض رسالة نصية للمستخدم عبر Toast API
+        await Toast.show({
+          text: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+          duration: "short"
         });
         
         permissionGranted = await requestPermission();
@@ -58,10 +77,9 @@ export const useProductScanLogic = () => {
           
           const openSettings = await openAppSettings();
           if (!openSettings) {
-            toast({
-              title: "تم رفض الإذن",
-              description: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
-              variant: "destructive",
+            await Toast.show({
+              text: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
+              duration: "long"
             });
             
             setIsLoading(false);
@@ -78,10 +96,9 @@ export const useProductScanLogic = () => {
       console.error('ProductScanLogic: خطأ في فتح الماسح:', error);
       setScanError('حدث خطأ أثناء محاولة فتح الماسح الضوئي');
       
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء محاولة فتح الماسح الضوئي",
-        variant: "destructive",
+      await Toast.show({
+        text: "حدث خطأ أثناء محاولة فتح الماسح الضوئي",
+        duration: "long"
       });
     } finally {
       setIsLoading(false);
@@ -99,11 +116,23 @@ export const useProductScanLogic = () => {
     setScanError(null);
     
     try {
-      // Fetch product data using the helper function
+      // عرض رسالة للمستخدم
+      if (Capacitor.isNativePlatform()) {
+        await Toast.show({
+          text: `تم مسح الباركود: ${code}`,
+          duration: "short"
+        });
+      }
+      
+      // الحصول على بيانات المنتج باستخدام الدالة المساعدة
       const product = await fetchProductByCode(code);
       
       if (product) {
         setScannedProduct(product);
+        
+        // تسجيل عملية المسح
+        await logProductScan(code, product.id, "check");
+        
         toast({
           title: "تم مسح المنتج بنجاح",
           description: `تم العثور على المنتج: ${product.name}`,
@@ -111,6 +140,14 @@ export const useProductScanLogic = () => {
       }
     } catch (error) {
       console.error('ProductScan: خطأ في البحث عن تفاصيل المنتج:', error);
+      
+      if (Capacitor.isNativePlatform()) {
+        await Toast.show({
+          text: typeof error === 'string' ? error : "حدث خطأ أثناء البحث عن معلومات المنتج",
+          duration: "long"
+        });
+      }
+      
       toast({
         title: "خطأ في البحث",
         description: typeof error === 'string' ? error : "حدث خطأ أثناء البحث عن معلومات المنتج",
@@ -127,7 +164,16 @@ export const useProductScanLogic = () => {
     setScannedProduct(null);
     setScanError(null);
     // فتح الماسح مباشرة عند طلب مسح منتج آخر
-    setIsScannerOpen(true);
+    if (Capacitor.isNativePlatform()) {
+      setIsScannerOpen(true);
+    } else {
+      // في بيئة المتصفح، نعرض رسالة للمستخدم
+      toast({
+        title: "المسح غير متاح في المتصفح",
+        description: "يرجى استخدام تطبيق الجوال للقيام بعمليات المسح",
+        variant: "default",
+      });
+    }
   };
 
   const viewProductDetails = () => {
@@ -142,7 +188,7 @@ export const useProductScanLogic = () => {
     isLoading,
     scanError,
     handleOpenScanner,
-    handleCloseScanner: () => setIsScannerOpen(false),
+    handleCloseScanner,
     handleScanResult,
     handleScanAnother,
     viewProductDetails
