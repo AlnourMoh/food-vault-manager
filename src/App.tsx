@@ -1,6 +1,6 @@
 
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -23,15 +23,13 @@ function App() {
           <div className="min-h-screen bg-background">
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* صفحات مباشرة لتسهيل الوصول من الهاتف المحمول */}
-                <Route path="/inventory" element={<MobileInventory />} />
-                
-                {/* المسارات الأخرى */}
-                <Route path="/*" element={isMobile ? <MobileRoutes /> : <DesktopRoutes />} />
-              </Routes>
-            </BrowserRouter>
+            <Routes>
+              {/* صفحات مباشرة لتسهيل الوصول من الهاتف المحمول */}
+              <Route path="/inventory" element={<MobileInventory />} />
+              
+              {/* المسارات الأخرى */}
+              <Route path="/*" element={isMobile ? <MobileRoutes /> : <DesktopRoutes />} />
+            </Routes>
           </div>
         </TooltipProvider>
       </ThemeProvider>
