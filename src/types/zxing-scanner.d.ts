@@ -1,56 +1,51 @@
 
 /**
- * تعريفات الأنواع الخاصة بمكتبة ZXing للماسح الضوئي
+ * تعريف الأنواع للماسح الضوئي ZXing
  */
 
-import { BarcodeFormat, DecodeHintType } from '@zxing/library';
-
-export interface ZXingScannerOptions {
-  formats?: BarcodeFormat[];
-  hints?: Map<DecodeHintType, any>;
-  tryHarder?: boolean;
-  delayBetweenScanAttempts?: number;
-  constraints?: MediaTrackConstraints;
+// تعريف تنسيقات الباركود
+export enum ZXingBarcodeFormat {
+  QR_CODE = 'QR_CODE',
+  EAN_13 = 'EAN_13',
+  CODE_128 = 'CODE_128',
+  CODE_39 = 'CODE_39',
+  UPC_A = 'UPC_A',
+  UPC_E = 'UPC_E',
+  EAN_8 = 'EAN_8',
+  DATA_MATRIX = 'DATA_MATRIX',
+  PDF_417 = 'PDF_417',
+  AZTEC = 'AZTEC',
+  ITF = 'ITF'
 }
 
+// خيارات المسح
+export interface ZXingScanOptions {
+  formats?: ZXingBarcodeFormat[];
+  cameraFacing?: 'front' | 'back';
+  timeout?: number;
+}
+
+// نتيجة المسح
 export interface ZXingScanResult {
   text: string;
-  format?: BarcodeFormat;
-  resultPoints?: Array<{ x: number; y: number }>;
-  timestamp?: number;
-  rawBytes?: Uint8Array;
+  format: ZXingBarcodeFormat;
+  cancelled: boolean;
 }
 
-export interface ZXingPermissionStatus {
-  granted: boolean;
-  error?: string;
-}
+// حالة إذن الكاميرا
+export type PermissionStatus = 'granted' | 'denied' | 'prompt';
 
-export interface ZXingDeviceInfo {
-  deviceId: string;
-  label: string;
-  groupId?: string;
-}
-
-export interface ZXingCameraCapabilities {
-  hasFlash: boolean;
-  availableDevices: ZXingDeviceInfo[];
-}
-
-/**
- * قيم تنسيقات الباركود المستخدمة في MLKit
- * 
- * QR_CODE = 1
- * AZTEC = 2
- * CODABAR = 4
- * CODE_39 = 16
- * CODE_93 = 32
- * CODE_128 = 64
- * DATA_MATRIX = 128
- * EAN_8 = 256
- * EAN_13 = 32
- * ITF = 128
- * PDF_417 = 2
- * UPC_A = 512
- * UPC_E = 1024
- */
+// مصفوفة لتحويل القيم النصية إلى قيم BarcodeFormat المستخدمة في MLKit
+export const MLKitBarcodeFormatMap = {
+  'QR_CODE': 1, // BarcodeFormat.QrCode
+  'EAN_13': 32, // BarcodeFormat.Ean13
+  'CODE_128': 1024, // BarcodeFormat.Code128
+  'CODE_39': 4, // BarcodeFormat.Code39
+  'UPC_A': 16, // BarcodeFormat.UpcA
+  'UPC_E': 8, // BarcodeFormat.UpcE
+  'EAN_8': 64, // BarcodeFormat.Ean8
+  'DATA_MATRIX': 2, // BarcodeFormat.DataMatrix
+  'PDF_417': 2048, // BarcodeFormat.Pdf417
+  'AZTEC': 8192, // BarcodeFormat.Aztec
+  'ITF': 128 // BarcodeFormat.Itf
+};

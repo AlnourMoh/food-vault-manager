@@ -1,0 +1,128 @@
+
+/* أنماط للماسح الضوئي */
+
+/* عند تنشيط الماسح، نجعل خلفية الجسم شفافة */
+body.scanner-active {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* تطبيق أنماط مشروطة بناءً على متغير CSS */
+:root {
+  --scanner-active: 0;
+}
+
+/* العناصر التي يجب إخفاؤها عند تنشيط الماسح */
+.app-header,
+.app-navigation {
+  transition: opacity 0.3s, background 0.3s;
+}
+
+body.scanner-active .app-header,
+body.scanner-active .app-navigation {
+  opacity: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* منطقة عرض الماسح */
+.scanner-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background-color: var(--scanner-bg, rgba(0, 0, 0, 0.8));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+/* إطار المسح */
+.scan-frame {
+  position: relative;
+  width: 80%;
+  aspect-ratio: 1;
+  max-width: 300px;
+  border: 2px solid var(--scanner-frame, #fff);
+  border-radius: 16px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+  animation: pulse 2s infinite;
+}
+
+/* زر الفلاش */
+.torch-button {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: none;
+  outline: none;
+}
+
+/* أزرار التحكم */
+.scanner-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* تأثير نبض لإطار المسح */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4), 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0), 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0), 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* حالة الخطأ */
+.scanner-error {
+  color: #e74c3c;
+  margin-top: 1rem;
+  text-align: center;
+  padding: 1rem;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 8px;
+}
+
+/* زر إعادة المحاولة */
+.retry-button {
+  background-color: var(--scanner-retry, #3498db);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+/* مؤشر الحالة */
+.scanner-status {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+}

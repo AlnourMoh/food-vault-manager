@@ -1,10 +1,13 @@
 
+import { Capacitor } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+
 /**
- * خدمة إدارة واجهة المستخدم للماسح الضوئي
+ * خدمة لإدارة واجهة المستخدم للماسح الضوئي
  */
 export class ScannerUIService {
   private static instance: ScannerUIService;
-  private videoElement: HTMLVideoElement | null = null;
+  private originalStyles: Map<HTMLElement, { background: string, opacity: string }> = new Map();
   
   private constructor() {}
   
@@ -16,103 +19,108 @@ export class ScannerUIService {
   }
   
   /**
-   * إنشاء عنصر فيديو للمسح
-   */
-  public createVideoElement(): HTMLVideoElement {
-    if (this.videoElement) {
-      return this.videoElement;
-    }
-    
-    const video = document.createElement('video');
-    video.id = 'zxing-scanner-video';
-    video.style.position = 'absolute';
-    video.style.top = '0';
-    video.style.left = '0';
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.objectFit = 'cover';
-    video.style.opacity = '0'; // جعله مخفياً
-    video.style.pointerEvents = 'none'; // لا يتفاعل مع النقرات
-    video.setAttribute('playsinline', 'true'); // ضروري لـ iOS
-    video.setAttribute('muted', 'true');
-    video.muted = true;
-    
-    // إضافة العنصر مؤقتًا إلى DOM
-    document.body.appendChild(video);
-    
-    this.videoElement = video;
-    return video;
-  }
-  
-  /**
-   * تفعيل نمط المسح في واجهة المستخدم
-   */
-  public activateScanningUI(videoElement: HTMLVideoElement): void {
-    document.body.classList.add('zxing-scanning');
-    if (videoElement) {
-      videoElement.style.opacity = '1';
-    }
-  }
-  
-  /**
-   * إزالة نمط المسح من واجهة المستخدم
-   */
-  public deactivateScanningUI(): void {
-    document.body.classList.remove('zxing-scanning');
-    if (this.videoElement) {
-      this.videoElement.style.opacity = '0';
-    }
-  }
-  
-  /**
-   * إزالة عنصر الفيديو
-   */
-  public removeVideoElement(): void {
-    if (this.videoElement && document.body.contains(this.videoElement)) {
-      document.body.removeChild(this.videoElement);
-      this.videoElement = null;
-    }
-  }
-  
-  /**
    * إعداد واجهة المستخدم لعملية المسح
    */
   public setupUIForScanning(): void {
-    document.body.classList.add('scanner-active');
-    document.documentElement.style.backgroundColor = 'transparent';
+    try {
+      console.log('[ScannerUIService] إعداد واجهة المستخدم للمسح');
+      
+      // حفظ الأنماط الأصلية للعناصر
+      this.saveOriginalStyles();
+      
+      // إضافة فئة CSS للجسم
+      document.body.classList.add('scanner-active');
+      
+      // تعيين متغير CSS لاستخدامه في أنماط CSS
+      document.documentElement.style.setProperty('--scanner-active', '1');
+      
+      // إخفاء أو تعديل العناصر التي قد تتداخل مع المسح
+      this.hideInterfaceElements();
+      
+      // إظهار خلفية الكاميرا إذا كان ذلك متاحًا
+      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        BarcodeScanner.showBackground().catch(error => {
+          console.error('[ScannerUIService] خطأ في إظهار خلفية الكاميرا:', error);
+        });
+      }
+    } catch (error) {
+      console.error('[ScannerUIService] خطأ في إعداد واجهة المستخدم للمسح:', error);
+    }
   }
   
   /**
    * استعادة واجهة المستخدم بعد المسح
    */
   public restoreUIAfterScanning(): void {
-    document.body.classList.remove('scanner-active');
-    document.documentElement.style.backgroundColor = '';
-  }
-  
-  /**
-   * تنظيف الموارد
-   */
-  public dispose(): void {
-    this.deactivateScanningUI();
-    this.removeVideoElement();
-    this.restoreUIAfterScanning();
-  }
-  
-  /**
-   * تحويل صورة HTML canvas إلى ImageData
-   */
-  public static canvasToImageData(canvas: HTMLCanvasElement): ImageData | null {
     try {
-      const context = canvas.getContext('2d');
-      if (!context) return null;
-      return context.getImageData(0, 0, canvas.width, canvas.height);
+      console.log('[ScannerUIService] استعادة واجهة المستخدم بعد المسح');
+      
+      // إزالة فئة CSS من الجسم
+      document.body.classList.remove('scanner-active');
+      
+      // إعادة تعيين متغير CSS
+      document.documentElement.style.setProperty('--scanner-active', '0');
+      
+      // استعادة العناصر المخفية
+      this.restoreInterfaceElements();
+      
+      // إخفاء خلفية الكاميرا إذا كان ذلك متاحًا
+      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        BarcodeScanner.hideBackground().catch(error => {
+          console.error('[ScannerUIService] خطأ في إخفاء خلفية الكاميرا:', error);
+        });
+      }
     } catch (error) {
-      console.error('[ScannerUIService] خطأ في تحويل Canvas إلى ImageData:', error);
-      return null;
+      console.error('[ScannerUIService] خطأ في استعادة واجهة المستخدم بعد المسح:', error);
     }
+  }
+  
+  /**
+   * حفظ الأنماط الأصلية للعناصر
+   */
+  private saveOriginalStyles(): void {
+    // العناصر التي نحتاج إلى حفظ أنماطها
+    const elementsToSave = document.querySelectorAll('header, nav, footer, .app-header, .app-navigation');
+    
+    elementsToSave.forEach(el => {
+      if (el instanceof HTMLElement) {
+        this.originalStyles.set(el, {
+          background: el.style.background,
+          opacity: el.style.opacity
+        });
+      }
+    });
+  }
+  
+  /**
+   * إخفاء عناصر الواجهة التي قد تتداخل مع المسح
+   */
+  private hideInterfaceElements(): void {
+    // العناصر التي نحتاج إلى إخفائها أو تعديلها
+    const elementsToModify = document.querySelectorAll('header, nav, footer, .app-header, .app-navigation');
+    
+    elementsToModify.forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.style.background = 'transparent';
+        el.style.opacity = '0';
+      }
+    });
+  }
+  
+  /**
+   * استعادة عناصر الواجهة إلى حالتها الأصلية
+   */
+  private restoreInterfaceElements(): void {
+    // استعادة جميع العناصر التي تم تعديلها
+    this.originalStyles.forEach((styles, el) => {
+      el.style.background = styles.background;
+      el.style.opacity = styles.opacity;
+    });
+    
+    // تفريغ المخزن
+    this.originalStyles.clear();
   }
 }
 
-// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
+// تصدير نسخة واحدة من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerUIService = ScannerUIService.getInstance();

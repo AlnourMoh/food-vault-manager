@@ -1,20 +1,16 @@
 
-/**
- * خدمة التحكم بالكاميرا للماسح الضوئي
- */
-
+import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { ScannerUIService } from './ui/ScannerUIService';
-import { scannerPermissionService } from './ScannerPermissionService';
 
+/**
+ * خدمة للتعامل مع كاميرا الماسح الضوئي
+ */
 export class ScannerCameraService {
   private static instance: ScannerCameraService;
-  private isActive = false;
-  private readonly uiService = new ScannerUIService();
+  private isTorchEnabled = false;
   
-  /**
-   * الحصول على نسخة وحيدة من الخدمة (Singleton)
-   */
+  private constructor() {}
+  
   public static getInstance(): ScannerCameraService {
     if (!ScannerCameraService.instance) {
       ScannerCameraService.instance = new ScannerCameraService();
@@ -23,38 +19,22 @@ export class ScannerCameraService {
   }
   
   /**
-   * التحقق من حالة نشاط الكاميرا
-   */
-  public isScanning(): boolean {
-    return this.isActive;
-  }
-  
-  /**
-   * تهيئة الكاميرا وتجهيزها للمسح
+   * تهيئة الكاميرا للاستخدام
    */
   public async initialize(): Promise<boolean> {
     try {
-      // التحقق من وجود الملحق أولاً
-      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.warn('[ScannerCameraService] ملحق MLKitBarcodeScanner غير متاح');
+      console.log('[ScannerCameraService] تهيئة الكاميرا');
+      
+      // التحقق من وجود الملحق
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('[ScannerCameraService] ملحق MLKitBarcodeScanner غير متاح');
         return false;
       }
-      
-      // التحقق من وجود إذن للكاميرا
-      const hasPermission = await scannerPermissionService.checkPermission();
-      if (!hasPermission) {
-        console.warn('[ScannerCameraService] لا يوجد إذن للكاميرا');
-        return false;
-      }
-      
-      // إعداد الكاميرا وتهيئتها - استخدام createVideoElement بدلاً من prepareBackground
-      const videoElement = this.uiService.createVideoElement();
-      this.uiService.activateScanningUI(videoElement);
       
       // تهيئة الكاميرا
       await BarcodeScanner.prepare();
-      
       console.log('[ScannerCameraService] تمت تهيئة الكاميرا بنجاح');
+      
       return true;
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في تهيئة الكاميرا:', error);
@@ -63,34 +43,108 @@ export class ScannerCameraService {
   }
   
   /**
-   * إيقاف الماسح الضوئي وتنظيف الموارد
+   * إيقاف المسح وتنظيف موارد الكاميرا
    */
-  public async stopScanning(): Promise<void> {
+  public async stopScanning(): Promise<boolean> {
     try {
-      // التحقق من حالة النشاط قبل المحاولة
-      if (!this.isActive) {
-        return;
+      console.log('[ScannerCameraService] إيقاف المسح وتنظيف موارد الكاميرا');
+      
+      // التحقق من وجود الملحق
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        return false;
       }
       
-      console.log('[ScannerCameraService] إيقاف المسح الضوئي...');
-      
-      // إيقاف المسح وتعطيل المصباح
-      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
-        await BarcodeScanner.disableTorch().catch(e => console.error('[ScannerCameraService] خطأ في تعطيل المصباح:', e));
-        await BarcodeScanner.stopScan().catch(e => console.error('[ScannerCameraService] خطأ في إيقاف المسح:', e));
+      // إيقاف الفلاش إذا كان مفعلاً
+      if (this.isTorchEnabled) {
+        await this.disableTorch().catch(() => {});
       }
       
-      // إعادة ضبط واجهة المستخدم - استخدام deactivateScanningUI بدلاً من restoreBackground
-      this.uiService.deactivateScanningUI();
-      this.uiService.removeVideoElement();
+      // إيقاف المسح
+      await BarcodeScanner.stopScan().catch(() => {});
       
-      // تحديث الحالة
-      this.isActive = false;
-      
-      console.log('[ScannerCameraService] تم إيقاف المسح الضوئي بنجاح');
+      return true;
     } catch (error) {
-      console.error('[ScannerCameraService] خطأ في إيقاف المسح الضوئي:', error);
-      this.isActive = false;
+      console.error('[ScannerCameraService] خطأ في إيقاف المسح:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * التبديل بين تشغيل وإيقاف الفلاش
+   */
+  public async toggleTorch(): Promise<boolean> {
+    try {
+      // التحقق من وجود الملحق
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        return false;
+      }
+      
+      if (this.isTorchEnabled) {
+        return await this.disableTorch();
+      } else {
+        return await this.enableTorch();
+      }
+    } catch (error) {
+      console.error('[ScannerCameraService] خطأ في تبديل حالة الفلاش:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * تفعيل الفلاش
+   */
+  public async enableTorch(): Promise<boolean> {
+    try {
+      // التحقق من وجود الملحق
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        return false;
+      }
+      
+      await BarcodeScanner.enableTorch();
+      this.isTorchEnabled = true;
+      
+      return true;
+    } catch (error) {
+      console.error('[ScannerCameraService] خطأ في تفعيل الفلاش:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * إلغاء تفعيل الفلاش
+   */
+  public async disableTorch(): Promise<boolean> {
+    try {
+      // التحقق من وجود الملحق
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        return false;
+      }
+      
+      await BarcodeScanner.disableTorch();
+      this.isTorchEnabled = false;
+      
+      return true;
+    } catch (error) {
+      console.error('[ScannerCameraService] خطأ في إلغاء تفعيل الفلاش:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * التحقق من توفر الفلاش
+   */
+  public async isTorchAvailable(): Promise<boolean> {
+    try {
+      // التحقق من وجود الملحق
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        return false;
+      }
+      
+      const result = await BarcodeScanner.isTorchAvailable();
+      return result.available;
+    } catch (error) {
+      console.error('[ScannerCameraService] خطأ في التحقق من توفر الفلاش:', error);
+      return false;
     }
   }
 }

@@ -1,9 +1,8 @@
 
 import { Toast } from '@capacitor/toast';
-import { supabase } from '@/integrations/supabase/client';
 
 /**
- * خدمة تتعامل مع معالجة نتائج المسح
+ * خدمة لمعالجة نتائج المسح الضوئي
  */
 export class ScannerResultService {
   private static instance: ScannerResultService;
@@ -18,82 +17,73 @@ export class ScannerResultService {
   }
   
   /**
-   * معالجة نتائج المسح الناجح
+   * معالجة نتيجة المسح
+   * @param result نتيجة المسح من ملحق الماسح الضوئي
+   * @param onSuccess دالة يتم استدعاؤها عند نجاح المسح
    */
-  public async processSuccessfulScan(code: string, scanType: "check" | "in" | "out" = "check"): Promise<boolean> {
+  public async processScanResult(
+    result: { barcodes?: Array<{ rawValue?: string }> },
+    onSuccess: (code: string) => void
+  ): Promise<boolean> {
     try {
-      console.log(`[ScannerResultService] معالجة المسح الناجح للرمز: ${code}`);
+      console.log('[ScannerResultService] معالجة نتيجة المسح:', result);
       
-      // يمكن هنا تسجيل عملية المسح إذا كان مطلوباً
-      const restaurantId = localStorage.getItem('restaurantId');
-      if (restaurantId) {
-        try {
-          await supabase
-            .from('product_scans')
-            .insert({
-              product_id: '', // ملاحظة: يجب تضمين معرف المنتج إذا كان متاحًا
-              qr_code: code,
-              scan_type: scanType,
-              scanned_by: restaurantId
-            });
-            
-          console.log('[ScannerResultService] تم تسجيل عملية المسح بنجاح');
-        } catch (error) {
-          console.error('[ScannerResultService] خطأ في تسجيل عملية المسح:', error);
-          // نتابع حتى لو فشل التسجيل لأنه ليس حرجاً
-        }
+      // التحقق من وجود باركود
+      if (!result.barcodes || result.barcodes.length === 0) {
+        console.log('[ScannerResultService] لم يتم العثور على باركود');
+        await Toast.show({
+          text: 'لم يتم العثور على باركود. يرجى المحاولة مرة أخرى.',
+          duration: 'short'
+        });
+        return false;
       }
       
+      // استخراج قيمة الباركود
+      const barcode = result.barcodes[0];
+      if (!barcode.rawValue) {
+        console.log('[ScannerResultService] تم العثور على باركود لكن بدون قيمة');
+        await Toast.show({
+          text: 'تم العثور على باركود لكن لا يمكن قراءته. يرجى المحاولة مرة أخرى.',
+          duration: 'short'
+        });
+        return false;
+      }
+      
+      // استدعاء دالة النجاح مع قيمة الباركود
+      const code = barcode.rawValue;
+      console.log('[ScannerResultService] تم مسح الباركود بنجاح:', code);
+      
+      // عرض رسالة نجاح
+      await Toast.show({
+        text: `تم مسح الباركود بنجاح: ${code}`,
+        duration: 'short'
+      });
+      
+      // استدعاء دالة النجاح
+      onSuccess(code);
       return true;
     } catch (error) {
       console.error('[ScannerResultService] خطأ في معالجة نتيجة المسح:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * معالجة فشل المسح
-   */
-  public async handleScanFailure(error: any = null): Promise<void> {
-    try {
-      console.error('[ScannerResultService] فشل في عملية المسح:', error);
       
-      // عرض رسالة للمستخدم
+      // عرض رسالة خطأ
       await Toast.show({
-        text: 'لم يتم العثور على باركود. يرجى المحاولة مرة أخرى.',
-        duration: 'long'
+        text: 'حدث خطأ أثناء معالجة نتيجة المسح',
+        duration: 'short'
       });
-    } catch (toastError) {
-      console.error('[ScannerResultService] خطأ في عرض رسالة الفشل:', toastError);
+      
+      return false;
     }
   }
   
   /**
-   * معالجة نتيجة المسح - سواء كانت ناجحة أو فاشلة
+   * التحقق من أن قيمة الباركود صالحة
+   * @param code قيمة الباركود للتحقق منها
    */
-  public async processScanResult(result: any, onSuccess: (code: string) => void): Promise<boolean> {
-    try {
-      if (result && result.barcodes && result.barcodes.length > 0) {
-        const code = result.barcodes[0].rawValue || '';
-        
-        if (code) {
-          console.log('[ScannerResultService] تم العثور على باركود:', code);
-          await this.processSuccessfulScan(code);
-          onSuccess(code);
-          return true;
-        }
-      }
-      
-      // لم يتم العثور على باركود
-      await this.handleScanFailure();
-      return false;
-    } catch (error) {
-      console.error('[ScannerResultService] خطأ في معالجة نتيجة المسح:', error);
-      await this.handleScanFailure(error);
-      return false;
-    }
+  public validateBarcode(code: string): boolean {
+    // يمكن إضافة منطق للتحقق من صحة الباركود هنا
+    return code.length > 0;
   }
 }
 
-// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
+// تصدير نسخة واحدة من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerResultService = ScannerResultService.getInstance();
