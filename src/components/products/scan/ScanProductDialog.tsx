@@ -1,14 +1,13 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useScanProductHandler } from './hooks/useScanProductHandler';
 import { ScanProductDialogHeader } from './components/ScanProductDialogHeader';
 import { ScanProductContent } from './components/ScanProductContent';
-import { Capacitor } from '@capacitor/core';
 import { BrowserView } from '@/components/mobile/scanner/components/BrowserView';
-import { platformService } from '@/services/scanner/PlatformService';
 import CapacitorTester from '@/components/mobile/CapacitorTester';
+import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
 
 interface ScanProductDialogProps {
   open: boolean;
@@ -18,29 +17,23 @@ interface ScanProductDialogProps {
 
 const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDialogProps) => {
   const { toast } = useToast();
-  const [isWebEnvironment, setIsWebEnvironment] = useState(true);
   const [showDebug, setShowDebug] = useState(false);
+  const environment = useScannerEnvironment();
   
-  // تحقق من بيئة التشغيل عند فتح الحوار
-  useEffect(() => {
+  // تشخيص البيئة عند الفتح
+  React.useEffect(() => {
     if (open) {
-      const isNative = platformService.isNativePlatform();
-      const platform = platformService.getPlatform();
-      
-      console.log('ScanProductDialog: هل نحن في بيئة الجوال؟', isNative);
-      console.log('ScanProductDialog: منصة التشغيل:', platform);
-      
-      setIsWebEnvironment(!isNative);
+      console.log('ScanProductDialog: بيئة التشغيل الحالية:', environment);
       
       // إذا كنا في بيئة الجوال وليس الويب، نعرض رسالة تأكيد
-      if (isNative) {
+      if (environment.isNativePlatform) {
         toast({
           title: "تفعيل الماسح الضوئي",
           description: "جاري تشغيل الماسح الضوئي للباركود..."
         });
       }
     }
-  }, [open, toast]);
+  }, [open, toast, environment]);
   
   const {
     isProcessing,
@@ -59,14 +52,14 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   
   // تفعيل الماسح تلقائياً عند فتح مربع الحوار في بيئة الأجهزة
   React.useEffect(() => {
-    if (open && !showScanner && !isWebEnvironment) {
+    if (open && !showScanner && environment.isNativePlatform) {
       console.log('ScanProductDialog: تفعيل الماسح تلقائياً في بيئة الجوال');
       setShowScanner(true);
     }
-  }, [open, showScanner, setShowScanner, isWebEnvironment]);
+  }, [open, showScanner, setShowScanner, environment.isNativePlatform]);
 
   // في بيئة الويب، نعرض رسالة بدلاً من الماسح
-  if (isWebEnvironment) {
+  if (!environment.isNativePlatform) {
     return (
       <Dialog 
         open={open} 

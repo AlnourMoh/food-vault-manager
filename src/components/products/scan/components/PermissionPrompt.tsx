@@ -1,13 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Settings, Keyboard } from 'lucide-react';
+import { Camera, Settings, X, AlertTriangle, Info } from 'lucide-react';
+import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
 
 interface PermissionPromptProps {
   permissionError: string | null;
   handleRequestPermission: () => Promise<void>;
   handleOpenSettings: () => Promise<void>;
-  handleManualEntry: () => void;
+  handleManualEntry?: () => void;
   onClose: () => void;
 }
 
@@ -18,62 +19,127 @@ export const PermissionPrompt: React.FC<PermissionPromptProps> = ({
   handleManualEntry,
   onClose
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const environment = useScannerEnvironment();
+  
+  const handleRequest = async () => {
+    setIsLoading(true);
+    await handleRequestPermission();
+    setIsLoading(false);
+  };
+
+  const handleSettings = async () => {
+    setIsLoading(true);
+    await handleOpenSettings();
+    setIsLoading(false);
+  };
+
+  // تخصيص الرسالة بناءً على بيئة التشغيل
+  const getEnvSpecificInstructions = () => {
+    if (environment.isNativePlatform) {
+      if (environment.platform === 'ios') {
+        return 'اذهب إلى إعدادات جهازك > الخصوصية > الكاميرا وقم بتمكين الإذن لتطبيق مخزن الطعام';
+      } else if (environment.platform === 'android') {
+        return 'اذهب إلى إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات > الكاميرا وقم بتمكينها';
+      }
+    }
+    return 'تأكد من منح إذن الكاميرا للتطبيق من إعدادات جهازك';
+  };
+
   return (
-    <div className="scanner-permission-overlay">
-      <div className="permission-error-view">
-        <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
-          <Camera className="h-8 w-8" />
+    <div className="permission-prompt p-6 flex flex-col items-center">
+      <div className="absolute top-4 right-4">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="bg-amber-100 text-amber-700 p-3 rounded-full">
+        <Camera className="h-8 w-8" />
+      </div>
+      
+      <h3 className="text-xl font-bold mt-4">الكاميرا غير متاحة</h3>
+      
+      {permissionError ? (
+        <div className="mt-2 bg-red-50 p-3 rounded-md border border-red-200">
+          <div className="flex gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
+            <p className="text-red-700 text-sm">{permissionError}</p>
+          </div>
         </div>
-        
-        <h3 className="text-xl font-bold mt-4">لا يوجد إذن للكاميرا</h3>
-        
-        {permissionError && (
-          <p className="text-sm text-red-600 mt-2 mb-4">
-            {permissionError}
-          </p>
-        )}
-        
-        <p className="text-muted-foreground mb-4">
-          المطلوب إذن الكاميرا لتمكين مسح الباركود. يستخدم التطبيق الكاميرا فقط لقراءة الباركود.
+      ) : (
+        <p className="text-gray-600 text-center mt-2">
+          يحتاج التطبيق إلى إذن استخدام الكاميرا للمسح الضوئي
         </p>
-        
-        <div className="space-y-2 mt-4">
-          <Button 
-            onClick={handleRequestPermission}
-            className="w-full"
-            variant="default"
-          >
-            <Camera className="h-4 w-4 ml-2" />
-            طلب إذن الكاميرا
-          </Button>
-          
-          <Button 
-            onClick={handleOpenSettings}
-            className="w-full"
-            variant="secondary"
-          >
-            <Settings className="h-4 w-4 ml-2" />
-            فتح إعدادات التطبيق
-          </Button>
-          
-          <Button 
-            onClick={handleManualEntry}
-            className="w-full"
-            variant="secondary"
-          >
-            <Keyboard className="h-4 w-4 ml-2" />
-            إدخال الكود يدويًا
-          </Button>
-          
-          <Button 
-            onClick={onClose}
-            className="w-full"
-            variant="outline"
-          >
-            إغلاق
-          </Button>
+      )}
+      
+      <div className="bg-blue-50 p-3 rounded-md border border-blue-200 mt-4 w-full">
+        <div className="flex gap-2">
+          <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <p className="text-blue-700 text-sm">{getEnvSpecificInstructions()}</p>
         </div>
       </div>
+      
+      <div className="mt-6 space-y-3 w-full">
+        <Button 
+          className="w-full" 
+          onClick={handleRequest} 
+          disabled={isLoading}
+        >
+          السماح بالوصول إلى الكاميرا
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={handleSettings}
+          disabled={isLoading}
+        >
+          <Settings className="h-4 w-4 ml-2" />
+          فتح إعدادات التطبيق
+        </Button>
+        
+        {handleManualEntry && (
+          <Button 
+            variant="ghost" 
+            className="w-full"
+            onClick={handleManualEntry}
+          >
+            إدخال الباركود يدويًا
+          </Button>
+        )}
+      </div>
+      
+      {!environment.isNativePlatform && (
+        <div className="mt-4 p-3 bg-gray-100 rounded-md w-full">
+          <p className="text-sm text-gray-600">
+            <strong>ملاحظة:</strong> يبدو أنك تستخدم المتصفح وليس تطبيق الجوال. بعض ميزات المسح قد لا تعمل بشكل صحيح في المتصفح.
+          </p>
+        </div>
+      )}
+      
+      <div className="mt-4">
+        <button 
+          className="text-xs text-blue-500 underline"
+          onClick={() => setShowDebug(!showDebug)}
+        >
+          {showDebug ? "إخفاء معلومات التشخيص" : "عرض معلومات التشخيص"}
+        </button>
+      </div>
+      
+      {showDebug && (
+        <div className="mt-2 p-2 bg-gray-100 rounded text-xs w-full overflow-auto max-h-40 dir-ltr">
+          <pre className="whitespace-pre-wrap">
+            {JSON.stringify(environment, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 };

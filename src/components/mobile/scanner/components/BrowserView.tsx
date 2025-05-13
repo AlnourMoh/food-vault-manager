@@ -1,57 +1,35 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Smartphone, X, Info } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
-import { platformService } from '@/services/scanner/PlatformService';
+import CapacitorTester from '../../CapacitorTester';
+import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
 
 interface BrowserViewProps {
   onClose: () => void;
 }
 
 export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
-  const [isNative, setIsNative] = useState(false);
-  const [platform, setPlatform] = useState('');
-  const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [showDebug, setShowDebug] = useState(false);
-  
-  useEffect(() => {
-    // تحقق مما إذا كنا في بيئة تطبيق أصلية
-    const isNativePlatform = platformService.isNativePlatform();
-    const currentPlatform = platformService.getPlatform();
-    
-    console.log('BrowserView: هل نحن في بيئة أصلية؟', isNativePlatform);
-    console.log('BrowserView: المنصة الحالية:', currentPlatform);
-    
-    // جمع معلومات التشخيص
-    const info = [
-      `منصة التشغيل: ${currentPlatform}`,
-      `بيئة أصلية: ${isNativePlatform ? 'نعم' : 'لا'}`,
-      `وجود Capacitor: ${platformService.hasCapacitor() ? 'نعم' : 'لا'}`,
-      `ملحق MLKitBarcodeScanner: ${platformService.isPluginAvailable('MLKitBarcodeScanner') ? 'متاح' : 'غير متاح'}`,
-      `ملحق Camera: ${platformService.isPluginAvailable('Camera') ? 'متاح' : 'غير متاح'}`,
-      `userAgent: ${navigator.userAgent}`
-    ];
-    
-    setIsNative(isNativePlatform);
-    setPlatform(currentPlatform);
-    setDebugInfo(info);
-  }, []);
+  const environment = useScannerEnvironment();
   
   // إذا كنا في بيئة أصلية، نغلق هذه الواجهة تلقائياً
-  useEffect(() => {
-    if (isNative) {
+  React.useEffect(() => {
+    if (environment.isNativePlatform) {
       console.log('BrowserView: تم اكتشاف بيئة أصلية، إغلاق شاشة BrowserView...');
       const timer = setTimeout(() => {
         onClose();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [isNative, onClose]);
+  }, [environment.isNativePlatform, onClose]);
 
-  if (isNative) {
+  if (environment.isNativePlatform) {
     return null;
   }
+
+  // إذا كنا في WebView لكن لسنا في البيئة الأصلية، نعرض رسالة مختلفة
+  const isInWebView = environment.isWebView && !environment.isNativePlatform;
 
   return (
     <div className="browser-view-container p-4">
@@ -61,7 +39,9 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
       
       <h2 className="text-xl font-bold mb-2 text-center">الماسح الضوئي غير متاح</h2>
       <p className="text-gray-600 mb-4 text-center">
-        ميزة المسح الضوئي متاحة فقط في تطبيق الجوال.
+        {isInWebView 
+          ? "يبدو أنك تستخدم التطبيق داخل متصفح. للحصول على وظائف كاملة، يرجى تثبيت التطبيق من المتجر."
+          : "ميزة المسح الضوئي متاحة فقط في تطبيق الجوال."}
       </p>
       
       <div className="bg-blue-50 p-3 rounded-lg mb-4 flex items-start">
@@ -80,7 +60,14 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
         <div className="bg-gray-100 p-3 rounded-lg mb-4 text-xs text-gray-800 dir-ltr">
           <h4 className="font-bold mb-1">معلومات تشخيصية:</h4>
           <pre className="whitespace-pre-wrap">
-            {debugInfo.join('\n')}
+            {`منصة التشغيل: ${environment.platform}
+بيئة أصلية: ${environment.isNativePlatform ? 'نعم' : 'لا'}
+WebView: ${environment.isWebView ? 'نعم' : 'لا'}
+وجود Capacitor: ${environment.hasCapacitor ? 'نعم' : 'لا'}
+ملحق MLKitBarcodeScanner: ${environment.availablePlugins.mlkitScanner ? 'متاح' : 'غير متاح'}
+ملحق Camera: ${environment.availablePlugins.camera ? 'متاح' : 'غير متاح'}
+ملحق BarcodeScanner: ${environment.availablePlugins.barcodeScanner ? 'متاح' : 'غير متاح'}
+userAgent: ${navigator.userAgent}`}
           </pre>
         </div>
       )}
