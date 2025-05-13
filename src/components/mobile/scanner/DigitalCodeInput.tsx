@@ -1,85 +1,101 @@
 
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Keyboard, Check, X } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 
 interface DigitalCodeInputProps {
   onSubmit: (code: string) => void;
   onCancel: () => void;
 }
 
-export const DigitalCodeInput = ({ onSubmit, onCancel }: DigitalCodeInputProps) => {
-  const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = () => {
-    if (!code.trim()) {
-      setError('يرجى إدخال الكود');
-      return;
-    }
+export const DigitalCodeInput: React.FC<DigitalCodeInputProps> = ({
+  onSubmit,
+  onCancel
+}) => {
+  const [code, setCode] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Basic validation - codes are usually alphanumeric
-    if (!/^[A-Za-z0-9-]+$/.test(code)) {
-      setError('الكود يجب أن يحتوي على أحرف وأرقام فقط');
-      return;
-    }
+    if (!code || code.trim() === '') return;
     
-    setError(null);
-    onSubmit(code.trim());
+    try {
+      setIsSubmitting(true);
+      onSubmit(code.trim());
+    } catch (error) {
+      console.error('خطأ في إرسال الكود:', error);
+      setIsSubmitting(false);
+    }
   };
-
+  
   return (
-    <Card className="p-4 fixed inset-x-0 bottom-0 z-50 bg-background border-t shadow-lg">
-      <div className="flex flex-col items-center justify-center py-6 space-y-4">
-        <div className="bg-primary/10 text-primary p-3 rounded-full w-16 h-16 flex items-center justify-center">
-          <Keyboard className="h-8 w-8" />
-        </div>
+    <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-6">
+      <div className="bg-white p-6 rounded-xl max-w-md w-full">
+        <h2 className="text-xl font-bold mb-4 text-center">إدخال الباركود يدويًا</h2>
         
-        <h3 className="text-xl font-bold">إدخال الكود يدويًا</h3>
-        
-        <p className="text-center text-muted-foreground">
-          يرجى إدخال الكود الموجود على المنتج
+        <p className="text-gray-600 text-sm mb-6 text-center">
+          يرجى إدخال الباركود المطبوع على المنتج أو من مستندات المنتج.
         </p>
         
-        <div className="w-full space-y-2">
-          <Input
-            placeholder="أدخل الكود هنا"
-            value={code}
-            onChange={(e) => {
-              setCode(e.target.value);
-              if (error) setError(null);
-            }}
-            className="text-center text-lg"
-            autoFocus
-          />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="barcode" className="text-sm font-medium block mb-1">
+              رمز الباركود:
+            </label>
+            <Input
+              id="barcode"
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="مثال: 123456789012"
+              className="w-full text-lg tracking-wider"
+              autoFocus
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={20}
+            />
+          </div>
           
-          {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
-          )}
-        </div>
+          <div className="flex flex-col space-y-2">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!code || isSubmitting || code.trim() === ''}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                  جاري المعالجة...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  تأكيد الإدخال
+                </>
+              )}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={onCancel}
+            >
+              <X className="mr-2 h-4 w-4" />
+              إلغاء
+            </Button>
+          </div>
+        </form>
         
-        <div className="flex flex-col w-full space-y-2 mt-4">
-          <Button 
-            onClick={handleSubmit}
-            className="w-full"
-            variant="default"
-          >
-            <Check className="h-4 w-4 ml-2" />
-            تأكيد
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={onCancel}
-            className="w-full"
-          >
-            <X className="h-4 w-4 ml-2" />
-            إلغاء
-          </Button>
+        <div className="mt-4 p-3 bg-amber-50 rounded-md">
+          <p className="text-amber-800 text-xs">
+            <strong>ملاحظة:</strong> تأكد من إدخال جميع الأرقام الظاهرة على الباركود، 
+            عادة ما تكون 8-13 رقماً بدون مسافات أو رموز خاصة.
+          </p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };

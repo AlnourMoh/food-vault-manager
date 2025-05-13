@@ -1,70 +1,71 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Settings, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Camera, Settings, Keyboard } from 'lucide-react';
 
-interface PermissionViewProps {
-  permissionError: boolean;
+export interface PermissionViewProps {
   handleRequestPermission: () => Promise<void>;
-  handleOpenSettings: () => Promise<void>;
-  handleManualEntry?: () => void;
   onClose: () => void;
+  onManualEntry?: () => void;
 }
 
 export const PermissionView: React.FC<PermissionViewProps> = ({
-  permissionError,
   handleRequestPermission,
-  handleOpenSettings,
-  handleManualEntry,
-  onClose
+  onClose,
+  onManualEntry
 }) => {
   return (
-    <Card className="w-[90%] max-w-md mx-auto text-center">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex justify-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
-        </CardTitle>
-        <CardTitle className="text-xl">تصريح الكاميرا مطلوب</CardTitle>
-      </CardHeader>
-      
-      <CardContent>
-        <p className="text-gray-600 mb-6">
-          يحتاج التطبيق إلى إذن الوصول إلى الكاميرا لتمكين مسح الباركود. 
-          يرجى منح الإذن للاستمرار.
+    <div className="scanner-permission-overlay">
+      <div className="permission-error-view">
+        <div className="bg-red-100 text-red-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+          <Camera className="h-8 w-8" />
+        </div>
+        
+        <h3 className="text-xl font-bold mt-4">لا يوجد إذن للكاميرا</h3>
+        
+        <p className="text-muted-foreground mb-4">
+          المطلوب إذن الكاميرا لتمكين مسح الباركود. يستخدم التطبيق الكاميرا فقط لقراءة الباركود.
         </p>
         
-        {permissionError && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 mb-6">
-            <p className="text-sm">
-              تم رفض إذن الكاميرا. يرجى تمكينه من إعدادات جهازك لاستخدام الماسح الضوئي.
-            </p>
-          </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="flex flex-col gap-3">
-        {!permissionError ? (
-          <Button className="w-full" onClick={handleRequestPermission}>
-            منح إذن الكاميرا
+        <div className="space-y-2 mt-4">
+          <Button 
+            onClick={handleRequestPermission}
+            className="w-full"
+            variant="default"
+          >
+            <Camera className="h-4 w-4 ml-2" />
+            طلب إذن الكاميرا
           </Button>
-        ) : (
-          <Button className="w-full" onClick={handleOpenSettings}>
-            <Settings className="ml-2 h-4 w-4" />
+          
+          <Button 
+            onClick={onClose}
+            className="w-full"
+            variant="secondary"
+          >
+            <Settings className="h-4 w-4 ml-2" />
             فتح إعدادات التطبيق
           </Button>
-        )}
-        
-        {handleManualEntry && (
-          <Button variant="outline" className="w-full" onClick={handleManualEntry}>
-            إدخال الرمز يدوياً
+          
+          {onManualEntry && (
+            <Button 
+              onClick={onManualEntry}
+              className="w-full"
+              variant="secondary"
+            >
+              <Keyboard className="h-4 w-4 ml-2" />
+              إدخال الكود يدويًا
+            </Button>
+          )}
+          
+          <Button 
+            onClick={onClose}
+            className="w-full"
+            variant="outline"
+          >
+            إغلاق
           </Button>
-        )}
-        
-        <Button variant="ghost" className="w-full" onClick={onClose}>
-          إلغاء
-        </Button>
-      </CardFooter>
-    </Card>
+        </div>
+      </div>
+    </div>
   );
 };

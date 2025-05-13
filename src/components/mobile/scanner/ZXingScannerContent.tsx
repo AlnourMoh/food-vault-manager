@@ -48,7 +48,12 @@ export const ZXingScannerContent: React.FC<ZXingScannerContentProps> = ({
 
   return (
     <ScannerView
+      isActive={isScanningActive}
+      cameraActive={cameraActive}
+      hasError={hasScannerError}
       onStartScan={startScan}
+      onStopScan={stopScan}
+      onRetry={handleRetry}
       onClose={onClose}
       onManualEntry={onManualEntry}
     />

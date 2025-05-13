@@ -10,9 +10,10 @@ interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
   onClose: () => void;
   autoStart?: boolean;
+  onManualEntry?: () => void;
 }
 
-const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcodeScannerProps) => {
+const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry }: ZXingBarcodeScannerProps) => {
   const {
     isNativePlatform,
     hasPermission,
@@ -31,7 +32,15 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
   
   // إذا لم يكن لدينا إذن الكاميرا
   if (hasPermission === false) {
-    return <PermissionView onRequestPermission={checkAndRequestPermissions} onClose={onClose} />;
+    return (
+      <PermissionView 
+        handleRequestPermission={async () => {
+          await checkAndRequestPermissions();
+        }} 
+        onClose={onClose}
+        onManualEntry={onManualEntry}
+      />
+    );
   }
   
   // أثناء التحقق من الإذن أو عملية المسح النشطة
@@ -42,7 +51,12 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
   // واجهة المستخدم الرئيسية للماسح
   return (
     <ScannerView 
+      isActive={scanActive}
+      cameraActive={cameraActive || false}
+      hasError={false}
       onStartScan={startScan}
+      onStopScan={stopScan}
+      onRetry={() => startScan()}
       onClose={onClose}
     />
   );
