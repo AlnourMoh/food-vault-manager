@@ -1,91 +1,87 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
-import { Toast } from '@capacitor/toast';
+import { useState, useCallback } from 'react';
+import { zxingService } from '@/services/scanner/ZXingService';
+import { useToast } from '@/hooks/use-toast';
 
+/**
+ * هوك للتعامل مع أذونات الكاميرا
+ */
 export const useScannerPermission = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Check permission on component mount
-  useEffect(() => {
-    checkPermission().catch(console.error);
-  }, []);
-
-  // Check camera permission
-  const checkPermission = useCallback(async (): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      setPermissionError(null);
-
-      const isSupported = await scannerPermissionService.isSupported();
-      if (!isSupported) {
-        setPermissionError('الجهاز لا يدعم الماسح الضوئي');
-        setHasPermission(false);
-        return false;
-      }
-
-      const permission = await scannerPermissionService.checkPermission();
-      setHasPermission(permission);
-      return permission;
-    } catch (error) {
-      console.error('خطأ في التحقق من الإذن:', error);
-      setPermissionError('حدث خطأ أثناء التحقق من إذن الكاميرا');
-      setHasPermission(false);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Request camera permission
+  /**
+   * طلب إذن الكاميرا
+   */
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      setPermissionError(null);
-
-      const granted = await scannerPermissionService.requestPermission();
-      setHasPermission(granted);
-
-      if (!granted) {
-        setPermissionError('تم رفض إذن الكاميرا');
-        await Toast.show({
-          text: 'يجب منح إذن الكاميرا لاستخدام الماسح الضوئي',
-          duration: 'long'
+      
+      const permissionStatus = await zxingService.requestPermission();
+      
+      setHasPermission(permissionStatus.granted);
+      
+      if (!permissionStatus.granted && permissionStatus.error) {
+        toast({
+          title: "لم يتم الحصول على إذن الكاميرا",
+          description: permissionStatus.error,
+          variant: "destructive"
         });
       }
-
-      return granted;
+      
+      return permissionStatus.granted;
     } catch (error) {
-      console.error('خطأ في طلب الإذن:', error);
-      setPermissionError('حدث خطأ أثناء طلب إذن الكاميرا');
+      console.error('[useScannerPermission] خطأ في طلب الإذن:', error);
+      
       setHasPermission(false);
+      
+      toast({
+        title: "خطأ في طلب إذن الكاميرا",
+        description: "حدث خطأ أثناء محاولة طلب إذن الكاميرا",
+        variant: "destructive"
+      });
+      
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [toast]);
 
-  // Open app settings to manually enable camera permission
-  const openSettings = useCallback(async (): Promise<void> => {
+  /**
+   * التحقق من دعم الجهاز والأذونات
+   */
+  const checkSupportAndPermission = useCallback(async (): Promise<boolean> => {
     try {
-      await scannerPermissionService.openAppSettings();
+      setIsLoading(true);
+      
+      // التحقق أولاً من الدعم
+      const isSupported = await zxingService.isSupported();
+      if (!isSupported) {
+        setHasPermission(false);
+        return false;
+      }
+      
+      // التحقق من الإذن
+      const permissionStatus = await zxingService.requestPermission();
+      setHasPermission(permissionStatus.granted);
+      
+      return permissionStatus.granted;
     } catch (error) {
-      console.error('خطأ في فتح الإعدادات:', error);
-      await Toast.show({
-        text: 'تعذر فتح إعدادات التطبيق، يرجى تمكين إذن الكاميرا يدويًا',
-        duration: 'long'
-      });
+      console.error('[useScannerPermission] خطأ في التحقق من الدعم والإذن:', error);
+      setHasPermission(false);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   return {
     isLoading,
+    setIsLoading,
     hasPermission,
-    permissionError,
-    checkPermission,
+    setHasPermission,
     requestPermission,
-    openSettings
+    checkSupportAndPermission
   };
 };

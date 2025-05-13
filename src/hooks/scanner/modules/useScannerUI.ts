@@ -1,71 +1,82 @@
 
-import { useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { useState, useCallback } from 'react';
 
+/**
+ * هوك لإدارة واجهة المستخدم للماسح
+ */
 export const useScannerUI = () => {
-  // Setup UI for scanning (hide web elements, prepare background)
-  const setupScannerBackground = useCallback(async (): Promise<void> => {
+  const [isManualEntry, setIsManualEntry] = useState(false);
+  
+  /**
+   * تنفيذ إعداد خلفية الماسح
+   */
+  const setupScannerBackground = useCallback(async () => {
     try {
-      if (!Capacitor.isNativePlatform()) return;
-      
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        // Hide app UI elements that might interfere with the scanner
-        document.documentElement.style.setProperty('--scanner-active', '1');
-        document.body.classList.add('scanner-active');
-        
-        // Hide any header or navigation elements
-        const elementsToHide = document.querySelectorAll('header, nav, footer');
-        elementsToHide.forEach(el => {
-          if (el instanceof HTMLElement) {
-            el.style.display = 'none';
-          }
-        });
-
-        // Show the camera background if supported
-        try {
-          await BarcodeScanner.showBackground();
-        } catch (error) {
-          console.error('خطأ في إظهار خلفية الكاميرا:', error);
+      // إخفاء عناصر الواجهة أثناء المسح
+      document.querySelectorAll('header, footer, nav').forEach(element => {
+        if (element instanceof HTMLElement) {
+          element.style.opacity = '0';
+          element.style.visibility = 'hidden';
+          element.style.pointerEvents = 'none';
         }
-      }
+      });
+      
+      // إضافة فئة للتحكم في المظهر العام
+      document.body.classList.add('scanner-active');
+      
+      return true;
     } catch (error) {
-      console.error('خطأ في إعداد واجهة المسح:', error);
+      console.error('[useScannerUI] خطأ في إعداد خلفية الماسح:', error);
+      return false;
     }
   }, []);
 
-  // Restore UI after scanning
-  const restoreUIAfterScanning = useCallback(async (): Promise<void> => {
+  /**
+   * استعادة واجهة المستخدم بعد المسح
+   */
+  const restoreUIAfterScanning = useCallback(async () => {
     try {
-      if (!Capacitor.isNativePlatform()) return;
+      // استعادة عناصر الواجهة بشكل تدريجي
+      setTimeout(() => {
+        document.querySelectorAll('header, footer, nav').forEach(el => {
+          if (el instanceof HTMLElement) {
+            el.style.opacity = '';
+            el.style.visibility = '';
+            el.style.pointerEvents = '';
+          }
+        });
+      }, 200);
       
-      // Reset CSS variables and classes
-      document.documentElement.style.setProperty('--scanner-active', '0');
+      // إزالة فئة التحكم في المظهر العام
       document.body.classList.remove('scanner-active');
       
-      // Show previously hidden elements
-      const elementsToShow = document.querySelectorAll('header, nav, footer');
-      elementsToShow.forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.style.display = '';
-        }
-      });
-
-      // Hide the camera background if needed
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          await BarcodeScanner.hideBackground();
-        } catch (error) {
-          console.error('خطأ في إخفاء خلفية الكاميرا:', error);
-        }
-      }
+      return true;
     } catch (error) {
-      console.error('خطأ في استعادة واجهة المسح:', error);
+      console.error('[useScannerUI] خطأ في استعادة واجهة المستخدم:', error);
+      return false;
     }
+  }, []);
+
+  /**
+   * التبديل إلى الإدخال اليدوي
+   */
+  const handleManualEntry = useCallback(() => {
+    setIsManualEntry(true);
+  }, []);
+
+  /**
+   * إلغاء الإدخال اليدوي
+   */
+  const handleManualCancel = useCallback(() => {
+    setIsManualEntry(false);
   }, []);
 
   return {
+    isManualEntry,
+    setIsManualEntry,
     setupScannerBackground,
-    restoreUIAfterScanning
+    restoreUIAfterScanning,
+    handleManualEntry,
+    handleManualCancel
   };
 };

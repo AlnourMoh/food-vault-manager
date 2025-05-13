@@ -1,112 +1,146 @@
 
 import { useState, useCallback } from 'react';
-import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
-import { Toast } from '@capacitor/toast';
-import { Capacitor } from '@capacitor/core';
+import { zxingService } from '@/services/scanner/ZXingService';
+import { useToast } from '@/hooks/use-toast';
+import { ZXingScanResult } from '@/types/zxing-scanner';
 
-export const useScannerOperations = () => {
-  const [isScanning, setIsScanning] = useState(false);
+/**
+ * هوك للتعامل مع عمليات المسح
+ */
+export const useScannerOperations = (
+  onScan?: (code: string) => void
+) => {
+  const [isScanningActive, setIsScanningActive] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
+  const [hasScannerError, setHasScannerError] = useState(false);
+  const { toast } = useToast();
 
-  // Start scanning for barcodes
-  const startScan = useCallback(async (onSuccess: (code: string) => void): Promise<boolean> => {
-    try {
-      // Check if we're on a native platform
-      if (!Capacitor.isNativePlatform()) {
-        console.log('نحن في بيئة الويب، الماسح غير متاح');
-        setScanError('الماسح غير متاح في بيئة الويب');
-        return false;
+  /**
+   * معالجة نتيجة المسح
+   */
+  const handleScanResult = useCallback((result: ZXingScanResult) => {
+    if (result && result.text) {
+      setLastScannedCode(result.text);
+      
+      if (onScan) {
+        onScan(result.text);
       }
-
-      // Check if the plugin is available
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('ملحق MLKit غير متاح');
-        setScanError('ملحق الماسح الضوئي غير متاح');
-        return false;
-      }
-
-      console.log('بدء عملية المسح...');
-      setScanError(null);
-      setIsScanning(true);
-
-      // Configure supported barcode formats
-      const supportedFormats = [
-        BarcodeFormat.QrCode,
-        BarcodeFormat.Ean13,
-        BarcodeFormat.Code128,
-        BarcodeFormat.Code39,
-        BarcodeFormat.UpcA,
-        BarcodeFormat.UpcE
-      ];
-
-      // Prepare the scanner
-      await BarcodeScanner.prepare();
-
-      // Start scanning
-      const result = await BarcodeScanner.scan({
-        formats: supportedFormats
-      });
-
-      // Process result
-      if (result.barcodes && result.barcodes.length > 0) {
-        const code = result.barcodes[0].rawValue;
-        if (code) {
-          setLastScannedCode(code);
-          onSuccess(code);
-          await stopScan();
-          return true;
-        }
-      }
-
-      // No barcode found
-      setScanError('لم يتم العثور على باركود');
-      await Toast.show({
-        text: 'لم يتم العثور على باركود. يرجى المحاولة مرة أخرى.',
-        duration: 'short'
-      });
-
-      await stopScan();
-      return false;
-    } catch (error) {
-      console.error('خطأ في بدء المسح:', error);
-      setScanError('حدث خطأ أثناء عملية المسح');
-      await stopScan();
-      return false;
+      
+      return true;
     }
-  }, []);
+    
+    return false;
+  }, [onScan]);
 
-  // Stop the scanning process
-  const stopScan = useCallback(async (): Promise<boolean> => {
+  /**
+   * بدء المسح
+   */
+  const startScan = useCallback(async (hasPermission: boolean, requestPermission: () => Promise<boolean>): Promise<boolean> => {
     try {
-      if (!isScanning) return true;
-
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          // Attempt to disable torch if it was enabled
-          await BarcodeScanner.disableTorch().catch(() => {});
-          // Stop the scanning process
-          await BarcodeScanner.stopScan().catch(() => {});
-        } catch (error) {
-          console.error('خطأ في إيقاف المسح:', error);
+      if (isScanningActive) {
+        console.log('[useScannerOperations] الماسح نشط بالفعل');
+        return true;
+      }
+      
+      setHasScannerError(false);
+      
+      // التحقق من الإذن وطلبه إذا لزم الأمر
+      if (hasPermission !== true) {
+        const granted = await requestPermission();
+        if (!granted) {
+          return false;
         }
       }
-
-      setIsScanning(false);
+      
+      setIsScanningActive(true);
+      
+      // بدء المسح
+      const success = await zxingService.startScan({
+        tryHarder: true,
+        delayBetweenScanAttempts: 500
+      }, handleScanResult);
+      
+      if (!success) {
+        setHasScannerError(true);
+        setIsScanningActive(false);
+        
+        toast({
+          title: "فشل في بدء المسح",
+          description: "حدث خطأ أثناء محاولة بدء الماسح الضوئي",
+          variant: "destructive"
+        });
+        
+        return false;
+      }
+      
       return true;
     } catch (error) {
-      console.error('خطأ في إيقاف المسح:', error);
-      setIsScanning(false);
+      console.error('[useScannerOperations] خطأ في بدء المسح:', error);
+      
+      setHasScannerError(true);
+      setIsScanningActive(false);
+      
+      toast({
+        title: "خطأ في الماسح الضوئي",
+        description: "حدث خطأ غير متوقع أثناء بدء المسح",
+        variant: "destructive"
+      });
+      
       return false;
     }
-  }, [isScanning]);
+  }, [isScanningActive, handleScanResult, toast]);
+
+  /**
+   * إيقاف المسح
+   */
+  const stopScan = useCallback(async (): Promise<void> => {
+    try {
+      if (!isScanningActive) {
+        return;
+      }
+      
+      await zxingService.stopScan();
+      
+      setIsScanningActive(false);
+    } catch (error) {
+      console.error('[useScannerOperations] خطأ في إيقاف المسح:', error);
+      setIsScanningActive(false);
+    }
+  }, [isScanningActive]);
+
+  /**
+   * مسح من صورة
+   */
+  const scanFromImage = useCallback(async (imageSource: string | Blob | File): Promise<string | null> => {
+    try {
+      const result = await zxingService.scanFromImage(imageSource);
+      
+      if (result && result.text) {
+        setLastScannedCode(result.text);
+        
+        if (onScan) {
+          onScan(result.text);
+        }
+        
+        return result.text;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('[useScannerOperations] خطأ في مسح الصورة:', error);
+      return null;
+    }
+  }, [onScan]);
 
   return {
-    isScanning,
+    isScanningActive,
+    setIsScanningActive,
     lastScannedCode,
-    scanError,
+    setLastScannedCode,
+    hasScannerError,
+    setHasScannerError,
     startScan,
     stopScan,
-    setLastScannedCode
+    scanFromImage
   };
 };

@@ -36,8 +36,11 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
     return <LoadingView hasPermission={hasPermission} scanActive={scanActive} onClose={onClose} />;
   }
   
-  // واجهة المستخدم الرئيسية للماسح
-  return <ScannerView onStartScan={async () => { await startScan(); return true; }} onClose={onClose} />;
+  // واجهة المستخدم الرئيسية للماسح - تعديل نوع الإرجاع
+  return <ScannerView onStartScan={async () => { 
+    const result = await startScan(); 
+    return result;
+  }} onClose={onClose} />;
 };
 
 export default ZXingBarcodeScanner;
