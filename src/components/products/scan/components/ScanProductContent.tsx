@@ -5,6 +5,7 @@ import { ScannerErrorView } from './ScannerErrorView';
 import { useCameraPermissions } from '@/hooks/useCameraPermissions';
 import { PermissionPrompt } from './PermissionPrompt';
 import { useScannerPermissionHandlers } from '../hooks/useScannerPermissionHandlers';
+import { Spinner } from '@/components/ui/spinner';
 
 interface ScanProductContentProps {
   hasScannerError: boolean;
@@ -26,6 +27,7 @@ export const ScanProductContent = ({
   // استخدام hook للتحقق من أذونات الكاميرا
   const { hasPermission, requestPermission, openAppSettings } = useCameraPermissions();
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
+  const [scannerMounted, setScannerMounted] = useState(false);
   
   const {
     permissionError,
@@ -49,25 +51,49 @@ export const ScanProductContent = ({
           if (hasPermission === false) {
             console.log('ScanProductContent: لا يوجد إذن للكاميرا، عرض واجهة طلب الإذن');
             setShowPermissionPrompt(true);
+            setScannerMounted(false);
           } else {
             setShowPermissionPrompt(false);
+            // تأخير قصير لتفادي مشاكل التحميل المتزامنة
+            setTimeout(() => {
+              setScannerMounted(true);
+            }, 300);
           }
         } catch (error) {
           console.error('ScanProductContent: خطأ في التحقق من إذن الكاميرا:', error);
           setShowPermissionPrompt(true);
+          setScannerMounted(false);
         }
       };
       
       checkPermission();
     } else {
       setShowPermissionPrompt(false);
+      setScannerMounted(false);
     }
   }, [showScanner, hasPermission]);
+  
+  useEffect(() => {
+    return () => {
+      // تنظيف عند إزالة المكون
+      console.log('ScanProductContent: تم إلغاء التحميل والتنظيف');
+    };
+  }, []);
   
   const handleManualEntry = () => {
     // يمكن إضافة وظيفة إدخال الرمز يدويًا هنا
     console.log('الانتقال إلى الإدخال اليدوي');
   };
+
+  // إضافة شاشة تحميل للحظات عرض الماسح الأولى
+  if (showScanner && !scannerMounted && !showPermissionPrompt && !hasScannerError) {
+    return (
+      <div className="h-[calc(100vh-120px)] flex flex-col items-center justify-center">
+        <Spinner size="lg" className="mb-4" />
+        <p className="text-center text-gray-600">جاري تهيئة الماسح...</p>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -87,7 +113,7 @@ export const ScanProductContent = ({
           onClose={onClose}
         />
       ) : (
-        showScanner && (
+        showScanner && scannerMounted && (
           <div className="scanner-container" style={{
             position: 'absolute',
             inset: 0,
@@ -96,6 +122,7 @@ export const ScanProductContent = ({
             <ZXingBarcodeScanner
               onScan={onScan}
               onClose={onClose}
+              autoStart={true}
             />
           </div>
         )

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useScanProductHandler } from './hooks/useScanProductHandler';
@@ -19,11 +19,13 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   const { toast } = useToast();
   const [showDebug, setShowDebug] = useState(false);
   const environment = useScannerEnvironment();
+  const [dialogForceOpen, setDialogForceOpen] = useState(false);
   
   // تشخيص البيئة عند الفتح
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       console.log('ScanProductDialog: بيئة التشغيل الحالية:', environment);
+      setDialogForceOpen(true);
       
       // إذا كنا في بيئة الجوال وليس الويب، نعرض رسالة تأكيد
       if (environment.isNativePlatform || environment.isWebView) {
@@ -35,6 +37,23 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     }
   }, [open, toast, environment]);
   
+  // منع إغلاق الحوار تلقائيًا
+  const handleOpenChange = (newOpenState: boolean) => {
+    // إذا كان المستخدم يحاول إغلاق الحوار، نحافظ على فتحه إلا لو كانت العملية من خلال زر الإغلاق الصريح
+    if (!newOpenState && dialogForceOpen) {
+      console.log('ScanProductDialog: محاولة إغلاق الحوار - تم تجاهلها');
+      return;
+    }
+    onOpenChange(newOpenState);
+  };
+  
+  // دالة لإغلاق الحوار بشكل صريح
+  const handleExplicitClose = () => {
+    console.log('ScanProductDialog: إغلاق صريح للحوار');
+    setDialogForceOpen(false);
+    onOpenChange(false);
+  };
+  
   const {
     isProcessing,
     hasScannerError,
@@ -45,16 +64,21 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     setShowScanner
   } = useScanProductHandler({ 
     open, 
-    onOpenChange, 
+    onOpenChange: handleExplicitClose, 
     onProductAdded, 
     toast 
   });
   
   // تفعيل الماسح تلقائياً عند فتح مربع الحوار في بيئة الأجهزة
-  React.useEffect(() => {
+  useEffect(() => {
     if (open && !showScanner && (environment.isNativePlatform || environment.isWebView)) {
       console.log('ScanProductDialog: تفعيل الماسح تلقائياً في بيئة الجوال/WebView');
-      setShowScanner(true);
+      // تأخير قصير لضمان استقرار واجهة المستخدم
+      const timer = setTimeout(() => {
+        setShowScanner(true);
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
   }, [open, showScanner, setShowScanner, environment]);
 
@@ -63,12 +87,12 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
     return (
       <Dialog 
         open={open} 
-        onOpenChange={onOpenChange}
+        onOpenChange={handleOpenChange}
       >
         <DialogContent 
           className="bg-white p-6 border shadow-lg rounded-lg max-w-md mx-auto"
         >
-          <BrowserView onClose={() => onOpenChange(false)} />
+          <BrowserView onClose={handleExplicitClose} />
           
           {showDebug && (
             <div className="mt-4">
@@ -91,8 +115,8 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
 
   return (
     <Dialog 
-      open={open} 
-      onOpenChange={onOpenChange}
+      open={open || dialogForceOpen} 
+      onOpenChange={handleOpenChange}
       modal={false}
     >
       <DialogContent 
@@ -114,7 +138,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
           isProcessing={isProcessing}
           onRetry={handleRetry}
           onScan={handleScanResult}
-          onClose={handleScanClose}
+          onClose={handleExplicitClose}
         />
         
         {showDebug && (

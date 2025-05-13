@@ -19,7 +19,35 @@ interface ZXingBarcodeScannerProps {
 const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry }: ZXingBarcodeScannerProps) => {
   const [isNativePlatform, setIsNativePlatform] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [mountTime] = useState(Date.now());
   const { toast } = useToast();
+  
+  // دالة مخصصة للتعامل مع نتائج المسح لمنع المسح المتكرر
+  const handleScan = (code: string) => {
+    console.log(`ZXingBarcodeScanner: تم المسح بنجاح [${code}]`);
+    
+    // استخدام تأخير بسيط لمنع مشاكل التأثيرات الجانبية
+    setTimeout(() => {
+      onScan(code);
+    }, 100);
+  };
+  
+  // دالة مخصصة للإغلاق مع تأكيد وتأخير
+  const handleClose = () => {
+    console.log('ZXingBarcodeScanner: إغلاق الماسح');
+    
+    // التحقق من الوقت المنقضي منذ تحميل المكون لمنع الإغلاق المبكر
+    const timeElapsed = Date.now() - mountTime;
+    if (timeElapsed < 1000) {
+      console.log('ZXingBarcodeScanner: تجاهل محاولة الإغلاق المبكرة');
+      return;
+    }
+    
+    // تأخير الإغلاق قليلاً للسماح بإتمام عمليات أخرى إذا كانت جارية
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
   
   useEffect(() => {
     // تحقق من بيئة التشغيل عند تحميل المكون
@@ -38,6 +66,11 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
         ? "تم اكتشاف بيئة الجوال، يمكنك استخدام الماسح الضوئي" 
         : "أنت في المتصفح، بعض الميزات قد لا تعمل"
     });
+    
+    // تنظيف عند إزالة المكون
+    return () => {
+      console.log('ZXingBarcodeScanner: إلغاء تحميل المكون والتنظيف');
+    };
   }, [toast]);
   
   const {
@@ -48,13 +81,23 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
     startScan,
     stopScan,
     checkAndRequestPermissions
-  } = useZXingBarcodeScanner(autoStart, onScan, onClose);
+  } = useZXingBarcodeScanner(autoStart, handleScan, handleClose);
+  
+  // تسجيل حالة المسح للتشخيص
+  useEffect(() => {
+    console.log('ZXingBarcodeScanner: حالة المسح -', { 
+      hasPermission, 
+      scanActive, 
+      cameraActive, 
+      isLoading 
+    });
+  }, [hasPermission, scanActive, cameraActive, isLoading]);
   
   // إذا كنا في بيئة المتصفح، نظهر رسالة بدلاً من الماسح
   if (!isNativePlatform) {
     return (
       <div>
-        <BrowserView onClose={onClose} />
+        <BrowserView onClose={handleClose} />
         
         {showDebug && (
           <div className="mt-4">
@@ -80,7 +123,7 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
           handleRequestPermission={async () => {
             await checkAndRequestPermissions();
           }} 
-          onClose={onClose}
+          onClose={handleClose}
           onManualEntry={onManualEntry}
         />
         
@@ -104,7 +147,7 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
   if (isLoading || hasPermission === null) {
     return (
       <div>
-        <LoadingView hasPermission={hasPermission} scanActive={scanActive} onClose={onClose} />
+        <LoadingView hasPermission={hasPermission} scanActive={scanActive} onClose={handleClose} />
         
         {showDebug && (
           <div className="mt-4">
@@ -132,7 +175,7 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true, onManualEntry 
         onStartScan={startScan}
         onStopScan={stopScan}
         onRetry={() => startScan()}
-        onClose={onClose}
+        onClose={handleClose}
         onManualEntry={onManualEntry}
       />
       
