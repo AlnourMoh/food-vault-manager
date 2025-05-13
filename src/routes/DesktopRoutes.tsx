@@ -26,6 +26,9 @@ export const DesktopRoutes = () => {
         <Fragment key={`restaurant-route-${index}`}>{route}</Fragment>
       ))}
       
+      {/* Direct access to restaurant credentials */}
+      <Route path="/restaurants/:id/credentials" element={<Navigate to="/admin/restaurants/:id/credentials" replace />} />
+      
       {/* Direct scan routes for both desktop and mobile access */}
       <Route path="/scan" element={<ProductScan />} />
       <Route path="/scan-product" element={<Navigate to="/scan" replace />} />
