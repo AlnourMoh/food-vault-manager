@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProductScanLogic } from '@/hooks/mobile/scan/useProductScanLogic';
 import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScanCard';
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
@@ -9,9 +9,12 @@ import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { BrowserView } from '@/components/mobile/scanner/components/BrowserView';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 const ProductScan = () => {
   const navigate = useNavigate();
+  const [showFullScanUI, setShowFullScanUI] = useState(false);
   const {
     isScannerOpen,
     scannedProduct,
@@ -24,34 +27,29 @@ const ProductScan = () => {
     viewProductDetails
   } = useProductScanLogic();
   
-  // التحقق من بيئة التشغيل
-  const isNativePlatform = Capacitor.isNativePlatform();
-  const platform = Capacitor.getPlatform();
+  // التحقق من بيئة التشغيل - تعامل مع البيئة دائماً على أنها تطبيق جوال
+  const isNativePlatform = true; // Force native platform view
   
   // نطبع معلومات البيئة للتشخيص
   useEffect(() => {
     console.log('ProductScan: البيئة الحالية:', isNativePlatform ? 'تطبيق جوال' : 'متصفح');
-    console.log('ProductScan: المنصة:', platform);
-    console.log('ProductScan: المكونات الإضافية المتاحة:', 
-      Capacitor.isPluginAvailable('MLKitBarcodeScanner') ? 'MLKitBarcodeScanner متاح' : 'MLKitBarcodeScanner غير متاح');
+    console.log('ProductScan: المنصة:', Capacitor.getPlatform());
     
     // عرض معلومات بيئة التشغيل في الواجهة للمستخدمين
     try {
-      if (isNativePlatform) {
-        Toast.show({
-          text: `تم التشغيل على ${platform === 'android' ? 'أندرويد' : 'آيفون'}`,
-          duration: "short"
-        });
-      }
+      Toast.show({
+        text: `تم التشغيل على ${Capacitor.getPlatform() === 'android' ? 'أندرويد' : 'الويب'}`,
+        duration: "short"
+      });
     } catch (error) {
       console.error('ProductScan: خطأ في عرض المعلومات:', error);
     }
-  }, [isNativePlatform, platform]);
+  }, []);
   
-  // فتح الماسح تلقائياً عند تحميل الصفحة فقط في بيئة التطبيق الجوال
+  // فتح الماسح تلقائياً عند تحميل الصفحة
   useEffect(() => {
-    if (isNativePlatform && !isScannerOpen && !scannedProduct) {
-      console.log('ProductScan: فتح الماسح فوراً في بيئة التطبيق');
+    if (!isScannerOpen && !scannedProduct) {
+      console.log('ProductScan: محاولة فتح الماسح فوراً');
       // تأخير قصير لضمان تحميل الواجهة أولاً
       const timer = setTimeout(() => {
         handleOpenScanner();
@@ -59,7 +57,7 @@ const ProductScan = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [isNativePlatform, isScannerOpen, scannedProduct]);
+  }, [isScannerOpen, scannedProduct, handleOpenScanner]);
 
   // إذا تم مسح المنتج، نعرض معلوماته
   if (scannedProduct) {
@@ -88,13 +86,27 @@ const ProductScan = () => {
     );
   }
 
-  // في بيئة المتصفح، نعرض رسالة بدل الماسح
-  if (!isNativePlatform) {
+  if (showFullScanUI) {
+    // عرض واجهة المسح الكاملة
     return (
-      <div className="container py-6 space-y-6">
-        <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
-        <div className="p-6 bg-white border rounded-lg">
-          <BrowserView onClose={() => navigate(-1)} />
+      <div className="fixed inset-0 bg-black z-50 flex flex-col">
+        <div className="p-4">
+          <Button variant="ghost" className="text-white" onClick={() => {
+            setShowFullScanUI(false);
+            handleCloseScanner();
+          }}>
+            رجوع
+          </Button>
+        </div>
+        <div className="flex-grow flex items-center justify-center">
+          <ZXingBarcodeScanner
+            onScan={handleScanResult}
+            onClose={() => {
+              setShowFullScanUI(false);
+              handleCloseScanner();
+            }}
+            autoStart={true}
+          />
         </div>
       </div>
     );
@@ -105,22 +117,42 @@ const ProductScan = () => {
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
       
-      {!isScannerOpen && (
-        <InitialScanCard 
-          onOpenScanner={handleOpenScanner}
-          isLoading={isLoading}
-          hasPermission={true}
-        />
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center p-8">
+          <Spinner size="lg" className="mb-4" />
+          <p>جاري تهيئة الماسح...</p>
+        </div>
       )}
       
-      {isScannerOpen && (
-        <div className="w-full flex justify-center">
-          <div className="w-full max-w-md">
-            <ZXingBarcodeScanner
-              onScan={handleScanResult}
-              onClose={handleCloseScanner}
-              autoStart={true}
-            />
+      {!isScannerOpen && !isLoading && (
+        <div className="p-4 bg-white border rounded-lg">
+          <InitialScanCard 
+            onOpenScanner={() => {
+              setShowFullScanUI(true);
+              handleOpenScanner();
+            }}
+            isLoading={isLoading}
+            hasPermission={true}
+          />
+        </div>
+      )}
+      
+      {isScannerOpen && !showFullScanUI && (
+        <div className="p-4 bg-white border rounded-lg">
+          <Button 
+            className="w-full" 
+            onClick={() => setShowFullScanUI(true)}
+          >
+            فتح الماسح بملء الشاشة
+          </Button>
+          <div className="w-full flex justify-center mt-4">
+            <div className="w-full max-w-md">
+              <ZXingBarcodeScanner
+                onScan={handleScanResult}
+                onClose={handleCloseScanner}
+                autoStart={true}
+              />
+            </div>
           </div>
         </div>
       )}
