@@ -13,8 +13,10 @@ import NotFound from '@/pages/NotFound';
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<Navigate to="/inventory" replace />} />
+      {/* توجيه مسار تسجيل الدخول إلى المخزون مباشرة */}
+      <Route path="/login" element={<Navigate to="/" replace />} />
       
+      {/* الصفحة الرئيسية تعرض المخزون */}
       <Route path="/" element={
         <ProtectedRoute>
           <MobileLayout>

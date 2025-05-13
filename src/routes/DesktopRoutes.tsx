@@ -7,6 +7,7 @@ import { RestaurantRoutes } from './restaurant/RestaurantRoutes';
 import NotFound from '@/pages/NotFound';
 import MobileApp from '@/components/mobile/MobileApp';
 import ProductScan from '@/pages/mobile/ProductScan';
+import MobileInventory from '@/pages/mobile/MobileInventory';
 
 export const DesktopRoutes = () => {
   return (
@@ -31,6 +32,9 @@ export const DesktopRoutes = () => {
       <Route path="/restaurants" element={<Navigate to="/admin/restaurants" replace />} />
       <Route path="/restaurants/:id/credentials" element={<Navigate to="/admin/restaurants/:id/credentials" replace />} />
       <Route path="/restaurants/:id/edit" element={<Navigate to="/admin/restaurants/:id/edit" replace />} />
+      
+      {/* Direct inventory access */}
+      <Route path="/inventory" element={<MobileInventory />} />
       
       {/* Direct scan routes for both desktop and mobile access */}
       <Route path="/scan" element={<ProductScan />} />

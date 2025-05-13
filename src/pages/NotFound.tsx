@@ -27,17 +27,25 @@ const NotFound = () => {
   }, [location.pathname]);
 
   const handleRetry = () => {
-    if (location.pathname.includes('restaurant')) {
+    if (location.pathname.includes('inventory')) {
+      navigate("/inventory");
+    } else if (location.pathname.includes('restaurant')) {
       navigate("/restaurant/dashboard");
     } else if (location.pathname.includes('admin')) {
-      navigate("/admin/restaurants");
+      navigate("/admin/dashboard");
+    } else if (isMobile) {
+      navigate("/inventory");
     } else {
       navigate("/");
     }
   };
   
-  const handleGoToRestaurants = () => {
-    navigate("/admin/restaurants");
+  const handleGoHome = () => {
+    if (isMobile) {
+      navigate("/inventory");
+    } else {
+      navigate("/");
+    }
   };
 
   if (isMobile) {
@@ -57,30 +65,24 @@ const NotFound = () => {
         <h1 className="text-4xl font-bold mb-4">404</h1>
         <p className="text-xl text-gray-600 mb-4">عذراً، الصفحة غير موجودة</p>
         <p className="text-gray-500 mb-6 text-sm">
-          {location.pathname.includes('restaurants') ? 
-            'يبدو أنك تحاول الوصول إلى صفحة مطعم. قد تحتاج إلى تسجيل الدخول أولاً أو التأكد من الرابط الصحيح.' : 
-            'الصفحة التي تحاول الوصول إليها غير موجودة أو تم نقلها.'}
+          الصفحة التي تحاول الوصول إليها غير موجودة أو تم نقلها.
         </p>
         
         <div className="space-y-3">
-          {location.pathname.includes('restaurants') && (
-            <Button 
-              onClick={handleGoToRestaurants}
-              variant="default"
-              className="w-full"
-            >
-              الذهاب إلى قائمة المطاعم
-            </Button>
-          )}
-          
           <Button 
             onClick={handleRetry}
+            variant="default"
+            className="w-full"
+          >
+            المحاولة مرة أخرى
+          </Button>
+          
+          <Button 
+            onClick={handleGoHome}
             variant="outline"
             className="w-full"
           >
-            {location.pathname.includes('restaurant') ? 'الذهاب إلى لوحة تحكم المطعم' : 
-             location.pathname.includes('admin') ? 'الذهاب إلى لوحة تحكم الإدارة' : 
-             'العودة إلى الصفحة الرئيسية'}
+            الذهاب إلى الصفحة الرئيسية
           </Button>
         </div>
       </div>
