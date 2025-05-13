@@ -212,17 +212,14 @@ export class ScannerPermissionService {
           const appInfo = await App.getInfo();
           console.log('[ScannerPermissionService] معلومات التطبيق:', appInfo);
           
-          // محاولة مباشرة لفتح إعدادات التطبيق
+          // استخدام exitApp بدلاً من openUrl (الذي تسبب في الخطأ)
           try {
-            await App.openUrl('app-settings:');
-            return true;
-          } catch (e) {
-            console.error('[ScannerPermissionService] خطأ في محاولة فتح URL الإعدادات:', e);
-            
-            // محاولة استخدام exitApp كخيار بديل
             console.log('[ScannerPermissionService] محاولة استخدام exitApp...');
             await App.exitApp();
             return true;
+          } catch (e) {
+            console.error('[ScannerPermissionService] خطأ في محاولة الخروج من التطبيق:', e);
+            return false;
           }
         }
       }
