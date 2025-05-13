@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useScannerControls } from './scanner/hooks/useScannerControls';
 import { ScannerContainer } from './scanner/ScannerContainer';
+import { MockScanner } from './scanner/MockScanner';
+import { Capacitor } from '@capacitor/core';
 
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -31,28 +33,46 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     setCameraActive
   } = useScannerControls({ onScan, onClose });
 
-  // Activate camera immediately when component mounts
+  const [useWebMock, setUseWebMock] = useState(false);
+
+  // التحقق مما إذا كنا في بيئة الويب
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      // في بيئة الويب، نستخدم المحاكاة
+      setUseWebMock(true);
+    }
+  }, []);
+
+  // تفعيل الكاميرا فوراً عند تحميل المكون
   useEffect(() => {
     console.log('ZXingBarcodeScanner: تفعيل الكاميرا فورًا عند تحميل المكون');
     
-    // Set camera as active immediately
-    setCameraActive(true);
-    
-    // Start scan immediately without waiting
-    const timerRef = setTimeout(() => {
-      startScan().catch(error => {
-        console.error('ZXingBarcodeScanner: خطأ في بدء المسح المباشر:', error);
-      });
-    }, 500);
-    
-    return () => {
-      clearTimeout(timerRef);
-      stopScan().catch(error => {
-        console.error('ZXingBarcodeScanner: خطأ في إيقاف المسح عند التنظيف:', error);
-      });
-    };
-  }, []);
+    if (!useWebMock) {
+      // تفعيل الكاميرا
+      setCameraActive(true);
+      
+      // بدء المسح فوراً
+      const timerRef = setTimeout(() => {
+        startScan().catch(error => {
+          console.error('ZXingBarcodeScanner: خطأ في بدء المسح المباشر:', error);
+        });
+      }, 500);
+      
+      return () => {
+        clearTimeout(timerRef);
+        stopScan().catch(error => {
+          console.error('ZXingBarcodeScanner: خطأ في إيقاف المسح عند التنظيف:', error);
+        });
+      };
+    }
+  }, [useWebMock]);
 
+  // استخدام محاكاة الماسح في بيئة الويب
+  if (useWebMock) {
+    return <MockScanner onScan={onScan} onClose={onClose} />;
+  }
+
+  // استخدام الماسح الحقيقي في بيئة الأجهزة الجوالة
   return (
     <ScannerContainer
       isManualEntry={isManualEntry}

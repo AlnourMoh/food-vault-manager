@@ -20,6 +20,29 @@ export const useScanProduct = () => {
     console.log('useScanProduct: جاري البحث عن بيانات المنتج للرمز:', code);
     
     try {
+      // التعامل مع الرموز الوهمية في بيئة الاختبار
+      if (code.startsWith('MOCK-') || code.startsWith('DEMO-')) {
+        console.log('useScanProduct: هذا رمز وهمي، إنشاء منتج وهمي للاختبار');
+        
+        // إنشاء منتج وهمي للاختبار
+        const mockProduct: Product = {
+          id: `mock-${Math.random().toString(36).substring(2, 9)}`,
+          name: "منتج تجريبي",
+          category: "خضروات",
+          quantity: 10,
+          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 يوم من الآن
+          entryDate: new Date(),
+          restaurantId: localStorage.getItem('restaurantId') || "unknown",
+          status: "active",
+          imageUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200",
+          restaurantName: "",
+          addedBy: "",
+          unit: "piece"
+        };
+        
+        return mockProduct;
+      }
+      
       // البحث عن معرف المنتج باستخدام الرمز الممسوح
       const { data: productCode, error: codeError } = await supabase
         .from('product_codes')

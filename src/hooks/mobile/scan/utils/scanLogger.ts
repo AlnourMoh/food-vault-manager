@@ -2,25 +2,38 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Logs a product scan event in the database
- * @param code The scanned QR/barcode
- * @param productId The product ID associated with the scan
+ * تسجيل عملية مسح المنتج في قاعدة البيانات
  */
-export const logProductScan = async (code: string, productId: string): Promise<void> => {
-  const restaurantId = localStorage.getItem('restaurantId');
-  
-  if (restaurantId) {
-    console.log('scanLogger: تسجيل عملية المسح للمطعم:', restaurantId);
+export const logProductScan = async (code: string, productId: string): Promise<boolean> => {
+  try {
+    // تجاهل تسجيل الرموز الوهمية في بيئة الاختبار
+    if (code.startsWith('MOCK-') || code.startsWith('DEMO-')) {
+      console.log('scanLogger: تجاهل تسجيل الرمز الوهمي:', code);
+      return true;
+    }
     
-    await supabase
-      .from('product_scans')
+    console.log('scanLogger: تسجيل عملية المسح للمنتج:', productId);
+    
+    const userId = localStorage.getItem('userId') || 'unknown';
+    const restaurantId = localStorage.getItem('restaurantId') || 'unknown';
+    
+    const { error } = await supabase
+      .from('product_scan_logs')
       .insert({
         product_id: productId,
-        qr_code: code,
-        scan_type: 'check',
-        scanned_by: restaurantId
+        scanned_by: userId,
+        restaurant_id: restaurantId,
+        scan_code: code,
       });
-  } else {
-    console.warn('scanLogger: لم يتم العثور على معرف المطعم للتسجيل');
+    
+    if (error) {
+      console.error('scanLogger: خطأ في تسجيل عملية المسح:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('scanLogger: خطأ غير متوقع في تسجيل عملية المسح:', error);
+    return false;
   }
 };

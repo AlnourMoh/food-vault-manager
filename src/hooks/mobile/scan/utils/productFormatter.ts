@@ -1,50 +1,40 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
 
 /**
- * Normalizes the product status from database value to the application's expected format
- * @param status The status string from the database
- * @returns The normalized status value conforming to our Product type
+ * تنسيق بيانات المنتج الخام من قاعدة البيانات إلى كائن المنتج المتوقع
  */
-export const normalizeProductStatus = (status: string): 'active' | 'expired' | 'removed' => {
-  switch(status) {
-    case 'active':
-      return 'active';
-    case 'expired':
-      return 'expired';
-    case 'removed':
-      return 'removed';
-    default:
-      console.warn(`productFormatter: حالة منتج غير متوقعة: ${status}، استخدام 'active' كقيمة افتراضية`);
-      return 'active';
-  }
+export const formatProductData = (rawProduct: any): Product => {
+  return {
+    id: rawProduct.id,
+    name: rawProduct.name,
+    category: rawProduct.category,
+    quantity: rawProduct.quantity,
+    expiryDate: new Date(rawProduct.expiry_date),
+    entryDate: new Date(rawProduct.created_at || rawProduct.production_date),
+    restaurantId: rawProduct.company_id || rawProduct.restaurant_id,
+    status: rawProduct.status as "active" | "expired" | "removed",
+    imageUrl: rawProduct.image_url || getPlaceholderImage(rawProduct.category),
+    restaurantName: rawProduct.restaurant_name || '',
+    addedBy: rawProduct.added_by || '',
+    unit: rawProduct.unit || 'piece'
+  };
 };
 
 /**
- * Formats the raw product data from database into the application's Product type
- * @param product The raw product data from database
- * @returns Formatted product object
+ * الحصول على صورة بديلة بناءً على فئة المنتج
  */
-export const formatProductData = (product: any): Product => {
-  const normalizedStatus = normalizeProductStatus(product.status);
-  
-  const formattedProduct: Product = {
-    id: product.id,
-    name: product.name,
-    category: product.category,
-    unit: product.unit || '',
-    quantity: product.quantity,
-    expiryDate: new Date(product.expiry_date),
-    entryDate: new Date(product.production_date),
-    restaurantId: product.company_id,
-    restaurantName: '', 
-    addedBy: '', 
-    status: normalizedStatus,
-    imageUrl: product.image_url,
-  };
-  
-  console.log('productFormatter: بيانات المنتج المنسقة:', formattedProduct);
-  
-  return formattedProduct;
+const getPlaceholderImage = (category: string): string => {
+  switch (category) {
+    case 'خضروات':
+      return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=200";
+    case 'لحوم':
+      return "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?q=80&w=200";
+    case 'بهارات':
+      return "https://images.unsplash.com/photo-1532336414046-2a0e3a1dd7e5?q=80&w=200";
+    case 'بقالة':
+      return "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?q=80&w=200";
+    default:
+      return "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?q=80&w=200";
+  }
 };
