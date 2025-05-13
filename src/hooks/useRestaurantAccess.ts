@@ -10,7 +10,15 @@ export const useRestaurantAccess = (restaurantId: string | undefined) => {
   const { toast } = useToast();
 
   const handleOpenAccount = async () => {
-    if (!restaurantId) return;
+    if (!restaurantId || restaurantId === ':id') {
+      console.log('Invalid restaurant ID:', restaurantId);
+      toast({
+        variant: 'destructive',
+        title: 'خطأ في الوصول',
+        description: 'معرّف المطعم غير صحيح. الرجاء العودة واختيار مطعم صحيح.',
+      });
+      return;
+    }
     
     setIsLoading(true);
     

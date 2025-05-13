@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import SetupLinkForm from '@/components/restaurant/SetupLinkForm';
@@ -8,11 +8,26 @@ import SetupLinkDialog from '@/components/restaurant/SetupLinkDialog';
 import CredentialActionButtons from '@/components/restaurant/CredentialActionButtons';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { useRestaurantAccess } from '@/hooks/useRestaurantAccess';
+import { useToast } from '@/hooks/use-toast';
 
 const RestaurantCredentials = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(false);
   const [setupLink, setSetupLink] = useState('');
+  const { toast } = useToast();
+  
+  // Check if ID is valid
+  useEffect(() => {
+    if (!id || id === ':id') {
+      toast({
+        variant: 'destructive',
+        title: 'خطأ في الوصول',
+        description: 'معرّف المطعم غير صحيح. سيتم توجيهك إلى صفحة المطاعم.',
+      });
+      navigate('/admin/restaurants');
+    }
+  }, [id, navigate, toast]);
   
   // Use our custom hooks
   const { restaurantName, email, updateEmail, isLoading: isLoadingData } = useRestaurantData(id);
@@ -20,6 +35,15 @@ const RestaurantCredentials = () => {
 
   const handleGenerateLink = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!id || id === ':id') {
+      toast({
+        variant: 'destructive',
+        title: 'خطأ في الوصول',
+        description: 'معرّف المطعم غير صحيح. سيتم توجيهك إلى صفحة المطاعم.',
+      });
+      return;
+    }
     
     // Create a setup link with the restaurant ID and email
     const baseUrl = window.location.origin;
@@ -34,7 +58,7 @@ const RestaurantCredentials = () => {
         <h1 className="text-3xl font-bold">إرسال رابط إعداد حساب المطعم</h1>
         <Card className="w-full max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>رابط إعداد الحساب للمطعم: {restaurantName}</CardTitle>
+            <CardTitle className="text-xl">رابط إعداد الحساب للمطعم: {restaurantName}</CardTitle>
             <CardDescription>أدخل البريد الإلكتروني الذي سيتم استخدامه لتسجيل دخول المطعم ثم قم بإنشاء رابط الإعداد</CardDescription>
           </CardHeader>
           <CardContent>

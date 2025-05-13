@@ -26,7 +26,9 @@ export const DesktopRoutes = () => {
         <Fragment key={`restaurant-route-${index}`}>{route}</Fragment>
       ))}
       
-      {/* Direct access to restaurant credentials */}
+      {/* Redirect legacy routes */}
+      <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="/restaurants" element={<Navigate to="/admin/restaurants" replace />} />
       <Route path="/restaurants/:id/credentials" element={<Navigate to="/admin/restaurants/:id/credentials" replace />} />
       
       {/* Direct scan routes for both desktop and mobile access */}

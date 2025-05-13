@@ -31,6 +31,7 @@ export const AdminRoutes = [
     }
   >
     <Route index element={<Dashboard />} />
+    <Route path="dashboard" element={<Dashboard />} />
     <Route path="restaurants" element={<Restaurants />} />
     <Route path="restaurants/add" element={<AddRestaurant />} />
     <Route path="restaurants/:id/edit" element={<EditRestaurant />} />

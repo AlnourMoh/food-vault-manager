@@ -17,11 +17,16 @@ export const useRestaurantData = (restaurantId: string | undefined) => {
 
   useEffect(() => {
     const fetchRestaurant = async () => {
-      if (!restaurantId) return;
+      if (!restaurantId || restaurantId === ':id') {
+        console.log('Invalid restaurant ID:', restaurantId);
+        return;
+      }
       
       setIsLoading(true);
       
       try {
+        console.log('Fetching restaurant with ID:', restaurantId);
+        
         const { data, error } = await supabase
           .from('companies')
           .select('name, email')
