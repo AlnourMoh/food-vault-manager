@@ -30,22 +30,15 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 }) => {
   // تحسين: بدء المسح تلقائيًا بمجرد أن تكون الكاميرا نشطة
   useEffect(() => {
-    const initScan = async () => {
-      if (cameraActive && !isActive && !hasError) {
-        console.log('ScannerView: الكاميرا نشطة الآن، جاري بدء المسح تلقائيًا...');
-        try {
-          const started = await onStartScan();
-          console.log(`ScannerView: نتيجة بدء المسح التلقائي: ${started ? 'نجاح' : 'فشل'}`);
-        } catch (error) {
-          console.error('ScannerView: خطأ في بدء المسح التلقائي:', error);
-        }
-      }
-    };
-    
-    // تأخير قصير قبل بدء المسح لضمان جاهزية الواجهة
-    const timer = setTimeout(initScan, 300);
-    
-    return () => clearTimeout(timer);
+    // بدء المسح تلقائياً عندما تكون الكاميرا نشطة
+    if (cameraActive && !isActive && !hasError) {
+      console.log('ScannerView: الكاميرا نشطة الآن، جاري بدء المسح تلقائيًا...');
+      
+      // بدء المسح فورًا بدون تأخير
+      onStartScan().catch(error => {
+        console.error('ScannerView: خطأ في بدء المسح التلقائي:', error);
+      });
+    }
   }, [cameraActive, isActive, hasError, onStartScan]);
 
   // إضافة تسجيل للمكون للتشخيص
@@ -82,7 +75,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     );
   }
   
-  // عرض حالة انتظار تفعيل الكاميرا بشكل أوضح
+  // عرض حالة انتظار تفعيل الكاميرا
   if (!cameraActive) {
     return (
       <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
@@ -100,33 +93,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       </div>
     );
   }
-  
-  // إذا كانت الكاميرا نشطة ولكن المسح غير نشط
-  if (cameraActive && !isActive) {
-    return (
-      <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
-        <div className="text-white text-center p-4">
-          <div className="mb-6 flex flex-col items-center">
-            <Loader2 className="h-12 w-12 animate-spin mb-4" />
-            <h3 className="text-xl font-semibold mb-3">جاري تحضير المسح</h3>
-            <p className="text-sm text-gray-300 mb-4">يرجى تثبيت الكاميرا على الباركود...</p>
-          </div>
-          <Button 
-            onClick={() => onStartScan()} 
-            className="bg-white text-black hover:bg-gray-200 w-full mb-2"
-            autoFocus
-          >
-            <RefreshCw className="h-4 w-4 ml-2" />
-            بدء المسح
-          </Button>
-          <Button onClick={onClose} variant="ghost" className="text-white hover:bg-white/20 w-full">
-            <X className="h-4 w-4 ml-2" />
-            إلغاء
-          </Button>
-        </div>
-      </div>
-    );
-  }
+
+  // تم إزالة واجهة "بدء المسح" اليدوية، الكاميرا نشطة الآن والمسح سيبدأ تلقائيًا
 
   return (
     <div className="scanner-view-container relative h-full w-full">

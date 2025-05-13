@@ -12,7 +12,7 @@ interface ZXingBarcodeScannerProps {
 const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({ 
   onScan, 
   onClose,
-  autoStart = false
+  autoStart = true // تعيين القيمة الافتراضية إلى true للبدء التلقائي
 }) => {
   const {
     isManualEntry,
@@ -27,27 +27,26 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
     handleManualCancel,
     requestPermission,
     handleRetry,
-    cameraActive
+    cameraActive,
+    setCameraActive
   } = useScannerControls({ onScan, onClose });
 
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // تفعيل المسح تلقائيًا عند تحميل المكون إذا كانت خاصية autoStart = true
+  // تفعيل المسح تلقائيًا عند تحميل المكون
   useEffect(() => {
-    if (autoStart && !isInitialized && !isLoading && hasPermission !== false) {
-      console.log('ZXingBarcodeScanner: بدء المسح تلقائياً');
+    if (!isInitialized && !isLoading && hasPermission !== false) {
+      console.log('ZXingBarcodeScanner: تهيئة المسح التلقائي');
       setIsInitialized(true);
       
-      // تأخير قصير جدًا للسماح بتحميل واجهة المستخدم
-      const timer = setTimeout(() => {
-        startScan().catch(console.error);
-      }, 200);
+      // تحديد الكاميرا كنشطة بمجرد تحميل المكون
+      setCameraActive(true);
       
-      return () => clearTimeout(timer);
+      // لا نحتاج إلى تأخير هنا، سيتم تفعيل المسح تلقائياً من ScannerView
     }
-  }, [autoStart, isInitialized, isLoading, hasPermission]);
+  }, [isInitialized, isLoading, hasPermission, setCameraActive]);
 
-  // إضافة تفعيل المسح عندما تصبح الكاميرا نشطة
+  // تأكيد الاستجابة السريعة للتغييرات في حالة الكاميرا
   useEffect(() => {
     if (cameraActive && !isScanningActive && !hasScannerError && !isManualEntry) {
       console.log('ZXingBarcodeScanner: الكاميرا نشطة الآن، جاري تفعيل المسح');
@@ -55,7 +54,7 @@ const ZXingBarcodeScanner: React.FC<ZXingBarcodeScannerProps> = ({
         console.error('ZXingBarcodeScanner: خطأ عند بدء المسح تلقائياً بعد تنشيط الكاميرا:', error);
       });
     }
-  }, [cameraActive, isScanningActive, hasScannerError, isManualEntry]);
+  }, [cameraActive, isScanningActive, hasScannerError, isManualEntry, startScan]);
 
   return (
     <ScannerContainer

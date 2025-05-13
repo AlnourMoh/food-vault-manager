@@ -19,9 +19,9 @@ const ProductScan = () => {
     viewProductDetails
   } = useProductScanLogic();
   
-  // تعديل: فتح الماسح تلقائياً عند تحميل الصفحة بدون أي تأخير
+  // فتح الماسح تلقائياً عند تحميل الصفحة
   useEffect(() => {
-    console.log('ProductScan: فتح الماسح فوراً بدون تأخير');
+    console.log('ProductScan: فتح الماسح فوراً');
     // فتح الماسح مباشرة عند تحميل الصفحة
     handleOpenScanner();
   }, []);
