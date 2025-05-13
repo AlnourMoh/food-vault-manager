@@ -14,26 +14,37 @@ const CapacitorTester: React.FC = () => {
   useEffect(() => {
     // محاولة اكتشاف إذا كنا في WebView
     const userAgent = navigator.userAgent;
-    const isWebView = 
-      userAgent.includes('wv') || 
-      userAgent.includes('FoodVaultManage') || 
-      environment.isWebView;
+    const isWebView = platformService.isWebView();
+    const isNative = platformService.isNativePlatform();
       
     // جمع معلومات التشخيص
     const diagnosticInfo = [
       { key: "Capacitor.isNativePlatform()", value: `${Capacitor.isNativePlatform()}` },
+      { key: "platformService.isNativePlatform()", value: `${isNative}` },
+      { key: "useScannerEnvironment.isNativePlatform", value: `${environment.isNativePlatform}` },
       { key: "Capacitor.platform", value: Capacitor.getPlatform() },
+      { key: "platformService.getPlatform()", value: platformService.getPlatform() },
+      { key: "WebView (detected)", value: `${isWebView}` },
+      { key: "WebView (hook)", value: `${environment.isWebView}` },
       { key: "Window.Capacitor exists", value: `${typeof window !== 'undefined' && !!(window as any).Capacitor}` },
       { key: "Plugin: MLKitBarcodeScanner", value: `${Capacitor.isPluginAvailable('MLKitBarcodeScanner')}` },
       { key: "Plugin: Camera", value: `${Capacitor.isPluginAvailable('Camera')}` },
       { key: "Plugin: BarcodeScanner", value: `${Capacitor.isPluginAvailable('BarcodeScanner')}` },
       { key: "Plugin: App", value: `${Capacitor.isPluginAvailable('App')}` },
-      { key: "WebView Detection", value: isWebView ? "WebView محتمل" : "متصفح عادي" },
-      { key: "User Agent", value: userAgent }
+      { key: "User Agent", value: userAgent },
+      { key: "Document: WebView", value: "WV" in navigator ? "مكتشف" : "غير مكتشف" }
     ];
     
     setInfo(diagnosticInfo);
-  }, [environment.isWebView]);
+    
+    // طباعة معلومات التشخيص في وحدة التحكم
+    console.log('CapacitorTester: معلومات التشخيص:', 
+      diagnosticInfo.reduce((obj, item) => {
+        obj[item.key] = item.value;
+        return obj;
+      }, {} as Record<string, string>)
+    );
+  }, [environment.isNativePlatform, environment.isWebView]);
   
   return (
     <div className="bg-gray-100 p-3 rounded-md text-xs overflow-auto max-h-[300px] dir-ltr">

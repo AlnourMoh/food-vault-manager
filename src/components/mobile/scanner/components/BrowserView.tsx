@@ -24,7 +24,8 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
     }
   }, [environment.isNativePlatform, onClose]);
 
-  if (environment.isNativePlatform) {
+  // إذا كنا في WebView لكن تم اعتباره بيئة أصلية، لا نعرض هذا المكون
+  if (environment.isNativePlatform || (environment.isWebView && environment.availablePlugins.camera)) {
     return null;
   }
 

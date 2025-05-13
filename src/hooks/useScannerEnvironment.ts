@@ -24,12 +24,16 @@ export const useScannerEnvironment = () => {
     const detectEnvironment = async () => {
       try {
         // التحقق من بيئة التشغيل
-        const isNative = Capacitor.isNativePlatform();
-        const platform = Capacitor.getPlatform();
+        const isNative = platformService.isNativePlatform();
+        const isWebView = platformService.isWebView();
+        const platform = platformService.getPlatform();
+        
+        // نعتبر أنفسنا في بيئة أصلية إذا كنا في WebView أو إذا كان Capacitor يقول ذلك
+        const effectivelyNative = isNative || isWebView;
         
         // التحقق من وجود WebView
         const userAgent = navigator.userAgent.toLowerCase();
-        const isWebView = userAgent.includes('wv') || 
+        const hasWebViewMarkers = userAgent.includes('wv') || 
                           userAgent.includes('foodvaultmanage') || 
                           userAgent.includes('capacitor');
         
@@ -42,18 +46,21 @@ export const useScannerEnvironment = () => {
           app: Capacitor.isPluginAvailable('App')
         };
         
+        // تعيين حالة البيئة المحسّنة
         setEnvironment({
-          isNativePlatform: isNative,
+          // اعتبار التطبيق في بيئة أصلية إذا كان في WebView أيضاً
+          isNativePlatform: effectivelyNative,
           platform,
-          isWebView,
+          isWebView: isWebView || hasWebViewMarkers,
           hasCapacitor,
           availablePlugins
         });
         
-        console.log('[useScannerEnvironment] تم تشخيص البيئة:', {
-          isNativePlatform: isNative,
+        console.log('[useScannerEnvironment] تم تشخيص البيئة بالطريقة المحسّنة:', {
+          isNativePlatform: effectivelyNative,
           platform,
-          isWebView,
+          isWebView: isWebView || hasWebViewMarkers,
+          userAgent,
           hasCapacitor,
           availablePlugins
         });
