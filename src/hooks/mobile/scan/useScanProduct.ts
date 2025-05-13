@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
+import { formatProductData } from './utils/productFormatter';
 
 export const useScanProduct = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +35,7 @@ export const useScanProduct = () => {
       }
       
       // ثانيًا، نحصل على تفاصيل المنتج باستخدام المعرف
-      const { data: product, error: productError } = await supabase
+      const { data: productData, error: productError } = await supabase
         .from('products')
         .select('*')
         .eq('id', productCode.product_id)
@@ -45,11 +46,12 @@ export const useScanProduct = () => {
         throw 'حدث خطأ أثناء جلب تفاصيل المنتج';
       }
       
-      if (!product) {
+      if (!productData) {
         throw 'لم يتم العثور على تفاصيل المنتج';
       }
       
-      return product as Product;
+      // استخدام دالة تنسيق بيانات المنتج لتحويل البيانات الخام إلى نوع المنتج المتوقع
+      return formatProductData(productData);
     } catch (err) {
       setError(typeof err === 'string' ? err : 'حدث خطأ غير معروف');
       throw err;
