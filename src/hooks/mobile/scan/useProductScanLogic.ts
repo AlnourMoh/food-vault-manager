@@ -20,21 +20,13 @@ export const useProductScanLogic = () => {
   const { checkPermission, requestPermission, openAppSettings } = useScannerPermissions();
   const { fetchProductByCode, logProductScan } = useScanProduct();
 
-  // فتح الماسح تلقائيًا عند تحميل الصفحة بدون تأخير
+  // التحقق من بيئة التشغيل
+  const isNativePlatform = Capacitor.isNativePlatform();
+  
+  // طباعة معلومات عن بيئة التطبيق للتشخيص
   useEffect(() => {
-    console.log('ProductScan: فتح الماسح فوراً');
-    
-    // التأكد من أننا في بيئة تطبيق جوال قبل فتح الماسح تلقائيًا
-    if (Capacitor.isNativePlatform()) {
-      handleOpenScanner();
-    } else {
-      // في بيئة المتصفح، نعرض رسالة للمستخدم
-      toast({
-        title: "المسح غير متاح في المتصفح",
-        description: "يرجى استخدام تطبيق الجوال للقيام بعمليات المسح",
-        variant: "default",
-      });
-    }
+    console.log('ProductScanLogic: هل نحن في بيئة الجوال؟', isNativePlatform);
+    console.log('ProductScanLogic: معلومات النظام:', Capacitor.getPlatform());
   }, []);
 
   const handleOpenScanner = async () => {
@@ -43,8 +35,8 @@ export const useProductScanLogic = () => {
       setScanError(null);
       setIsLoading(true);
       
-      // التحقق إذا كنا في بيئة الويب وإعلام المستخدم
-      if (!Capacitor.isNativePlatform()) {
+      // التحقق إذا كنا في بيئة المتصفح
+      if (!isNativePlatform) {
         console.log('ProductScanLogic: بيئة الويب، عرض رسالة بدلاً من فتح الماسح');
         
         toast({
@@ -54,6 +46,7 @@ export const useProductScanLogic = () => {
         });
         
         setIsLoading(false);
+        setScanError("المسح غير متاح في المتصفح");
         return;
       }
       
@@ -63,11 +56,15 @@ export const useProductScanLogic = () => {
       if (!permissionGranted) {
         console.log('ProductScanLogic: طلب إذن الكاميرا');
         
-        // عرض رسالة نصية للمستخدم عبر Toast API
-        await Toast.show({
-          text: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
-          duration: "short"
-        });
+        try {
+          // عرض رسالة نصية للمستخدم عبر Toast API
+          await Toast.show({
+            text: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+            duration: "short"
+          });
+        } catch (e) {
+          console.error('خطأ عند محاولة إظهار رسالة Toast:', e);
+        }
         
         permissionGranted = await requestPermission();
         
@@ -77,10 +74,14 @@ export const useProductScanLogic = () => {
           
           const openSettings = await openAppSettings();
           if (!openSettings) {
-            await Toast.show({
-              text: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
-              duration: "long"
-            });
+            try {
+              await Toast.show({
+                text: "يرجى تمكين إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
+                duration: "long"
+              });
+            } catch (e) {
+              console.error('خطأ عند محاولة إظهار رسالة Toast:', e);
+            }
             
             setIsLoading(false);
             return;
@@ -96,10 +97,14 @@ export const useProductScanLogic = () => {
       console.error('ProductScanLogic: خطأ في فتح الماسح:', error);
       setScanError('حدث خطأ أثناء محاولة فتح الماسح الضوئي');
       
-      await Toast.show({
-        text: "حدث خطأ أثناء محاولة فتح الماسح الضوئي",
-        duration: "long"
-      });
+      try {
+        await Toast.show({
+          text: "حدث خطأ أثناء محاولة فتح الماسح الضوئي",
+          duration: "long"
+        });
+      } catch (e) {
+        console.error('خطأ عند محاولة إظهار رسالة Toast:', e);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -117,11 +122,15 @@ export const useProductScanLogic = () => {
     
     try {
       // عرض رسالة للمستخدم
-      if (Capacitor.isNativePlatform()) {
-        await Toast.show({
-          text: `تم مسح الباركود: ${code}`,
-          duration: "short"
-        });
+      if (isNativePlatform) {
+        try {
+          await Toast.show({
+            text: `تم مسح الباركود: ${code}`,
+            duration: "short"
+          });
+        } catch (e) {
+          console.error('خطأ عند محاولة إظهار رسالة Toast:', e);
+        }
       }
       
       // الحصول على بيانات المنتج باستخدام الدالة المساعدة
@@ -141,11 +150,15 @@ export const useProductScanLogic = () => {
     } catch (error) {
       console.error('ProductScan: خطأ في البحث عن تفاصيل المنتج:', error);
       
-      if (Capacitor.isNativePlatform()) {
-        await Toast.show({
-          text: typeof error === 'string' ? error : "حدث خطأ أثناء البحث عن معلومات المنتج",
-          duration: "long"
-        });
+      if (isNativePlatform) {
+        try {
+          await Toast.show({
+            text: typeof error === 'string' ? error : "حدث خطأ أثناء البحث عن معلومات المنتج",
+            duration: "long"
+          });
+        } catch (e) {
+          console.error('خطأ عند محاولة إظهار رسالة Toast:', e);
+        }
       }
       
       toast({
@@ -164,7 +177,7 @@ export const useProductScanLogic = () => {
     setScannedProduct(null);
     setScanError(null);
     // فتح الماسح مباشرة عند طلب مسح منتج آخر
-    if (Capacitor.isNativePlatform()) {
+    if (isNativePlatform) {
       setIsScannerOpen(true);
     } else {
       // في بيئة المتصفح، نعرض رسالة للمستخدم

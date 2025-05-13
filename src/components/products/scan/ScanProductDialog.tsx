@@ -20,6 +20,14 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   const { toast } = useToast();
   const isWebEnvironment = !Capacitor.isNativePlatform();
   
+  // تسجيل معلومات للتشخيص
+  useEffect(() => {
+    if (open) {
+      console.log('ScanProductDialog: هل نحن في بيئة الويب؟', isWebEnvironment);
+      console.log('ScanProductDialog: منصة التشغيل:', Capacitor.getPlatform());
+    }
+  }, [open, isWebEnvironment]);
+  
   const {
     isProcessing,
     hasScannerError,
@@ -38,6 +46,7 @@ const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDi
   // تفعيل الماسح تلقائياً عند فتح مربع الحوار في بيئة الأجهزة
   React.useEffect(() => {
     if (open && !showScanner && !isWebEnvironment) {
+      console.log('ScanProductDialog: تفعيل الماسح تلقائياً في بيئة الجوال');
       setShowScanner(true);
     }
   }, [open, showScanner, setShowScanner, isWebEnvironment]);

@@ -5,6 +5,7 @@ import { InitialScanCard } from '@/components/mobile/scanner/product/InitialScan
 import { ScannedProductCard } from '@/components/mobile/scanner/product/ScannedProductCard';
 import ZXingBarcodeScanner from '@/components/mobile/ZXingBarcodeScanner';
 import { ErrorDisplay } from '@/components/mobile/scanner/product/ErrorDisplay';
+import { Capacitor } from '@capacitor/core';
 
 const ProductScan = () => {
   const {
@@ -19,11 +20,17 @@ const ProductScan = () => {
     viewProductDetails
   } = useProductScanLogic();
   
-  // فتح الماسح تلقائياً عند تحميل الصفحة بدون تأخير
+  // التحقق من بيئة التشغيل
+  const isNativePlatform = Capacitor.isNativePlatform();
+  
+  // فتح الماسح تلقائياً عند تحميل الصفحة فقط في بيئة التطبيق الجوال
   useEffect(() => {
-    console.log('ProductScan: فتح الماسح فوراً');
-    handleOpenScanner();
-  }, []);
+    console.log('ProductScan: البيئة الحالية:', isNativePlatform ? 'تطبيق جوال' : 'متصفح');
+    if (isNativePlatform) {
+      console.log('ProductScan: فتح الماسح فوراً في بيئة التطبيق');
+      handleOpenScanner();
+    }
+  }, [isNativePlatform]);
 
   // إذا تم مسح المنتج، نعرض معلوماته
   if (scannedProduct) {
@@ -52,7 +59,23 @@ const ProductScan = () => {
     );
   }
 
-  // إظهار الماسح مباشرة
+  // في بيئة المتصفح، نعرض رسالة بدل الماسح
+  if (!isNativePlatform) {
+    return (
+      <div className="container py-6 space-y-6">
+        <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
+        <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">المسح غير متاح في المتصفح</h2>
+          <p className="text-gray-700 mb-4">
+            عملية مسح الباركود متاحة فقط في تطبيق الهاتف المحمول.
+            يرجى استخدام تطبيق الجوال للقيام بعمليات المسح.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // إظهار الماسح مباشرة أو بطاقة بدء المسح
   return (
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
@@ -61,6 +84,7 @@ const ProductScan = () => {
         <InitialScanCard 
           onOpenScanner={handleOpenScanner}
           isLoading={isLoading}
+          hasPermission={true}
         />
       )}
       

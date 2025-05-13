@@ -19,7 +19,7 @@ const ZXingBarcodeScanner = ({ onScan, onClose, autoStart = true }: ZXingBarcode
   const [scanActive, setScanActive] = useState(false);
   const { toast } = useToast();
   
-  // التحقق ما إذا كنا في بيئة المتصفح أو بيئة التطبيق
+  // التحقق ما إذا كنا في بيئة المتصفح أو بيئة التطبيق - تحسين التحقق
   const isNativePlatform = Capacitor.isNativePlatform();
   
   // وظيفة للتحقق من الأذونات وطلبها إذا لزم الأمر
