@@ -9,8 +9,6 @@ export const formatProductData = (productData: any): Product => {
   // تحويل النصوص إلى كائنات تاريخ
   const expiryDate = new Date(productData.expiry_date);
   const entryDate = new Date(productData.production_date);
-  const createdAt = new Date(productData.created_at);
-  const updatedAt = new Date(productData.updated_at);
   
   // تحويل البيانات من تنسيق قاعدة البيانات إلى تنسيق المنتج في التطبيق
   return {
@@ -27,8 +25,6 @@ export const formatProductData = (productData: any): Product => {
     // معلومات إضافية
     restaurantId: productData.company_id || '',
     restaurantName: '', // يمكن إضافته لاحقاً من مصدر آخر
-    addedBy: '', // يمكن إضافته لاحقاً من مصدر آخر
-    createdAt,
-    updatedAt
+    addedBy: '' // يمكن إضافته لاحقاً من مصدر آخر
   };
 };
