@@ -1,165 +1,203 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { useBarcodeScanning } from './modules/useBarcodeScanning';
-import { useScannerRetry } from './modules/useScannerRetry';
-import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
-import { Toast } from '@capacitor/toast';
+import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { Toast } from '@capacitor/toast';
+import { useToast } from '@/hooks/use-toast';
 
-interface UseZXingBarcodeScannerOptions {
-  onScan: (code: string) => void;
-  onClose: () => void;
-  autoStart?: boolean;
-}
-
-export const useZXingBarcodeScanner = ({ 
-  onScan, 
-  onClose, 
-  autoStart = true 
-}: UseZXingBarcodeScannerOptions) => {
-  const [isLoading, setIsLoading] = useState(true);
+export const useZXingBarcodeScanner = (autoStart: boolean, onScan: (code: string) => void, onClose: () => void) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scannerError, setScannerError] = useState<string | null>(null);
-  const [attempts, setAttempts] = useState(0);
-
-  const { 
-    cameraActive,
-    isScanningActive,
-    startScan,
-    stopScan,
-    setCameraActive,
-  } = useBarcodeScanning({
-    onScan,
-    onScanError: (error: string) => {
-      console.error(`[useZXingBarcodeScanner] خطأ في المسح:`, error);
-      setScannerError(`خطأ في المسح: ${error}`);
-    },
-    onScanComplete: () => {
-      console.log('[useZXingBarcodeScanner] اكتمل المسح');
-      // إغلاق الماسح بعد المسح إذا لزم الأمر
-      onClose();
-    }
-  });
-
-  const { handleRetry } = useScannerRetry({
-    setHasScannerError: setScannerError,
-    setCameraActive,
-    activateCamera: async () => {
-      return await startScan();
-    },
-    startScan
-  });
-
-  // فحص وطلب أذونات الكاميرا
-  const checkPermissions = useCallback(async () => {
-    try {
-      console.log('[useZXingBarcodeScanner] التحقق من أذونات الكاميرا');
-      setIsLoading(true);
-
-      const permissionResult = await scannerPermissionService.checkPermission();
-      console.log(`[useZXingBarcodeScanner] نتيجة فحص الإذن:`, permissionResult);
-      setHasPermission(permissionResult);
-
-      if (permissionResult && autoStart) {
-        console.log('[useZXingBarcodeScanner] الأذونات موجودة، بدء المسح التلقائي');
-        
-        // محاولة بدء المسح مع تأخير قصير للتأكد من استقرار حالة الإذن
-        setTimeout(async () => {
-          try {
-            const success = await startScan();
-            console.log('[useZXingBarcodeScanner] نتيجة بدء المسح:', success);
-            
-            if (!success && attempts < 3) {
-              console.warn('[useZXingBarcodeScanner] فشل بدء المسح، محاولة مرة أخرى...');
-              setAttempts(prev => prev + 1);
-              
-              setTimeout(() => {
-                startScan().catch(e => console.error('[useZXingBarcodeScanner] خطأ في إعادة محاولة المسح:', e));
-              }, 1000);
-            }
-          } catch (e) {
-            console.error('[useZXingBarcodeScanner] خطأ في بدء المسح:', e);
-          }
-        }, 500);
-      }
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error('[useZXingBarcodeScanner] خطأ في التحقق من الأذونات:', error);
-      setScannerError('خطأ في التحقق من أذونات الكاميرا');
-      setIsLoading(false);
-    }
-  }, [autoStart, startScan, attempts]);
-
-  // طلب الأذونات
-  const requestPermission = useCallback(async (): Promise<boolean> => {
-    try {
-      console.log('[useZXingBarcodeScanner] طلب إذن الكاميرا');
-      setIsLoading(true);
-
-      const granted = await scannerPermissionService.requestPermission();
-      console.log(`[useZXingBarcodeScanner] نتيجة طلب الإذن:`, granted);
-      
-      setHasPermission(granted);
-      setIsLoading(false);
-      
-      if (granted && autoStart) {
-        console.log('[useZXingBarcodeScanner] تم منح الإذن، بدء المسح');
-        
-        // محاولة بدء المسح مع تأخير قصير للتأكد من استقرار حالة الإذن
-        setTimeout(async () => {
-          const started = await startScan();
-          console.log('[useZXingBarcodeScanner] نتيجة بدء المسح بعد منح الإذن:', started);
-          
-          // محاولة مرة أخرى بعد تأخير أطول إذا فشلت المحاولة الأولى
-          if (!started) {
-            console.warn('[useZXingBarcodeScanner] فشل بدء المسح، محاولة مرة أخرى بعد تأخير');
-            setTimeout(() => {
-              startScan().catch(e => console.error('[useZXingBarcodeScanner] خطأ في إعادة محاولة المسح:', e));
-            }, 1500);
-          }
-        }, 500);
-      }
-      
-      return granted;
-    } catch (error) {
-      console.error('[useZXingBarcodeScanner] خطأ في طلب الإذن:', error);
-      setScannerError('خطأ في طلب إذن الكاميرا');
-      setIsLoading(false);
+  const [scanActive, setScanActive] = useState(false);
+  const { toast } = useToast();
+  
+  // التحقق ما إذا كنا في بيئة المتصفح أو بيئة التطبيق
+  const isNativePlatform = Capacitor.isNativePlatform();
+  
+  console.log('useZXingBarcodeScanner: بيئة التشغيل:', Capacitor.getPlatform());
+  console.log('useZXingBarcodeScanner: هل نحن في بيئة الجوال؟', isNativePlatform);
+  
+  // وظيفة للتحقق من الأذونات وطلبها إذا لزم الأمر
+  const checkAndRequestPermissions = async () => {
+    if (!isNativePlatform) {
+      console.log('useZXingBarcodeScanner: ليست بيئة جوال. الكاميرا غير متاحة.');
+      setHasPermission(false);
       return false;
     }
-  }, [autoStart, startScan]);
-
-  // فتح إعدادات التطبيق
-  const openAppSettings = useCallback(async (): Promise<boolean> => {
-    try {
-      console.log('[useZXingBarcodeScanner] فتح إعدادات التطبيق');
-      return await scannerPermissionService.openAppSettings();
-    } catch (error) {
-      console.error('[useZXingBarcodeScanner] خطأ في فتح الإعدادات:', error);
-      return false;
-    }
-  }, []);
-
-  // فحص الأذونات عند تحميل المكون
-  useEffect(() => {
-    checkPermissions();
     
-    // تنظيف عند إلغاء تحميل المكون
+    try {
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('useZXingBarcodeScanner: ملحق MLKitBarcodeScanner غير متاح');
+        toast({
+          title: "ملحق الماسح الضوئي غير متاح",
+          description: "الجهاز لا يدعم MLKitBarcodeScanner"
+        });
+        return false;
+      }
+      
+      // التحقق من إذن الكاميرا
+      console.log('useZXingBarcodeScanner: التحقق من إذن الكاميرا...');
+      const { camera } = await BarcodeScanner.checkPermissions();
+      
+      if (camera !== 'granted') {
+        console.log('useZXingBarcodeScanner: طلب إذن الكاميرا...');
+        // إظهار رسالة
+        await Toast.show({
+          text: 'يحتاج التطبيق إلى إذن الكاميرا للمسح الضوئي',
+          duration: 'short'
+        });
+        
+        // طلب الإذن
+        const request = await BarcodeScanner.requestPermissions();
+        const granted = request.camera === 'granted';
+        
+        console.log('useZXingBarcodeScanner: نتيجة طلب الإذن:', granted ? 'تم منح الإذن' : 'تم رفض الإذن');
+        setHasPermission(granted);
+        return granted;
+      } else {
+        console.log('useZXingBarcodeScanner: إذن الكاميرا ممنوح بالفعل');
+        setHasPermission(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('useZXingBarcodeScanner: خطأ في التحقق من الأذونات:', error);
+      setHasPermission(false);
+      
+      toast({
+        title: "خطأ في الأذونات",
+        description: "تعذر التحقق من إذن الكاميرا",
+        variant: "destructive"
+      });
+      
+      return false;
+    }
+  };
+  
+  // بدء المسح
+  const startScan = async () => {
+    if (!isNativePlatform) {
+      console.log('useZXingBarcodeScanner: ليست بيئة جوال، لا يمكن بدء المسح');
+      toast({
+        title: "المسح غير متاح في المتصفح",
+        description: "يرجى استخدام تطبيق الجوال للقيام بعمليات المسح",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // التحقق من الإذن
+      console.log('useZXingBarcodeScanner: التحقق من الإذن قبل بدء المسح');
+      const hasPermission = await checkAndRequestPermissions();
+      
+      if (!hasPermission) {
+        console.log('useZXingBarcodeScanner: لا يوجد إذن، تعذر بدء المسح');
+        toast({
+          title: "تم رفض الإذن",
+          description: "لا يمكن استخدام الماسح الضوئي بدون إذن الكاميرا.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('useZXingBarcodeScanner: بدء عملية المسح...');
+      setScanActive(true);
+      
+      // نستخدم هذا لتفادي مشكلة تصميم الواجهة
+      try {
+        await Toast.show({
+          text: "جاري تشغيل المسح... وجّه الكاميرا نحو الباركود",
+          duration: "short"
+        });
+      } catch (e) {
+        console.log('useZXingBarcodeScanner: تعذر عرض رسالة Toast');
+      }
+      
+      // استخدام قيم تعداد BarcodeFormat بدلاً من السلاسل النصية
+      const result = await BarcodeScanner.scan({
+        formats: [
+          BarcodeFormat.QrCode, // QR_CODE
+          BarcodeFormat.Ean13, // EAN_13 
+          BarcodeFormat.Code128, // CODE_128
+          BarcodeFormat.Code39, // CODE_39
+          BarcodeFormat.UpcA, // UPC_A
+          BarcodeFormat.UpcE // UPC_E
+        ]
+      });
+      
+      if (result.barcodes && result.barcodes.length > 0) {
+        const code = result.barcodes[0].rawValue;
+        console.log('useZXingBarcodeScanner: تم مسح الكود:', code);
+        
+        try {
+          await Toast.show({
+            text: `تم مسح الباركود: ${code}`,
+            duration: "short"
+          });
+        } catch (e) {
+          console.log('useZXingBarcodeScanner: تعذر عرض رسالة Toast');
+        }
+        
+        // استدعاء دالة رد النداء مع الكود الممسوح
+        onScan(code);
+      } else {
+        console.log('useZXingBarcodeScanner: لم يتم العثور على باركود');
+        toast({
+          title: "لم يتم العثور على باركود",
+          description: "حاول مجدداً وتأكد من توجيه الكاميرا بشكل صحيح"
+        });
+      }
+      
+      setScanActive(false);
+    } catch (error) {
+      console.error('useZXingBarcodeScanner: خطأ في المسح:', error);
+      setScanActive(false);
+      
+      toast({
+        title: "خطأ في المسح",
+        description: "حدث خطأ أثناء محاولة مسح الباركود.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // وظيفة تلقائية لبدء المسح عند تحميل المكون إذا كان autoStart = true
+  useEffect(() => {
+    if (autoStart && isNativePlatform) {
+      console.log('useZXingBarcodeScanner: تفعيل بدء المسح التلقائي');
+      // تأخير قصير للتأكد من تحميل الواجهة أولاً
+      const timer = setTimeout(() => {
+        checkAndRequestPermissions().then((granted) => {
+          if (granted) {
+            console.log('useZXingBarcodeScanner: بدء المسح التلقائي');
+            startScan();
+          } else {
+            console.log('useZXingBarcodeScanner: تعذر بدء المسح التلقائي - لا يوجد إذن');
+          }
+        });
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoStart, isNativePlatform]);
+  
+  // تنظيف عند إلغاء تحميل المكون
+  useEffect(() => {
     return () => {
-      stopScan().catch(e => console.error('[useZXingBarcodeScanner] خطأ في إيقاف المسح عند التنظيف:', e));
+      if (scanActive && isNativePlatform) {
+        console.log('useZXingBarcodeScanner: إيقاف المسح عند التنظيف');
+        BarcodeScanner.stopScan().catch(error => 
+          console.error('useZXingBarcodeScanner: خطأ في إيقاف المسح:', error)
+        );
+      }
     };
-  }, []);
+  }, [scanActive, isNativePlatform]);
 
   return {
-    isLoading,
+    isNativePlatform,
     hasPermission,
-    cameraActive,
-    isScanningActive,
-    scannerError,
-    requestPermission,
-    handleRetry,
-    openAppSettings,
-    startScan // إضافة للتحكم المباشر ببدء المسح
+    scanActive,
+    startScan,
+    checkAndRequestPermissions
   };
 };
