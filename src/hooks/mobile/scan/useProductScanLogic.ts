@@ -25,15 +25,21 @@ export const useProductScanLogic = () => {
       setScanError(null);
       setIsLoading(true);
       
-      // في بيئة الويب، نفتح الماسح مباشرة بدون التحقق من الإذن
+      // التحقق إذا كنا في بيئة الويب وإعلام المستخدم
       if (!Capacitor.isNativePlatform()) {
-        console.log('ProductScanLogic: بيئة الويب، فتح الماسح مباشرة');
-        setIsScannerOpen(true);
+        console.log('ProductScanLogic: بيئة الويب، عرض رسالة بدلاً من فتح الماسح');
+        
+        toast({
+          title: "المسح غير متاح في المتصفح",
+          description: "يرجى استخدام تطبيق الجوال للقيام بعمليات المسح",
+          variant: "destructive",
+        });
+        
         setIsLoading(false);
         return;
       }
       
-      // التحقق من إذن الكاميرا في الأجهزة الجوالة
+      // في بيئة الأجهزة الجوالة، نتحقق من إذن الكاميرا ونفتح الماسح
       let permissionGranted = await checkPermission();
       
       if (!permissionGranted) {

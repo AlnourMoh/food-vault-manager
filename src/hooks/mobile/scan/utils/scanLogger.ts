@@ -23,7 +23,7 @@ export const logProductScan = async (code: string, productId: string): Promise<b
         product_id: productId,
         scanned_by: userId,
         qr_code: code,
-        scan_type: 'product_check'
+        scan_type: 'check'  // تعديل نوع المسح ليكون متوافقاً مع القيم المسموح بها
       });
     
     if (error) {

@@ -1,9 +1,9 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 import { Capacitor } from '@capacitor/core';
+import { useToast } from '@/hooks/use-toast';
 
 // Import the augmentation to ensure TypeScript recognizes the extended methods
 import '@/types/barcode-scanner-augmentation.d.ts';
@@ -12,6 +12,7 @@ export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const { setupScannerBackground, restoreUIAfterScanning } = useScannerUI();
+  const { toast } = useToast();
 
   // تحسين الأداء وتقليل التأخير
   const startMLKitScan = useCallback(async (onSuccess: (code: string) => void): Promise<boolean> => {
@@ -22,29 +23,19 @@ export const useMLKitScanner = () => {
       if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         console.warn('[useMLKitScanner] MLKit غير متوفر على هذا الجهاز');
         
-        // في بيئة الويب، استخدام محاكاة الماسح
+        // في بيئة الويب، نعرض رسالة بدلاً من محاكاة المسح
         if (!Capacitor.isNativePlatform()) {
-          console.log('[useMLKitScanner] استخدام محاكاة الماسح في بيئة الويب');
+          console.log('[useMLKitScanner] عرض رسالة للمستخدم في بيئة الويب');
           
-          // إظهار واجهة الماسح
-          setIsScanning(true);
-          await setupScannerBackground();
+          toast({
+            title: "المسح غير متاح في المتصفح",
+            description: "يرجى استخدام تطبيق الجوال للقيام بعمليات المسح",
+            variant: "destructive"
+          });
           
-          // تأخير قصير لمحاكاة عملية المسح
-          setTimeout(() => {
-            // تجهيز رمز وهمي للاختبار
-            const mockBarcode = `MOCK-${Math.floor(Math.random() * 1000000)}`;
-            console.log('[useMLKitScanner] محاكاة مسح الرمز:', mockBarcode);
-            
-            // استدعاء معالج النجاح
-            onSuccess(mockBarcode);
-            
-            // إيقاف الماسح
-            setIsScanning(false);
-            restoreUIAfterScanning().catch(console.error);
-          }, 1500);
-          
-          return true;
+          // إيقاف عملية المسح
+          setIsScanning(false);
+          return false;
         }
         
         return false;
@@ -130,7 +121,7 @@ export const useMLKitScanner = () => {
       
       return false;
     }
-  }, [setupScannerBackground, restoreUIAfterScanning]);
+  }, [setupScannerBackground, restoreUIAfterScanning, toast]);
 
   const stopMLKitScan = useCallback(async (): Promise<boolean> => {
     try {
