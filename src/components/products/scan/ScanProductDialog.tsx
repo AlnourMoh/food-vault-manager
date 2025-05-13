@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useScanProductHandler } from './hooks/useScanProductHandler';
@@ -16,15 +16,28 @@ interface ScanProductDialogProps {
 
 const ScanProductDialog = ({ open, onOpenChange, onProductAdded }: ScanProductDialogProps) => {
   const { toast } = useToast();
-  const isWebEnvironment = !Capacitor.isNativePlatform();
+  const [isWebEnvironment, setIsWebEnvironment] = useState(true);
   
-  // تسجيل معلومات للتشخيص
+  // تحقق من بيئة التشغيل عند فتح الحوار
   useEffect(() => {
     if (open) {
-      console.log('ScanProductDialog: هل نحن في بيئة الويب؟', isWebEnvironment);
-      console.log('ScanProductDialog: منصة التشغيل:', Capacitor.getPlatform());
+      const isNative = Capacitor.isNativePlatform();
+      const platform = Capacitor.getPlatform();
+      
+      console.log('ScanProductDialog: هل نحن في بيئة الجوال؟', isNative);
+      console.log('ScanProductDialog: منصة التشغيل:', platform);
+      
+      setIsWebEnvironment(!isNative);
+      
+      // إذا كنا في بيئة الجوال وليس الويب، نعرض رسالة تأكيد
+      if (isNative) {
+        toast({
+          title: "تفعيل الماسح الضوئي",
+          description: "جاري تشغيل الماسح الضوئي للباركود..."
+        });
+      }
     }
-  }, [open, isWebEnvironment]);
+  }, [open, toast]);
   
   const {
     isProcessing,

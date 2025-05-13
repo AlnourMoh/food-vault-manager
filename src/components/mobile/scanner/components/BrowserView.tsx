@@ -1,13 +1,32 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Smartphone, X, Info } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 interface BrowserViewProps {
   onClose: () => void;
 }
 
 export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
+  const [isNative, setIsNative] = useState(false);
+  
+  useEffect(() => {
+    // تحقق مما إذا كنا في بيئة تطبيق أصلية
+    const isNativePlatform = Capacitor.isNativePlatform();
+    console.log('BrowserView: هل نحن في بيئة أصلية؟', isNativePlatform);
+    console.log('BrowserView: المنصة الحالية:', Capacitor.getPlatform());
+    setIsNative(isNativePlatform);
+  }, []);
+  
+  // إذا كنا في بيئة أصلية، نغلق هذه الواجهة تلقائياً
+  if (isNative) {
+    setTimeout(() => {
+      onClose();
+    }, 100);
+    return null;
+  }
+
   return (
     <div className="browser-view-container">
       <div className="browser-view-icon-container">
