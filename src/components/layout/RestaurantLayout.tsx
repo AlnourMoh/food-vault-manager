@@ -41,7 +41,7 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
     },
     { 
       name: 'فريق المخزن', 
-      path: '/restaurant/storage-team', 
+      path: '/restaurant/team', 
       icon: <Users className="ml-2 h-5 w-5" /> 
     },
     { 

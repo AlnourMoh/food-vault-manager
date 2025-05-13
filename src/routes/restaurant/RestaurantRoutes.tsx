@@ -36,24 +36,114 @@ export const RestaurantRoutes = [
     } 
   />,
   <Route 
+    key="restaurant-dashboard"
+    path="/restaurant/dashboard" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <Dashboard />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-inventory"
+    path="/restaurant/inventory" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <Inventory />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-products-add"
+    path="/restaurant/products/add" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <AddProducts />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-products-edit"
+    path="/restaurant/products/:id/edit" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <EditProduct />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-products-remove"
+    path="/restaurant/products/remove" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <RemoveProducts />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-products-barcodes"
+    path="/restaurant/products/barcodes" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <ProductBarcodes />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-team"
+    path="/restaurant/team" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <StorageTeam />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-reports"
+    path="/restaurant/reports" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <Reports />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  <Route 
+    key="restaurant-expired"
+    path="/restaurant/expired" 
+    element={
+      <RestaurantGuard>
+        <RestaurantLayout>
+          <Expired />
+        </RestaurantLayout>
+      </RestaurantGuard>
+    }
+  />,
+  // Add a root redirect for /restaurant to /restaurant/dashboard
+  <Route 
     key="restaurant-root"
     path="/restaurant" 
     element={
       <RestaurantGuard>
         <RestaurantLayout>
-          <></>
+          <Dashboard />
         </RestaurantLayout>
       </RestaurantGuard>
     }
-  >
-    <Route index element={<Dashboard />} />
-    <Route path="inventory" element={<Inventory />} />
-    <Route path="products/add" element={<AddProducts />} />
-    <Route path="products/:id/edit" element={<EditProduct />} />
-    <Route path="products/remove" element={<RemoveProducts />} />
-    <Route path="products/barcodes" element={<ProductBarcodes />} />
-    <Route path="team" element={<StorageTeam />} />
-    <Route path="reports" element={<Reports />} />
-    <Route path="expired" element={<Expired />} />
-  </Route>
+  />
 ];
