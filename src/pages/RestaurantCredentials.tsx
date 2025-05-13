@@ -11,7 +11,7 @@ import { useRestaurantAccess } from '@/hooks/useRestaurantAccess';
 import { useToast } from '@/hooks/use-toast';
 
 const RestaurantCredentials = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(false);
   const [setupLink, setSetupLink] = useState('');

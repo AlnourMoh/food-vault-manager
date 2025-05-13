@@ -89,7 +89,11 @@ const Restaurants = () => {
   };
 
   const handleEditRestaurant = (restaurantId: string) => {
-    navigate(`/restaurants/${restaurantId}/edit`);
+    navigate(`/admin/restaurants/${restaurantId}/edit`);
+  };
+
+  const handleCredentialsClick = (restaurantId: string) => {
+    navigate(`/admin/restaurants/${restaurantId}/credentials`);
   };
 
   const handleDeleteConfirm = async () => {
@@ -135,7 +139,7 @@ const Restaurants = () => {
           <h1 className="text-3xl font-bold tracking-tight">المطاعم</h1>
           <Button 
             className="bg-fvm-primary hover:bg-fvm-primary-light flex items-center gap-2"
-            onClick={() => navigate('/restaurants/add')}
+            onClick={() => navigate('/admin/restaurants/add')}
           >
             <Plus className="h-4 w-4" />
             <span>إضافة مطعم جديد</span>
@@ -191,7 +195,7 @@ const Restaurants = () => {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => navigate(`/restaurants/${restaurant.id}/credentials`)}
+                            onClick={() => handleCredentialsClick(restaurant.id)}
                             className="flex items-center gap-1"
                           >
                             <Key className="h-4 w-4" />
