@@ -4,8 +4,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { useScannerState } from './hooks/useScannerState';
 import { useScannerActions } from './hooks/useScannerActions';
-import BrowserView from './components/BrowserView';
-import ScannerLayout from './components/ScannerLayout';
+import { BrowserView, ScannerLayout } from './components';
 import { platformService } from '@/services/scanner/PlatformService';
 
 interface SimpleBarcodeScannerProps {
@@ -19,7 +18,7 @@ const SimpleBarcodeScanner: React.FC<SimpleBarcodeScannerProps> = ({
   onClose, 
   autoStart = false 
 }) => {
-  const scannerState = useScannerState(autoStart);
+  const scannerState = useScannerState();
   const { startScan, stopScan } = useScannerActions({ 
     onScan, 
     onClose, 

@@ -6,20 +6,26 @@ import { useMLKitScanner } from './providers/useMLKitScanner';
 import { useScannerUI } from './useScannerUI';
 
 interface UseScannerStateProps {
-  onScan: (code: string) => void;
-  onClose: () => void;
+  onScan?: (code: string) => void;
+  onClose?: () => void;
   autoActivateCamera?: boolean;
 }
 
-export const useScannerState = ({ onScan, onClose, autoActivateCamera = false }: UseScannerStateProps) => {
+export const useScannerState = (props?: UseScannerStateProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const [isScanningActive, setIsScanningActive] = useState(false);
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [hasScannerError, setHasScannerError] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  
+  const autoActivateCamera = props?.autoActivateCamera || false;
+  const onScan = props?.onScan || (() => {});
+  const onClose = props?.onClose || (() => {});
   
   const { hasPermission, requestPermission } = useCameraPermissions();
-  const { isScanning, startMLKitScan, stopMLKitScan } = useMLKitScanner();
+  const { isScanning: mlkitIsScanning, startMLKitScan, stopMLKitScan } = useMLKitScanner();
   const { setupScannerBackground, restoreUIAfterScanning, cleanup } = useScannerUI();
   
   const { toast } = useToast();
@@ -125,12 +131,17 @@ export const useScannerState = ({ onScan, onClose, autoActivateCamera = false }:
   }, [stopScan]);
 
   return {
-    isLoading,
+    isLoading, 
+    setIsLoading,
     hasPermission,
     isScanningActive,
     lastScannedCode,
     isManualEntry,
     hasScannerError,
+    hasError,
+    setHasError,
+    isScanning,
+    setIsScanning,
     startScan,
     stopScan,
     requestPermission,
