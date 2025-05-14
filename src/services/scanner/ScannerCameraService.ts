@@ -61,7 +61,7 @@ class ScannerCameraService {
         // إيقاف تشغيل الفلاش إن وجد
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
-        // إيقاف المسح - بدون معاملات لأنه يتوقع 0 معاملات
+        // Fix: Remove the argument from stopScan() call as it expects 0 arguments
         await BarcodeScanner.stopScan();
       }
       
