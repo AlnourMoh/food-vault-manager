@@ -51,7 +51,7 @@ export const useScannerActions = ({
       });
       
       // التحقق من توفر ملحق المسح
-      if (!isNativePlatform || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+      if (!isNativePlatform || !platformService.isPluginAvailable('MLKitBarcodeScanner')) {
         // نتحقق من اكتشاف البيئة الأصلية بطرق متعددة
         if (isNativePlatform || isWebView || isInstalledApp) {
           console.log('[useScannerActions] في بيئة أصلية ولكن ملحق MLKitBarcodeScanner غير متوفر');
@@ -143,7 +143,7 @@ export const useScannerActions = ({
       try {
         const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         await BarcodeScanner.enableTorch(false);
-        // تصحيح: إزالة المعلمة في استدعاء stopScan() - لا يتوقع أي معلمات
+        // Fix: Remove the parameter from stopScan() call
         await BarcodeScanner.stopScan();
       } catch (error) {
         console.error('[useScannerActions] خطأ في إيقاف المسح:', error);
