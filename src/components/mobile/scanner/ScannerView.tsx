@@ -1,11 +1,9 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScannerFrame } from './components/ScannerFrame';
-import { ScannerControls } from './components/ScannerControls';
-import { ScannerStatusIndicator } from './components/ScannerStatusIndicator';
-import { X, RefreshCw, Loader2 } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { Camera, X, ZapOff, Zap, Smartphone, Keyboard } from 'lucide-react';
+import CapacitorTester from '../../CapacitorTester';
+import { Capacitor } from '@capacitor/core';
 
 interface ScannerViewProps {
   isActive: boolean;
@@ -15,7 +13,7 @@ interface ScannerViewProps {
   onStopScan: () => Promise<boolean>;
   onRetry: () => void;
   onClose: () => void;
-  onToggleFlash?: () => void;
+  onManualEntry?: () => void;
 }
 
 export const ScannerView: React.FC<ScannerViewProps> = ({
@@ -26,101 +24,169 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
   onStopScan,
   onRetry,
   onClose,
-  onToggleFlash
+  onManualEntry
 }) => {
-  // بدء المسح فورًا بمجرد أن تكون الكاميرا جاهزة
+  const [showDebug, setShowDebug] = useState(false);
+  const [isNativePlatform, setIsNativePlatform] = useState(false);
+
   useEffect(() => {
-    if (cameraActive && !isActive && !hasError) {
-      console.log('ScannerView: الكاميرا جاهزة، بدء المسح تلقائيًا');
-      onStartScan().catch(error => {
-        console.error('ScannerView: خطأ في بدء المسح التلقائي:', error);
-      });
+    // تحقق من بيئة التشغيل
+    const isNative = Capacitor.isNativePlatform();
+    setIsNativePlatform(isNative);
+    
+    console.log('ScannerView: هل نحن في بيئة أصلية؟', isNative);
+    console.log('ScannerView: المنصة الحالية:', Capacitor.getPlatform());
+    
+    // محاولة بدء المسح تلقائياً إذا كانت الكاميرا نشطة
+    if (cameraActive && isNative && !hasError) {
+      console.log('ScannerView: محاولة بدء المسح تلقائياً');
+      onStartScan();
     }
-  }, [cameraActive, isActive, hasError, onStartScan]);
+    
+    // تطبيق فئات خاصة بعناصر واجهة المستخدم للماسح
+    document.body.classList.add('scanner-active');
+    
+    return () => {
+      // تنظيف عند إلغاء التحميل
+      document.body.classList.remove('scanner-active');
+    };
+  }, [cameraActive, hasError, onStartScan]);
 
-  // إذا كان هناك خطأ في الكاميرا
-  if (hasError) {
-    return (
-      <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
-        <div className="text-white text-center p-4">
-          <div className="mb-4">
-            <div className="bg-red-500/20 p-4 rounded-full mx-auto w-16 h-16 flex items-center justify-center mb-2">
-              <RefreshCw className="h-8 w-8 text-red-500" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">حدث خطأ في الكاميرا</h3>
-            <p className="text-sm text-gray-300 mb-4">تعذر تشغيل الكاميرا. يرجى التحقق من أذونات الكاميرا وإعادة المحاولة.</p>
-          </div>
-          <Button onClick={onRetry} className="bg-white text-black hover:bg-gray-200 w-full mb-2">
-            <RefreshCw className="h-4 w-4 ml-2" />
-            إعادة المحاولة
-          </Button>
-          <Button onClick={onClose} variant="ghost" className="text-white hover:bg-white/20 w-full">
-            <X className="h-4 w-4 ml-2" />
-            إغلاق
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
-  // انتظار تفعيل الكاميرا
-  if (!cameraActive) {
-    return (
-      <div className="scanner-view-container relative h-full w-full bg-black/90 flex flex-col items-center justify-center">
-        <div className="text-white text-center p-4">
-          <div className="mb-6 flex flex-col items-center">
-            <Spinner size="lg" className="border-white border-t-transparent mb-6" />
-            <h3 className="text-xl font-semibold mb-3">جاري تفعيل الكاميرا</h3>
-            <p className="text-sm text-gray-300">يرجى الانتظار بضع لحظات...</p>
-          </div>
-          <Button onClick={onClose} variant="ghost" className="text-white hover:bg-white/20 w-full">
-            <X className="h-4 w-4 ml-2" />
-            إلغاء
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // عرض الماسح النشط - تم إزالة زر "بدء المسح" الإضافي
   return (
-    <div className="scanner-view-container relative h-full w-full">
-      {/* إطار الماسح */}
-      <ScannerFrame 
-        isActive={isActive} 
-        cameraActive={cameraActive} 
-        hasError={hasError} 
-      />
-      
-      {/* مؤشر حالة الماسح */}
-      <ScannerStatusIndicator 
-        isActive={isActive} 
-        cameraActive={cameraActive}
-        hasError={hasError}
-      />
-      
-      {/* عناصر التحكم في الماسح */}
-      <ScannerControls 
-        isActive={isActive}
-        cameraActive={cameraActive}
-        hasError={hasError}
-        onStartScan={onStartScan}
-        onStopScan={onStopScan}
-        onRetry={onRetry}
-        onClose={onClose}
-        onToggleFlash={onToggleFlash}
-      />
-      
-      {/* زر إغلاق للحالات الطارئة */}
-      <Button
-        onClick={onClose}
-        className="absolute top-3 right-3 bg-black/20 hover:bg-black/40 text-white rounded-full p-2 size-10"
-        variant="ghost"
-        size="icon"
-      >
-        <span className="sr-only">إغلاق</span>
-        <X className="h-6 w-6" />
-      </Button>
+    <div className="scanner-view-container bg-black text-white min-h-[70vh] flex flex-col items-center justify-center p-6 relative">
+      {hasError ? (
+        <div className="scanner-error flex flex-col items-center justify-center text-center max-w-xs mx-auto">
+          <div className="bg-red-100 text-red-700 p-3 rounded-full mb-4">
+            <ZapOff className="h-8 w-8" />
+          </div>
+          <h3 className="text-xl font-bold mt-4 text-white">خطأ في المسح الضوئي</h3>
+          <p className="text-gray-300 mb-6">
+            تعذر تشغيل الماسح الضوئي. يرجى التحقق من أذونات الكاميرا والمحاولة مرة أخرى.
+          </p>
+          <div className="flex gap-2">
+            <Button onClick={onRetry} variant="default" className="bg-blue-600 hover:bg-blue-700">
+              إعادة المحاولة
+            </Button>
+            {onManualEntry && (
+              <Button onClick={onManualEntry} variant="outline" className="text-white border-white hover:bg-gray-800">
+                إدخال يدوي
+              </Button>
+            )}
+          </div>
+          
+          <div className="mt-6">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowDebug(prev => !prev)}
+              className="text-gray-300 border-gray-600 hover:bg-gray-800"
+            >
+              {showDebug ? "إخفاء معلومات التشخيص" : "عرض معلومات التشخيص"}
+            </Button>
+            
+            {showDebug && <CapacitorTester />}
+          </div>
+        </div>
+      ) : (
+        <div className="scanner-active-view w-full h-full relative">
+          <div className="absolute top-4 right-4 z-20 flex space-x-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="bg-gray-800/50 text-white hover:bg-gray-800/70"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          {!isNativePlatform && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/90">
+              <div className="text-center p-6 bg-gray-900 rounded-lg max-w-sm">
+                <Smartphone className="h-10 w-10 mx-auto text-blue-500 mb-2" />
+                <h3 className="text-lg font-bold mb-2 text-white">المسح غير متاح في المتصفح</h3>
+                <p className="text-gray-400 mb-4">
+                  ميزة المسح الضوئي تعمل فقط في تطبيق الجوال، وليس في المتصفح.
+                </p>
+                <Button onClick={onClose} className="w-full">فهمت</Button>
+                
+                <div className="mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowDebug(prev => !prev)}
+                    className="text-gray-300 border-gray-600 hover:bg-gray-800"
+                  >
+                    {showDebug ? "إخفاء التشخيص" : "عرض التشخيص"}
+                  </Button>
+                  
+                  {showDebug && <CapacitorTester />}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="scanner-active-content h-full flex flex-col items-center justify-center">
+            {!isActive && (
+              <div className="flex flex-col items-center justify-center pt-10 pb-20">
+                <div className="bg-blue-100 text-blue-700 p-3 rounded-full mb-6">
+                  <Camera className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">جاهز للمسح</h3>
+                <p className="text-gray-300 mb-6 text-center max-w-xs">
+                  اضغط على بدء المسح وقم بتوجيه الكاميرا نحو الباركود
+                </p>
+                <Button 
+                  onClick={() => onStartScan()} 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full flex items-center gap-2"
+                >
+                  <Zap className="h-5 w-5" />
+                  بدء المسح
+                </Button>
+                {onManualEntry && (
+                  <Button 
+                    onClick={onManualEntry} 
+                    variant="ghost" 
+                    className="mt-3 text-gray-300 hover:bg-gray-800/50"
+                  >
+                    <Keyboard className="h-4 w-4 mr-1" />
+                    إدخال يدوي للكود
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            {isActive && (
+              <div className="scanner-frame-container relative w-full flex-1 flex items-center justify-center">
+                <div className="scanner-frame animate-scanner-box-pulse"></div>
+                <div className="text-white text-center absolute bottom-10 left-0 right-0">
+                  <p className="mb-4 text-sm bg-black/50 py-2 px-4 rounded-full inline-block">
+                    قم بتوجيه الكاميرا نحو الباركود
+                  </p>
+                  <div className="flex justify-center gap-2">
+                    <Button 
+                      onClick={() => onStopScan()}
+                      variant="outline" 
+                      className="border-white text-white hover:bg-gray-800"
+                    >
+                      إلغاء المسح
+                    </Button>
+                    {onManualEntry && (
+                      <Button 
+                        onClick={onManualEntry}
+                        variant="outline" 
+                        className="border-white text-white hover:bg-gray-800"
+                      >
+                        إدخال يدوي
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

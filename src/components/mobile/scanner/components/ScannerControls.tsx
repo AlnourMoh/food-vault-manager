@@ -1,116 +1,71 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Flashlight, Keyboard, X, RotateCcw, Camera } from 'lucide-react';
+import { Camera, X, ZapOff, Zap, Keyboard } from 'lucide-react';
 
-export interface ScannerControlsProps {
+interface ScannerControlsProps {
   isActive: boolean;
   cameraActive: boolean;
   hasError: boolean;
   onStartScan: () => Promise<boolean>;
   onStopScan: () => Promise<boolean>;
-  onClose: () => void;
   onRetry: () => void;
+  onClose: () => void;
   onToggleFlash?: () => void;
-  onManualEntry?: () => void;
+  onManualEntry?: () => void; // Added this prop
 }
 
-export const ScannerControls: React.FC<ScannerControlsProps> = ({ 
+export const ScannerControls: React.FC<ScannerControlsProps> = ({
   isActive,
   cameraActive,
   hasError,
   onStartScan,
   onStopScan,
-  onClose,
   onRetry,
+  onClose,
   onToggleFlash,
   onManualEntry
 }) => {
+  if (hasError) {
+    return null; // No controls shown in error state
+  }
+
   return (
-    <div className="absolute bottom-10 inset-x-0 flex justify-center gap-4">
-      {/* عرض أزرار مختلفة بناءً على حالة الماسح */}
-      {hasError ? (
-        <Button 
-          variant="secondary"
-          size="lg" 
-          className="rounded-full px-6"
-          onClick={onRetry}
-        >
-          <RotateCcw className="h-5 w-5 ml-2" />
-          إعادة المحاولة
-        </Button>
-      ) : isActive ? (
-        <>
-          {/* أزرار التحكم عندما يكون الماسح نشطًا */}
-          <Button 
-            variant="secondary"
-            size="lg" 
-            className="rounded-full px-6"
+    <div className="scanner-controls absolute bottom-6 left-0 right-0 px-6">
+      {isActive ? (
+        <div className="flex justify-center gap-3">
+          <Button
             onClick={() => onStopScan()}
+            variant="outline"
+            className="text-white border-white hover:bg-white/10"
           >
-            <X className="h-5 w-5 ml-2" />
-            إيقاف المسح
-          </Button>
-          
-          {onToggleFlash && (
-            <Button 
-              variant="outline"
-              size="icon" 
-              className="rounded-full h-12 w-12 bg-background/20 hover:bg-background/40"
-              onClick={onToggleFlash}
-            >
-              <Flashlight className="h-6 w-6 text-white" />
-            </Button>
-          )}
-        </>
-      ) : cameraActive ? (
-        // الكاميرا نشطة لكن المسح متوقف
-        <Button 
-          variant="secondary"
-          size="lg" 
-          className="rounded-full px-6"
-          onClick={() => onStartScan()}
-        >
-          <Camera className="h-5 w-5 ml-2" />
-          بدء المسح
-        </Button>
-      ) : (
-        // لا الكاميرا ولا المسح نشط
-        <>
-          <Button 
-            variant="secondary"
-            size="lg" 
-            className="rounded-full px-6"
-            onClick={() => onStartScan()}
-          >
-            <Camera className="h-5 w-5 ml-2" />
-            تفعيل الكاميرا
+            إلغاء المسح
           </Button>
           
           {onManualEntry && (
-            <Button 
-              variant="outline"
-              size="lg" 
-              className="rounded-full px-6"
+            <Button
               onClick={onManualEntry}
+              variant="outline"
+              className="text-white border-white hover:bg-white/10"
             >
-              <Keyboard className="h-5 w-5 ml-2" />
+              <Keyboard className="mr-1 h-4 w-4" />
               إدخال يدوي
             </Button>
           )}
-        </>
+        </div>
+      ) : (
+        <div className="flex justify-center">
+          {cameraActive && (
+            <Button
+              onClick={() => onStartScan()}
+              className="bg-white text-black hover:bg-gray-100 px-6 py-2"
+            >
+              <Zap className="mr-1 h-4 w-4" />
+              بدء المسح
+            </Button>
+          )}
+        </div>
       )}
-      
-      {/* زر الإغلاق متاح دائماً */}
-      <Button 
-        variant="destructive"
-        size="lg" 
-        className="rounded-full px-6"
-        onClick={onClose}
-      >
-        <X className="h-5 w-5 ml-2" />
-        إغلاق
-      </Button>
     </div>
   );
 };
