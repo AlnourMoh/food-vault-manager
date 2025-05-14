@@ -28,7 +28,7 @@ const ScannerLoadingView: React.FC<ScannerLoadingViewProps> = ({ onClose }) => {
       <div className="w-16 h-16 border-4 border-t-transparent border-white rounded-full animate-spin mb-6"></div>
       
       {/* نص التحميل */}
-      <p className="text-white text-lg">...جاري تهيئة الماسح الضوئي</p>
+      <p className="text-white text-lg">جاري تهيئة الماسح الضوئي...</p>
     </div>
   );
 };

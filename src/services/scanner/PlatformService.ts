@@ -2,77 +2,65 @@
 import { Capacitor } from '@capacitor/core';
 
 /**
- * خدمة للتحقق من بيئة تشغيل التطبيق
+ * خدمة تحديد بيئة التشغيل للتطبيق
  */
-class PlatformService {
+export class PlatformService {
+  private static instance: PlatformService;
+
+  private constructor() {}
+
+  public static getInstance(): PlatformService {
+    if (!PlatformService.instance) {
+      PlatformService.instance = new PlatformService();
+    }
+    return PlatformService.instance;
+  }
+
   /**
-   * التحقق مما إذا كان التطبيق يعمل في بيئة أصلية
+   * التحقق من وجود منصة أصلية (iOS, Android)
    */
   public isNativePlatform(): boolean {
     return Capacitor.isNativePlatform();
   }
 
   /**
-   * التحقق مما إذا كان التطبيق يعمل في وضع WebView
+   * التحقق من وجود Capacitor في الصفحة
+   */
+  public hasCapacitor(): boolean {
+    return 'Capacitor' in window;
+  }
+
+  /**
+   * التحقق من التشغيل في WebView
    */
   public isWebView(): boolean {
     const userAgent = navigator.userAgent.toLowerCase();
-    // تحسين اكتشاف WebView
     return userAgent.includes('wv') || 
-           userAgent.includes('electron') || 
            userAgent.includes('capacitor');
   }
 
   /**
-   * التحقق مما إذا كان التطبيق مثبتًا (وليس متصفحًا)
+   * التحقق من كون التطبيق مثبت
    */
   public isInstalledApp(): boolean {
-    // اختبار وجود serviceWorker أو إذا كان التطبيق مثبتًا (PWA)
-    return 'serviceWorker' in navigator || 
-           window.matchMedia('(display-mode: standalone)').matches ||
-           document.referrer.includes('android-app://');
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           ('standalone' in navigator && (navigator as any).standalone === true);
   }
 
   /**
-   * الحصول على اسم المنصة الحالية
+   * الحصول على منصة التشغيل الحالية
    */
   public getPlatform(): string {
     return Capacitor.getPlatform();
   }
 
   /**
-   * التحقق من توفر مكون Capacitor
-   */
-  public hasCapacitor(): boolean {
-    return typeof window !== 'undefined' && !!(window as any).Capacitor;
-  }
-
-  /**
-   * التحقق من توفر ملحق محدد
+   * التحقق من توفر ملحق معين
    */
   public isPluginAvailable(pluginName: string): boolean {
     return Capacitor.isPluginAvailable(pluginName);
   }
-
-  /**
-   * تسجيل معلومات تشخيصية عن البيئة
-   */
-  public logEnvironmentInfo(): void {
-    console.log('PlatformService - بيئة التشغيل:', {
-      platform: Capacitor.getPlatform(),
-      isNative: this.isNativePlatform(),
-      isWebView: this.isWebView(),
-      isInstalled: this.isInstalledApp(),
-      userAgent: navigator.userAgent,
-      referrer: document.referrer,
-      availablePlugins: {
-        MLKit: Capacitor.isPluginAvailable('MLKitBarcodeScanner'),
-        Camera: Capacitor.isPluginAvailable('Camera'),
-        BarcodeScanner: Capacitor.isPluginAvailable('BarcodeScanner')
-      }
-    });
-  }
 }
 
-// تصدير وحدة الخدمة مباشرة
-export const platformService = new PlatformService();
+// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
+export const platformService = PlatformService.getInstance();
