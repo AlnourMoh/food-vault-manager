@@ -93,7 +93,6 @@ class BarcodeScannerService {
   public async stopScan(): Promise<void> {
     if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
       try {
-        // Fix: Remove any arguments from stopScan() call as it expects 0 arguments
         await BarcodeScanner.stopScan();
       } catch (error) {
         console.error('[BarcodeScannerService] خطأ في إيقاف المسح:', error);
