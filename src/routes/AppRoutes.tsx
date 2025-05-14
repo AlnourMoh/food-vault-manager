@@ -25,21 +25,22 @@ const AppRoutes: React.FC = () => {
       if (!React.isValidElement(routeElement)) return null;
       
       // Extract the props and path from the route element
-      const { element, path } = routeElement.props;
+      const props = routeElement.props as { element: React.ReactNode, path: string, children?: React.ReactNode[] };
       
       // For the root path, special handling with nested routes
-      if (path === '/') {
+      if (props.path === '/') {
         return (
           <Route key={`website-root-${idx}`} path="/" element={<WebsiteLayout />}>
-            <Route index element={element} />
+            <Route index element={props.element} />
             {/* Extract nested routes */}
-            {React.Children.map(routeElement.props.children, (child, childIdx) => {
+            {React.Children.map(props.children, (child, childIdx) => {
               if (!React.isValidElement(child)) return null;
+              const childProps = child.props as { path: string, element: React.ReactNode };
               return (
                 <Route
                   key={`website-child-${childIdx}`}
-                  path={child.props.path}
-                  element={child.props.element}
+                  path={childProps.path}
+                  element={childProps.element}
                 />
               );
             })}
