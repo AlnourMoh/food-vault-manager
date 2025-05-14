@@ -6,7 +6,7 @@ import NotFound from '@/pages/NotFound';
 import ProductScan from '@/pages/mobile/ProductScan';
 import MobileInventory from '@/pages/mobile/MobileInventory';
 
-export const MobileRoutes = () => {
+const MobileRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/mobile" replace />} />
@@ -23,3 +23,6 @@ export const MobileRoutes = () => {
     </Routes>
   );
 };
+
+export { MobileRoutes };
+export default MobileRoutes;

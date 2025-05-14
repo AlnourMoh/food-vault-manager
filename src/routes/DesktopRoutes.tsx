@@ -1,5 +1,4 @@
-
-import React, { Fragment } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { WebsiteRoutes } from './website/WebsiteRoutes';
 import { AdminRoutes } from './admin/AdminRoutes';
@@ -14,17 +13,17 @@ export const DesktopRoutes = () => {
     <Routes>
       {/* Website Routes */}
       {WebsiteRoutes.map((route, index) => (
-        <Fragment key={`website-route-${index}`}>{route}</Fragment>
+        <React.Fragment key={`website-route-${index}`}>{route}</React.Fragment>
       ))}
       
       {/* Admin Routes */}
       {AdminRoutes.map((route, index) => (
-        <Fragment key={`admin-route-${index}`}>{route}</Fragment>
+        <React.Fragment key={`admin-route-${index}`}>{route}</React.Fragment>
       ))}
       
       {/* Restaurant Routes */}
       {RestaurantRoutes.map((route, index) => (
-        <Fragment key={`restaurant-route-${index}`}>{route}</Fragment>
+        <React.Fragment key={`restaurant-route-${index}`}>{route}</React.Fragment>
       ))}
       
       {/* Redirect legacy routes */}
