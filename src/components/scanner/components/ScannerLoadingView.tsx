@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Spinner } from '@/components/ui/spinner';
+import { Loader2 } from 'lucide-react';
 
 const ScannerLoadingView: React.FC = () => {
   return (
-    <div className="text-center">
-      <Spinner className="w-12 h-12 text-white mx-auto mb-4" />
-      <p className="text-white">جاري تهيئة الماسح...</p>
+    <div className="flex flex-col items-center justify-center h-full">
+      <Loader2 className="w-10 h-10 text-white animate-spin" />
+      <p className="text-white mt-4">جاري تهيئة الماسح الضوئي...</p>
     </div>
   );
 };

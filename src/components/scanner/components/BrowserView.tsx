@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { QrCode, X } from 'lucide-react';
+import { QrCode, AlertCircle } from 'lucide-react';
 
 interface BrowserViewProps {
   onClose: () => void;
@@ -9,15 +9,20 @@ interface BrowserViewProps {
 
 const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md text-center">
-        <div className="mx-auto bg-yellow-100 text-yellow-700 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-          <QrCode className="h-8 w-8" />
+    <div className="flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="flex flex-col items-center gap-2">
+        <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+          <AlertCircle className="w-8 h-8 text-amber-600" />
         </div>
-        <h2 className="text-xl font-bold mb-2">المسح غير متاح في المتصفح</h2>
-        <p className="text-gray-500 mb-6">خاصية مسح الباركود تعمل فقط في تطبيق الجوال. يرجى تنزيل التطبيق واستخدامه لمسح الباركود.</p>
-        <Button onClick={onClose} className="w-full">
-          <X className="h-4 w-4 ml-2" />
+        <h2 className="text-xl font-bold">قارئ الباركود غير متوفر</h2>
+      </div>
+      
+      <p className="text-gray-600 mb-4">
+        قارئ الباركود غير متوفر في المتصفح. يرجى استخدام تطبيق الجوال للوصول لهذه الميزة.
+      </p>
+      
+      <div className="flex flex-col gap-3 w-full max-w-xs">
+        <Button variant="outline" onClick={onClose} className="w-full">
           إغلاق
         </Button>
       </div>

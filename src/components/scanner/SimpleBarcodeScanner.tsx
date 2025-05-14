@@ -18,7 +18,7 @@ const SimpleBarcodeScanner: React.FC<SimpleBarcodeScannerProps> = ({
   onClose, 
   autoStart = false 
 }) => {
-  const scannerState = useScannerState();
+  const scannerState = useScannerState(autoStart);
   const { startScan, stopScan } = useScannerActions({ 
     onScan, 
     onClose, 
@@ -49,7 +49,15 @@ const SimpleBarcodeScanner: React.FC<SimpleBarcodeScannerProps> = ({
         Camera: Capacitor.isPluginAvailable('Camera')
       }
     });
-  }, [isWebView, isInstalledApp, isEffectivelyNative]);
+
+    // بدء المسح تلقائيًا إذا كنا في بيئة أصلية وتم تعيين autoStart
+    if (isEffectivelyNative && autoStart) {
+      console.log('SimpleBarcodeScanner: بدء المسح تلقائيًا...');
+      startScan();
+    } else {
+      scannerState.setIsLoading(false);
+    }
+  }, [isWebView, isInstalledApp, isEffectivelyNative, autoStart]);
 
   // في البيئة غير الأصلية المؤكدة، نعرض واجهة المتصفح
   if (!isEffectivelyNative) {

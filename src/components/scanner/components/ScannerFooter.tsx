@@ -1,20 +1,25 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Lightbulb } from 'lucide-react';
 
 interface ScannerFooterProps {
   isScanning: boolean;
-  onStopScan: () => void;
+  onStopScan: () => Promise<void>;
 }
 
 const ScannerFooter: React.FC<ScannerFooterProps> = ({ isScanning, onStopScan }) => {
-  if (!isScanning) return null;
-  
+  if (!isScanning) {
+    return null;
+  }
+
   return (
-    <div className="p-4 flex justify-center">
-      <Button variant="destructive" onClick={onStopScan}>
-        إيقاف المسح
-      </Button>
+    <div className="p-4 flex items-center justify-center bg-black bg-opacity-50">
+      <button 
+        className="w-14 h-14 flex items-center justify-center rounded-full bg-white"
+        onClick={onStopScan}
+      >
+        <Lightbulb size={24} />
+      </button>
     </div>
   );
 };

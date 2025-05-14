@@ -1,14 +1,8 @@
 
-import ScannerContent from './ScannerContent';
-import ScannerHeader from './ScannerHeader';
-import ScannerFooter from './ScannerFooter';
-import ScannerLayout from './ScannerLayout';
 import BrowserView from './BrowserView';
+import ScannerLayout from './ScannerLayout';
 
-export {
-  ScannerContent,
-  ScannerHeader,
-  ScannerFooter,
-  ScannerLayout,
-  BrowserView
+export { 
+  BrowserView,
+  ScannerLayout
 };
