@@ -1,57 +1,76 @@
 
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { PlatformService } from '@/services/scanner/PlatformService';
+import { platformService } from '@/services/scanner/PlatformService';
 
 /**
- * هوك للتحقق من بيئة تشغيل الماسح الضوئي
+ * هوك للتعرف على بيئة تشغيل الماسح الضوئي وتوفر المكونات
  */
 export const useScannerEnvironment = () => {
-  const [isNativePlatform, setIsNativePlatform] = useState(false);
-  const [isInAppWebView, setIsInAppWebView] = useState(false);
-  const [isBrowser, setIsBrowser] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
+  const [environment, setEnvironment] = useState({
+    isNativePlatform: false,
+    platform: 'web',
+    isWebView: false,
+    hasCapacitor: false,
+    availablePlugins: {
+      mlkitScanner: false,
+      camera: false,
+      barcodeScanner: false,
+      app: false
+    }
+  });
 
   useEffect(() => {
-    // التحقق من البيئة
-    const platformCheck = () => {
+    const detectEnvironment = async () => {
       try {
-        const native = Capacitor.isNativePlatform();
-        const inAppWebView = PlatformService.isInAppWebView();
-        const browser = !native && !inAppWebView;
+        // التحقق من بيئة التشغيل
+        const isNative = platformService.isNativePlatform();
+        const isWebView = platformService.isWebView();
+        const platform = platformService.getPlatform();
         
-        setIsNativePlatform(native);
-        setIsInAppWebView(inAppWebView);
-        setIsBrowser(browser);
+        // نعتبر أنفسنا في بيئة أصلية إذا كنا في WebView أو إذا كان Capacitor يقول ذلك
+        const effectivelyNative = isNative || isWebView;
         
-        // الماسح مدعوم في التطبيق الأصلي أو WebView
-        setIsSupported(native || inAppWebView);
+        // التحقق من وجود WebView
+        const userAgent = navigator.userAgent.toLowerCase();
+        const hasWebViewMarkers = userAgent.includes('wv') || 
+                          userAgent.includes('foodvaultmanage') || 
+                          userAgent.includes('capacitor');
         
-        console.log('[useScannerEnvironment] معلومات البيئة:', {
-          native,
-          inAppWebView,
-          browser,
-          isSupported: native || inAppWebView,
-          userAgent: navigator.userAgent,
-          platform: Capacitor.getPlatform()
+        // التحقق من توفر المكونات الإضافية
+        const hasCapacitor = platformService.hasCapacitor();
+        const availablePlugins = {
+          mlkitScanner: Capacitor.isPluginAvailable('MLKitBarcodeScanner'),
+          camera: Capacitor.isPluginAvailable('Camera'),
+          barcodeScanner: Capacitor.isPluginAvailable('BarcodeScanner'),
+          app: Capacitor.isPluginAvailable('App')
+        };
+        
+        // تعيين حالة البيئة المحسّنة
+        setEnvironment({
+          // اعتبار التطبيق في بيئة أصلية إذا كان في WebView أيضاً
+          isNativePlatform: effectivelyNative,
+          platform,
+          isWebView: isWebView || hasWebViewMarkers,
+          hasCapacitor,
+          availablePlugins
+        });
+        
+        console.log('[useScannerEnvironment] تم تشخيص البيئة بالطريقة المحسّنة:', {
+          isNativePlatform: effectivelyNative,
+          platform,
+          isWebView: isWebView || hasWebViewMarkers,
+          userAgent,
+          hasCapacitor,
+          availablePlugins
         });
       } catch (error) {
-        console.error('[useScannerEnvironment] خطأ في تحديد البيئة:', error);
-        setIsSupported(false);
+        console.error('[useScannerEnvironment] خطأ في اكتشاف البيئة:', error);
       }
     };
-
-    platformCheck();
+    
+    detectEnvironment();
   }, []);
 
-  return {
-    isNativePlatform,
-    isInAppWebView,
-    isBrowserOnly: isBrowser,
-    isSupported,
-    platformName: Capacitor.getPlatform(),
-    // إضافة الخصائص المتوافقة
-    isWebView: isInAppWebView,
-    platform: Capacitor.getPlatform()
-  };
+  return environment;
 };

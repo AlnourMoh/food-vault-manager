@@ -7,7 +7,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
  */
 export class ScannerUIService {
   private static instance: ScannerUIService;
-  private originalStyles: Map<HTMLElement, { background: string, opacity: string, visibility: string }> = new Map();
+  private originalStyles: Map<HTMLElement, { background: string, opacity: string }> = new Map();
   
   private constructor() {}
   
@@ -79,15 +79,14 @@ export class ScannerUIService {
    * حفظ الأنماط الأصلية للعناصر
    */
   private saveOriginalStyles(): void {
-    // العناصر التي نحتاج إلى حفظ أنماطها - استبعاد العناصر المرتبطة بالماسح
-    const elementsToSave = document.querySelectorAll('header:not(.scanner-header), nav:not(.scanner-nav), footer:not(.scanner-footer), .app-header, .app-navigation');
+    // العناصر التي نحتاج إلى حفظ أنماطها
+    const elementsToSave = document.querySelectorAll('header, nav, footer, .app-header, .app-navigation');
     
     elementsToSave.forEach(el => {
       if (el instanceof HTMLElement) {
         this.originalStyles.set(el, {
-          background: el.style.background || '',
-          opacity: el.style.opacity || '1',
-          visibility: el.style.visibility || 'visible'
+          background: el.style.background,
+          opacity: el.style.opacity
         });
       }
     });
@@ -97,14 +96,13 @@ export class ScannerUIService {
    * إخفاء عناصر الواجهة التي قد تتداخل مع المسح
    */
   private hideInterfaceElements(): void {
-    // العناصر التي نحتاج إلى إخفائها أو تعديلها - استبعاد العناصر المرتبطة بالماسح
-    const elementsToModify = document.querySelectorAll('header:not(.scanner-header), nav:not(.scanner-nav), footer:not(.scanner-footer), .app-header, .app-navigation');
+    // العناصر التي نحتاج إلى إخفائها أو تعديلها
+    const elementsToModify = document.querySelectorAll('header, nav, footer, .app-header, .app-navigation');
     
     elementsToModify.forEach(el => {
       if (el instanceof HTMLElement) {
         el.style.background = 'transparent';
         el.style.opacity = '0';
-        el.style.visibility = 'hidden';
       }
     });
   }
@@ -117,17 +115,6 @@ export class ScannerUIService {
     this.originalStyles.forEach((styles, el) => {
       el.style.background = styles.background;
       el.style.opacity = styles.opacity;
-      el.style.visibility = styles.visibility;
-    });
-    
-    // تطبيق أنماط ثابتة للتأكد من ظهور العناصر الرئيسية
-    document.querySelectorAll('.app-header, .app-footer').forEach(el => {
-      if (el instanceof HTMLElement) {
-        el.style.background = 'white';
-        el.style.backgroundColor = 'white';
-        el.style.opacity = '1';
-        el.style.visibility = 'visible';
-      }
     });
     
     // تفريغ المخزن

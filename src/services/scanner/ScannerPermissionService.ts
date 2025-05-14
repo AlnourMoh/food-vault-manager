@@ -1,3 +1,4 @@
+
 /**
  * خدمة إدارة أذونات الماسح الضوئي
  */
@@ -5,7 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 import { App } from '@capacitor/app';
-import { PlatformService } from './PlatformService';
+import { platformService } from './PlatformService';
 
 export class ScannerPermissionService {
   /**
@@ -14,18 +15,18 @@ export class ScannerPermissionService {
   public async isSupported(): Promise<boolean> {
     try {
       // التحقق أولاً إذا كنا في منصة أصلية
-      if (!PlatformService.isNativePlatform()) {
+      if (!platformService.isNativePlatform()) {
         console.warn('[ScannerPermissionService] نحن في بيئة المتصفح، الماسح غير مدعوم');
         return false;
       }
       
       // طباعة معلومات عن المنصة وتوفر الملحقات
-      console.log(`[ScannerPermissionService] منصة: ${PlatformService.getPlatform()}`);
-      console.log(`[ScannerPermissionService] MLKitBarcodeScanner: ${PlatformService.isPluginAvailable('MLKitBarcodeScanner')}`);
-      console.log(`[ScannerPermissionService] Camera: ${PlatformService.isPluginAvailable('Camera')}`);
+      console.log(`[ScannerPermissionService] منصة: ${platformService.getPlatform()}`);
+      console.log(`[ScannerPermissionService] MLKitBarcodeScanner: ${platformService.isPluginAvailable('MLKitBarcodeScanner')}`);
+      console.log(`[ScannerPermissionService] Camera: ${platformService.isPluginAvailable('Camera')}`);
       
       // التحقق من دعم ملحق الماسح الضوئي
-      if (PlatformService.isPluginAvailable('MLKitBarcodeScanner')) {
+      if (platformService.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           const result = await BarcodeScanner.isSupported();
           console.log('[ScannerPermissionService] نتيجة isSupported من BarcodeScanner:', result);
@@ -56,7 +57,7 @@ export class ScannerPermissionService {
       }
       
       // في بيئة الجوال، نفترض وجود الكاميرا حتى لو لم نتمكن من التحقق منها
-      if (PlatformService.isNativePlatform()) {
+      if (platformService.isNativePlatform()) {
         console.log('[ScannerPermissionService] في بيئة الجوال، نفترض دعم الكاميرا');
         return true;
       }
@@ -65,7 +66,7 @@ export class ScannerPermissionService {
     } catch (error) {
       console.error('[ScannerPermissionService] خطأ في التحقق من الدعم:', error);
       // في حالة الخطأ في بيئة الجوال، نفترض وجود الدعم كإجراء احتياطي
-      return PlatformService.isNativePlatform();
+      return platformService.isNativePlatform();
     }
   }
 
@@ -81,10 +82,10 @@ export class ScannerPermissionService {
         return false;
       }
       
-      // في بيئة التطبيق الأ��لي
-      if (PlatformService.isNativePlatform()) {
+      // في بيئة التطبيق الأصلي
+      if (platformService.isNativePlatform()) {
         // محاولة استخدام BarcodeScanner أولاً
-        if (PlatformService.isPluginAvailable('MLKitBarcodeScanner')) {
+        if (platformService.isPluginAvailable('MLKitBarcodeScanner')) {
           console.log('[ScannerPermissionService] التحقق من الإذن باستخدام MLKitBarcodeScanner');
           const status = await BarcodeScanner.checkPermissions();
           console.log('[ScannerPermissionService] حالة إذن MLKitBarcodeScanner:', status);
@@ -92,7 +93,7 @@ export class ScannerPermissionService {
         }
         
         // استخدام ملحق الكاميرا العادي
-        if (PlatformService.isPluginAvailable('Camera')) {
+        if (platformService.isPluginAvailable('Camera')) {
           console.log('[ScannerPermissionService] التحقق من الإذن باستخدام Camera');
           const status = await Camera.checkPermissions();
           console.log('[ScannerPermissionService] حالة إذن Camera:', status);
@@ -135,9 +136,9 @@ export class ScannerPermissionService {
       }
       
       // في بيئة التطبيق الأصلي
-      if (PlatformService.isNativePlatform()) {
+      if (platformService.isNativePlatform()) {
         // محاولة استخدام BarcodeScanner أولاً
-        if (PlatformService.isPluginAvailable('MLKitBarcodeScanner')) {
+        if (platformService.isPluginAvailable('MLKitBarcodeScanner')) {
           console.log('[ScannerPermissionService] طلب الإذن باستخدام MLKitBarcodeScanner');
           const status = await BarcodeScanner.checkPermissions();
           
@@ -154,7 +155,7 @@ export class ScannerPermissionService {
         }
         
         // استخدام ملحق الكاميرا العادي
-        if (PlatformService.isPluginAvailable('Camera')) {
+        if (platformService.isPluginAvailable('Camera')) {
           console.log('[ScannerPermissionService] طلب الإذن باستخدام Camera');
           const status = await Camera.checkPermissions();
           
@@ -204,9 +205,9 @@ export class ScannerPermissionService {
     try {
       console.log('[ScannerPermissionService] محاولة فتح إعدادات التطبيق...');
       
-      if (PlatformService.isNativePlatform()) {
+      if (platformService.isNativePlatform()) {
         // محاولة استخدام واجهة برمجة التطبيق لفتح الإعدادات
-        if (PlatformService.isPluginAvailable('App')) {
+        if (platformService.isPluginAvailable('App')) {
           // استخدام طريقة آمنة للوصول للإعدادات
           const appInfo = await App.getInfo();
           console.log('[ScannerPermissionService] معلومات التطبيق:', appInfo);
