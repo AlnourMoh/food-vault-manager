@@ -2,15 +2,14 @@
 import React from 'react';
 import ScannerLoadingView from './ScannerLoadingView';
 import ScannerErrorView from './ScannerErrorView';
-import ScannerStartView from './ScannerStartView';
-import ActiveScannerView from './ActiveScannerView';
+import ScannerActiveView from './ScannerActiveView';
 
 interface ScannerContentProps {
   isLoading: boolean;
   hasError: boolean;
   isScanning: boolean;
-  onStartScan: () => void;
-  onRetry: () => void;
+  onStartScan: () => Promise<void>;
+  onRetry: () => Promise<void>;
   onClose: () => void;
 }
 
@@ -22,19 +21,22 @@ const ScannerContent: React.FC<ScannerContentProps> = ({
   onRetry,
   onClose
 }) => {
+  // تحسين التعامل مع حالات العرض المختلفة
   if (isLoading) {
-    return <ScannerLoadingView />;
+    return <ScannerLoadingView onClose={onClose} />;
   }
-  
+
   if (hasError) {
     return <ScannerErrorView onRetry={onRetry} onClose={onClose} />;
   }
-  
-  if (!isScanning) {
-    return <ScannerStartView onStartScan={onStartScan} />;
-  }
-  
-  return <ActiveScannerView />;
+
+  return (
+    <ScannerActiveView 
+      isActive={isScanning} 
+      onStartScan={onStartScan} 
+      onClose={onClose} 
+    />
+  );
 };
 
 export default ScannerContent;
