@@ -4,7 +4,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { useScannerState } from './hooks/useScannerState';
 import { useScannerActions } from './hooks/useScannerActions';
-import { BrowserView } from './components/BrowserView';
+import BrowserView from './components/BrowserView';
 import ScannerLayout from './components/ScannerLayout';
 import { platformService } from '@/services/scanner/PlatformService';
 
