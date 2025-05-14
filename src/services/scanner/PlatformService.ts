@@ -34,6 +34,27 @@ class PlatformService {
   }
 
   /**
+   * الحصول على اسم المنصة الحالية
+   */
+  public getPlatform(): string {
+    return Capacitor.getPlatform();
+  }
+
+  /**
+   * التحقق من توفر مكون Capacitor
+   */
+  public hasCapacitor(): boolean {
+    return typeof window !== 'undefined' && !!(window as any).Capacitor;
+  }
+
+  /**
+   * التحقق من توفر ملحق محدد
+   */
+  public isPluginAvailable(pluginName: string): boolean {
+    return Capacitor.isPluginAvailable(pluginName);
+  }
+
+  /**
    * تسجيل معلومات تشخيصية عن البيئة
    */
   public logEnvironmentInfo(): void {
