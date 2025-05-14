@@ -62,7 +62,7 @@ class ScannerCameraService {
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
         // إيقاف المسح - بدون معاملات لأنه يتوقع 0 معاملات
-        await BarcodeScanner.stopScan().catch(() => {});
+        await BarcodeScanner.stopScan();
       }
       
       this.isInitialized = false;
