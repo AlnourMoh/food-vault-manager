@@ -10,6 +10,12 @@ interface ScannerEnvironment {
   platform: string;
   hasBarcodeSupport: boolean;
   barcodeScannerPlugin: string | null;
+  hasCapacitor: boolean;
+  availablePlugins: {
+    mlkitScanner: boolean;
+    camera: boolean;
+    barcodeScanner: boolean;
+  };
 }
 
 export const useScannerEnvironment = () => {
@@ -19,7 +25,13 @@ export const useScannerEnvironment = () => {
     isInstalledApp: false,
     platform: 'web',
     hasBarcodeSupport: false,
-    barcodeScannerPlugin: null
+    barcodeScannerPlugin: null,
+    hasCapacitor: false,
+    availablePlugins: {
+      mlkitScanner: false,
+      camera: false,
+      barcodeScanner: false
+    }
   });
   
   useEffect(() => {
@@ -33,6 +45,8 @@ export const useScannerEnvironment = () => {
       // التحقق من دعم الباركود
       const hasMLKit = Capacitor.isPluginAvailable('MLKitBarcodeScanner');
       const hasTraditional = Capacitor.isPluginAvailable('BarcodeScanner');
+      const hasCamera = Capacitor.isPluginAvailable('Camera');
+      const hasCapacitor = typeof Capacitor !== 'undefined';
       
       setEnvironment({
         isNativePlatform,
@@ -40,7 +54,13 @@ export const useScannerEnvironment = () => {
         isInstalledApp,
         platform,
         hasBarcodeSupport: hasMLKit || hasTraditional,
-        barcodeScannerPlugin: hasMLKit ? 'MLKitBarcodeScanner' : (hasTraditional ? 'BarcodeScanner' : null)
+        barcodeScannerPlugin: hasMLKit ? 'MLKitBarcodeScanner' : (hasTraditional ? 'BarcodeScanner' : null),
+        hasCapacitor,
+        availablePlugins: {
+          mlkitScanner: hasMLKit,
+          camera: hasCamera,
+          barcodeScanner: hasTraditional
+        }
       });
       
       // تسجيل تفاصيل البيئة للتشخيص
@@ -50,7 +70,9 @@ export const useScannerEnvironment = () => {
         isInstalledApp,
         platform,
         hasMLKit,
-        hasTraditional
+        hasTraditional,
+        hasCamera,
+        hasCapacitor
       });
     }, 300);
     
