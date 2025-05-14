@@ -41,32 +41,60 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
   handleRetry,
   cameraActive = false
 }) => {
-  // تطبيق حماية على عناصر الواجهة أثناء تشغيل الماسح
+  // تطبيق أنماط خاصة على عناصر الواجهة أثناء تشغيل الماسح
   useEffect(() => {
-    // تسجيل العناصر التي نحتاج إلى حمايتها
-    const elementsToProtect = document.querySelectorAll('header, footer, nav');
+    // إضافة فئة عامة للجسم للتحكم في المظهر العام
+    document.body.classList.add('scanner-active');
+    
+    // حفظ الحالة الأصلية للعناصر الرئيسية
+    const elementsToProtect = document.querySelectorAll('header:not(.scanner-header), footer:not(.scanner-footer), nav:not(.scanner-nav)');
     
     // تطبيق فئات حماية على جميع العناصر المطلوبة
     elementsToProtect.forEach(element => {
       if (element instanceof HTMLElement) {
         element.classList.add('app-header');
-        // تخزين الأنماط الأصلية لاستعادتها لاحقًا
-        element.dataset.originalBg = element.style.background;
-        element.dataset.originalOpacity = element.style.opacity;
+        
+        // حفظ الأنماط الأصلية لاستعادتها لاحقًا
+        if (!element.dataset.originalBg) {
+          element.dataset.originalBg = element.style.background || '';
+          element.dataset.originalOpacity = element.style.opacity || '1';
+          element.dataset.originalVisibility = element.style.visibility || 'visible';
+        }
+        
+        // تطبيق أنماط الإخفاء
+        element.style.background = 'transparent';
+        element.style.opacity = '0';
+        element.style.visibility = 'hidden';
       }
     });
     
     // تنظيف عند إلغاء تحميل المكون
     return () => {
+      // إزالة الفئة العامة من الجسم
+      document.body.classList.remove('scanner-active');
+      
       // استعادة الأنماط الأصلية بشكل تدريجي
       setTimeout(() => {
         document.querySelectorAll('.app-header').forEach(el => {
           if (el instanceof HTMLElement) {
-            // استعادة الأنماط الأصلية إن وجدت، أو تعيين القيم الافتراضية
-            el.style.background = 'white';
-            el.style.backgroundColor = 'white';
-            el.style.opacity = '1';
-            el.style.visibility = 'visible';
+            // استعادة الأنماط الأصلية إذا كانت محفوظة
+            if (el.dataset.originalBg) {
+              el.style.background = el.dataset.originalBg;
+              el.style.opacity = el.dataset.originalOpacity || '1';
+              el.style.visibility = el.dataset.originalVisibility || 'visible';
+              
+              // مسح البيانات المحفوظة
+              delete el.dataset.originalBg;
+              delete el.dataset.originalOpacity;
+              delete el.dataset.originalVisibility;
+            } else {
+              // تطبيق أنماط افتراضية إذا لم تكن هناك قيم محفوظة
+              el.style.background = 'white';
+              el.style.backgroundColor = 'white';
+              el.style.opacity = '1';
+              el.style.visibility = 'visible';
+            }
+            
             // إزالة فئة الحماية
             el.classList.remove('app-header');
           }
@@ -75,6 +103,7 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
     };
   }, []);
   
+  // تحديد المكون المناسب للعرض بناءً على الحالة
   if (isManualEntry) {
     return (
       <DigitalCodeInput 
@@ -98,6 +127,7 @@ export const ScannerContainer: React.FC<ScannerContainerProps> = ({
         onStopScan={stopScan}
         onRetry={handleRetry}
         onClose={onClose}
+        onManualEntry={handleManualEntry}
       />
     );
   }

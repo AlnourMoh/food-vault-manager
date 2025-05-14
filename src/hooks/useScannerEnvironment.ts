@@ -32,7 +32,8 @@ export const useScannerEnvironment = () => {
           inAppWebView,
           browser,
           isSupported: native || inAppWebView,
-          userAgent: navigator.userAgent
+          userAgent: navigator.userAgent,
+          platform: Capacitor.getPlatform()
         });
       } catch (error) {
         console.error('[useScannerEnvironment] خطأ في تحديد البيئة:', error);
@@ -49,7 +50,7 @@ export const useScannerEnvironment = () => {
     isBrowserOnly: isBrowser,
     isSupported,
     platformName: Capacitor.getPlatform(),
-    // إضافة الخصائص المفقودة
+    // إضافة الخصائص المتوافقة
     isWebView: isInAppWebView,
     platform: Capacitor.getPlatform()
   };

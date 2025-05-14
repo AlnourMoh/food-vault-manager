@@ -1,20 +1,27 @@
 
 /* أنماط عامة للماسح */
 .zxing-scanner {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background-color: black;
-  color: white;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  background-color: black !important;
+  color: white !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
 /* إطار كامل الشاشة للماسح */
 .zxing-scan-frame {
-  min-height: 60vh;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  min-height: 60vh !important;
+  position: relative !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: 500px !important;
+  margin: 0 auto !important;
 }
 
 /* خصائص لضمان ظهور الماسح في كل الحالات */
@@ -24,21 +31,93 @@ body.zxing-scanning .scanner-view-container,
   display: flex !important;
   opacity: 1 !important;
   visibility: visible !important;
-  background-color: rgba(0, 0, 0, 0.95);
+  background-color: rgba(0, 0, 0, 0.95) !important;
+  z-index: 10000 !important;
 }
 
 .scanner-view-container {
-  min-height: 60vh;
-  padding: 2rem;
-  border-radius: 0.5rem;
+  min-height: 70vh !important;
+  padding: 2rem !important;
+  border-radius: 0.5rem !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
 /* تصميم محسن للرسائل والتحذيرات */
 .scanner-message {
-  background-color: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 16px;
-  color: white;
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin-top: 16px !important;
+  color: white !important;
+  backdrop-filter: blur(4px) !important;
+  max-width: 90% !important;
+  text-align: center !important;
+}
+
+/* تحسين مظهر إطار المسح */
+.scanner-frame {
+  position: relative !important;
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  width: 80% !important;
+  max-width: 400px !important;
+  aspect-ratio: 4/3 !important;
+  margin: 0 auto !important;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.6) !important;
+}
+
+/* تأثيرات متحركة لإطار المسح */
+.scanner-frame::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2px !important;
+  background: linear-gradient(to right, transparent, #ffffff, transparent) !important;
+  animation: scanner-line 2s linear infinite !important;
+}
+
+@keyframes scanner-line {
+  0% {
+    top: 0 !important;
+  }
+  50% {
+    top: 100% !important;
+  }
+  100% {
+    top: 0 !important;
+  }
+}
+
+/* تحسين مظهر الأزرار */
+.scanner-action-button {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 50px !important;
+  padding: 10px 25px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 10px 5px !important;
+}
+
+.scanner-close-button {
+  position: absolute !important;
+  top: 20px !important;
+  right: 20px !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }

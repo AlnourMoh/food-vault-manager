@@ -42,24 +42,25 @@
   color: #888;
 }
 
-/* تعزيز الأنماط للعناصر الرئيسية في التطبيق مع تقليل استخدام !important */
+/* إعادة تحديد الأنماط للعناصر الرئيسية في التطبيق */
 :root {
   --background-override: white;
+  --app-header-bg: white;
+  --app-footer-bg: white;
 }
 
-/* أنماط للعناصر العادية (غير في وضع الماسح) */
+/* تحسين أنماط الهيدر والفوتر بشكل عام */
 .app-header, 
 header.app-header,
 div.app-header,
-#root .app-header,
-body:not(.scanner-active):not(.scanner-viewport) .app-header {
-  background: white;
-  background-color: white;
-  visibility: visible;
-  opacity: 1;
-  z-index: 1001;
-  position: relative;
-  display: flex;
+#root .app-header {
+  background: var(--app-header-bg) !important;
+  background-color: var(--app-header-bg) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1001 !important;
+  position: relative !important;
+  display: flex !important;
 }
 
 .app-footer, 
@@ -67,39 +68,38 @@ footer.app-footer,
 nav.app-footer,
 div.app-footer,
 #root .app-footer,
-body:not(.scanner-active):not(.scanner-viewport) .app-footer,
 .bottom-nav {
-  background: white;
-  background-color: white;
-  visibility: visible;
-  opacity: 1;
-  z-index: 1001;
-  position: relative;
+  background: var(--app-footer-bg) !important;
+  background-color: var(--app-footer-bg) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1001 !important;
+  position: relative !important;
 }
 
-/* عناصر التطبيق في الوضع العادي */
+/* تحديد العناصر المرئية في الوضع العادي */
 body:not(.scanner-active):not(.scanner-viewport) header,
 body:not(.scanner-active):not(.scanner-viewport) footer,
 body:not(.scanner-active):not(.scanner-viewport) nav {
-  background: white;
-  visibility: visible;
-  opacity: 1;
-  display: block;
+  background: var(--app-header-bg) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
 }
 
-/* أنماط خاصة فقط للماسح النشط */
-body.scanner-active header,
-body.scanner-active footer,
-body.scanner-active nav,
-body.scanner-viewport header,
-body.scanner-viewport footer,
-body.scanner-viewport nav {
-  display: none;
-  visibility: hidden;
-  opacity: 0;
+/* أنماط خاصة للماسح النشط لإخفاء العناصر المطلوبة */
+body.scanner-active header:not(.scanner-header),
+body.scanner-active footer:not(.scanner-footer),
+body.scanner-active nav:not(.scanner-nav),
+body.scanner-viewport header:not(.scanner-header),
+body.scanner-viewport footer:not(.scanner-footer),
+body.scanner-viewport nav:not(.scanner-nav) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
-/* منع تطبيق الشفافية على عناصر المحتوى الرئيسية */
+/* تحسين مظهر حاوية المحتوى */
 .content-container {
   background: white;
   background-color: white;
@@ -107,24 +107,25 @@ body.scanner-viewport nav {
   position: relative;
 }
 
-/* تضمين قواعد خاصة للصفحات المحددة */
+/* تحسين مظهر لوحة تحكم الإدارة */
 .admin-dashboard-page header,
 .admin-dashboard-page .app-header,
 .admin-dashboard-page .top-nav {
-  background: white;
-  background-color: white;
-  visibility: visible;
-  opacity: 1;
-  z-index: 1010;
-  position: relative;
-  display: flex;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: white !important;
+  background-color: white !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1010 !important;
+  position: relative !important;
+  display: flex !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* أنماط لواجهة الماسح الضوئي */
+/* تحسين واجهة الماسح الضوئي */
 .scanner-container {
   background: transparent !important;
   background-color: transparent !important;
+  z-index: 9999 !important;
 }
 
 /* إصلاح واجهة الحوار للماسح */
@@ -134,7 +135,20 @@ body.scanner-viewport nav {
   background: transparent !important;
 }
 
-/* أنماط الانتقال للهيدر والفوتر */
+/* تحسين انتقالات الهيدر والفوتر */
 header, footer, nav {
   transition: opacity 0.3s, visibility 0.3s;
+}
+
+/* تخصيص للمحتوى في وضع الماسح */
+body.scanner-active {
+  background-color: #000 !important;
+  color: white !important;
+}
+
+.scanner-view-container {
+  background-color: black !important;
+  color: white !important;
+  min-height: 70vh !important;
+  z-index: 10000 !important;
 }

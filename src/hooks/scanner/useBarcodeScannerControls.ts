@@ -1,90 +1,118 @@
 
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useScannerDevice } from './useScannerDevice';
+import { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { PlatformService } from '@/services/scanner/PlatformService';
 
-interface UseBarcodeScannerControlsProps {
-  onScan: (code: string) => void;
-  onClose: () => void;
-  hasPermission: boolean | null;
-  requestPermission: () => Promise<boolean>;
-}
-
-export const useBarcodeScannerControls = ({ 
-  onScan, 
-  onClose, 
-  hasPermission, 
-  requestPermission 
-}: UseBarcodeScannerControlsProps) => {
+/**
+ * هوك للتحكم في الماسح الضوئي
+ */
+export const useBarcodeScannerControls = () => {
+  const [isScanning, setIsScanning] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [hasScannerError, setHasScannerError] = useState(false);
   const [isScanningActive, setIsScanningActive] = useState(false);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
-  const { toast } = useToast();
-  const { startDeviceScan, stopDeviceScan } = useScannerDevice();
+  const [isManualEntry, setIsManualEntry] = useState(false);
+  const [isNativePlatform, setIsNativePlatform] = useState(false);
   
-  const handleSuccessfulScan = async (code: string) => {
-    console.log('Successful scan detected:', code);
-    setLastScannedCode(code);
-    setIsScanningActive(false);
+  /**
+   * التحقق من بيئة العمل عند التحميل
+   */
+  useEffect(() => {
+    // تحديد ما إذا كانت البيئة أصلية أم لا
+    const native = Capacitor.isNativePlatform();
+    setIsNativePlatform(native);
     
-    try {
-      // Process the scanned code
-      await stopDeviceScan();
-      onScan(code);
-    } catch (error) {
-      console.error('Error processing scan:', error);
-      toast({
-        title: "خطأ في معالجة المسح",
-        description: "حدث خطأ أثناء معالجة الباركود المسح",
-        variant: "destructive"
-      });
-    }
-  };
+    // تطبيق أنماط مخصصة على عناصر واجهة المستخدم
+    document.documentElement.style.setProperty('--is-native', native ? '1' : '0');
+    
+    console.log('[useBarcodeScannerControls] هل البيئة أصلية؟', native);
+    console.log('[useBarcodeScannerControls] المنصة:', Capacitor.getPlatform());
+  }, []);
   
-  const startScan = async () => {
+  /**
+   * إعداد واجهة المستخدم للمسح
+   */
+  const setupScannerUI = useCallback(async () => {
     try {
-      console.log('Starting barcode scan, permission status:', hasPermission);
+      // إضافة فئة للجسم للتحكم في المظهر العام
+      document.body.classList.add('scanner-active');
       
-      // If we don't have permission yet, request it
-      if (hasPermission === false) {
-        console.log('No permission, requesting...');
-        const granted = await requestPermission();
-        console.log('Permission request result from startScan:', granted);
-        
-        if (!granted) {
-          console.log('Permission denied, cannot start scan');
-          toast({
-            title: "لا يمكن بدء المسح",
-            description: "لم يتم منح إذن الكاميرا المطلوب للمسح",
-            variant: "destructive"
-          });
-          return;
+      // إخفاء العناصر التي قد تتداخل مع المسح
+      document.querySelectorAll('header:not(.scanner-header), footer:not(.scanner-footer), nav:not(.scanner-nav)').forEach(element => {
+        if (element instanceof HTMLElement) {
+          element.style.opacity = '0';
+          element.style.visibility = 'hidden';
+          element.style.background = 'transparent';
         }
-      }
-      
-      console.log('Permission OK, activating scanner...');
-      setIsScanningActive(true);
-      await startDeviceScan(handleSuccessfulScan);
-    } catch (error) {
-      console.error('Scanning error:', error);
-      toast({
-        title: "خطأ في المسح",
-        description: "حدث خطأ أثناء محاولة مسح الباركود",
-        variant: "destructive"
       });
-      stopScan();
+      
+      return true;
+    } catch (error) {
+      console.error('[useBarcodeScannerControls] خطأ في إعداد واجهة المستخدم للمسح:', error);
+      return false;
     }
-  };
+  }, []);
   
-  const stopScan = async () => {
-    console.log('Stopping barcode scan...');
-    setIsScanningActive(false);
-    await stopDeviceScan();
-  };
+  /**
+   * استعادة واجهة المستخدم بعد المسح
+   */
+  const restoreScannerUI = useCallback(async () => {
+    try {
+      // إزالة فئة الجسم
+      document.body.classList.remove('scanner-active');
+      
+      // إعادة إظهار العناصر المخفية
+      document.querySelectorAll('header, footer, nav').forEach(element => {
+        if (element instanceof HTMLElement) {
+          element.style.opacity = '';
+          element.style.visibility = '';
+          element.style.background = '';
+        }
+      });
+      
+      // تطبيق أنماط محددة على العناصر الرئيسية
+      document.querySelectorAll('.app-header, .app-footer').forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.background = 'white';
+          el.style.backgroundColor = 'white';
+          el.style.opacity = '1';
+          el.style.visibility = 'visible';
+        }
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('[useBarcodeScannerControls] خطأ في استعادة واجهة المستخدم بعد المسح:', error);
+      return false;
+    }
+  }, []);
   
+  /**
+   * تنظيف الماسح عند إلغاء التحميل
+   */
+  useEffect(() => {
+    return () => {
+      // استعادة واجهة المستخدم عند إلغاء تحميل المكوّن
+      restoreScannerUI();
+    };
+  }, [restoreScannerUI]);
+
   return {
+    isScanning,
+    setIsScanning,
+    hasPermission,
+    setHasPermission,
+    hasScannerError,
+    setHasScannerError,
     isScanningActive,
+    setIsScanningActive,
     lastScannedCode,
-    startScan,
-    stopScan,
+    setLastScannedCode,
+    isManualEntry,
+    setIsManualEntry,
+    isNativePlatform,
+    setupScannerUI,
+    restoreScannerUI
   };
 };

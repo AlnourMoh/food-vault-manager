@@ -17,20 +17,32 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // تحسين ظهور العناصر الرئيسية بإضافة فئة app-header و app-footer
   useEffect(() => {
     const isAdminRoute = location.pathname.includes('/admin/');
-    // Only add the class if it's a non-empty string
+    // إضافة فئة خاصة لصفحات الإدارة
     if (isAdminRoute) {
       document.body.classList.add('admin-dashboard-page');
     }
     
     // تعريف العناصر الرئيسية عند التحميل
     const header = document.querySelector('header');
-    if (header) header.classList.add('app-header');
+    if (header) {
+      header.classList.add('app-header');
+      header.style.background = 'white';
+      header.style.backgroundColor = 'white';
+      header.style.opacity = '1';
+      header.style.visibility = 'visible';
+    }
     
     const footer = document.querySelector('footer');
-    if (footer) footer.classList.add('app-footer');
+    if (footer) {
+      footer.classList.add('app-footer');
+      footer.style.background = 'white';
+      footer.style.backgroundColor = 'white';
+      footer.style.opacity = '1';
+      footer.style.visibility = 'visible';
+    }
     
+    // تنظيف عند الخروج
     return () => {
-      // Only remove if it was actually added
       if (isAdminRoute) {
         document.body.classList.remove('admin-dashboard-page');
       }
