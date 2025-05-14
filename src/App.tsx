@@ -1,41 +1,38 @@
 
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ThemeProvider } from "@/providers/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ProductBarcodes from './pages/ProductBarcodes';
+import CameraTest from './pages/CameraTest';
+import BarcodeScannerTest from './pages/BarcodeScannerTest';
 
-import { DesktopRoutes } from "./routes/DesktopRoutes";
-import { MobileRoutes } from "./routes/MobileRoutes";
-import MobileInventory from '@/pages/mobile/MobileInventory';
-
-const queryClient = new QueryClient();
+// Import Tailwind CSS
+import './index.css';
 
 function App() {
-  const isMobile = useIsMobile();
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <TooltipProvider>
-          <div className="min-h-screen bg-background">
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* صفحات مباشرة لتسهيل الوصول من الهاتف المحمول */}
-                <Route path="/inventory" element={<MobileInventory />} />
-                
-                {/* المسارات الأخرى */}
-                <Route path="/*" element={isMobile ? <MobileRoutes /> : <DesktopRoutes />} />
-              </Routes>
-            </BrowserRouter>
+    <Router>
+      <Routes>
+        <Route path="/product/:productId/barcodes" element={<ProductBarcodes />} />
+        <Route path="/restaurant/product/:productId/barcodes" element={<ProductBarcodes />} />
+        <Route path="/camera-test" element={<CameraTest />} />
+        <Route path="/barcode-scanner" element={<BarcodeScannerTest />} />
+        <Route path="/" element={
+          <div className="container py-8">
+            <h1 className="text-3xl font-bold mb-6">اختبار مكونات التطبيق</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a href="/barcode-scanner" className="p-6 bg-white rounded-lg border hover:shadow-md transition-shadow">
+                <h2 className="text-xl font-bold mb-2">اختبار قارئ الباركود</h2>
+                <p className="text-gray-600">اختبار قراءة الباركود باستخدام كاميرا الجهاز</p>
+              </a>
+              <a href="/camera-test" className="p-6 bg-white rounded-lg border hover:shadow-md transition-shadow">
+                <h2 className="text-xl font-bold mb-2">اختبار الكاميرا</h2>
+                <p className="text-gray-600">اختبار إمكانيات الكاميرا والأذونات</p>
+              </a>
+            </div>
           </div>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+        } />
+      </Routes>
+    </Router>
   );
 }
 
