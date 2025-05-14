@@ -1,16 +1,17 @@
 
-import * as React from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
-interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
+interface SpinnerProps {
   size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
 }
 
-export const Spinner = ({ className, size = "md", ...props }: SpinnerProps) => {
+export const Spinner: React.FC<SpinnerProps> = ({ size = "md", className }) => {
   const sizeClasses = {
     sm: "h-4 w-4 border-2",
-    md: "h-8 w-8 border-2",
-    lg: "h-12 w-12 border-3",
+    md: "h-6 w-6 border-2",
+    lg: "h-10 w-10 border-3",
     xl: "h-16 w-16 border-4",
   };
 
@@ -21,11 +22,6 @@ export const Spinner = ({ className, size = "md", ...props }: SpinnerProps) => {
         sizeClasses[size],
         className
       )}
-      {...props}
-      role="status"
-      aria-label="loading"
-    >
-      <span className="sr-only">جاري التحميل...</span>
-    </div>
+    />
   );
 };

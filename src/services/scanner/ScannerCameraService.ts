@@ -1,13 +1,12 @@
 
-import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 /**
- * خدمة للتعامل مع كاميرا الماسح الضوئي
+ * خدمة للتعامل مع كاميرا المسح الضوئي
  */
-export class ScannerCameraService {
+class ScannerCameraService {
   private static instance: ScannerCameraService;
-  private isTorchEnabled = false;
+  private isInitialized = false;
   
   private constructor() {}
   
@@ -19,25 +18,28 @@ export class ScannerCameraService {
   }
   
   /**
-   * تهيئة الكاميرا للاستخدام
+   * تهيئة كاميرا المسح
    */
   public async initialize(): Promise<boolean> {
     try {
-      console.log('[ScannerCameraService] تهيئة الكاميرا');
+      console.log('[ScannerCameraService] تهيئة كاميرا المسح');
       
-      // التحقق من وجود الملحق
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+      if (this.isInitialized) {
+        console.log('[ScannerCameraService] الكاميرا مهيأة بالفعل');
+        return true;
+      }
+      
+      // تحقق من توفر الملحق
+      if (!window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         console.log('[ScannerCameraService] ملحق MLKitBarcodeScanner غير متاح');
         return false;
       }
       
-      // تهيئة الكاميرا
-      await BarcodeScanner.prepare();
-      console.log('[ScannerCameraService] تمت تهيئة الكاميرا بنجاح');
-      
+      this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error('[ScannerCameraService] خطأ في تهيئة الكاميرا:', error);
+      console.error('[ScannerCameraService] خطأ في تهيئة كاميرا المسح:', error);
+      this.isInitialized = false;
       return false;
     }
   }
@@ -49,105 +51,59 @@ export class ScannerCameraService {
     try {
       console.log('[ScannerCameraService] إيقاف المسح وتنظيف موارد الكاميرا');
       
-      // التحقق من وجود الملحق
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        return false;
+      if (!this.isInitialized) {
+        console.log('[ScannerCameraService] الكاميرا غير مهيأة، لا حاجة للتنظيف');
+        return true;
       }
       
-      // إيقاف الفلاش إذا كان مفعلاً
-      if (this.isTorchEnabled) {
-        await this.disableTorch().catch(() => {});
+      // تحقق من توفر الملحق وإيقاف المسح
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        // إيقاف تشغيل الفلاش إن وجد
+        await BarcodeScanner.enableTorch(false).catch(() => {});
+        
+        // إيقاف المسح - بدون معاملات لأنه يتوقع 0 معاملات
+        await BarcodeScanner.stopScan().catch(() => {});
       }
       
-      // إيقاف المسح
-      await BarcodeScanner.stopScan().catch(() => {});
-      
+      this.isInitialized = false;
       return true;
     } catch (error) {
       console.error('[ScannerCameraService] خطأ في إيقاف المسح:', error);
+      this.isInitialized = false;
       return false;
     }
   }
   
   /**
-   * التبديل بين تشغيل وإيقاف الفلاش
+   * تبديل حالة الفلاش
    */
-  public async toggleTorch(): Promise<boolean> {
+  public async toggleFlash(): Promise<boolean> {
     try {
-      // التحقق من وجود الملحق
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+      console.log('[ScannerCameraService] تبديل حالة الفلاش');
+      
+      if (!this.isInitialized) {
+        console.log('[ScannerCameraService] الكاميرا غير مهيأة، لا يمكن تبديل الفلاش');
         return false;
       }
       
-      if (this.isTorchEnabled) {
-        return await this.disableTorch();
-      } else {
-        return await this.enableTorch();
+      // تحقق من توفر الملحق وتبديل الفلاش
+      if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
+        // الحصول على حالة الفلاش الحالية
+        const isTorchEnabled = await BarcodeScanner.isTorchEnabled();
+        
+        // تبديل الفلاش
+        await BarcodeScanner.enableTorch(!isTorchEnabled.enabled);
+        
+        return true;
       }
-    } catch (error) {
-      console.error('[ScannerCameraService] خطأ في تبديل حالة الفلاش:', error);
+      
       return false;
-    }
-  }
-  
-  /**
-   * تفعيل الفلاش
-   */
-  public async enableTorch(): Promise<boolean> {
-    try {
-      // التحقق من وجود الملحق
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        return false;
-      }
-      
-      await BarcodeScanner.enableTorch();
-      this.isTorchEnabled = true;
-      
-      return true;
     } catch (error) {
-      console.error('[ScannerCameraService] خطأ في تفعيل الفلاش:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * إلغاء تفعيل الفلاش
-   */
-  public async disableTorch(): Promise<boolean> {
-    try {
-      // التحقق من وجود الملحق
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        return false;
-      }
-      
-      await BarcodeScanner.disableTorch();
-      this.isTorchEnabled = false;
-      
-      return true;
-    } catch (error) {
-      console.error('[ScannerCameraService] خطأ في إلغاء تفعيل الفلاش:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * التحقق من توفر الفلاش
-   */
-  public async isTorchAvailable(): Promise<boolean> {
-    try {
-      // التحقق من وجود الملحق
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        return false;
-      }
-      
-      const result = await BarcodeScanner.isTorchAvailable();
-      return result.available;
-    } catch (error) {
-      console.error('[ScannerCameraService] خطأ في التحقق من توفر الفلاش:', error);
+      console.error('[ScannerCameraService] خطأ في تبديل الفلاش:', error);
       return false;
     }
   }
 }
 
-// تصدير نسخة واحدة من الخدمة للاستخدام في جميع أنحاء التطبيق
+// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerCameraService = ScannerCameraService.getInstance();

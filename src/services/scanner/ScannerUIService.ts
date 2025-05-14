@@ -1,13 +1,10 @@
 
-import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-
 /**
- * خدمة لإدارة واجهة المستخدم للماسح الضوئي
+ * خدمة للتعامل مع واجهة المستخدم أثناء المسح
  */
-export class ScannerUIService {
+class ScannerUIService {
   private static instance: ScannerUIService;
-  private originalStyles: Map<HTMLElement, { background: string, opacity: string }> = new Map();
+  private originalStyles: Map<HTMLElement, {bg: string, opacity: string, visibility: string}> = new Map();
   
   private constructor() {}
   
@@ -19,108 +16,80 @@ export class ScannerUIService {
   }
   
   /**
-   * إعداد واجهة المستخدم لعملية المسح
+   * إعداد واجهة المستخدم للمسح الضوئي
    */
-  public setupUIForScanning(): void {
+  public async setupUIForScanning(): Promise<void> {
     try {
       console.log('[ScannerUIService] إعداد واجهة المستخدم للمسح');
       
-      // حفظ الأنماط الأصلية للعناصر
-      this.saveOriginalStyles();
+      // حفظ أنماط العناصر الأصلية وإخفاء العناصر التي قد تتداخل مع المسح
+      const elementsToHide = document.querySelectorAll('header, footer, nav, .fixed-top, .fixed-bottom');
       
-      // إضافة فئة CSS للجسم
-      document.body.classList.add('scanner-active');
+      elementsToHide.forEach(element => {
+        if (element instanceof HTMLElement) {
+          // حفظ الأنماط الأصلية
+          this.originalStyles.set(element, {
+            bg: element.style.background,
+            opacity: element.style.opacity,
+            visibility: element.style.visibility
+          });
+          
+          // إضافة فئة وإخفاء العناصر
+          element.classList.add('app-header');
+          element.style.background = 'transparent';
+          element.style.opacity = '0';
+          element.style.visibility = 'hidden';
+        }
+      });
       
-      // تعيين متغير CSS لاستخدامه في أنماط CSS
-      document.documentElement.style.setProperty('--scanner-active', '1');
-      
-      // إخفاء أو تعديل العناصر التي قد تتداخل مع المسح
-      this.hideInterfaceElements();
-      
-      // إظهار خلفية الكاميرا إذا كان ذلك متاحًا
-      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        BarcodeScanner.showBackground().catch(error => {
-          console.error('[ScannerUIService] خطأ في إظهار خلفية الكاميرا:', error);
-        });
-      }
+      // تعديل نمط الجسم للمسح
+      document.body.style.overflow = 'hidden';
+      document.body.style.backgroundColor = 'black';
     } catch (error) {
-      console.error('[ScannerUIService] خطأ في إعداد واجهة المستخدم للمسح:', error);
+      console.error('[ScannerUIService] خطأ في إعداد واجهة المستخدم:', error);
     }
   }
   
   /**
    * استعادة واجهة المستخدم بعد المسح
    */
-  public restoreUIAfterScanning(): void {
+  public async restoreUIAfterScanning(): Promise<void> {
     try {
       console.log('[ScannerUIService] استعادة واجهة المستخدم بعد المسح');
       
-      // إزالة فئة CSS من الجسم
-      document.body.classList.remove('scanner-active');
-      
-      // إعادة تعيين متغير CSS
-      document.documentElement.style.setProperty('--scanner-active', '0');
-      
       // استعادة العناصر المخفية
-      this.restoreInterfaceElements();
+      document.querySelectorAll('.app-header').forEach(element => {
+        if (element instanceof HTMLElement) {
+          // استعادة الأنماط الأصلية
+          const originalStyle = this.originalStyles.get(element);
+          if (originalStyle) {
+            element.style.background = originalStyle.bg;
+            element.style.opacity = originalStyle.opacity;
+            element.style.visibility = originalStyle.visibility;
+          } else {
+            element.style.background = '';
+            element.style.opacity = '1';
+            element.style.visibility = 'visible';
+          }
+          
+          // إزالة الفئة
+          element.classList.remove('app-header');
+        }
+      });
       
-      // إخفاء خلفية الكاميرا إذا كان ذلك متاحًا
-      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        BarcodeScanner.hideBackground().catch(error => {
-          console.error('[ScannerUIService] خطأ في إخفاء خلفية الكاميرا:', error);
-        });
-      }
+      // استعادة نمط الجسم
+      document.body.style.overflow = '';
+      document.body.style.backgroundColor = '';
+      
+      // مسح الأنماط المحفوظة
+      this.originalStyles.clear();
     } catch (error) {
-      console.error('[ScannerUIService] خطأ في استعادة واجهة المستخدم بعد المسح:', error);
+      console.error('[ScannerUIService] خطأ في استعادة واجهة المستخدم:', error);
+      // مسح الأنماط المحفوظة في حالة الخطأ
+      this.originalStyles.clear();
     }
-  }
-  
-  /**
-   * حفظ الأنماط الأصلية للعناصر
-   */
-  private saveOriginalStyles(): void {
-    // العناصر التي نحتاج إلى حفظ أنماطها
-    const elementsToSave = document.querySelectorAll('header, nav, footer, .app-header, .app-navigation');
-    
-    elementsToSave.forEach(el => {
-      if (el instanceof HTMLElement) {
-        this.originalStyles.set(el, {
-          background: el.style.background,
-          opacity: el.style.opacity
-        });
-      }
-    });
-  }
-  
-  /**
-   * إخفاء عناصر الواجهة التي قد تتداخل مع المسح
-   */
-  private hideInterfaceElements(): void {
-    // العناصر التي نحتاج إلى إخفائها أو تعديلها
-    const elementsToModify = document.querySelectorAll('header, nav, footer, .app-header, .app-navigation');
-    
-    elementsToModify.forEach(el => {
-      if (el instanceof HTMLElement) {
-        el.style.background = 'transparent';
-        el.style.opacity = '0';
-      }
-    });
-  }
-  
-  /**
-   * استعادة عناصر الواجهة إلى حالتها الأصلية
-   */
-  private restoreInterfaceElements(): void {
-    // استعادة جميع العناصر التي تم تعديلها
-    this.originalStyles.forEach((styles, el) => {
-      el.style.background = styles.background;
-      el.style.opacity = styles.opacity;
-    });
-    
-    // تفريغ المخزن
-    this.originalStyles.clear();
   }
 }
 
-// تصدير نسخة واحدة من الخدمة للاستخدام في جميع أنحاء التطبيق
+// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerUIService = ScannerUIService.getInstance();
