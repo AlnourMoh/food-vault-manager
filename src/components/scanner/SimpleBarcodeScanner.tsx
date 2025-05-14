@@ -5,9 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { useScannerState } from './hooks/useScannerState';
 import { useScannerActions } from './hooks/useScannerActions';
 import BrowserView from './components/BrowserView';
-import ScannerHeader from './components/ScannerHeader';
-import ScannerContent from './components/ScannerContent';
-import ScannerFooter from './components/ScannerFooter';
+import ScannerLayout from './components/ScannerLayout';
 
 interface SimpleBarcodeScannerProps {
   onScan: (code: string) => void;
@@ -34,28 +32,12 @@ const SimpleBarcodeScanner: React.FC<SimpleBarcodeScannerProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      {/* شريط العنوان */}
-      <ScannerHeader onClose={onClose} />
-      
-      {/* منطقة المسح */}
-      <div className="flex-1 flex items-center justify-center">
-        <ScannerContent
-          isLoading={scannerState.isLoading}
-          hasError={scannerState.hasError}
-          isScanning={scannerState.isScanning}
-          onStartScan={startScan}
-          onRetry={startScan}
-          onClose={onClose}
-        />
-      </div>
-      
-      {/* شريط الأدوات السفلي */}
-      <ScannerFooter 
-        isScanning={scannerState.isScanning} 
-        onStopScan={stopScan} 
-      />
-    </div>
+    <ScannerLayout 
+      scannerState={scannerState}
+      startScan={startScan}
+      stopScan={stopScan}
+      onClose={onClose}
+    />
   );
 };
 
