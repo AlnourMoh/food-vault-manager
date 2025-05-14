@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, ZapOff, Zap, Smartphone, Keyboard } from 'lucide-react';
-import CapacitorTester from '../../CapacitorTester';
+import CapacitorTester from '@/components/mobile/CapacitorTester';
 import { Capacitor } from '@capacitor/core';
 
 interface ScannerViewProps {
