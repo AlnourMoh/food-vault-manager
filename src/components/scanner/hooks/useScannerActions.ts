@@ -143,7 +143,7 @@ export const useScannerActions = ({
       try {
         const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         await BarcodeScanner.enableTorch(false);
-        // هنا كان الخطأ - يجب استدعاء stopScan بدون وسيطات
+        // Fix: Remove argument from stopScan() call - it expects no arguments
         await BarcodeScanner.stopScan();
       } catch (error) {
         console.error('[useScannerActions] خطأ في إيقاف المسح:', error);
@@ -156,3 +156,4 @@ export const useScannerActions = ({
     stopScan
   };
 };
+
