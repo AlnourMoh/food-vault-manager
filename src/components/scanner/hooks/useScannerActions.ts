@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
+import { platformService } from '@/services/scanner/PlatformService';
 
 export interface ScannerActionsProps {
   onScan: (code: string) => void;
@@ -36,31 +37,61 @@ export const useScannerActions = ({
       setIsLoading(true);
       setHasError(false);
       
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        setHasError(true);
-        setIsLoading(false);
-        
-        if (Capacitor.isNativePlatform()) {
-          toast({
-            title: "خطأ في المسح",
-            description: "هذا الجهاز لا يدعم قراءة الباركود",
-            variant: "destructive"
-          });
+      // تحسين اكتشاف البيئة باستخدام الخدمة المحسنة
+      const isNativePlatform = platformService.isNativePlatform();
+      const isWebView = platformService.isWebView();
+      const isInstalledApp = platformService.isInstalledApp();
+      
+      // تسجيل تفاصيل التشخيص
+      console.log('[useScannerActions] بدء المسح في البيئة:', {
+        isNativePlatform,
+        isWebView,
+        isInstalledApp,
+        userAgent: navigator.userAgent
+      });
+      
+      // التحقق من توفر ملحق المسح
+      if (!isNativePlatform || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        // نتحقق من اكتشاف البيئة الأصلية بطرق متعددة
+        if (isNativePlatform || isWebView || isInstalledApp) {
+          console.log('[useScannerActions] في بيئة أصلية ولكن ملحق MLKitBarcodeScanner غير متوفر');
+          // نستمر للتعامل مع أوضاع الأجهزة المختلفة
         } else {
+          // إذا كنا متأكدين أننا في متصفح، نعرض رسالة مناسبة
+          setHasError(true);
+          setIsLoading(false);
+          
           toast({
             title: "المسح غير متاح",
             description: "ميزة المسح غير متاحة في المتصفح، يرجى استخدام تطبيق الهاتف",
             variant: "destructive"
           });
+          return;
         }
-        return;
       }
       
       const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
       
+      // التحقق من دعم المسح
+      const isSupportResult = await BarcodeScanner.isSupported();
+      if (!isSupportResult.supported) {
+        console.log('[useScannerActions] جهاز لا يدعم المسح:', isSupportResult);
+        setHasError(true);
+        setIsLoading(false);
+        
+        toast({
+          title: "خطأ في المسح",
+          description: "هذا الجهاز لا يدعم قراءة الباركود",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // طلب أذونات الكاميرا
       const { camera } = await BarcodeScanner.requestPermissions();
       
       if (camera !== 'granted') {
+        console.log('[useScannerActions] تم رفض إذن الكاميرا:', camera);
         setHasError(true);
         setIsLoading(false);
         
@@ -92,7 +123,7 @@ export const useScannerActions = ({
       stopScan();
       
     } catch (error) {
-      console.error('خطأ في المسح:', error);
+      console.error('[useScannerActions] خطأ في المسح:', error);
       setHasError(true);
       setIsLoading(false);
       setIsScanning(false);
@@ -112,9 +143,10 @@ export const useScannerActions = ({
       try {
         const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         await BarcodeScanner.enableTorch(false);
+        // هنا كان الخطأ - يجب استدعاء stopScan بدون وسيطات
         await BarcodeScanner.stopScan();
       } catch (error) {
-        console.error('خطأ في إيقاف المسح:', error);
+        console.error('[useScannerActions] خطأ في إيقاف المسح:', error);
       }
     }
   };

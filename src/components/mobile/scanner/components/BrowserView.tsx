@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Smartphone, X, Info } from 'lucide-react';
 import CapacitorTester from '../../CapacitorTester';
 import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
+import { platformService } from '@/services/scanner/PlatformService';
 
 interface BrowserViewProps {
   onClose: () => void;
@@ -13,24 +14,53 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
   const [showDebug, setShowDebug] = useState(false);
   const environment = useScannerEnvironment();
   
+  // إضافة المزيد من التشخيصات
+  const [diagnostics, setDiagnostics] = useState({
+    userAgent: '',
+    referrer: '',
+    platform: '',
+    isAndroidPackage: false
+  });
+  
+  useEffect(() => {
+    // جمع معلومات تشخيصية محسنة
+    setDiagnostics({
+      userAgent: navigator.userAgent,
+      referrer: document.referrer,
+      platform: navigator.platform,
+      isAndroidPackage: navigator.userAgent.toLowerCase().includes('app.lovable.foodvault.manager')
+    });
+    
+    // تسجيل معلومات التشخيص
+    console.log('BrowserView Diagnostics:', {
+      userAgent: navigator.userAgent,
+      referrer: document.referrer,
+      platform: navigator.platform,
+      environment
+    });
+  }, [environment]);
+  
+  // اكتشاف محسن للبيئة الأصلية
+  const isEffectivelyNative = environment.isNativePlatform || 
+                              environment.isWebView || 
+                              environment.isInstalledApp ||
+                              diagnostics.isAndroidPackage;
+  
   // إذا كنا في بيئة أصلية، نغلق هذه الواجهة تلقائياً
-  React.useEffect(() => {
-    if (environment.isNativePlatform) {
-      console.log('BrowserView: تم اكتشاف بيئة أصلية، إغلاق شاشة BrowserView...');
+  useEffect(() => {
+    if (isEffectivelyNative) {
+      console.log('BrowserView: تم اكتشاف بيئة أصلية بالطريقة المحسنة، إغلاق شاشة BrowserView...');
       const timer = setTimeout(() => {
         onClose();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [environment.isNativePlatform, onClose]);
+  }, [isEffectivelyNative, onClose]);
 
-  // إذا كنا في WebView لكن تم اعتباره بيئة أصلية، لا نعرض هذا المكون
-  if (environment.isNativePlatform || (environment.isWebView && environment.availablePlugins.camera)) {
+  // إذا كنا في بيئة أصلية، لا نعرض هذا المكون
+  if (isEffectivelyNative) {
     return null;
   }
-
-  // إذا كنا في WebView لكن لسنا في البيئة الأصلية، نعرض رسالة مختلفة
-  const isInWebView = environment.isWebView && !environment.isNativePlatform;
 
   return (
     <div className="browser-view-container p-4">
@@ -47,9 +77,7 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
       
       <h2 className="text-xl font-bold mb-2 text-center">تعذر تشغيل الماسح</h2>
       <p className="text-gray-600 mb-4 text-center">
-        {isInWebView 
-          ? "يبدو أنك تستخدم التطبيق داخل متصفح. للحصول على وظائف كاملة، يرجى تثبيت التطبيق من المتجر."
-          : "ميزة المسح الضوئي متاحة فقط في تطبيق الجوال."}
+        ميزة المسح الضوئي متاحة فقط في تطبيق الجوال.
       </p>
       
       <div className="bg-blue-50 p-3 rounded-lg mb-4 flex items-start">
@@ -66,16 +94,20 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
       
       {showDebug && (
         <div className="bg-gray-100 p-3 rounded-lg mb-4 text-xs text-gray-800 dir-ltr">
-          <h4 className="font-bold mb-1">معلومات تشخيصية:</h4>
+          <h4 className="font-bold mb-1">معلومات تشخيصية محسنة:</h4>
           <pre className="whitespace-pre-wrap">
             {`منصة التشغيل: ${environment.platform}
 بيئة أصلية: ${environment.isNativePlatform ? 'نعم' : 'لا'}
 WebView: ${environment.isWebView ? 'نعم' : 'لا'}
+تطبيق مثبت: ${environment.isInstalledApp ? 'نعم' : 'لا'}
 وجود Capacitor: ${environment.hasCapacitor ? 'نعم' : 'لا'}
 ملحق MLKitBarcodeScanner: ${environment.availablePlugins.mlkitScanner ? 'متاح' : 'غير متاح'}
 ملحق Camera: ${environment.availablePlugins.camera ? 'متاح' : 'غير متاح'}
 ملحق BarcodeScanner: ${environment.availablePlugins.barcodeScanner ? 'متاح' : 'غير متاح'}
-userAgent: ${navigator.userAgent}`}
+userAgent: ${diagnostics.userAgent}
+referrer: ${diagnostics.referrer}
+platform: ${diagnostics.platform}
+حزمة Android: ${diagnostics.isAndroidPackage ? 'نعم' : 'لا'}`}
           </pre>
         </div>
       )}

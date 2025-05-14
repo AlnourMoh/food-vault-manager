@@ -26,8 +26,22 @@ export class PlatformService {
         return true;
       }
       
-      // اكتشاف إضافي للWebView في حالة عدم اكتشاف Capacitor للبيئة الأصلية
+      // إضافة تحقق من Android WebView داخل APK
       const userAgent = navigator.userAgent.toLowerCase();
+      
+      // اكتشاف محسن للتطبيقات المثبتة من خلال APK
+      const packageName = 'app.lovable.foodvault.manager';
+      const isAndroidApp = userAgent.includes('android') && 
+                          (userAgent.includes('wv') || 
+                           userAgent.includes(packageName) || 
+                           document.referrer.includes('android-app://'));
+                           
+      if (isAndroidApp) {
+        console.log('[PlatformService] تم اكتشاف تطبيق Android مثبت من خلال APK:', userAgent);
+        return true;
+      }
+      
+      // اكتشاف إضافي للWebView في حالة عدم اكتشاف Capacitor للبيئة الأصلية
       const isInWebView = 
         userAgent.includes('wv') || 
         userAgent.includes('foodvaultmanage') || 
@@ -42,7 +56,6 @@ export class PlatformService {
       }
       
       console.log('[PlatformService] تم اكتشاف بيئة متصفح عادية');
-      console.log('[PlatformService] Platform:', this.getPlatform());
       return false;
     } catch (e) {
       console.error('[PlatformService] Error checking native platform:', e);
@@ -56,24 +69,40 @@ export class PlatformService {
    */
   public static getPlatform(): string {
     try {
-      const platform = Capacitor.getPlatform();
-      
-      // التحقق الإضافي من المنصة باستخدام وكيل المستخدم
-      if (platform === 'web') {
-        const userAgent = navigator.userAgent.toLowerCase();
+      // إذا كانت الإضافات الأصلية متوفرة، نستخدم قيمة منصة Capacitor
+      if (this.hasCapacitor()) {
+        const platform = Capacitor.getPlatform();
         
-        if (userAgent.includes('android') || userAgent.includes('huawei')) {
-          console.log('[PlatformService] تصحيح المنصة: تم اكتشاف Android من خلال وكيل المستخدم');
-          return 'android';
+        // التحقق الإضافي من المنصة باستخدام وكيل المستخدم
+        if (platform === 'web') {
+          const userAgent = navigator.userAgent.toLowerCase();
+          
+          if (userAgent.includes('android') || userAgent.includes('huawei')) {
+            console.log('[PlatformService] تصحيح المنصة: تم اكتشاف Android من خلال وكيل المستخدم');
+            return 'android';
+          }
+          
+          if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
+            console.log('[PlatformService] تصحيح المنصة: تم اكتشاف iOS من خلال وكيل المستخدم');
+            return 'ios';
+          }
         }
         
-        if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
-          console.log('[PlatformService] تصحيح المنصة: تم اكتشاف iOS من خلال وكيل المستخدم');
-          return 'ios';
-        }
+        return platform;
       }
       
-      return platform;
+      // اكتشاف المنصة من خلال وكيل المستخدم إذا لم يكن Capacitor متاحاً
+      const userAgent = navigator.userAgent.toLowerCase();
+      
+      if (userAgent.includes('android')) {
+        return 'android';
+      }
+      
+      if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
+        return 'ios';
+      }
+      
+      return 'web';
     } catch (e) {
       console.error('[PlatformService] Error getting platform:', e);
       return 'web';
@@ -86,6 +115,11 @@ export class PlatformService {
    */
   public static isPluginAvailable(pluginName: string): boolean {
     try {
+      // إذا كان Capacitor غير متوفر، لا يمكن استخدام الإضافات
+      if (!this.hasCapacitor()) {
+        return false;
+      }
+      
       const isAvailable = Capacitor.isPluginAvailable(pluginName);
       console.log(`[PlatformService] Plugin ${pluginName} availability:`, isAvailable);
       return isAvailable;
@@ -109,6 +143,12 @@ export class PlatformService {
     try {
       // اكتشاف WebView
       const userAgent = navigator.userAgent.toLowerCase();
+      
+      // تعزيز اكتشاف تطبيقات APK
+      if (userAgent.includes('app.lovable.foodvault.manager')) {
+        console.log('[PlatformService] تم اكتشاف تطبيق FoodVault Manager');
+        return true;
+      }
       
       // علامات WebView المختلفة
       const webViewMarkers = [
@@ -136,10 +176,46 @@ export class PlatformService {
         return true;
       }
       
+      // تفحص قيمة document.referrer للكشف عن الانتقال من تطبيق أصلي
+      if (document.referrer.includes('android-app://')) {
+        console.log('[PlatformService] تم اكتشاف التطبيق من خلال الإحالة:', document.referrer);
+        return true;
+      }
+      
       console.log('[PlatformService] لم يتم اكتشاف WebView');
       return false;
     } catch (e) {
       console.error('[PlatformService] خطأ في اكتشاف WebView:', e);
+      return false;
+    }
+  }
+
+  /**
+   * التحقق من إذا كنا في تطبيق APK مثبت
+   */
+  public static isInstalledApp(): boolean {
+    try {
+      // التحقق من وكيل المستخدم
+      const userAgent = navigator.userAgent.toLowerCase();
+      
+      // علامات التطبيق المثبت
+      const isAndroidInstalled = userAgent.includes('android') && !userAgent.includes('mobile safari');
+      const isIOSInstalled = (userAgent.includes('iphone') || userAgent.includes('ipad')) && window.navigator.standalone === true;
+      
+      // فحص إضافي للتطبيق المثبت
+      const isInstalledSignal = 
+        userAgent.includes('app.lovable.foodvault.manager') || 
+        document.referrer.includes('android-app://');
+      
+      const result = isAndroidInstalled || isIOSInstalled || isInstalledSignal;
+      
+      if (result) {
+        console.log('[PlatformService] تم اكتشاف تطبيق مثبت:', userAgent);
+      }
+      
+      return result;
+    } catch (e) {
+      console.error('[PlatformService] خطأ في التحقق من التطبيق المثبت:', e);
       return false;
     }
   }
