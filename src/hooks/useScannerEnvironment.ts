@@ -1,83 +1,97 @@
 
 import { useEffect, useState } from 'react';
-import { platformService } from '@/services/scanner/PlatformService';
 import { Capacitor } from '@capacitor/core';
 
-interface ScannerEnvironment {
+export interface ScannerEnvironment {
   isNativePlatform: boolean;
+  platform: string;
   isWebView: boolean;
   isInstalledApp: boolean;
-  platform: string;
-  hasBarcodeSupport: boolean;
-  barcodeScannerPlugin: string | null;
   hasCapacitor: boolean;
   availablePlugins: {
     mlkitScanner: boolean;
     camera: boolean;
     barcodeScanner: boolean;
   };
+  userAgent: string;
 }
 
-export const useScannerEnvironment = () => {
+/**
+ * Hook للتحقق من بيئة تشغيل الماسح الضوئي
+ * يساعد في تحليل المشاكل وتوفير تجربة مناسبة لمختلف البيئات
+ */
+export const useScannerEnvironment = (): ScannerEnvironment => {
   const [environment, setEnvironment] = useState<ScannerEnvironment>({
     isNativePlatform: false,
+    platform: '',
     isWebView: false,
     isInstalledApp: false,
-    platform: 'web',
-    hasBarcodeSupport: false,
-    barcodeScannerPlugin: null,
     hasCapacitor: false,
     availablePlugins: {
       mlkitScanner: false,
       camera: false,
       barcodeScanner: false
-    }
+    },
+    userAgent: ''
   });
-  
+
   useEffect(() => {
-    // تأخير قصير لضمان تحميل النوافذ بشكل صحيح
-    const timer = setTimeout(() => {
-      const isNativePlatform = platformService.isNativePlatform();
-      const isWebView = platformService.isWebView();
-      const isInstalledApp = platformService.isInstalledApp();
-      const platform = platformService.getPlatform();
+    const detectEnvironment = () => {
+      // التحقق من وجود Capacitor
+      const hasCapacitor = typeof window !== 'undefined' && !!window.Capacitor;
       
-      // التحقق من دعم الباركود
-      const hasMLKit = Capacitor.isPluginAvailable('MLKitBarcodeScanner');
-      const hasTraditional = Capacitor.isPluginAvailable('BarcodeScanner');
-      const hasCamera = Capacitor.isPluginAvailable('Camera');
-      const hasCapacitor = typeof Capacitor !== 'undefined';
+      // التحقق مما إذا كنا في بيئة أصلية
+      let isNativePlatform = false;
+      let platform = 'web';
+      
+      if (hasCapacitor) {
+        isNativePlatform = Capacitor.isNativePlatform();
+        platform = Capacitor.getPlatform();
+      }
+      
+      // التحقق مما إذا كنا في WebView
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isWebView = userAgent.includes('wv') || 
+                        userAgent.includes('webview') ||
+                        (userAgent.includes('android') && !userAgent.includes('chrome')) ||
+                        (userAgent.includes('iphone') && !userAgent.includes('safari'));
+      
+      // التحقق مما إذا كنا في تطبيق مثبت
+      const isInstalledApp = navigator.standalone === true || 
+                            userAgent.includes('app.lovable.foodvault.manager') ||
+                            window.matchMedia('(display-mode: standalone)').matches;
+      
+      // التحقق من الملحقات المتاحة
+      const availablePlugins = {
+        mlkitScanner: hasCapacitor && Capacitor.isPluginAvailable('MLKitBarcodeScanner'),
+        camera: hasCapacitor && Capacitor.isPluginAvailable('Camera'),
+        barcodeScanner: hasCapacitor && Capacitor.isPluginAvailable('BarcodeScanner')
+      };
       
       setEnvironment({
         isNativePlatform,
+        platform,
         isWebView,
         isInstalledApp,
-        platform,
-        hasBarcodeSupport: hasMLKit || hasTraditional,
-        barcodeScannerPlugin: hasMLKit ? 'MLKitBarcodeScanner' : (hasTraditional ? 'BarcodeScanner' : null),
         hasCapacitor,
-        availablePlugins: {
-          mlkitScanner: hasMLKit,
-          camera: hasCamera,
-          barcodeScanner: hasTraditional
-        }
+        availablePlugins,
+        userAgent
       });
       
-      // تسجيل تفاصيل البيئة للتشخيص
-      console.log('[useScannerEnvironment] تفاصيل بيئة التشغيل:', {
+      // تسجيل معلومات البيئة في وحدة التحكم
+      console.log('Scanner Environment:', {
         isNativePlatform,
+        platform,
         isWebView,
         isInstalledApp,
-        platform,
-        hasMLKit,
-        hasTraditional,
-        hasCamera,
-        hasCapacitor
+        hasCapacitor,
+        availablePlugins,
+        userAgent
       });
-    }, 300);
+    };
     
-    return () => clearTimeout(timer);
+    detectEnvironment();
   }, []);
-  
+
   return environment;
 };

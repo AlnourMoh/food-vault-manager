@@ -1,11 +1,25 @@
 
-import '@capacitor-mlkit/barcode-scanning';
+// This file extends the BarcodeScanner type definitions to ensure proper TypeScript checking
+
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 declare module '@capacitor-mlkit/barcode-scanning' {
-  interface BarcodeScannerPlugin {
-    showBackground(): Promise<void>;
-    hideBackground(): Promise<void>;
-    prepare(): Promise<void>;
-    stopScan(): Promise<void>; // Ensure this is defined correctly with no parameters
+  export interface BarcodeScanner {
+    /**
+     * Stop the current scan session. The version of the plugin's API requires no arguments.
+     */
+    stopScan(): Promise<void>;
   }
 }
+
+// Add global augmentation for Capacitor
+declare global {
+  interface Window {
+    Capacitor?: {
+      isPluginAvailable: (pluginName: string) => boolean;
+      isNativePlatform: () => boolean;
+      getPlatform: () => string;
+    };
+  }
+}
+
