@@ -1,4 +1,5 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 /**
  * خدمة للتعامل مع كاميرا المسح الضوئي
@@ -60,7 +61,7 @@ class ScannerCameraService {
         // إيقاف تشغيل الفلاش إن وجد
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
-        // Fixed: Removed argument from stopScan
+        // استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
       }
       

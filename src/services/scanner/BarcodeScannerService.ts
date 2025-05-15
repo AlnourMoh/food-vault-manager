@@ -2,6 +2,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { scannerPermissionService } from './ScannerPermissionService';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 /**
  * خدمة للتعامل مع ماسح الباركود
@@ -119,7 +120,7 @@ class BarcodeScannerService {
         // إيقاف الفلاش إذا كان مفعلاً
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
-        // Fixed: Removed argument from stopScan
+        // استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
         
         return true;

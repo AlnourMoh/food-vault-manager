@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { scannerOperationsService } from '@/services/scanner/ScannerOperationsSe
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 const CameraTest = () => {
   const navigate = useNavigate();
@@ -111,7 +111,7 @@ const CameraTest = () => {
 
   const handleStopScan = async () => {
     try {
-      // تصحيح: إزالة المعامل من دالة stopScan
+      // استدعاء stopScan بدون معاملات
       await scannerOperationsService.stopScan();
       setIsScanning(false);
       
