@@ -111,6 +111,7 @@ const CameraTest = () => {
 
   const handleStopScan = async () => {
     try {
+      // تصحيح: إزالة المعامل من دالة stopScan
       await scannerOperationsService.stopScan();
       setIsScanning(false);
       

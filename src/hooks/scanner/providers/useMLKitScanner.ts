@@ -131,7 +131,7 @@ export const useMLKitScanner = () => {
       
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         await BarcodeScanner.disableTorch().catch(() => {});
-        await BarcodeScanner.stopScan().catch(() => {});
+        await BarcodeScanner.stopScan();
       }
       
       setIsScanning(false);

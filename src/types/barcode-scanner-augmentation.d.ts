@@ -1,22 +1,17 @@
 
-import { BarcodeFormat, BarcodeScannerPlugin } from './barcode-scanner';
+import '@capacitor-mlkit/barcode-scanning';
 
-// Extend the existing BarcodeScanner interface from @capacitor-mlkit/barcode-scanning
+// اضافة تعريفات مخصصة للتعامل مع الملحق
 declare module '@capacitor-mlkit/barcode-scanning' {
-  interface BarcodeScannerPlugin {
+  interface BarcodeScanner {
     /**
-     * تحضير الماسح الضوئي للاستخدام
+     * تعريف دالة stopScan التي لا تأخذ معاملات
      */
-    prepare(): Promise<void>;
+    stopScan(): Promise<void>;
     
     /**
-     * إظهار خلفية الكاميرا
+     * تعريف دالة disableTorch التي لا تأخذ معاملات
      */
-    showBackground(): Promise<void>;
-    
-    /**
-     * إخفاء خلفية الكاميرا
-     */
-    hideBackground(): Promise<void>;
+    disableTorch(): Promise<void>;
   }
 }

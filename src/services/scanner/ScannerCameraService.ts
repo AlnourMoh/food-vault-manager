@@ -1,4 +1,3 @@
-
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
 /**
@@ -61,6 +60,7 @@ class ScannerCameraService {
         // إيقاف تشغيل الفلاش إن وجد
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
+        // تصحيح: إزالة المعامل من دالة stopScan
         await BarcodeScanner.stopScan();
       }
       
