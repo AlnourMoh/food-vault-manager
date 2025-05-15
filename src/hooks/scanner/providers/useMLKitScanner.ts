@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';

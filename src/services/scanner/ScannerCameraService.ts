@@ -1,3 +1,4 @@
+
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import '@/types/barcode-scanner-augmentation.d.ts';
 

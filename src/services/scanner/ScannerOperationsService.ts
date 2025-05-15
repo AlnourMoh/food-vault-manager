@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';

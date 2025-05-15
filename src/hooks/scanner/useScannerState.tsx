@@ -25,7 +25,7 @@ export const useScannerState = (props?: UseScannerStateProps) => {
   const onClose = props?.onClose || (() => {});
   
   const { hasPermission, requestPermission } = useCameraPermissions();
-  const { isScanning: mlkitIsScanning, startMLKitScan, stopMLKitScan } = useMLKitScanner();
+  const { startMLKitScan, stopMLKitScan, isMLKitScanActive } = useMLKitScanner();
   const { setupScannerBackground, restoreUIAfterScanning, cleanup } = useScannerUI();
   
   const { toast } = useToast();
