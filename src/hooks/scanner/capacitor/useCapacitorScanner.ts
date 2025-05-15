@@ -1,8 +1,8 @@
-
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { useToast } from '@/hooks/use-toast';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 /**
  * هوك للتعامل مع عمليات المسح في Capacitor

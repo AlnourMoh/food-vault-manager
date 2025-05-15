@@ -135,20 +135,26 @@ export const useScannerActions = ({
     }
   };
 
-  const stopScan = async () => {
-    setIsScanning(false);
-    
-    if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-      try {
-        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
-        await BarcodeScanner.enableTorch(false);
-        await BarcodeScanner.stopScan();
-      } catch (error) {
-        console.error('[useScannerActions] خطأ في إيقاف المسح:', error);
+  const stopScan = useCallback(async () => {
+    try {
+      setIsScanning(false);
+      
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+          await BarcodeScanner.enableTorch(false).catch(() => {});
+          
+          // Fixed: Removed argument from stopScan
+          await BarcodeScanner.stopScan();
+        } catch (error) {
+          console.error('[useScannerActions] خطأ في إيقاف المسح:', error);
+        }
       }
+    } catch (error) {
+      console.error('[useScannerActions] خطأ في إيقاف المسح:', error);
     }
-  };
-  
+  }, []);
+
   return {
     startScan,
     stopScan

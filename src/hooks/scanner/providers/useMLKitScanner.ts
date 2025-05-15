@@ -5,7 +5,7 @@ import { useScannerUI } from '@/hooks/scanner/useScannerUI';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 
-// Import the augmentation to ensure TypeScript recognizes the extended methods
+// Ensure we import the type augmentation
 import '@/types/barcode-scanner-augmentation.d.ts';
 
 export const useMLKitScanner = () => {
@@ -91,7 +91,7 @@ export const useMLKitScanner = () => {
         }
         
         // في حالة عدم العثور على باركود
-        Toast.show({ text: 'لم يتم العثور على أي باركود. حاول مرة أخرى.' });
+        Toast.show({ text: 'لم يتم العثور على أي با��كود. حاول مرة أخرى.' });
         return false;
       } catch (error) {
         console.error('[useMLKitScanner] خطأ في المسح:', error);
