@@ -1,8 +1,22 @@
+
 import { useState, useEffect } from 'react';
-import { useScannerState, UseScannerStateProps } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 import { useToast } from '@/hooks/use-toast';
-import { useScannerPermissions } from '@/hooks/scanner/hooks/useScannerPermissions';
+
+// Define a simple interface for scanner state
+interface ScannerState {
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  hasError: boolean;
+  setHasError: (error: boolean) => void;
+  isScanning: boolean;
+  setIsScanning: (scanning: boolean) => void;
+  hasPermission: boolean | null;
+  lastScannedCode: string | null;
+  startScan: () => Promise<boolean>;
+  stopScan: () => Promise<boolean>;
+  requestPermission: () => Promise<boolean>;
+}
 
 interface UseScannerControlsProps {
   onScan: (code: string) => void;
@@ -15,22 +29,24 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const [cameraActive, setCameraActive] = useState(false);
   const { toast } = useToast();
   
-  // Use scanner state with the props we have available
-  const {
-    isLoading,
-    hasPermission,
-    isScanning: isScanningActive,
-    lastScannedCode,
-    startScan: _startScan,
-    stopScan: _stopScan
-  } = useScannerState({ 
-    onScan, 
-    onClose,
-    autoStart: true 
-  });
-
-  const { requestPermission } = useScannerPermissions();
-
+  // Create a basic scanner state
+  const initialScannerState: ScannerState = {
+    isLoading: true,
+    setIsLoading: () => {},
+    hasError: false,
+    setHasError: () => {},
+    isScanning: false,
+    setIsScanning: () => {},
+    hasPermission: null,
+    lastScannedCode: null,
+    startScan: async () => false,
+    stopScan: async () => false,
+    requestPermission: async () => false
+  };
+  
+  const [scannerState, setScannerState] = useState<ScannerState>(initialScannerState);
+  
+  // Use mock scanner for fallback
   const {
     startMockScan,
     isMockScanActive,
@@ -38,20 +54,30 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     cancelMockScan
   } = useMockScanner();
 
-  // تخزين مرجع للماسح النشط
-  const [isActive, setIsActive] = useState(false);
-
-  // تنظيف أي حالة نشطة عند إلغاء تحميل المكون
+  // Initialize scanner state when component mounts
   useEffect(() => {
+    // Import dynamically to avoid build issues
+    import('@/hooks/scanner/useScannerState').then(module => {
+      const { useScannerState } = module;
+      const state = useScannerState({ 
+        onScan, 
+        onClose,
+        autoStart: true 
+      });
+      
+      setScannerState(state);
+    }).catch(error => {
+      console.error('[useScannerControls] Error importing useScannerState:', error);
+      setHasScannerError(true);
+    });
+    
     return () => {
       console.log('[useScannerControls] تنظيف الموارد عند إلغاء التحميل');
       
       try {
-        if (isActive) {
-          stopScan().catch(e => {
-            console.error('[useScannerControls] خطأ في إيقاف المسح عند التنظيف:', e);
-          });
-        }
+        scannerState.stopScan().catch(e => {
+          console.error('[useScannerControls] خطأ في إيقاف المسح عند التنظيف:', e);
+        });
         
         if (isManualEntry) {
           cancelMockScan();
@@ -60,38 +86,37 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
         console.error('[useScannerControls] خطأ غير متوقع أثناء التنظيف:', error);
       }
     };
-  }, [isActive, isManualEntry]);
+  }, []);
 
   // تفعيل الكاميرا تلقائيًا عند التحميل
   useEffect(() => {
-    if (!cameraActive && !isLoading) {
+    if (!cameraActive && !scannerState.isLoading) {
       console.log('[useScannerControls] تفعيل الكاميرا تلقائيًا عند التحميل');
       setCameraActive(true);
     }
-  }, [cameraActive, isLoading]);
+  }, [cameraActive, scannerState.isLoading]);
 
   // تحديث حالة الكاميرا عند تغير حالة المسح
   useEffect(() => {
-    if (isScanningActive && !cameraActive) {
+    if (scannerState.isScanning && !cameraActive) {
       setCameraActive(true);
     }
-  }, [isScanningActive, cameraActive]);
+  }, [scannerState.isScanning, cameraActive]);
 
   // تبسيط بدء المسح بأقل فرص للأخطاء
   const startScan = async () => {
     try {
       console.log('[useScannerControls] بدء المسح بالطريقة المبسطة...');
-      setIsActive(true);
       setCameraActive(true);
       
       // كان هناك مشكلة سابقة في تسلسل التنفيذ، الآن نضمن التسلسل الصحيح
-      const success = await _startScan();
+      const success = await scannerState.startScan();
       
       if (!success) {
         console.log('[useScannerControls] فشل بدء المسح، محاولة مرة أخرى بتأخير قصير');
         // محاولة ثانية بعد فترة قصيرة
         setTimeout(async () => {
-          await _startScan().catch(error => {
+          await scannerState.startScan().catch(error => {
             console.error('[useScannerControls] فشل في المحاولة الثانية:', error);
           });
         }, 500);
@@ -101,7 +126,6 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     } catch (error) {
       console.error('[useScannerControls] خطأ غير متوقع عند بدء المسح:', error);
       setHasScannerError(true);
-      setIsActive(false);
       return false;
     }
   };
@@ -110,10 +134,9 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const stopScan = async () => {
     try {
       console.log('[useScannerControls] إيقاف المسح');
-      setIsActive(false);
       // إضافة تأخير قصير قبل إيقاف الكاميرا لتفادي التحولات المرئية المفاجئة
       setTimeout(() => setCameraActive(false), 100);
-      return await _stopScan();
+      return await scannerState.stopScan();
     } catch (error) {
       console.error('[useScannerControls] خطأ عند إيقاف المسح:', error);
       setCameraActive(false); // تأكيد إيقاف الكاميرا حتى في حالة الخطأ
@@ -125,7 +148,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const handleManualEntry = () => {
     console.log('[Scanner] التحويل إلى إدخال الكود يدويًا');
     try {
-      if (isActive) {
+      if (scannerState.isScanning) {
         stopScan().catch(error => {
           console.error('[Scanner] خطأ عند إيقاف المسح قبل الإدخال اليدوي:', error);
         });
@@ -165,15 +188,15 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     isManualEntry,
     hasScannerError,
     setHasScannerError,
-    isLoading,
-    hasPermission,
-    isScanningActive,
-    lastScannedCode,
-    startScan: _startScan,
-    stopScan: _stopScan,
+    isLoading: scannerState.isLoading,
+    hasPermission: scannerState.hasPermission,
+    isScanningActive: scannerState.isScanning,
+    lastScannedCode: scannerState.lastScannedCode,
+    startScan: scannerState.startScan,
+    stopScan: scannerState.stopScan,
     handleManualEntry,
     handleManualCancel,
-    requestPermission,
+    requestPermission: scannerState.requestPermission,
     handleRetry,
     isMockScanActive,
     handleManualInput,

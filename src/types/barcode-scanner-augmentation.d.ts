@@ -6,5 +6,6 @@ declare module '@capacitor-mlkit/barcode-scanning' {
     showBackground(): Promise<void>;
     hideBackground(): Promise<void>;
     prepare(): Promise<void>;
+    stopScan(): Promise<void>; // Ensure this is defined correctly with no parameters
   }
 }
