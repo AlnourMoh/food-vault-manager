@@ -1,23 +1,28 @@
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
 
 /**
- * هوك للكشف عن بيئة تشغيل الماسح الضوئي
+ * Hook للحصول على معلومات حول بيئة تشغيل الماسح
  */
 export const useScannerEnvironment = () => {
-  const [environment, setEnvironment] = useState(() => {
-    const webViewRegex = /(iPhone|iPod|iPad|Android).*(wv|WebView)/i;
-    const mobileAppRegex = /food-vault-manager|app\.lovable\./i;
-    
-    // اكتشاف بيئة تشغيل الماسح الضوئي
+  return useMemo(() => {
     const isNativePlatform = Capacitor.isNativePlatform();
-    const isWebView = webViewRegex.test(navigator.userAgent.toLowerCase());
-    const isInstalledApp = mobileAppRegex.test(navigator.userAgent.toLowerCase()) || 
-                          mobileAppRegex.test(document.referrer);
-                          
-    // اكتشاف نوع الجهاز
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // التحقق من WebView في أندرويد
+    const isWebView = /wv|WebView/.test(navigator.userAgent);
+    
+    // هل التطبيق مثبت
+    const isInstalledApp = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
+    
+    // اعتبار البيئة أصلية إذا تم تصنيفها هكذا بأي من الطرق
+    const isEffectivelyNative = isNativePlatform || isWebView || isInstalledApp;
+    
+    // التحقق من جهاز الجوّال
+    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    // التعرف على نظام التشغيل
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     
@@ -37,7 +42,7 @@ export const useScannerEnvironment = () => {
       isNativePlatform,
       isWebView,
       isInstalledApp,
-      isEffectivelyNative: isNativePlatform || isWebView || isInstalledApp,
+      isEffectivelyNative,
       isMobileDevice,
       isAndroid,
       isIOS,
@@ -47,13 +52,4 @@ export const useScannerEnvironment = () => {
       availablePlugins
     };
   });
-  
-  // تحديث البيئة عند التغييرات
-  useEffect(() => {
-    console.log('[useScannerEnvironment] تفاصيل البيئة:', environment);
-  }, [environment]);
-  
-  return environment;
 };
-
-export default useScannerEnvironment;

@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core';
 
 /**
- * خدمة للكشف عن بيئة تشغيل التطبيق
+ * خدمة للتعامل مع معلومات البيئة والمنصة
  */
 class PlatformService {
   private static instance: PlatformService;
@@ -17,55 +17,81 @@ class PlatformService {
   }
   
   /**
-   * التحقق مما إذا كان التطبيق يعمل على منصة أصلية
+   * التحقق من بيئة الجوال الأصلية
    */
   public isNativePlatform(): boolean {
     return Capacitor.isNativePlatform();
   }
   
   /**
-   * التحقق مما إذا كان التطبيق يعمل في عرض ويب داخل تطبيق أصلي
+   * التحقق من بيئة WebView
    */
   public isWebView(): boolean {
-    const webViewRegex = /(iPhone|iPod|iPad|Android).*(wv|WebView)/i;
-    return webViewRegex.test(navigator.userAgent.toLowerCase());
+    return /wv|WebView/.test(navigator.userAgent);
   }
   
   /**
-   * التحقق مما إذا كان التطبيق مثبت كتطبيق مستقل
+   * التحقق من تثبيت التطبيق
    */
   public isInstalledApp(): boolean {
-    const mobileAppRegex = /food-vault-manager|app\.lovable\./i;
-    return mobileAppRegex.test(navigator.userAgent.toLowerCase()) || 
-           mobileAppRegex.test(document.referrer);
+    return window.matchMedia('(display-mode: standalone)').matches || 
+           (window.navigator as any).standalone === true;
   }
   
   /**
-   * التحقق مما إذا كان الملحق المطلوب متاحاً
-   */
-  public isPluginAvailable(pluginName: string): boolean {
-    return Capacitor.isPluginAvailable(pluginName);
-  }
-  
-  /**
-   * الحصول على اسم المنصة الحالية
+   * الحصول على نظام التشغيل
    */
   public getPlatform(): string {
     return Capacitor.getPlatform();
   }
   
   /**
-   * التحقق مما إذا كان الجهاز أندرويد
+   * التحقق من توفر ملحق معين
    */
-  public isAndroid(): boolean {
-    return this.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
+  public isPluginAvailable(pluginName: string): boolean {
+    return Capacitor.isPluginAvailable(pluginName);
   }
   
   /**
-   * التحقق مما إذا كان الجهاز iOS
+   * التحقق من جهاز الجوّال
+   */
+  public isMobileDevice(): boolean {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+  
+  /**
+   * التحقق من جهاز أندرويد
+   */
+  public isAndroid(): boolean {
+    return /Android/i.test(navigator.userAgent);
+  }
+  
+  /**
+   * التحقق من جهاز iOS
    */
   public isIOS(): boolean {
-    return this.getPlatform() === 'ios' || /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+  
+  /**
+   * الحصول على معلومات البيئة
+   */
+  public getEnvironmentInfo() {
+    return {
+      isNativePlatform: this.isNativePlatform(),
+      isWebView: this.isWebView(),
+      isInstalledApp: this.isInstalledApp(),
+      isMobileDevice: this.isMobileDevice(),
+      isAndroid: this.isAndroid(),
+      isIOS: this.isIOS(),
+      platform: this.getPlatform(),
+      userAgent: navigator.userAgent,
+      availablePlugins: {
+        mlkitScanner: this.isPluginAvailable('MLKitBarcodeScanner'),
+        barcodeScanner: this.isPluginAvailable('BarcodeScanner'),
+        camera: this.isPluginAvailable('Camera')
+      }
+    };
   }
 }
 

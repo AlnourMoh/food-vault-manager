@@ -1,139 +1,75 @@
 
 import React, { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import '@/types/barcode-scanner-augmentation.d.ts';
+import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
 
-const CapacitorTester = () => {
-  const [platformInfo, setPlatformInfo] = useState<string>('');
-  const [pluginsInfo, setPluginsInfo] = useState<string>('');
-  const [scannerSupported, setScannerSupported] = useState<boolean | null>(null);
-  const [cameraPermission, setCameraPermission] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const getPlatformInfo = async () => {
-      try {
-        // Get platform info
-        const platform = Capacitor.getPlatform();
-        const isNative = Capacitor.isNativePlatform();
-        setPlatformInfo(`Platform: ${platform}, Native: ${isNative ? 'Yes' : 'No'}`);
-        
-        // Check available plugins
-        const hasMLKit = Capacitor.isPluginAvailable('MLKitBarcodeScanner');
-        const hasCamera = Capacitor.isPluginAvailable('Camera');
-        const hasToast = Capacitor.isPluginAvailable('Toast');
-        setPluginsInfo(`MLKit: ${hasMLKit ? 'Yes' : 'No'}, Camera: ${hasCamera ? 'Yes' : 'No'}, Toast: ${hasToast ? 'Yes' : 'No'}`);
-
-        // Check if scanner is supported
-        if (hasMLKit) {
-          try {
-            const support = await BarcodeScanner.isSupported();
-            setScannerSupported(support.supported);
-          } catch (error) {
-            console.error('Error checking scanner support:', error);
-            setScannerSupported(false);
-          }
-        } else {
-          setScannerSupported(false);
-        }
-
-        // Check camera permission
-        if (hasMLKit) {
-          try {
-            const permission = await BarcodeScanner.checkPermissions();
-            setCameraPermission(permission.camera);
-          } catch (error) {
-            console.error('Error checking permission:', error);
-            setCameraPermission('error');
-          }
-        }
-      } catch (error) {
-        console.error('Error getting platform info:', error);
-      }
-    };
-
-    getPlatformInfo();
-  }, []);
-
-  const handleRequestPermission = async () => {
-    try {
-      const result = await BarcodeScanner.requestPermissions();
-      setCameraPermission(result.camera);
-      toast({
-        title: "Permission status",
-        description: `Camera permission: ${result.camera}`
-      });
-    } catch (error) {
-      console.error('Error requesting permission:', error);
-      toast({
-        title: "Error",
-        description: "Could not request camera permission",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleTestScan = async () => {
-    try {
-      toast({
-        title: "Starting scan test",
-        description: "Please wait..."
-      });
-
-      await BarcodeScanner.scan().then(result => {
-        if (result.barcodes && result.barcodes.length > 0) {
-          toast({
-            title: "Scan successful",
-            description: `Code: ${result.barcodes[0].rawValue}`
-          });
-        } else {
-          toast({
-            title: "No barcode detected",
-            description: "Try again with a clear barcode"
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Scan error:', error);
-      toast({
-        title: "Scan error",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      });
-    }
-  };
+/**
+ * مكون لاختبار قدرات Capacitor والبيئة
+ */
+const CapacitorTester: React.FC = () => {
+  const [expanded, setExpanded] = useState(false);
+  const environment = useScannerEnvironment();
 
   return (
-    <div className="p-3 bg-gray-100 rounded-md text-sm">
-      <h3 className="font-medium mb-2">Capacitor Diagnostics:</h3>
-      <div className="space-y-1 mb-3">
-        <p>{platformInfo}</p>
-        <p>{pluginsInfo}</p>
-        <p>Scanner supported: {scannerSupported === null ? 'Checking...' : scannerSupported ? 'Yes' : 'No'}</p>
-        <p>Camera permission: {cameraPermission || 'Unknown'}</p>
+    <div className="border border-slate-200 rounded-md p-3 text-xs bg-slate-50 text-slate-700">
+      <div className="flex justify-between items-center">
+        <h3 className="font-bold">Capacitor Environment Tester</h3>
+        <button 
+          onClick={() => setExpanded(!expanded)} 
+          className="text-blue-500 underline"
+        >
+          {expanded ? "إخفاء التفاصيل" : "عرض التفاصيل"}
+        </button>
       </div>
       
-      <div className="flex flex-col space-y-2">
-        <Button 
-          size="sm" 
-          onClick={handleRequestPermission}
-          disabled={!scannerSupported}
-        >
-          Request Camera Permission
-        </Button>
-        
-        <Button 
-          size="sm" 
-          onClick={handleTestScan}
-          disabled={!scannerSupported || cameraPermission !== 'granted'}
-          variant="secondary"
-        >
-          Test Scanner
-        </Button>
-      </div>
+      {expanded && (
+        <div className="mt-2 space-y-2">
+          <div className="flex justify-between">
+            <span>Capacitor Version:</span>
+            <span>{Capacitor.getPlatform()}</span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span>Is Native Platform:</span>
+            <span className={environment.isNativePlatform ? "text-green-600" : "text-red-600"}>
+              {String(environment.isNativePlatform)}
+            </span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span>Is WebView:</span>
+            <span className={environment.isWebView ? "text-green-600" : "text-red-600"}>
+              {String(environment.isWebView)}
+            </span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span>Is Effectively Native:</span>
+            <span className={environment.isEffectivelyNative ? "text-green-600" : "text-red-600"}>
+              {String(environment.isEffectivelyNative)}
+            </span>
+          </div>
+          
+          <div className="mt-2 pt-2 border-t border-slate-200">
+            <h4 className="font-bold mb-1">Available Plugins:</h4>
+            <ul className="space-y-1">
+              {Object.entries(environment.availablePlugins).map(([plugin, available]) => (
+                <li key={plugin} className="flex justify-between">
+                  <span>{plugin}:</span>
+                  <span className={available ? "text-green-600" : "text-red-600"}>
+                    {String(available)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div className="mt-2 pt-2 border-t border-slate-200 break-words text-[10px]">
+            <h4 className="font-bold mb-1">User Agent:</h4>
+            <p>{navigator.userAgent}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
