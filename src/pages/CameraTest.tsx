@@ -81,24 +81,31 @@ const CameraTest = () => {
       setIsScanning(true);
       setScanResult(null);
       
-      await scannerOperationsService.startScan((code) => {
-        console.log('تم مسح الرمز:', code);
-        setScanResult(code);
-        setIsScanning(false);
+      const result = await scannerOperationsService.startScan();
+      if (result.success && result.data) {
+        console.log('تم مسح الرمز:', result.data);
+        setScanResult(result.data);
         
         Toast.show({
-          text: `تم مسح الرمز: ${code}`,
+          text: `تم مسح الرمز: ${result.data}`,
           duration: 'long'
         });
-      });
+      } else {
+        console.error('فشل المسح:', result.error);
+        Toast.show({
+          text: result.error || 'فشل المسح لسبب غير معروف',
+          duration: 'long'
+        });
+      }
     } catch (error) {
       console.error('خطأ في بدء المسح:', error);
-      setIsScanning(false);
       
       Toast.show({
         text: 'حدث خطأ أثناء محاولة بدء المسح',
         duration: 'long'
       });
+    } finally {
+      setIsScanning(false);
     }
   };
 

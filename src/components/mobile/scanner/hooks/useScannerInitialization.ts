@@ -14,6 +14,10 @@ export const useScannerInitialization = () => {
     try {
       setIsInitializing(true);
       
+      // تسجيل بيانات تشخيصية
+      console.log("[useScannerInitialization] المنصة:", window.Capacitor?.getPlatform());
+      console.log("[useScannerInitialization] هل هي بيئة أصلية؟", window.Capacitor?.isNativePlatform());
+      
       // نستخدم Promise.resolve().then() لتأخير تنفيذ الكود بشكل طفيف
       // هذا يساعد في تجنب مشاكل التوقيت المحتملة في دورة حياة المكون
       Promise.resolve().then(() => {
@@ -42,8 +46,8 @@ export const useScannerInitialization = () => {
     };
   }, []);
   
-  // نعيد isInitializing: false بشكل مباشر لتجنب مشاكل الوصول المبكر للماسح
+  // نعيد isInitializing بشكل صحيح
   return { 
-    isInitializing: false 
+    isInitializing 
   };
 };
