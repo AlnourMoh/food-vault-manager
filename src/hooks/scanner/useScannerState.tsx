@@ -1,152 +1,42 @@
-
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
-import { useCameraPermissions } from '@/hooks/useCameraPermissions';
+import { useCameraPermissions } from './permissions/useCameraPermissions';
 import { useMLKitScanner } from './providers/useMLKitScanner';
-import { useScannerUI } from './useScannerUI';
+import { useScannerUI } from './ui/useScannerUI';
 
 interface UseScannerStateProps {
+  autoStart?: boolean;
   onScan?: (code: string) => void;
   onClose?: () => void;
-  autoActivateCamera?: boolean;
 }
 
 export const useScannerState = (props?: UseScannerStateProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
-  const [isScanningActive, setIsScanningActive] = useState(false);
-  const [isManualEntry, setIsManualEntry] = useState(false);
-  const [hasScannerError, setHasScannerError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  
-  const autoActivateCamera = props?.autoActivateCamera || false;
-  const onScan = props?.onScan || (() => {});
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
+
+  const autoStart = props?.autoStart || false;
+  const onScan = props?.onScan || ((code: string) => console.log('Scanned:', code));
   const onClose = props?.onClose || (() => {});
   
-  const { hasPermission, requestPermission } = useCameraPermissions();
+  const { hasPermission: cameraPermission, requestPermission } = useCameraPermissions();
   const { startMLKitScan, stopMLKitScan, isMLKitScanActive } = useMLKitScanner();
   const { setupScannerBackground, restoreUIAfterScanning, cleanup } = useScannerUI();
   
   const { toast } = useToast();
-  
-  // تفعيل الكاميرا تلقائيًا إذا تم طلب ذلك
-  useEffect(() => {
-    if (autoActivateCamera && !isScanningActive) {
-      console.log('[useScannerState] تفعيل الكاميرا تلقائيًا حسب الإعداد');
-      startScan().catch(error => {
-        console.error('[useScannerState] خطأ في التفعيل التلقائي للكاميرا:', error);
-      });
-    }
-  }, [autoActivateCamera]);
-  
-  // بدء المسح
-  const startScan = useCallback(async () => {
-    try {
-      console.log('[useScannerState] بدء المسح...');
-      setIsLoading(true);
-      
-      // التحقق من الأذونات وطلبها إذا لزم الأمر
-      if (hasPermission === false) {
-        const granted = await requestPermission();
-        if (!granted) {
-          console.log('[useScannerState] لم يتم منح إذن الكاميرا');
-          setIsLoading(false);
-          return false;
-        }
-      }
-      
-      // إعداد الواجهة للمسح
-      await setupScannerBackground();
-      setIsScanningActive(true);
-      setIsLoading(false);
-      
-      // بدء المسح
-      const success = await startMLKitScan((code) => {
-        console.log('[useScannerState] تم المسح بنجاح:', code);
-        setLastScannedCode(code);
-        onScan(code);
-      });
-      
-      if (!success) {
-        console.log('[useScannerState] فشل المسح');
-        stopScan();
-        setHasScannerError(true);
-      }
-      
-      return success;
-    } catch (error) {
-      console.error('[useScannerState] خطأ في بدء المسح:', error);
-      setIsLoading(false);
-      stopScan();
-      setHasScannerError(true);
-      return false;
-    }
-  }, [hasPermission, requestPermission, onScan, setupScannerBackground, startMLKitScan, stopMLKitScan]);
-
-  // إيقاف المسح
-  const stopScan = useCallback(async () => {
-    try {
-      console.log('[useScannerState] إيقاف المسح...');
-      setIsScanningActive(false);
-      
-      // إيقاف المسح في MLKit
-      await stopMLKitScan();
-      
-      // تنظيف واجهة المستخدم
-      await restoreUIAfterScanning();
-      
-      return true;
-    } catch (error) {
-      console.error('[useScannerState] خطأ في إيقاف المسح:', error);
-      return false;
-    }
-  }, [stopMLKitScan, restoreUIAfterScanning]);
-
-  // وظيفة للتعامل مع الإدخال اليدوي
-  const handleManualEntry = useCallback(() => {
-    setIsManualEntry(true);
-    stopScan();
-  }, [stopScan]);
-
-  // وظيفة لإلغاء الإدخال اليدوي
-  const handleManualCancel = useCallback(() => {
-    setIsManualEntry(false);
-  }, []);
-
-  // وظيفة لإعادة المحاولة بعد الخطأ
-  const handleRetry = useCallback(() => {
-    setHasScannerError(false);
-    startScan();
-  }, [startScan]);
-
-  // تنظيف عند إلغاء تحميل المكون
-  useEffect(() => {
-    return () => {
-      console.log('[useScannerState] تنظيف المكون...');
-      stopScan().catch(e => 
-        console.error('[useScannerState] خطأ في إيقاف المسح عند التنظيف:', e)
-      );
-    };
-  }, [stopScan]);
 
   return {
-    isLoading, 
+    isLoading,
     setIsLoading,
-    hasPermission,
-    isScanningActive,
-    lastScannedCode,
-    isManualEntry,
-    hasScannerError,
     hasError,
     setHasError,
-    isScanning,
+    isScanning: isMLKitScanActive || isScanning,
     setIsScanning,
-    startScan,
-    stopScan,
-    requestPermission,
-    handleManualEntry,
-    handleManualCancel,
-    handleRetry
+    hasPermission: cameraPermission,
+    lastScannedCode,
+    setLastScannedCode
   };
 };
