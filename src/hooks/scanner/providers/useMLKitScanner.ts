@@ -52,58 +52,41 @@ export const useMLKitScanner = () => {
         ]
       });
 
-      if (result.barcodes && result.barcodes.length > 0) {
-        const code = result.barcodes[0].rawValue;
-        if (code) {
-          onSuccess(code);
-          toast({
-            title: "تم المسح بنجاح",
-            description: `تم مسح الرمز: ${code}`,
-          });
-        }
+      setIsScanActive(false);
+      
+      try {
+        // Fixed: call stopScan without arguments
+        await BarcodeScanner.stopScan();
+      } catch (error) {
+        console.error('[useMLKitScanner] خطأ في إيقاف المسح:', error);
       }
 
-      return true;
-    } catch (error) {
-      console.error('MLKitScanner: خطأ في بدء المسح:', error);
-      setIsScanActive(false);
-      toast({
-        title: "خطأ في المسح",
-        description: "حدث خطأ أثناء عملية المسح",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
-  const stopMLKitScan = async (): Promise<boolean> => {
-    try {
-      if (isScanActive) {
-        try {
-          // إيقاف الفلاش إذا كان مفعلاً
-          await BarcodeScanner.enableTorch(false).catch(() => {});
-          
-          // Fixed: call stopScan without arguments
-          await BarcodeScanner.stopScan();
-          
-          setIsScanActive(false);
-        } catch (error) {
-          console.error('[useMLKitScanner] خطأ في إيقاف المسح:', error);
+      if (result.barcodes && result.barcodes.length > 0) {
+        const barcodeValue = result.barcodes[0].rawValue;
+        if (barcodeValue) {
+          onSuccess(barcodeValue);
+          return true;
         }
       }
       
-      return true;
-    } catch (error) {
-      console.error('[useMLKitScanner] خطأ في إيقاف المسح:', error);
       return false;
-    } finally {
+    } catch (error) {
+      console.error('[useMLKitScanner] خطأ في المسح:', error);
       setIsScanActive(false);
+      
+      try {
+        // Fixed: call stopScan without arguments
+        await BarcodeScanner.stopScan();
+      } catch (err) {
+        console.error('[useMLKitScanner] خطأ في إيقاف المسح بعد خطأ:', err);
+      }
+      
+      return false;
     }
   };
 
   return {
-    startMLKitScan,
-    stopMLKitScan,
-    isMLKitScanActive: isScanActive
+    isScanActive,
+    startMLKitScan
   };
 };

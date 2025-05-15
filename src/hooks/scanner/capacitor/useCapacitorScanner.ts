@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
@@ -91,6 +92,7 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           await BarcodeScanner.hideBackground();
+          // Fixed: call stopScan without arguments
           await BarcodeScanner.stopScan();
         } catch (error) {
           console.error('خطأ في إيقاف المسح:', error);
