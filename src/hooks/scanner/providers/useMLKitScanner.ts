@@ -32,7 +32,7 @@ export const useMLKitScanner = () => {
         }
       }
       
-      // تهيئة الماسح
+      // تهيئة الماسح - using the extended interface from barcode-scanner-augmentation.d.ts
       try {
         await BarcodeScanner.prepare();
       } catch (error) {

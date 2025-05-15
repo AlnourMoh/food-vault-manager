@@ -21,6 +21,18 @@ export const useScannerEnvironment = () => {
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     
+    // تحقق من وجود Capacitor
+    const hasCapacitor = typeof window.Capacitor !== 'undefined';
+    
+    // تحقق من وجود الملحقات
+    const availablePlugins = {
+      mlkitScanner: Capacitor.isPluginAvailable('MLKitBarcodeScanner'),
+      barcodeScanner: Capacitor.isPluginAvailable('BarcodeScanner'),
+      camera: Capacitor.isPluginAvailable('Camera'),
+      app: Capacitor.isPluginAvailable('App'),
+      browser: Capacitor.isPluginAvailable('Browser')
+    };
+    
     return {
       isNativePlatform,
       isWebView,
@@ -30,7 +42,9 @@ export const useScannerEnvironment = () => {
       isAndroid,
       isIOS,
       platform: Capacitor.getPlatform(),
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
+      hasCapacitor,
+      availablePlugins
     };
   });
   

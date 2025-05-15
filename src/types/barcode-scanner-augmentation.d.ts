@@ -24,6 +24,16 @@ declare module '@capacitor-mlkit/barcode-scanning' {
      * Prepare the scanner
      */
     prepare(): Promise<void>;
+    
+    /**
+     * Check if the torch is enabled
+     */
+    isTorchEnabled(): Promise<{ enabled: boolean }>;
+    
+    /**
+     * Enable or disable the torch
+     */
+    enableTorch(enable: boolean): Promise<void>;
   }
 }
 

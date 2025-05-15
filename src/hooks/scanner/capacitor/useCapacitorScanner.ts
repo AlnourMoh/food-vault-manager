@@ -27,7 +27,7 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
       setIsScanning(true);
       
       try {
-        // تجهيز الماسح
+        // تجهيز الماسح - using the extended interface from barcode-scanner-augmentation.d.ts
         await BarcodeScanner.showBackground();
         await BarcodeScanner.prepare();
         
