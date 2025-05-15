@@ -120,7 +120,6 @@ class BarcodeScannerService {
         // إيقاف الفلاش إذا كان مفعلاً
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
-        // Fixed: Remove the argument from stopScan()
         await BarcodeScanner.stopScan();
         
         return true;

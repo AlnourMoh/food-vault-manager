@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -103,7 +104,6 @@ const CameraTest = () => {
 
   const handleStopScan = async () => {
     try {
-      // Fixed: Remove the argument from stopScan()
       await scannerOperationsService.stopScan();
       setIsScanning(false);
       
