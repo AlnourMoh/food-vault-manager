@@ -1,98 +1,50 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X, AlertTriangle, QrCode } from 'lucide-react';
+import { Smartphone } from 'lucide-react';
 import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
-import CapacitorTester from '@/components/mobile/CapacitorTester';
 
 interface BrowserViewProps {
   onClose: () => void;
 }
 
-/**
- * عرض بديل عندما نكون في بيئة المتصفح وليس في تطبيق الجوال
- */
 export const BrowserView: React.FC<BrowserViewProps> = ({ onClose }) => {
   const environment = useScannerEnvironment();
-  
+
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg">
-      <div className="flex justify-between items-start mb-6">
-        <h2 className="text-xl font-bold text-gray-800">المسح غير متاح</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <X className="w-5 h-5" />
-        </Button>
-      </div>
+    <div className="p-6 flex flex-col items-center justify-center">
+      <Smartphone className="h-20 w-20 text-gray-400 mb-6" />
       
-      <div className="flex flex-col items-center justify-center text-center space-y-4 mb-6">
-        <div className="bg-amber-100 p-4 rounded-full">
-          <AlertTriangle className="w-10 h-10 text-amber-600" />
-        </div>
-        
-        <div className="space-y-2">
-          <h3 className="font-bold text-lg text-gray-800">ميزة المسح غير متاحة في المتصفح</h3>
-          <p className="text-gray-600">
-            لاستخدام ماسح الباركود، يجب تشغيل التطبيق على جهاز جوال كتطبيق أصلي وليس من خلال متصفح الويب.
-          </p>
-        </div>
-      </div>
+      <h2 className="text-2xl font-bold text-center mb-2">
+        المسح الضوئي غير متاح في المتصفح
+      </h2>
       
-      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
-        <h4 className="font-bold mb-2 text-gray-700">تشخيص البيئة الحالية:</h4>
-        <ul className="space-y-2 text-sm">
-          <li className="flex justify-between">
-            <span className="text-gray-600">بيئة أصلية:</span>
-            <span className={environment.isNativePlatform ? "text-green-600" : "text-red-600"}>
-              {environment.isNativePlatform ? "نعم" : "لا"}
-            </span>
-          </li>
-          <li className="flex justify-between">
-            <span className="text-gray-600">WebView:</span>
-            <span className={environment.isWebView ? "text-green-600" : "text-red-600"}>
-              {environment.isWebView ? "نعم" : "لا"}
-            </span>
-          </li>
-          <li className="flex justify-between">
-            <span className="text-gray-600">Capacitor:</span>
-            <span className={environment.hasCapacitor ? "text-green-600" : "text-red-600"}>
-              {environment.hasCapacitor ? "متاح" : "غير متاح"}
-            </span>
-          </li>
-          <li className="flex justify-between">
-            <span className="text-gray-600">ملحق MLKit:</span>
-            <span className={environment.availablePlugins.mlkitScanner ? "text-green-600" : "text-red-600"}>
-              {environment.availablePlugins.mlkitScanner ? "متاح" : "غير متاح"}
-            </span>
-          </li>
-          <li className="flex justify-between">
-            <span className="text-gray-600">ملحق الكاميرا:</span>
-            <span className={environment.availablePlugins.camera ? "text-green-600" : "text-red-600"}>
-              {environment.availablePlugins.camera ? "متاح" : "غير متاح"}
-            </span>
-          </li>
+      <p className="text-center text-gray-500 mb-6">
+        لاستخدام الماسح الضوئي، يرجى تثبيت التطبيق على جهازك الجوال أو استخدام التطبيق من متجر التطبيقات.
+      </p>
+      
+      <Button 
+        variant="outline" 
+        className="w-full mb-2"
+        onClick={onClose}
+      >
+        إغلاق
+      </Button>
+      
+      <div className="w-full mt-8 text-xs text-gray-500 p-4 bg-gray-50 rounded-lg">
+        <h3 className="font-medium mb-2">معلومات عن نظام التشغيل:</h3>
+        <ul className="space-y-1">
+          <li>منصة: {environment.platform}</li>
+          <li>بيئة أصلية: {environment.isNativePlatform ? 'نعم' : 'لا'}</li>
+          <li>جهاز جوال: {environment.isMobileDevice ? 'نعم' : 'لا'}</li>
+          {environment.isAndroid && <li>نظام: أندرويد</li>}
+          {environment.isIOS && <li>نظام: iOS</li>}
+          <li>تطبيق ويب: {environment.isWebView ? 'نعم' : 'لا'}</li>
+          <li>Capacitor: {environment.hasCapacitor ? 'متاح' : 'غير متاح'}</li>
+          <li>MLKitScanner: {environment.availablePlugins.mlkitScanner ? 'متاح' : 'غير متاح'}</li>
+          <li>Camera: {environment.availablePlugins.camera ? 'متاح' : 'غير متاح'}</li>
+          <li>App: {environment.availablePlugins.app ? 'متاح' : 'غير متاح'}</li>
         </ul>
-      </div>
-      
-      <div className="space-y-4">
-        <Button 
-          variant="outline" 
-          className="w-full justify-center"
-          onClick={onClose}
-        >
-          إغلاق
-        </Button>
-        <p className="text-xs text-gray-500 text-center">
-          يرجى تثبيت وفتح التطبيق على جهازك المحمول لاستخدام ميزة المسح الضوئي.
-        </p>
-      </div>
-      
-      <div className="mt-6">
-        <CapacitorTester />
       </div>
     </div>
   );
