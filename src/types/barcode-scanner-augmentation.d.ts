@@ -9,6 +9,21 @@ declare module '@capacitor-mlkit/barcode-scanning' {
      * Stop the current scan session. The version of the plugin's API requires no arguments.
      */
     stopScan(): Promise<void>;
+
+    /**
+     * Show background for scanner
+     */
+    showBackground(): Promise<void>;
+
+    /**
+     * Hide background for scanner
+     */
+    hideBackground(): Promise<void>;
+
+    /**
+     * Prepare the scanner
+     */
+    prepare(): Promise<void>;
   }
 }
 
@@ -22,4 +37,3 @@ declare global {
     };
   }
 }
-

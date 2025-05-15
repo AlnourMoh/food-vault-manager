@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core';
 
 /**
- * خدمة للتحقق من بيئة التشغيل
+ * خدمة للكشف عن بيئة تشغيل التطبيق
  */
 class PlatformService {
   private static instance: PlatformService;
@@ -17,65 +17,57 @@ class PlatformService {
   }
   
   /**
-   * التحقق إذا كنا في بيئة أصلية (تطبيق جوال)
+   * التحقق مما إذا كان التطبيق يعمل على منصة أصلية
    */
   public isNativePlatform(): boolean {
     return Capacitor.isNativePlatform();
   }
   
   /**
-   * التحقق من توفر ملحق معين
+   * التحقق مما إذا كان التطبيق يعمل في عرض ويب داخل تطبيق أصلي
+   */
+  public isWebView(): boolean {
+    const webViewRegex = /(iPhone|iPod|iPad|Android).*(wv|WebView)/i;
+    return webViewRegex.test(navigator.userAgent.toLowerCase());
+  }
+  
+  /**
+   * التحقق مما إذا كان التطبيق مثبت كتطبيق مستقل
+   */
+  public isInstalledApp(): boolean {
+    const mobileAppRegex = /food-vault-manager|app\.lovable\./i;
+    return mobileAppRegex.test(navigator.userAgent.toLowerCase()) || 
+           mobileAppRegex.test(document.referrer);
+  }
+  
+  /**
+   * التحقق مما إذا كان الملحق المطلوب متاحاً
    */
   public isPluginAvailable(pluginName: string): boolean {
     return Capacitor.isPluginAvailable(pluginName);
   }
   
   /**
-   * التحقق إذا كنا في WebView
-   */
-  public isWebView(): boolean {
-    return navigator.userAgent.toLowerCase().indexOf(' wv') > -1 || 
-           navigator.userAgent.indexOf('Android') !== -1;
-  }
-  
-  /**
-   * التحقق إذا كان التطبيق مثبتًا
-   */
-  public isInstalledApp(): boolean {
-    // على iOS، التحقق من وجود "AppleWebKit" و عدم وجود "Safari"
-    if (navigator.userAgent.includes('AppleWebKit') && 
-        !navigator.userAgent.includes('Safari')) {
-      return true;
-    }
-    
-    // على Android، التحقق من وجود "wv" في userAgent
-    if (navigator.userAgent.toLowerCase().includes(' wv')) {
-      return true;
-    }
-    
-    // التحقق من المتصفحات المضمنة المعروفة
-    const embeddedBrowsers = ['cordova', 'capacitor', 'ionic'];
-    for (const browser of embeddedBrowsers) {
-      if (navigator.userAgent.toLowerCase().includes(browser)) {
-        return true;
-      }
-    }
-    
-    // التحقق من خصائص الويب المعينة للتطبيقات المثبتة
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      return true;
-    }
-    
-    return false;
-  }
-  
-  /**
-   * الحصول على منصة التشغيل
+   * الحصول على اسم المنصة الحالية
    */
   public getPlatform(): string {
     return Capacitor.getPlatform();
   }
+  
+  /**
+   * التحقق مما إذا كان الجهاز أندرويد
+   */
+  public isAndroid(): boolean {
+    return this.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
+  }
+  
+  /**
+   * التحقق مما إذا كان الجهاز iOS
+   */
+  public isIOS(): boolean {
+    return this.getPlatform() === 'ios' || /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
 }
 
-// تصدير مثيل وحيد من الخدمة
+// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const platformService = PlatformService.getInstance();
