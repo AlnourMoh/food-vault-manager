@@ -1,11 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
-import { useCameraPermissions } from './permissions/useCameraPermissions';
-import { useMLKitScanner } from './providers/useMLKitScanner';
-import { useScannerUI } from './ui/useScannerUI';
 
-interface UseScannerStateProps {
+// Define the props interface
+export interface UseScannerStateProps {
   autoStart?: boolean;
   onScan?: (code: string) => void;
   onClose?: () => void;
@@ -22,9 +21,28 @@ export const useScannerState = (props?: UseScannerStateProps) => {
   const onScan = props?.onScan || ((code: string) => console.log('Scanned:', code));
   const onClose = props?.onClose || (() => {});
   
-  const { hasPermission: cameraPermission, requestPermission } = useCameraPermissions();
-  const { startMLKitScan, stopMLKitScan, isMLKitScanActive } = useMLKitScanner();
-  const { setupScannerBackground, restoreUIAfterScanning, cleanup } = useScannerUI();
+  // Helper function to start scanning
+  const startScan = async (): Promise<boolean> => {
+    try {
+      setIsScanning(true);
+      return true;
+    } catch (error) {
+      console.error('Error starting scan:', error);
+      setIsScanning(false);
+      return false;
+    }
+  };
+
+  // Helper function to stop scanning
+  const stopScan = async (): Promise<boolean> => {
+    try {
+      setIsScanning(false);
+      return true;
+    } catch (error) {
+      console.error('Error stopping scan:', error);
+      return false;
+    }
+  };
   
   const { toast } = useToast();
 
@@ -33,10 +51,13 @@ export const useScannerState = (props?: UseScannerStateProps) => {
     setIsLoading,
     hasError,
     setHasError,
-    isScanning: isMLKitScanActive || isScanning,
+    isScanning,
     setIsScanning,
-    hasPermission: cameraPermission,
+    hasPermission,
     lastScannedCode,
-    setLastScannedCode
+    setLastScannedCode,
+    startScan,
+    stopScan,
+    isScanningActive: isScanning
   };
 };

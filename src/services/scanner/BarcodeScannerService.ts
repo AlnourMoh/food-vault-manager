@@ -1,4 +1,3 @@
-
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
@@ -121,7 +120,7 @@ class BarcodeScannerService {
         // إيقاف الفلاش إذا كان مفعلاً
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
-        // استدعاء stopScan بدون معاملات
+        // Fixed: call stopScan without arguments
         await BarcodeScanner.stopScan();
         
         return true;

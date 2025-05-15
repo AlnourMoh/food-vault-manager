@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useScannerState } from '@/hooks/scanner/useScannerState';
+import { useScannerState, UseScannerStateProps } from '@/hooks/scanner/useScannerState';
 import { useMockScanner } from '@/hooks/scanner/useMockScanner';
 import { useToast } from '@/hooks/use-toast';
 import { useScannerPermissions } from '@/hooks/scanner/hooks/useScannerPermissions';
@@ -16,18 +15,18 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
   const [cameraActive, setCameraActive] = useState(false);
   const { toast } = useToast();
   
-  // تحسين: استخدام حالة الكاميرا في أعلى المستوى
+  // Use scanner state with the props we have available
   const {
     isLoading,
     hasPermission,
-    isScanningActive,
+    isScanning: isScanningActive,
     lastScannedCode,
     startScan: _startScan,
     stopScan: _stopScan
   } = useScannerState({ 
     onScan, 
     onClose,
-    autoActivateCamera: true // تلميح للماسح ببدء الكاميرا تلقائيًا
+    autoStart: true 
   });
 
   const { requestPermission } = useScannerPermissions();
@@ -170,8 +169,8 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
     hasPermission,
     isScanningActive,
     lastScannedCode,
-    startScan,
-    stopScan,
+    startScan: _startScan,
+    stopScan: _stopScan,
     handleManualEntry,
     handleManualCancel,
     requestPermission,
