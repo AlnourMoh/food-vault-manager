@@ -6,7 +6,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 declare module '@capacitor-mlkit/barcode-scanning' {
   export interface BarcodeScanner {
     /**
-     * Stop the current scan session. The version of the plugin's API requires no arguments.
+     * Stop the current scan session.
      */
     stopScan(): Promise<void>;
 
