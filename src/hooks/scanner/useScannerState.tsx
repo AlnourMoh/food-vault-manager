@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
@@ -89,6 +90,7 @@ export const useScannerState = ({
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
+        // Fixed: call stopScan without arguments
         await BarcodeScanner.stopScan();
       }
       
