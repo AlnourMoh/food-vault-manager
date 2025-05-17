@@ -5,7 +5,7 @@ import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning
 import { Toast } from '@capacitor/toast';
 import { useToast } from '@/hooks/use-toast';
 
-// تأكد من استيراد تعريفات الأنواع الإضافية
+// Import the augmented type definitions
 import '@/types/barcode-scanner-augmentation.d.ts';
 
 export const useCapacitorScanner = (onScan?: (code: string) => void) => {
@@ -36,7 +36,7 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
         }
       }
       
-      // تهيئة الماسح - using the extended interface from barcode-scanner-augmentation.d.ts
+      // تهيئة الماسح - using the augmented interface
       try {
         await BarcodeScanner.showBackground();
         await BarcodeScanner.prepare();
