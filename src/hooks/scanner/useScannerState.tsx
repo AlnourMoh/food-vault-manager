@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';

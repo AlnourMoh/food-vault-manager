@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissionStatus } from '@/hooks/camera/usePermissionStatus';
@@ -137,7 +136,7 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
       
       return true;
     } catch (error) {
-      console.error('Error in stopScan:', error);
+      console.error('[useScannerControls] خطأ في إيقاف المسح:', error);
       return false;
     }
   };
