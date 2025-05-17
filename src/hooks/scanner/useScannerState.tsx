@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
@@ -17,11 +16,10 @@ export const useScannerState = ({
 }: UseScannerStateProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(autoStart);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   
-  // Check if scanner is supported
   const checkScannerSupport = useCallback(async () => {
     try {
       if (!Capacitor.isNativePlatform()) {
@@ -41,7 +39,6 @@ export const useScannerState = ({
     }
   }, []);
   
-  // Start scanning
   const startScan = useCallback(async () => {
     try {
       const isSupported = await checkScannerSupport();
@@ -85,7 +82,6 @@ export const useScannerState = ({
     }
   }, [checkScannerSupport, onScan]);
   
-  // Stop scanning
   const stopScan = useCallback(async () => {
     try {
       setIsScanning(false);
@@ -93,7 +89,6 @@ export const useScannerState = ({
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         await BarcodeScanner.enableTorch(false).catch(() => {});
         
-        // Fixed: call stopScan without arguments
         await BarcodeScanner.stopScan();
       }
       
@@ -106,7 +101,6 @@ export const useScannerState = ({
     }
   }, []);
   
-  // Create the permission object
   const requestPermission = useCallback(async () => {
     try {
       const result = await BarcodeScanner.requestPermissions();
