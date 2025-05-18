@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core';
 
 /**
- * خدمة للكشف عن منصة التشغيل وخصائصها
+ * خدمة تحديد منصة التشغيل والكشف عن البيئة المحيطة
  */
 class PlatformService {
   private static instance: PlatformService;
@@ -17,62 +17,93 @@ class PlatformService {
   }
   
   /**
-   * التحقق إذا كنا في منصة أصلية (جهاز حقيقي)
+   * التحقق مما إذا كنا في بيئة أصلية (تطبيق جوال)
    */
   public isNativePlatform(): boolean {
-    return Capacitor.isNativePlatform();
+    try {
+      return Capacitor.isNativePlatform();
+    } catch (e) {
+      console.error('[PlatformService] خطأ في التحقق من البيئة الأصلية:', e);
+      return false;
+    }
   }
   
   /**
-   * التحقق من WebView (مثل في تطبيق أندرويد مضمن)
+   * التحقق مما إذا كان التطبيق يعمل داخل WebView
    */
   public isWebView(): boolean {
-    return /wv|WebView/.test(navigator.userAgent);
+    try {
+      // WebView غالبًا ما يتضمن 'wv' في سلسلة وكيل المستخدم
+      const userAgent = navigator.userAgent.toLowerCase();
+      return userAgent.includes('wv') || // أندرويد WebView
+             userAgent.includes('; wv)') || // شكل آخر لأندرويد
+             userAgent.includes('fban/') || // Facebook WebView
+             userAgent.includes('fbav/') || // Facebook app
+             userAgent.includes('instagram') || // Instagram WebView
+             userAgent.includes('twitter') || // Twitter WebView
+             (userAgent.includes('iphone') && !userAgent.includes('safari')); // iOS WebView
+    } catch (e) {
+      console.error('[PlatformService] خطأ في التحقق من WebView:', e);
+      return false;
+    }
   }
   
   /**
-   * التحقق ما إذا كان التطبيق مثبت كتطبيق مستقل
+   * التحقق مما إذا كان التطبيق تم تثبيته كتطبيق PWA
    */
   public isInstalledApp(): boolean {
-    return window.matchMedia('(display-mode: standalone)').matches || 
-          (window.navigator as any).standalone === true;
+    try {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             (window.navigator as any).standalone === true; // iOS
+    } catch (e) {
+      console.error('[PlatformService] خطأ في التحقق من وضع التثبيت:', e);
+      return false;
+    }
   }
   
   /**
-   * التحقق من توفر ملحق كاباسيتور محدد
+   * التحقق مما إذا كان الملحق متاحًا
    */
   public isPluginAvailable(pluginName: string): boolean {
-    return Capacitor.isPluginAvailable(pluginName);
+    try {
+      return Capacitor.isPluginAvailable(pluginName);
+    } catch (e) {
+      console.error(`[PlatformService] خطأ في التحقق من الملحق ${pluginName}:`, e);
+      return false;
+    }
   }
   
   /**
-   * الحصول على اسم المنصة الحالية
+   * الحصول على منصة التشغيل الحالية
    */
   public getPlatform(): string {
-    return Capacitor.getPlatform();
+    try {
+      return Capacitor.getPlatform();
+    } catch (e) {
+      console.error('[PlatformService] خطأ في الحصول على المنصة:', e);
+      return 'web'; // افتراضي
+    }
   }
   
   /**
-   * التحقق ما إذا كان الجهاز أندرويد
+   * الإبلاغ عن معلومات البيئة المحيطة
    */
-  public isAndroid(): boolean {
-    return this.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
-  }
-  
-  /**
-   * التحقق ما إذا كان الجهاز iOS
-   */
-  public isIOS(): boolean {
-    return this.getPlatform() === 'ios' || /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  }
-  
-  /**
-   * التحقق ما إذا كان الجهاز جوال
-   */
-  public isMobileDevice(): boolean {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  public getEnvironmentInfo(): Record<string, any> {
+    return {
+      isNative: this.isNativePlatform(),
+      isWebView: this.isWebView(),
+      isInstalledApp: this.isInstalledApp(),
+      platform: this.getPlatform(),
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      plugins: {
+        camera: this.isPluginAvailable('Camera'),
+        barcodeScanner: this.isPluginAvailable('BarcodeScanner'),
+        mlkit: this.isPluginAvailable('MLKitBarcodeScanner')
+      }
+    };
   }
 }
 
-// تصدير مثيل وحيد من الخدمة
+// تصدير نسخة واحدة من الخدمة
 export const platformService = PlatformService.getInstance();

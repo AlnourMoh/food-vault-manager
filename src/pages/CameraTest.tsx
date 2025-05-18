@@ -50,6 +50,12 @@ const CameraTest = () => {
       setTestMessage(`فشل في تشغيل الكاميرا: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
     }
   };
+  
+  // عند رفض السماح للكاميرا بالوصول
+  const handlePermissionError = () => {
+    setTestState('error');
+    setTestMessage('تم رفض إذن الكاميرا. يرجى تمكينه من إعدادات جهازك');
+  };
 
   return (
     <div className="p-4 flex flex-col items-center min-h-screen">
@@ -91,20 +97,22 @@ const CameraTest = () => {
           )}
           
           {testState === 'error' && (
-            <Button 
-              onClick={() => window.location.reload()} 
-              variant="outline" 
-              className="mt-2 w-full"
-            >
-              إعادة الاختبار
-            </Button>
+            <div className="space-y-2 mt-2">
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline" 
+                className="w-full"
+              >
+                إعادة الاختبار
+              </Button>
+            </div>
           )}
         </div>
         
         {/* عرض الكاميرا النشطة */}
         {showCamera && (
-          <div className="relative bg-black rounded-lg overflow-hidden mb-6" style={{ height: '300px' }}>
-            <ActiveCameraView forceActivate={true} />
+          <div className="relative bg-black rounded-lg overflow-hidden mb-6" style={{ height: '350px' }}>
+            <ActiveCameraView forceActivate={true} showControls={true} />
             <Button 
               className="absolute top-2 right-2 bg-white/20 hover:bg-white/40 backdrop-blur-sm" 
               size="sm" 
@@ -116,7 +124,7 @@ const CameraTest = () => {
         )}
         
         {/* مكون اختبار تصاريح الكاميرا */}
-        <CameraPermissionTest />
+        <CameraPermissionTest onPermissionError={handlePermissionError} />
         
         <div className="mt-6">
           <Button onClick={() => navigate('/mobile/scan')} variant="outline" className="w-full">

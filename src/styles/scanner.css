@@ -109,12 +109,14 @@ video {
   display: block !important;
   z-index: 999 !important;
   position: relative !important;
+  background-color: #000000 !important;
 }
 
 /* إضافة قواعد !important إضافية لمنع الأنماط الأخرى من التأثير */
 video.scanner-video,
 #camera-view-video,
-video#camera-view-video {
+video#camera-view-video,
+.camera-view-video {
   position: absolute !important;
   left: 0 !important;
   top: 0 !important;

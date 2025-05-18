@@ -40,9 +40,28 @@ export class CameraService {
         throw new Error('واجهة mediaDevices غير مدعومة في هذا المتصفح');
       }
 
+      // التأكد من وجود كاميرات متاحة
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoCameras = devices.filter(device => device.kind === 'videoinput');
+      
+      if (videoCameras.length === 0) {
+        throw new Error('لم يتم العثور على كاميرات في هذا الجهاز');
+      }
+      
+      console.log(`CameraService: تم العثور على ${videoCameras.length} كاميرا`);
+      
       // طلب دفق الوسائط
+      console.log('CameraService: طلب دفق الكاميرا مع المحددات:', JSON.stringify(this.streamConstraints));
       const stream = await navigator.mediaDevices.getUserMedia(this.streamConstraints);
       this.activeStream = stream;
+      
+      // التحقق من وجود مسارات فيديو
+      const videoTracks = stream.getVideoTracks();
+      if (videoTracks.length === 0) {
+        throw new Error('تم الوصول للكاميرا ولكن بدون مسارات فيديو');
+      }
+      
+      console.log(`CameraService: تم الحصول على الكاميرا: ${videoTracks[0].label}`);
 
       // تحضير عنصر الفيديو
       let video: HTMLVideoElement;
@@ -58,16 +77,9 @@ export class CameraService {
 
       // تعيين خصائص الفيديو
       video.srcObject = stream;
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-      video.style.opacity = '1';
-      video.style.visibility = 'visible';
-      video.style.display = 'block';
-      video.style.position = 'absolute';
-      video.style.top = '0';
-      video.style.left = '0';
-      video.style.zIndex = '999';
+      
+      // تطبيق الأنماط للتأكد من رؤية الفيديو
+      this.applyVideoStyles(video);
 
       // محاولة تشغيل الفيديو
       try {
@@ -76,12 +88,6 @@ export class CameraService {
       } catch (playError) {
         console.error('CameraService: خطأ في تشغيل الفيديو:', playError);
         
-        // الإبلاغ عن الخطأ للمستخدم
-        await Toast.show({
-          text: `فشل في تشغيل الفيديو: ${playError instanceof Error ? playError.message : 'خطأ غير معروف'}`,
-          duration: 'short'
-        }).catch(() => {});
-
         // محاولة تشغيل تلقائي بعد تأخير قصير
         setTimeout(() => {
           video.play().catch((err) => {
@@ -98,6 +104,37 @@ export class CameraService {
       return video;
     } catch (error) {
       console.error('CameraService: فشل في بدء الكاميرا:', error);
+      
+      // محاولة استخدام خيارات أبسط إذا فشل الطلب الأول
+      if (error instanceof Error && error.message.includes('starting')) {
+        console.log('CameraService: محاولة تشغيل الكاميرا بخيارات أبسط...');
+        
+        try {
+          // محاولة مع محددات أبسط
+          const simpleStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const video = document.createElement('video');
+          video.id = 'camera-service-video-simple-' + Date.now();
+          video.autoplay = true;
+          video.playsInline = true;
+          video.muted = true;
+          video.srcObject = simpleStream;
+          
+          // تطبيق الأنماط
+          this.applyVideoStyles(video);
+          
+          // تشغيل الفيديو
+          await video.play();
+          
+          this.activeStream = simpleStream;
+          this.activeVideoElement = video;
+          this.startKeepAlive();
+          
+          console.log('CameraService: نجحت المحاولة البديلة لتشغيل الكاميرا');
+          return video;
+        } catch (fallbackError) {
+          console.error('CameraService: فشلت المحاولة البديلة أيضًا:', fallbackError);
+        }
+      }
       
       // الإبلاغ عن الخطأ للمستخدم
       await Toast.show({
@@ -121,6 +158,7 @@ export class CameraService {
     // إيقاف المسارات
     if (this.activeStream) {
       this.activeStream.getTracks().forEach(track => {
+        console.log(`CameraService: إيقاف مسار ${track.kind} - ${track.label}`);
         track.stop();
       });
       this.activeStream = null;
@@ -128,8 +166,14 @@ export class CameraService {
 
     // تنظيف عنصر الفيديو
     if (this.activeVideoElement) {
+      console.log('CameraService: تنظيف عنصر الفيديو');
       this.activeVideoElement.srcObject = null;
-      this.activeVideoElement.remove();
+      
+      // إذا كان العنصر جزءًا من DOM، نحاول إزالته
+      if (this.activeVideoElement.parentNode) {
+        this.activeVideoElement.parentNode.removeChild(this.activeVideoElement);
+      }
+      
       this.activeVideoElement = null;
     }
   }
@@ -151,6 +195,88 @@ export class CameraService {
     });
 
     return cameras;
+  }
+
+  /**
+   * اختبار سريع للكاميرا بدون إنشاء عنصر فيديو
+   */
+  public async quickCameraTest(): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log('CameraService: اختبار سريع للكاميرا...');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return {
+          success: false,
+          message: 'واجهة mediaDevices غير مدعومة في هذا المتصفح'
+        };
+      }
+
+      // التحقق من وجود كاميرات
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(device => device.kind === 'videoinput');
+      
+      if (cameras.length === 0) {
+        return {
+          success: false,
+          message: 'لم يتم العثور على كاميرات في هذا الجهاز'
+        };
+      }
+
+      // طلب دفق الوسائط لاختباره
+      const stream = await navigator.mediaDevices.getUserMedia(this.streamConstraints);
+      
+      // التحقق من وجود مسارات فيديو
+      const videoTracks = stream.getVideoTracks();
+      if (videoTracks.length === 0) {
+        // إيقاف المسارات
+        stream.getTracks().forEach(track => track.stop());
+        
+        return {
+          success: false,
+          message: 'تم الوصول للجهاز لكن بدون مسارات فيديو'
+        };
+      }
+      
+      // عرض معلومات الكاميرا
+      const cameraInfo = videoTracks[0].label || 'كاميرا غير معروفة';
+      console.log(`CameraService: تم اختبار الكاميرا بنجاح: ${cameraInfo}`);
+      
+      // الاختبار ناجح، إيقاف المسارات
+      videoTracks.forEach(track => track.stop());
+
+      return {
+        success: true,
+        message: `الكاميرا تعمل بشكل صحيح: ${cameraInfo}`
+      };
+    } catch (error) {
+      console.error('CameraService: فشل اختبار الكاميرا:', error);
+      return {
+        success: false,
+        message: `فشل اختبار الكاميرا: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`
+      };
+    }
+  }
+
+  /**
+   * تطبيق أنماط على عنصر الفيديو للتأكد من ظهوره بشكل صحيح
+   */
+  private applyVideoStyles(video: HTMLVideoElement): void {
+    // تطبيق كل الأنماط المطلوبة لضمان رؤية الفيديو
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.style.objectFit = 'cover';
+    video.style.opacity = '1';
+    video.style.visibility = 'visible';
+    video.style.display = 'block';
+    video.style.position = 'absolute';
+    video.style.top = '0';
+    video.style.left = '0';
+    video.style.zIndex = '999';
+    video.style.backgroundColor = '#000000';
+    
+    // إضافة كلاس مخصص للفيديو
+    video.classList.add('scanner-video');
+    video.classList.add('camera-view-video');
   }
 
   /**
@@ -178,41 +304,6 @@ export class CameraService {
     if (this.keepAliveInterval !== null) {
       clearInterval(this.keepAliveInterval);
       this.keepAliveInterval = null;
-    }
-  }
-
-  /**
-   * اختبار سريع للكاميرا بدون إنشاء عنصر فيديو
-   */
-  public async quickCameraTest(): Promise<{ success: boolean; message: string }> {
-    try {
-      console.log('CameraService: اختبار سريع للكاميرا...');
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        return {
-          success: false,
-          message: 'واجهة mediaDevices غير مدعومة في هذا المتصفح'
-        };
-      }
-
-      // طلب دفق الوسائط لاختباره
-      const stream = await navigator.mediaDevices.getUserMedia(this.streamConstraints);
-      
-      // الاختبار ناجح، إيقاف المسارات
-      stream.getTracks().forEach(track => {
-        track.stop();
-      });
-
-      return {
-        success: true,
-        message: 'الكاميرا تعمل بشكل صحيح'
-      };
-    } catch (error) {
-      console.error('CameraService: فشل اختبار الكاميرا:', error);
-      return {
-        success: false,
-        message: `فشل اختبار الكاميرا: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`
-      };
     }
   }
 }

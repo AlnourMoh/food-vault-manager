@@ -1,16 +1,21 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { checkCameraPermission, requestCameraPermission, testCameraDirectly } from '@/utils/cameraPermissions';
+import { checkCameraPermission, requestCameraPermission, testCameraDirectly, openAppSettings } from '@/utils/cameraPermissions';
 import { ActiveCameraView } from './ActiveCameraView';
-import { CameraOff, Check, X, Smartphone, AlertCircle } from 'lucide-react';
+import { CameraOff, Check, X, Smartphone, AlertCircle, Cog } from 'lucide-react';
 
-export const CameraPermissionTest: React.FC = () => {
+interface CameraPermissionTestProps {
+  onPermissionError?: () => void;
+}
+
+export const CameraPermissionTest: React.FC<CameraPermissionTestProps> = ({ onPermissionError }) => {
   const [permissionState, setPermissionState] = useState<'checking' | 'granted' | 'denied'>('checking');
   const [deviceInfo, setDeviceInfo] = useState<string>('');
   const [cameraStatus, setCameraStatus] = useState<string>('');
   const [isTesting, setIsTesting] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [detailedCheck, setDetailedCheck] = useState<Record<string, boolean | string>>({});
 
   // جمع معلومات الجهاز
   useEffect(() => {
@@ -31,29 +36,70 @@ export const CameraPermissionTest: React.FC = () => {
   useEffect(() => {
     const checkPermission = async () => {
       try {
+        setPermissionState('checking');
+        setCameraStatus('جاري التحقق من إذن الكاميرا...');
+        
+        // جمع معلومات مفصلة عن القدرات
+        const details: Record<string, boolean | string> = {
+          mediaDevices: !!navigator.mediaDevices,
+          getUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+          permissions: !!navigator.permissions,
+          secureContext: window.isSecureContext
+        };
+        setDetailedCheck(details);
+        
         const hasPermission = await checkCameraPermission();
         setPermissionState(hasPermission ? 'granted' : 'denied');
         setCameraStatus(hasPermission ? 'تم منح إذن الكاميرا' : 'لم يتم منح إذن الكاميرا');
+        
+        // تنبيه المكون الأب إذا كان هناك مشكلة في الإذن
+        if (!hasPermission && onPermissionError) {
+          onPermissionError();
+        }
       } catch (error) {
         console.error('خطأ في التحقق من الإذن:', error);
         setPermissionState('denied');
         setCameraStatus(`خطأ في التحقق من الإذن: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+        if (onPermissionError) onPermissionError();
       }
     };
     
     checkPermission();
-  }, []);
+  }, [onPermissionError]);
 
   // طلب إذن الكاميرا
   const handleRequestPermission = async () => {
     try {
       setCameraStatus('جاري طلب الإذن...');
+      setIsTesting(true);
+      
       const granted = await requestCameraPermission();
       setPermissionState(granted ? 'granted' : 'denied');
       setCameraStatus(granted ? 'تم منح إذن الكاميرا' : 'تم رفض إذن الكاميرا');
+      
+      if (!granted && onPermissionError) {
+        onPermissionError();
+      }
     } catch (error) {
       console.error('خطأ في طلب الإذن:', error);
       setCameraStatus(`خطأ في طلب الإذن: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+      if (onPermissionError) onPermissionError();
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  // فتح إعدادات التطبيق
+  const handleOpenSettings = async () => {
+    try {
+      setCameraStatus('محاولة فتح إعدادات التطبيق...');
+      setIsTesting(true);
+      await openAppSettings();
+    } catch (error) {
+      console.error('خطأ في فتح الإعدادات:', error);
+      setCameraStatus(`خطأ في فتح الإعدادات: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -69,10 +115,13 @@ export const CameraPermissionTest: React.FC = () => {
       if (result.success) {
         // عرض عنصر الكاميرا لاختباره بصرياً
         setShowCamera(true);
+      } else if (onPermissionError) {
+        onPermissionError();
       }
     } catch (error) {
       console.error('خطأ في اختبار الكاميرا:', error);
       setCameraStatus(`خطأ في اختبار الكاميرا: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+      if (onPermissionError) onPermissionError();
     } finally {
       setIsTesting(false);
     }
@@ -88,6 +137,20 @@ export const CameraPermissionTest: React.FC = () => {
         </div>
         <div className="overflow-x-auto whitespace-normal break-words">
           {deviceInfo}
+        </div>
+        
+        {/* عرض تفاصيل القدرات */}
+        <div className="mt-2 pt-2 border-t border-slate-200 text-xs">
+          <div className="grid grid-cols-2 gap-1">
+            {Object.entries(detailedCheck).map(([key, value]) => (
+              <div key={key} className="flex items-center gap-1">
+                <span>{key}:</span>
+                <span className={typeof value === 'boolean' ? (value ? 'text-green-600' : 'text-red-600') : ''}>
+                  {typeof value === 'boolean' ? (value ? '✓' : '✗') : value}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       
@@ -107,9 +170,14 @@ export const CameraPermissionTest: React.FC = () => {
           <p className="text-sm opacity-75">{cameraStatus}</p>
         </div>
         {permissionState === 'denied' && (
-          <Button size="sm" onClick={handleRequestPermission} variant="outline">
-            طلب الإذن
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleRequestPermission} variant="outline" disabled={isTesting}>
+              طلب الإذن
+            </Button>
+            <Button size="sm" onClick={handleOpenSettings} variant="ghost" disabled={isTesting}>
+              <Cog className="h-3 w-3" />
+            </Button>
+          </div>
         )}
       </div>
       
@@ -131,7 +199,7 @@ export const CameraPermissionTest: React.FC = () => {
       {showCamera && (
         <div className="mt-4">
           <div className="bg-black relative rounded-lg overflow-hidden" style={{ height: '300px' }}>
-            <ActiveCameraView forceActivate={true} />
+            <ActiveCameraView forceActivate={true} showControls={true} />
             <Button 
               className="absolute top-2 right-2 bg-white/20 hover:bg-white/40 backdrop-blur-sm" 
               size="sm" 
