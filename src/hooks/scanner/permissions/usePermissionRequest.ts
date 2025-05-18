@@ -1,43 +1,16 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 import { usePlatformPermissions } from './usePlatformPermissions';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
-import { App } from '@capacitor/app';
+import { useAppSettings } from './useAppSettings';
 
 export const usePermissionRequest = () => {
   const { toast } = useToast();
   const { handleIosPermissions, handleAndroidPermissions, handleWebPermissions } = usePlatformPermissions();
-  
-  // دالة لفتح إعدادات التطبيق
-  const openAppSettings = async () => {
-    try {
-      console.log('[usePermissionRequest] محاولة فتح إعدادات التطبيق...');
-      
-      if (Capacitor.isNativePlatform()) {
-        const platform = Capacitor.getPlatform();
-        
-        // استخدام واجهة برمجة التطبيق لفتح الإعدادات
-        if (platform === 'ios' || platform === 'android') {
-          // استخدام exitApp بدلا من openUrl غير المتوفر
-          await App.exitApp();
-          return true;
-        }
-      }
-      
-      // عرض رسالة للمستخدم عن كيفية الوصول للإعدادات يدوياً
-      await Toast.show({
-        text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا لهذا التطبيق',
-        duration: 'long'
-      });
-      
-      return false;
-    } catch (error) {
-      console.error('[usePermissionRequest] خطأ في فتح الإعدادات:', error);
-      return false;
-    }
-  };
+  const { openAppSettings } = useAppSettings();
 
   const requestPermission = async (force = true) => {
     try {
