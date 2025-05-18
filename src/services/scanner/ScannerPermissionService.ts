@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { platformService } from './PlatformService';
 
 export class ScannerPermissionService {
@@ -212,13 +213,20 @@ export class ScannerPermissionService {
           const appInfo = await App.getInfo();
           console.log('[ScannerPermissionService] معلومات التطبيق:', appInfo);
           
-          // استخدام exitApp بدلاً من openUrl (الذي تسبب في الخطأ)
+          // استخدام Browser.open بدلاً من exitApp أو openUrl
           try {
-            console.log('[ScannerPermissionService] محاولة استخدام exitApp...');
-            await App.exitApp();
+            console.log('[ScannerPermissionService] محاولة فتح إعدادات التطبيق...');
+            if (platformService.getPlatform() === 'android') {
+              await Browser.open({
+                url: `package:${appInfo.id || 'app.lovable.b3b6b969583d416c9d8b788fa375abca'}`
+              });
+            } else {
+              // iOS
+              await Browser.open({ url: 'app-settings:' });
+            }
             return true;
           } catch (e) {
-            console.error('[ScannerPermissionService] خطأ في محاولة الخروج من التطبيق:', e);
+            console.error('[ScannerPermissionService] خطأ في محاولة فتح إعدادات التطبيق:', e);
             return false;
           }
         }

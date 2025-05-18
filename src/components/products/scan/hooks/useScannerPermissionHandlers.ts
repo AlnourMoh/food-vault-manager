@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 
 export const useScannerPermissionHandlers = (
   requestPermission: () => Promise<boolean>,

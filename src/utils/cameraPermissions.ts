@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
@@ -284,7 +285,7 @@ export const openAppSettings = async (): Promise<boolean> => {
     const platform = Capacitor.getPlatform();
     const message = platform === 'android' 
       ? 'يرجى فتح إعدادات > التطبيقات > مخزن الطعام > الأذونات لتمكين الكاميرا'
-      : 'يرجى فتح إعدادات > ال��صوصية > الكاميرا لتمكين الإذن لتطبيقنا';
+      : 'يرجى فتح إعدادات > الخصوصية > الكاميرا لتمكين الإذن لتطبيقنا';
     
     console.log('عرض تعليمات الإعدادات اليدوية:', message);
     await Toast.show({ text: message, duration: 'long' });
