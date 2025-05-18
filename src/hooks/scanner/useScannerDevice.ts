@@ -10,7 +10,7 @@ export const useScannerDevice = () => {
   const { toast } = useToast();
   const { checkDeviceSupport } = useDeviceDetection();
   const { startMockScan } = useMockScanner();
-  const { startMLKitScan } = useMLKitScanner();
+  const mlkitScanner = useMLKitScanner(); // Get the full scanner object
   const { startTraditionalScan, stopTraditionalScan } = useTraditionalScanner();
 
   const startDeviceScan = async (onSuccess: (code: string) => void) => {
@@ -36,7 +36,15 @@ export const useScannerDevice = () => {
         // محاولة استخدام MLKit كاحتياطي
         try {
           console.log("[useScannerDevice] محاولة استخدام MLKit للمسح");
-          return await startMLKitScan(onSuccess);
+          // Use the startScan method from the mlkitScanner object
+          const mlkitResult = await mlkitScanner.startScan();
+          
+          // Set up a callback for MLKit scanner results
+          if (mlkitResult) {
+            onSuccess(mlkitResult.toString());
+          }
+          
+          return mlkitResult;
         } catch (mlkitError) {
           console.warn("[useScannerDevice] خطأ في استخدام MLKit:", mlkitError);
           
@@ -66,6 +74,9 @@ export const useScannerDevice = () => {
     try {
       // محاولة إيقاف المسح باستخدام خدمة الماسح الموحدة
       await barcodeScannerService.stopScan();
+      
+      // Stop the MLKit scanner
+      await mlkitScanner.stopScan();
       
       // محاولة إيقاف الماسح التقليدي كإجراء احتياطي
       await stopTraditionalScan();
