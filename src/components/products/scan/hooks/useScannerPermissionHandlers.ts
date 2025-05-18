@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
 import { Toast } from '@capacitor/toast';
-import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
 export const useScannerPermissionHandlers = (
   requestPermission: () => Promise<boolean>,
@@ -49,7 +49,7 @@ export const useScannerPermissionHandlers = (
       
       // محاولة أخيرة للتعامل مع الخطأ
       try {
-        const platform = window.Capacitor?.getPlatform();
+        const platform = Capacitor.getPlatform();
         const message = platform === 'ios' 
           ? 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا لتمكين الإذن' 
           : 'يرجى فتح إعدادات التطبيق > الأذونات لتمكين الكاميرا';
@@ -74,7 +74,7 @@ export const useScannerPermissionHandlers = (
       
       if (!opened) {
         // إرشاد المستخدم لفتح الإعدادات يدويًا
-        const platform = window.Capacitor?.getPlatform();
+        const platform = Capacitor.getPlatform();
         const message = platform === 'ios' 
           ? 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا لتمكين الإذن' 
           : 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات';
@@ -88,7 +88,7 @@ export const useScannerPermissionHandlers = (
       console.error('ScanProductContent: خطأ في فتح الإعدادات:', error);
       
       // إرشاد المستخدم لفتح الإعدادات يدويًا مع معلومات تفصيلية
-      const platformText = window.Capacitor?.getPlatform() === 'ios' 
+      const platformText = Capacitor.getPlatform() === 'ios' 
         ? 'فتح الإعدادات > الخصوصية > الكاميرا > تطبيق مخزن الطعام' 
         : 'فتح الإعدادات > التطبيقات > مخزن الطعام > الأذونات';
       
