@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
