@@ -1,3 +1,4 @@
+
 /**
  * خدمة إدارة أذونات الماسح الضوئي
  */
@@ -210,8 +211,9 @@ export class ScannerPermissionService {
           console.log('[ScannerPermissionService] محاولة فتح إعدادات التطبيق باستخدام Browser...');
           if (platformService.getPlatform() === 'android') {
             console.log('[ScannerPermissionService] فتح إعدادات أندرويد...');
+            const appId = await platformService.getAppId();
             await Browser.open({
-              url: 'package:' + (await platformService.getAppId())
+              url: 'package:' + appId
             });
             return true;
           } else {

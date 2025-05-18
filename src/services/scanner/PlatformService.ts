@@ -1,5 +1,5 @@
-
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 /**
  * خدمة تحديد منصة التشغيل والكشف عن البيئة المحيطة
@@ -82,6 +82,22 @@ class PlatformService {
     } catch (e) {
       console.error('[PlatformService] خطأ في الحصول على المنصة:', e);
       return 'web'; // افتراضي
+    }
+  }
+  
+  /**
+   * الحصول على معرف التطبيق
+   */
+  public async getAppId(): Promise<string> {
+    try {
+      if (this.isNativePlatform() && this.isPluginAvailable('App')) {
+        const appInfo = await App.getInfo();
+        return appInfo.id || 'app.lovable.foodvault.manager';
+      }
+      return 'app.lovable.foodvault.manager';
+    } catch (e) {
+      console.error('[PlatformService] خطأ في الحصول على معرف التطبيق:', e);
+      return 'app.lovable.foodvault.manager';
     }
   }
   
