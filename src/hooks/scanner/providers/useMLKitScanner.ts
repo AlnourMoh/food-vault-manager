@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { MLKitBarcodeFormatMap } from '@/types/zxing-scanner';
+import { MLKitBarcodeFormatMap, MLKitScanResult } from '@/types/zxing-scanner';
 
 export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
@@ -165,23 +165,33 @@ export const useMLKitScanner = () => {
       // بدء عملية المسح
       console.log("[useMLKitScanner] بدء عملية المسح...");
       
-      // استخدام تنسيقات باركود من كائن BarcodeScanner بدلاً من السلاسل النصية
-      const scanResult = await BarcodeScanner.startScan();
-      setIsScanning(false);
-      
-      // معالجة نتيجة المسح
-      if (scanResult && scanResult.hasContent) {
-        console.log("[useMLKitScanner] تم العثور على رمز:", scanResult.content);
+      try {
+        // استخدام startScan بدون معاملات
+        const result = await BarcodeScanner.startScan();
+        console.log("[useMLKitScanner] نتيجة المسح:", result);
         
-        // التحقق من وجود دالة استدعاء مسجلة
-        if (scanCallbackRef.current && scanResult.content) {
-          console.log("[useMLKitScanner] استدعاء دالة الاستدعاء مع الرمز:", scanResult.content);
-          scanCallbackRef.current(scanResult.content);
+        setIsScanning(false);
+        
+        // معالجة نتيجة المسح - التحقق من وجود محتوى
+        if (result && typeof result === 'object' && 'hasContent' in result && result.hasContent) {
+          if ('content' in result && typeof result.content === 'string') {
+            console.log("[useMLKitScanner] تم العثور على رمز:", result.content);
+            
+            // التحقق من وجود دالة استدعاء مسجلة
+            if (scanCallbackRef.current && result.content) {
+              console.log("[useMLKitScanner] استدعاء دالة الاستدعاء مع الرمز:", result.content);
+              scanCallbackRef.current(result.content);
+            }
+            
+            return true;
+          }
         }
         
-        return true;
-      } else {
-        console.log("[useMLKitScanner] لم يتم العثور على رموز");
+        console.log("[useMLKitScanner] لم يتم العثور على رموز أو نتيجة غير صالحة");
+        return false;
+      } catch (scanError) {
+        console.error("[useMLKitScanner] خطأ في عملية المسح:", scanError);
+        setIsScanning(false);
         return false;
       }
     } catch (error) {
