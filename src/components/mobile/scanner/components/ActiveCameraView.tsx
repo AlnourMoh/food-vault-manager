@@ -2,202 +2,247 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Toast } from '@capacitor/toast';
 
-/**
- * مكون بسيط لعرض عنصر الكاميرا بشكل واضح مع معلومات تشخيصية
- */
-export const ActiveCameraView: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [diagnostics, setDiagnostics] = useState<string[]>([]);
-  const [lastLog, setLastLog] = useState<string>('');
+interface ActiveCameraViewProps {
+  forceActivate?: boolean;
+}
 
-  // وظيفة لإضافة سجل تشخيصي
-  const addDiagnostic = (message: string) => {
+/**
+ * مكون لعرض الكاميرا بشكل مباشر مع تأكيد عرض الفيديو بشكل صحيح
+ */
+export const ActiveCameraView: React.FC<ActiveCameraViewProps> = ({ forceActivate = false }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isActive, setIsActive] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
+  
+  // وظيفة لإضافة سجل
+  const addLog = (message: string) => {
     console.log(`ActiveCameraView: ${message}`);
-    setDiagnostics(prev => [...prev, message]);
-    setLastLog(message);
+    setLogs(prev => [message, ...prev].slice(0, 5));
     
-    // عرض آخر رسالة تشخيصية للمستخدم
-    try {
-      Toast.show({
-        text: message,
-        duration: 'short'
-      });
-    } catch(e) {
-      console.error('فشل عرض Toast:', e);
+    // لا نعرض toast للمستخدم ما لم يكن هناك خطأ
+    if (message.includes('خطأ') || message.includes('فشل')) {
+      try {
+        Toast.show({
+          text: message,
+          duration: 'short'
+        }).catch(() => {});
+      } catch (e) {}
     }
   };
 
+  // تنشيط الكاميرا عند تحميل المكون
   useEffect(() => {
-    // تأكد من أن جميع عناصر الفيديو مرئية
-    const checkAndFixVideoVisibility = () => {
-      if (!containerRef.current) {
-        addDiagnostic('حاوية العرض غير موجودة');
-        return;
-      }
-      
-      // البحث عن عناصر الفيديو في الصفحة
-      const videoElements = document.querySelectorAll('video');
-      
-      if (videoElements.length === 0) {
-        addDiagnostic('لا توجد عناصر فيديو للعرض');
-        // إنشاء عنصر فيديو إذا لم يكن موجوداً
-        tryCreateVideoElement();
-        return;
-      }
-      
-      addDiagnostic(`تم العثور على ${videoElements.length} عنصر فيديو`);
-      
-      // تطبيق أنماط للتأكد من عرض الفيديو بشكل صحيح
-      videoElements.forEach((video, index) => {
-        // تحقق من خصائص الفيديو
-        const videoWidth = video.videoWidth;
-        const videoHeight = video.videoHeight;
-        const hasStream = video.srcObject !== null;
-        
-        addDiagnostic(`فيديو ${index+1}: الأبعاد=${videoWidth}x${videoHeight}, المصدر=${hasStream ? 'نعم' : 'لا'}`);
-        
-        // نقل الفيديو إلى حاوية العرض
-        if (containerRef.current && !containerRef.current.contains(video)) {
-          try {
-            // إضافة نسخة من عنصر الفيديو إلى الحاوية
-            const clonedVideo = video.cloneNode(true) as HTMLVideoElement;
-            containerRef.current.appendChild(clonedVideo);
-            
-            // تطبيق أنماط الرؤية
-            applyVisibilityStyles(clonedVideo);
-            
-            // تشغيل الفيديو إذا كان متوقفًا
-            if (clonedVideo.paused && clonedVideo.srcObject) {
-              clonedVideo.play().catch(err => {
-                addDiagnostic(`فشل في تشغيل الفيديو: ${err.message}`);
-              });
-            }
-            
-            addDiagnostic('تم نقل عنصر الفيديو إلى حاوية العرض');
-          } catch (err) {
-            addDiagnostic(`خطأ في نقل الفيديو: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
-          }
+    const activateCamera = async () => {
+      try {
+        // التحقق من وجود واجهة mediaDevices
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('واجهة برمجة الكاميرا غير متاحة في هذا المتصفح');
         }
         
-        // أيضًا تطبيق أنماط على الفيديو الأصلي
-        applyVisibilityStyles(video);
-      });
-    };
+        addLog('بدء تهيئة الكاميرا...');
 
-    // تطبيق أنماط الرؤية على عنصر الفيديو
-    const applyVisibilityStyles = (video: HTMLVideoElement) => {
-      video.style.opacity = '1';
-      video.style.visibility = 'visible';
-      video.style.display = 'block';
-      video.style.zIndex = '1';
-      video.style.position = 'absolute';
-      video.style.inset = '0';
-      video.style.width = '100%';
-      video.style.height = '100%';
-      video.style.objectFit = 'cover';
-    };
-
-    // محاولة إنشاء عنصر فيديو باستخدام mediaDevices إذا كان متاحًا
-    const tryCreateVideoElement = async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        addDiagnostic('mediaDevices غير مدعوم في هذا المتصفح');
-        return;
-      }
-
-      try {
-        addDiagnostic('محاولة إنشاء عنصر فيديو...');
-        
-        // طلب الوصول إلى الكاميرا
+        // طلب دفق الكاميرا
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         });
         
-        // إنشاء عنصر فيديو جديد
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.id = 'manual-video-stream';
-        
-        // تطبيق الأنماط
-        applyVisibilityStyles(video);
-        
-        // إضافة عنصر الفيديو إلى الحاوية
-        if (containerRef.current) {
-          containerRef.current.appendChild(video);
-          addDiagnostic('تم إنشاء وإضافة عنصر فيديو');
-          
-          // بدء تشغيل الفيديو
-          video.play().catch(err => {
-            addDiagnostic(`فشل في تشغيل الفيديو المنشأ: ${err.message}`);
-          });
-        }
-      } catch (err) {
-        addDiagnostic(`فشل في الوصول إلى الكاميرا: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
-      }
-    };
-    
-    // التحقق المباشر
-    addDiagnostic('تهيئة عرض الكاميرا');
-    checkAndFixVideoVisibility();
-    
-    // التحقق الدوري كل 2000 مللي ثانية
-    const interval = setInterval(checkAndFixVideoVisibility, 2000);
-    
-    return () => {
-      clearInterval(interval);
-      addDiagnostic('إيقاف عرض الكاميرا');
-    };
-  }, []);
+        addLog('تم الوصول للكاميرا بنجاح');
 
-  // تحقق من وجود الكاميرا عند تحميل المكون
-  useEffect(() => {
-    const checkCameraAvailability = async () => {
-      try {
-        // تحقق من وجود mediaDevices API
-        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-          addDiagnostic('واجهة mediaDevices غير مدعومة في هذا المتصفح');
-          return;
-        }
-        
-        // الحصول على قائمة الأجهزة المتاحة
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        
-        if (videoDevices.length === 0) {
-          addDiagnostic('لم يتم العثور على كاميرات متاحة');
-        } else {
-          addDiagnostic(`تم العثور على ${videoDevices.length} كاميرا`);
-          
-          // طباعة معلومات الكاميرات المتاحة
-          videoDevices.forEach((device, index) => {
-            console.log(`كاميرا ${index+1}: ${device.label || 'بدون تسمية'}`);
+        // إنشاء عنصر فيديو جديد إذا لم يكن موجودًا
+        if (!videoRef.current) {
+          const video = document.createElement('video');
+          video.id = 'camera-view-video';
+          video.autoplay = true;
+          video.playsInline = true;
+          video.muted = true;
+
+          // تطبيق الأنماط
+          Object.assign(video.style, {
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: '10',
+            backgroundColor: '#000000'
           });
+
+          videoRef.current = video;
         }
-      } catch (err) {
-        addDiagnostic(`فشل فحص الكاميرات: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
+
+        // تعيين مصدر الدفق وإضافة الفيديو للحاوية
+        videoRef.current.srcObject = stream;
+        
+        // محاولة تشغيل الفيديو
+        try {
+          await videoRef.current.play();
+          addLog('تم تشغيل عنصر الفيديو');
+        } catch (playError) {
+          addLog(`فشل تشغيل الفيديو: ${playError instanceof Error ? playError.message : 'خطأ غير معروف'}`);
+          
+          // محاولة تشغيل بعد تأخير قصير
+          setTimeout(() => {
+            videoRef.current?.play().catch(() => {});
+          }, 500);
+        }
+        
+        // إضافة الفيديو للحاوية
+        if (containerRef.current && videoRef.current) {
+          // إزالة أي فيديو سابق
+          containerRef.current.innerHTML = '';
+          containerRef.current.appendChild(videoRef.current);
+          addLog('تم إضافة عنصر الفيديو إلى DOM');
+        }
+
+        setIsActive(true);
+        setError(null);
+
+        // إعادة تنشيط الفيديو بشكل دوري
+        const keepAliveInterval = setInterval(() => {
+          if (videoRef.current?.paused && videoRef.current?.srcObject) {
+            addLog('إعادة تشغيل الفيديو المتوقف');
+            videoRef.current.play().catch(() => {});
+          }
+        }, 2000);
+
+        // تنظيف عند إلغاء التحميل
+        return () => {
+          clearInterval(keepAliveInterval);
+          
+          // إيقاف المسارات
+          stream.getTracks().forEach(track => track.stop());
+          addLog('تم إيقاف مسارات الكاميرا');
+          
+          // إزالة عنصر الفيديو
+          if (videoRef.current && videoRef.current.parentNode) {
+            videoRef.current.parentNode.removeChild(videoRef.current);
+          }
+          
+          setIsActive(false);
+        };
+      } catch (error) {
+        setIsActive(false);
+        const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
+        setError(`فشل في تنشيط الكاميرا: ${errorMessage}`);
+        addLog(`خطأ: ${errorMessage}`);
+        
+        // إظهار رسالة خطأ للمستخدم
+        try {
+          Toast.show({
+            text: `تعذر الوصول إلى الكاميرا: ${errorMessage}`,
+            duration: 'long'
+          }).catch(() => {});
+        } catch (e) {}
+        
+        // محاولة تنشيط الكاميرا مرة أخرى بعد فترة
+        if (forceActivate) {
+          setTimeout(() => {
+            addLog('محاولة إعادة تنشيط الكاميرا...');
+            activateCamera();
+          }, 3000);
+        }
       }
     };
+
+    // تنشيط الكاميرا
+    activateCamera();
     
-    checkCameraAvailability();
-  }, []);
-  
+  }, [forceActivate]);
+
   return (
     <>
+      {/* حاوية الكاميرا */}
       <div 
         ref={containerRef}
-        className="absolute inset-0 bg-black overflow-hidden"
+        className="absolute inset-0 bg-black overflow-hidden z-10"
         style={{
-          zIndex: 5,
           opacity: 1,
           visibility: 'visible'
         }}
       />
       
-      {/* عرض آخر رسالة تشخيصية في أسفل الشاشة */}
-      <div className="absolute bottom-2 left-0 right-0 bg-black/80 text-white text-xs p-1 text-center">
-        {lastLog}
+      {/* عرض رسائل الخطأ */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+          <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-lg max-w-xs text-center">
+            <p>{error}</p>
+            <button 
+              className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={() => {
+                setError(null);
+                setTimeout(() => activateCamera(), 500);
+              }}
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* مؤشر الحالة */}
+      <div className="absolute bottom-2 left-0 right-0 flex justify-center z-20">
+        <div className={`text-xs px-2 py-1 rounded-full ${isActive ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white'}`}>
+          {isActive ? 'الكاميرا نشطة' : 'جاري تنشيط الكاميرا...'}
+        </div>
       </div>
+      
+      {/* تسجيل التشخيص */}
+      {logs.length > 0 && (
+        <div className="absolute top-2 left-0 right-0 z-30 flex justify-center">
+          <div className="bg-black/50 backdrop-blur-sm text-white text-xs p-1 rounded max-w-xs truncate">
+            {logs[0]}
+          </div>
+        </div>
+      )}
     </>
   );
+  
+  // وظيفة مساعدة لتنشيط الكاميرا
+  function activateCamera() {
+    // محاولة إعادة تنشيط الكاميرا
+    setError(null);
+    setIsActive(false);
+    
+    // فحص الكاميرات المتاحة
+    navigator.mediaDevices.enumerateDevices()
+      .then(devices => {
+        const cameras = devices.filter(device => device.kind === 'videoinput');
+        addLog(`تم العثور على ${cameras.length} كاميرا`);
+        
+        // إعادة تهيئة الكاميرا
+        navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        })
+        .then(stream => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play()
+              .then(() => {
+                setIsActive(true);
+                addLog('تم إعادة تنشيط الكاميرا بنجاح');
+              })
+              .catch(err => {
+                addLog(`فشل تشغيل الفيديو: ${err.message}`);
+              });
+          }
+        })
+        .catch(err => {
+          setError(`فشل في إعادة تنشيط الكاميرا: ${err.message}`);
+        });
+      })
+      .catch(err => {
+        setError(`فشل في تعداد أجهزة الكاميرا: ${err.message}`);
+      });
+  }
 };

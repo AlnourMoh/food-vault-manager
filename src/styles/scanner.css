@@ -102,13 +102,30 @@
   display: block !important;
 }
 
-/* تعديلات لإصلاح مشكلة الشاشة السوداء */
+/* تعديلات جذرية لإصلاح مشكلة الشاشة السوداء */
 video {
   opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
   z-index: 999 !important;
   position: relative !important;
+}
+
+/* إضافة قواعد !important إضافية لمنع الأنماط الأخرى من التأثير */
+video.scanner-video,
+#camera-view-video,
+video#camera-view-video {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  z-index: 999 !important;
+  background: #000000 !important;
 }
 
 /* إضافة أنماط جديدة لتحريك خط المسح */
@@ -137,35 +154,42 @@ video {
   z-index: 10 !important;
 }
 
-/* تضمن ظهور فيديو الكاميرا */
-#barcode-scanner-view video,
-.scanner-container video,
-video.scanner-video {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: block !important;
-  z-index: 5 !important;
-}
-
-/* ضمان ظهور محتوى الحوار */
+/* تضمن ظهور محتوى الحوار */
 [role="dialog"] > div {
   max-height: 100vh !important;
   height: 100vh !important;
   overflow: visible !important;
 }
 
-/* الحفاظ على رؤية محتوى الماسح */
-.scanner-view-container {
-  min-height: 80vh !important;
-  display: flex !important;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.8);
+/* جعل الفيديو يعمل بشكل صحيح على نظام iOS */
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+/* ضمان عدم تداخل CSS أخرى */
+.camera-active {
+  position: relative;
+  background-color: #000;
+}
+
+.camera-active video {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  z-index: 50 !important;
+}
+
+/* تصحيح للشاشة السوداء - توسيع التغطية */
+body.scanner-active {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
