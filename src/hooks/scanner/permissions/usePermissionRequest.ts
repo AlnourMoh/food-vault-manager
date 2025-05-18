@@ -1,13 +1,47 @@
 
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
 import { usePlatformPermissions } from './usePlatformPermissions';
 import { Capacitor } from '@capacitor/core';
+import { Toast } from '@capacitor/toast';
+import { App } from '@capacitor/app';
 
 export const usePermissionRequest = () => {
   const { toast } = useToast();
   const { handleIosPermissions, handleAndroidPermissions, handleWebPermissions } = usePlatformPermissions();
+  
+  // دالة لفتح إعدادات التطبيق
+  const openAppSettings = async () => {
+    try {
+      console.log('[usePermissionRequest] محاولة فتح إعدادات التطبيق...');
+      
+      if (Capacitor.isNativePlatform()) {
+        const platform = Capacitor.getPlatform();
+        
+        // استخدام واجهة برمجة التطبيق لفتح الإعدادات
+        if (platform === 'ios' || platform === 'android') {
+          await App.openUrl({
+            url: platform === 'ios' 
+              ? 'app-settings:' 
+              : 'package:app.lovable.b3b6b969583d416c9d8b788fa375abca'
+          });
+          return true;
+        }
+      }
+      
+      // عرض رسالة للمستخدم عن كيفية الوصول للإعدادات يدوياً
+      await Toast.show({
+        text: 'يرجى فتح إعدادات جهازك وتمكين إذن الكاميرا لهذا التطبيق',
+        duration: 'long'
+      });
+      
+      return false;
+    } catch (error) {
+      console.error('[usePermissionRequest] خطأ في فتح الإعدادات:', error);
+      return false;
+    }
+  };
 
   const requestPermission = async (force = true) => {
     try {
@@ -23,72 +57,148 @@ export const usePermissionRequest = () => {
       }
 
       // طريقة 1: استخدام BarcodeScanner
-      if (Capacitor.isPluginAvailable('BarcodeScanner')) {
-        console.log(`[usePermissionRequest] محاولة طلب إذن BarcodeScanner...`);
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log(`[usePermissionRequest] محاولة طلب إذن MLKitBarcodeScanner...`);
         
-        // طلب الإذن من المستخدم
-        const permissionStatus = await BarcodeScanner.checkPermission({ force: true });
-        console.log('[usePermissionRequest] نتيجة طلب إذن BarcodeScanner:', permissionStatus);
-        
-        if (permissionStatus.granted) {
-          console.log('[usePermissionRequest] تم منح الإذن!');
-          return true;
+        try {
+          // فحص الأذونات الحالية أولاً
+          const currentStatus = await BarcodeScanner.checkPermissions();
+          console.log('[usePermissionRequest] حالة أذونات MLKit الحالية:', currentStatus);
+          
+          if (currentStatus.camera === 'granted') {
+            console.log('[usePermissionRequest] إذن MLKit ممنوح بالفعل');
+            return true;
+          }
+          
+          // عرض رسالة توضيحية للمستخدم قبل طلب الإذن
+          await Toast.show({
+            text: 'التطبيق يحتاج إلى إذن الكاميرا للقيام بعمليات المسح الضوئي',
+            duration: 'short'
+          }).catch(() => {});
+          
+          // طلب الإذن من المستخدم (بتفعيل force)
+          const permissionStatus = await BarcodeScanner.requestPermissions({ force });
+          console.log('[usePermissionRequest] نتيجة طلب إذن MLKit:', permissionStatus);
+          
+          if (permissionStatus.camera === 'granted') {
+            console.log('[usePermissionRequest] تم منح إذن MLKit!');
+            
+            // عرض رسالة نجاح
+            await Toast.show({
+              text: 'تم منح إذن الكاميرا بنجاح!',
+              duration: 'short'
+            }).catch(() => {});
+            
+            return true;
+          }
+          
+          // محاولة أخيرة لعرض حوار طلب الإذن مرة أخرى
+          if (permissionStatus.camera === 'prompt') {
+            console.log('[usePermissionRequest] إعادة محاولة طلب الإذن مع force=true...');
+            
+            // محاولة طلب الإذن مع إجبار ظهور الحوار
+            const retryStatus = await BarcodeScanner.requestPermissions({ force: true });
+            
+            if (retryStatus.camera === 'granted') {
+              console.log('[usePermissionRequest] تم منح إذن MLKit في المحاولة الثانية!');
+              
+              await Toast.show({
+                text: 'تم منح إذن الكاميرا بنجاح!',
+                duration: 'short'
+              }).catch(() => {});
+              
+              return true;
+            }
+          }
+        } catch (mlkitError) {
+          console.error('[usePermissionRequest] خطأ في طلب أذونات MLKit:', mlkitError);
+          // استمرار للطريقة التالية
         }
-        
-        // طريقة بديلة: استخدام واجهة الإعدادات
-        console.log('[usePermissionRequest] تجربة الطرق البديلة حسب المنصة...');
-        
-        if (platform === 'ios') {
-          toast({
-            title: "الإذن مطلوب",
-            description: "يرجى تفعيل إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
-            variant: "destructive"
-          });
-          return await handleIosPermissions();
-        } else if (platform === 'android') {
-          toast({
-            title: "الإذن مطلوب",
-            description: "يرجى تفعيل إذن الكاميرا من إعدادات جهازك لاستخدام الماسح الضوئي",
-            variant: "destructive"
-          });
-          return await handleAndroidPermissions();
-        }
-      } 
+      }
       
       // طريقة 2: استخدام ملحق Camera الأساسي
       if (Capacitor.isPluginAvailable('Camera')) {
         console.log('[usePermissionRequest] استخدام ملحق الكاميرا...');
         
-        const cameraResult = await Camera.requestPermissions({
-          permissions: ['camera']
-        });
-        console.log('[usePermissionRequest] نتيجة طلب إذن الكاميرا:', cameraResult);
-        
-        if (cameraResult.camera === 'granted') {
-          console.log('[usePermissionRequest] تم منح إذن الكاميرا!');
-          return true;
+        try {
+          // فحص الأذونات الحالية أولاً
+          const currentStatus = await Camera.checkPermissions();
+          console.log('[usePermissionRequest] حالة أذونات Camera الحالية:', currentStatus);
+          
+          if (currentStatus.camera === 'granted') {
+            console.log('[usePermissionRequest] إذن Camera ممنوح بالفعل');
+            return true;
+          }
+          
+          // عرض رسالة توضيحية للمستخدم
+          await Toast.show({
+            text: 'التطبيق يحتاج إلى إذن الكاميرا للقيام بعمليات المسح الضوئي',
+            duration: 'short'
+          }).catch(() => {});
+          
+          // طلب الإذن
+          const cameraResult = await Camera.requestPermissions({
+            permissions: ['camera']
+          });
+          console.log('[usePermissionRequest] نتيجة طلب إذن الكاميرا:', cameraResult);
+          
+          if (cameraResult.camera === 'granted') {
+            console.log('[usePermissionRequest] تم منح إذن الكاميرا!');
+            
+            // عرض رسالة نجاح
+            await Toast.show({
+              text: 'تم منح إذن الكاميرا بنجاح!',
+              duration: 'short'
+            }).catch(() => {});
+            
+            return true;
+          } else if (cameraResult.camera === 'denied') {
+            console.log('[usePermissionRequest] تم رفض إذن الكاميرا، توجيه المستخدم لفتح الإعدادات');
+            
+            // إظهار رسالة توجيهية للمستخدم
+            await Toast.show({
+              text: 'يرجى تمكين إذن الكاميرا من إعدادات جهازك للاستمرار',
+              duration: 'long'
+            }).catch(() => {});
+            
+            // استدعاء دالة فتح الإعدادات بعد تأخير قصير
+            setTimeout(async () => {
+              await openAppSettings();
+            }, 2000);
+            
+            return false;
+          }
+        } catch (cameraError) {
+          console.error('[usePermissionRequest] خطأ في طلب أذونات الكاميرا:', cameraError);
         }
-        
-        if (platform === 'ios') {
-          return await handleIosPermissions();
-        } else if (platform === 'android') {
-          return await handleAndroidPermissions();
-        }
-      } 
+      }
+      
+      // طريقة خاصة بكل منصة
+      if (platform === 'ios') {
+        return await handleIosPermissions();
+      } else if (platform === 'android') {
+        return await handleAndroidPermissions();
+      }
       
       // طريقة 3: بيئة الويب - تمكين الوصول إلى الكاميرا في بيئة الويب
       console.log('[usePermissionRequest] استخدام API الويب للكاميرا');
       return await handleWebPermissions();
     } catch (error) {
       console.error('[usePermissionRequest] خطأ في طلب الإذن:', error);
+      
+      // عرض رسالة خطأ للمستخدم
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء طلب إذن الكاميرا",
         variant: "destructive"
       });
+      
       return false;
     }
   };
 
-  return { requestPermission };
+  return { 
+    requestPermission,
+    openAppSettings 
+  };
 };

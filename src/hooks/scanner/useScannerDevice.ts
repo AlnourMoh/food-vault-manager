@@ -6,6 +6,7 @@ import { useMLKitScanner } from './providers/useMLKitScanner';
 import { useTraditionalScanner } from './providers/useTraditionalScanner';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
+import { usePermissionRequest } from './permissions/usePermissionRequest';
 
 export const useScannerDevice = () => {
   const { toast } = useToast();
@@ -13,10 +14,42 @@ export const useScannerDevice = () => {
   const { startMockScan } = useMockScanner();
   const mlkitScanner = useMLKitScanner();
   const { startTraditionalScan, stopTraditionalScan } = useTraditionalScanner();
+  const { requestPermission } = usePermissionRequest();
+
+  // دالة خاصة لفحص والحصول على أذونات الكاميرا قبل بدء المسح
+  const ensureCameraPermission = async () => {
+    try {
+      console.log("[useScannerDevice] التحقق من إذن الكاميرا قبل البدء...");
+      
+      // طلب الإذن بشكل واضح ومباشر للمستخدم
+      const permissionGranted = await requestPermission(true);
+      
+      // تسجيل نتيجة الطلب
+      console.log(`[useScannerDevice] نتيجة طلب إذن الكاميرا: ${permissionGranted ? 'تم منح الإذن' : 'تم رفض الإذن'}`);
+      
+      // إظهار رسالة للمستخدم بناءً على النتيجة
+      if (permissionGranted) {
+        await Toast.show({
+          text: 'تم منح إذن الكاميرا بنجاح! جاري بدء المسح...',
+          duration: 'short'
+        }).catch(() => {});
+      } else {
+        await Toast.show({
+          text: 'تم رفض إذن الكاميرا، لن يعمل الماسح الضوئي',
+          duration: 'long'
+        }).catch(() => {});
+      }
+      
+      return permissionGranted;
+    } catch (error) {
+      console.error("[useScannerDevice] خطأ أثناء طلب إذن الكاميرا:", error);
+      return false;
+    }
+  };
 
   const startDeviceScan = async (onSuccess: (code: string) => void) => {
     try {
-      console.log("[useScannerDevice] بدء عملية المسح فوراً");
+      console.log("[useScannerDevice] بدء عملية المسح");
       
       // تحقق من المنصة
       const isNative = Capacitor.isNativePlatform();
@@ -29,14 +62,32 @@ export const useScannerDevice = () => {
         platform: Capacitor.getPlatform()
       });
       
-      // تهيئة الكاميرا أولاً قبل المسح إذا كنا في منصة أصلية
+      // التحقق من أذونات الكاميرا أولاً
+      if (isNative) {
+        const hasPermission = await ensureCameraPermission();
+        if (!hasPermission) {
+          console.warn("[useScannerDevice] لم يتم منح إذن الكاميرا، التحويل إلى وضع المحاكاة");
+          startMockScan(onSuccess);
+          return false;
+        }
+      }
+      
+      // تهيئة الكاميرا إذا كنا في منصة أصلية
       if (isNative && hasBarcodePlugin) {
         try {
           // تهيئة كاميرا MLKit
-          await mlkitScanner.initializeCamera();
+          console.log("[useScannerDevice] محاولة تهيئة كاميرا MLKit");
+          const initialized = await mlkitScanner.initializeCamera();
+          
+          if (!initialized) {
+            console.warn("[useScannerDevice] فشل في تهيئة كاميرا MLKit");
+            throw new Error("فشل في تهيئة الكاميرا");
+          }
+          
+          console.log("[useScannerDevice] تم تهيئة الكاميرا بنجاح");
           
           // تسجيل معالج للمسح
-          mlkitScanner.setOnScanCallback((code) => {
+          mlkitScanner.registerScanCallback((code) => {
             console.log("[useScannerDevice] تم استلام رمز من MLKit:", code);
             onSuccess(code);
           });
