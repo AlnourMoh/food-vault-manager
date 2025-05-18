@@ -69,7 +69,12 @@ const SimpleBarcodeScanner: React.FC<SimpleBarcodeScannerProps> = ({
     <ScannerLayout 
       scannerState={scannerState}
       startScan={startScan}
-      stopScan={stopScan}
+      stopScan={() => {
+        // Wrapper function to convert Promise<boolean> to Promise<void>
+        stopScan().catch(error => {
+          console.error('Error stopping scan:', error);
+        });
+      }}
       onClose={onClose}
     />
   );
