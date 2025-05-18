@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
-import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 
 // Import the augmented type definitions
