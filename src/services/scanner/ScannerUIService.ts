@@ -46,14 +46,7 @@ class ScannerUIService {
       document.body.style.overflow = 'hidden';
       
       // تأكد من أن عناصر الكاميرا مرئية
-      const videoElements = document.querySelectorAll('video');
-      videoElements.forEach(video => {
-        if (video instanceof HTMLVideoElement) {
-          video.style.opacity = '1';
-          video.style.visibility = 'visible';
-          video.style.display = 'block';
-        }
-      });
+      this.updateVideoVisibility(true);
     } catch (error) {
       console.error('[ScannerUIService] خطأ في إعداد واجهة المستخدم:', error);
     }
@@ -91,6 +84,9 @@ class ScannerUIService {
       
       // مسح الأنماط المحفوظة
       this.originalStyles.clear();
+      
+      // تحديث رؤية الفيديو
+      this.updateVideoVisibility(false);
     } catch (error) {
       console.error('[ScannerUIService] خطأ في استعادة واجهة المستخدم:', error);
       // مسح الأنماط المحفوظة في حالة الخطأ
@@ -100,7 +96,7 @@ class ScannerUIService {
   
   /**
    * تحديث رؤية عناصر الفيديو
-   * هذه الوظيفة الجديدة تساعد في حل مشكلة الشاشة السوداء
+   * هذه الوظيفة تساعد في حل مشكلة الشاشة السوداء
    */
   public updateVideoVisibility(visible: boolean): void {
     try {
@@ -108,23 +104,120 @@ class ScannerUIService {
       const videoElements = document.querySelectorAll('video');
       console.log(`[ScannerUIService] تحديث رؤية ${videoElements.length} عناصر فيديو، الحالة: ${visible ? 'مرئي' : 'مخفي'}`);
       
-      videoElements.forEach(video => {
+      videoElements.forEach((video, index) => {
         if (video instanceof HTMLVideoElement) {
-          // تطبيق أنماط الرؤية
-          video.style.opacity = visible ? '1' : '0';
-          video.style.visibility = visible ? 'visible' : 'hidden';
-          video.style.display = visible ? 'block' : 'none';
+          // إضافة فئة للتعرف على عناصر الفيديو الخاصة بالماسح
+          video.classList.add('scanner-video');
           
-          if (visible && video.paused && video.srcObject) {
-            // محاولة تشغيل الفيديو إذا كان متوقفاً
-            video.play().catch(err => {
-              console.warn('[ScannerUIService] تعذر تشغيل الفيديو:', err);
-            });
+          // تطبيق أنماط الرؤية المحسنة
+          video.style.opacity = '1';
+          video.style.visibility = 'visible';
+          video.style.display = 'block';
+          video.style.zIndex = '999';
+          
+          // إضافة أنماط إضافية لتجاوز أي مشاكل في CSS
+          video.style.position = 'relative';
+          if (visible) {
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.objectFit = 'cover';
+            
+            // محاولة لتشغيل الفيديو إذا كان متوقفاً
+            if (video.paused && video.srcObject) {
+              console.log(`[ScannerUIService] محاولة تشغيل فيديو #${index}`);
+              video.play().catch(err => {
+                console.warn('[ScannerUIService] تعذر تشغيل الفيديو:', err);
+              });
+            }
           }
         }
       });
+      
+      // إنشاء عنصر حاوية للفيديو إذا لم يكن موجوداً
+      if (visible && videoElements.length > 0) {
+        let containerElement = document.getElementById('barcode-scanner-view');
+        if (!containerElement) {
+          containerElement = document.createElement('div');
+          containerElement.id = 'barcode-scanner-view';
+          containerElement.style.position = 'relative';
+          containerElement.style.width = '100%';
+          containerElement.style.height = '100%';
+          containerElement.style.overflow = 'hidden';
+          containerElement.style.zIndex = '10';
+          document.body.appendChild(containerElement);
+        }
+        
+        // نقل الفيديو الأول إلى داخل الحاوية إذا لم يكن موجوداً بداخلها
+        const firstVideo = videoElements[0] as HTMLVideoElement;
+        if (!containerElement.contains(firstVideo)) {
+          const videoClone = firstVideo.cloneNode(true) as HTMLVideoElement;
+          videoClone.style.position = 'absolute';
+          videoClone.style.left = '0';
+          videoClone.style.top = '0';
+          videoClone.style.width = '100%';
+          videoClone.style.height = '100%';
+          videoClone.style.objectFit = 'cover';
+          videoClone.style.zIndex = '5';
+          containerElement.appendChild(videoClone);
+          
+          console.log('[ScannerUIService] تم نقل الفيديو إلى حاوية العرض');
+        }
+      }
     } catch (error) {
       console.error('[ScannerUIService] خطأ في تحديث رؤية الفيديو:', error);
+    }
+  }
+  
+  /**
+   * إنشاء عنصر فيديو مخصص للماسح
+   * يمكن استخدام هذه الطريقة كحل احتياطي
+   */
+  public createScannerVideo(): HTMLVideoElement | null {
+    try {
+      // إنشاء عنصر فيديو جديد
+      const video = document.createElement('video');
+      video.id = 'scanner-video-' + Date.now();
+      video.classList.add('scanner-video');
+      
+      // تعيين الخصائص الضرورية
+      video.autoplay = true;
+      video.playsInline = true;
+      video.muted = true;
+      
+      // تطبيق الأنماط
+      video.style.position = 'absolute';
+      video.style.left = '0';
+      video.style.top = '0';
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'cover';
+      video.style.opacity = '1';
+      video.style.visibility = 'visible';
+      video.style.display = 'block';
+      video.style.zIndex = '999';
+      
+      // إنشاء حاوية للفيديو إذا لم تكن موجودة
+      let containerElement = document.getElementById('barcode-scanner-view');
+      if (!containerElement) {
+        containerElement = document.createElement('div');
+        containerElement.id = 'barcode-scanner-view';
+        containerElement.style.position = 'relative';
+        containerElement.style.width = '100%';
+        containerElement.style.height = '100%';
+        containerElement.style.overflow = 'hidden';
+        containerElement.style.zIndex = '10';
+        document.body.appendChild(containerElement);
+      }
+      
+      // إضافة الفيديو إلى الحاوية
+      containerElement.appendChild(video);
+      
+      console.log('[ScannerUIService] تم إنشاء عنصر فيديو جديد للماسح');
+      
+      return video;
+    } catch (error) {
+      console.error('[ScannerUIService] خطأ في إنشاء عنصر فيديو:', error);
+      return null;
     }
   }
 }

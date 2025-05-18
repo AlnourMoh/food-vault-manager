@@ -1,3 +1,4 @@
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -6,8 +7,7 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
-  prefix: "",
+  ],
   theme: {
     container: {
       center: true,
@@ -59,23 +59,23 @@ module.exports = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
+          from: { height: 0 },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          to: { height: 0 },
         },
-		    'scanner-line': {
-          '0%': { top: '0%' },
-          '50%': { top: '100%' },
-          '100%': { top: '0%' }
-        }
+        scanner: {
+          '0%': { top: '10%' },
+          '50%': { top: '90%' },
+          '100%': { top: '10%' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-		    'scanner-line': 'scanner-line 2s ease-in-out infinite'
+        "scanner-line": "scanner 2s ease-in-out infinite",
       },
     },
   },

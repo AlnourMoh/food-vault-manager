@@ -4,9 +4,11 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0, 0, 0, 0.8); /* جعل الخلفية شفافة قليلاً */
-  display: flex;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex !important;
   flex-direction: column;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* أنماط إطار المسح */
@@ -95,78 +97,9 @@
   width: 100%;
   max-height: 70vh;
   object-fit: cover;
-  opacity: 1 !important; /* التأكد من أن الفيديو مرئي */
+  opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
-}
-
-/* رسالة عدم توفر الماسح في المتصفح */
-.browser-view-container {
-  padding: 24px;
-  background-color: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-radius: 8px;
-  text-align: center;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.browser-view-icon {
-  color: #e53e3e;
-  margin-bottom: 16px;
-}
-
-.browser-view-title {
-  color: #e53e3e;
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-.browser-view-message {
-  color: #2d3748;
-  margin-bottom: 20px;
-  line-height: 1.6;
-}
-
-.browser-view-button {
-  width: 100%;
-  background-color: #3182ce;
-  color: white;
-  padding: 12px;
-  border-radius: 6px;
-  border: none;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.browser-view-button:hover {
-  background-color: #2c5282;
-}
-
-/* ضمان ظهور عناصر الماسح */
-body.zxing-scanning .scanner-container {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* ضمان ظهور محتوى الحوار */
-[role="dialog"] > div {
-  max-height: 100vh !important;
-  height: 100vh !important;
-  overflow: visible !important;
-}
-
-/* الحفاظ على رؤية محتوى الماسح */
-.scanner-view-container {
-  min-height: 80vh !important;
-  display: flex !important;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.8); /* خلفية شفافة قليلاً */
 }
 
 /* تعديلات لإصلاح مشكلة الشاشة السوداء */
@@ -176,26 +109,6 @@ video {
   display: block !important;
   z-index: 999 !important;
   position: relative !important;
-}
-
-/* إضافة أنماط للعناصر المخصصة للمسح */
-#barcode-scanner-view {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-#barcode-scanner-view video {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  top: 0;
-  left: 0;
-  opacity: 1 !important;
-  z-index: 5;
 }
 
 /* إضافة أنماط جديدة لتحريك خط المسح */
@@ -213,4 +126,46 @@ video {
 
 .animate-scanner-line {
   animation: scanner-line 2s ease-in-out infinite;
+}
+
+/* إضافة أنماط جديدة تضمن رؤية الكاميرا */
+#barcode-scanner-view {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+/* تضمن ظهور فيديو الكاميرا */
+#barcode-scanner-view video,
+.scanner-container video,
+video.scanner-video {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  z-index: 5 !important;
+}
+
+/* ضمان ظهور محتوى الحوار */
+[role="dialog"] > div {
+  max-height: 100vh !important;
+  height: 100vh !important;
+  overflow: visible !important;
+}
+
+/* الحفاظ على رؤية محتوى الماسح */
+.scanner-view-container {
+  min-height: 80vh !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
 }

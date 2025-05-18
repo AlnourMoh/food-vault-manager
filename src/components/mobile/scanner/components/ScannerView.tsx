@@ -1,13 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScannerFrame } from './ScannerFrame';
-import { ScannerControls } from './ScannerControls';
-import { ScannerStatusIndicator } from './ScannerStatusIndicator';
-import { X, RefreshCw, Loader2, Camera } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { X, RefreshCw, Camera } from 'lucide-react';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
+import { ActiveCameraView } from './ActiveCameraView';
 import { scannerUIService } from '@/services/scanner/ScannerUIService';
 
 interface ScannerViewProps {
@@ -40,9 +37,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       isNative: Capacitor.isNativePlatform(),
       isActive,
       cameraActive,
-      hasError,
-      barcodeScannerAvailable: Capacitor.isPluginAvailable('BarcodeScanner'),
-      mlkitAvailable: Capacitor.isPluginAvailable('MLKitBarcodeScanner')
+      hasError
     });
 
     // تأكد من أن عناصر الفيديو مرئية
@@ -61,21 +56,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
     if (cameraActive && !isActive && !hasError) {
       console.log('ScannerView: الكاميرا جاهزة، بدء المسح تلقائيًا');
       
-      // عرض رسالة للمستخدم
-      Toast.show({
-        text: 'الكاميرا جاهزة. جاري بدء المسح...',
-        duration: 'short'
-      }).catch(() => {});
-      
       // بدء المسح
       onStartScan().catch(error => {
         console.error('ScannerView: خطأ في بدء المسح التلقائي:', error);
-        
-        // عرض رسالة خطأ
-        Toast.show({
-          text: 'حدث خطأ في بدء المسح. حاول مرة أخرى',
-          duration: 'short'
-        }).catch(() => {});
       });
     }
   }, [cameraActive, isActive, hasError, onStartScan]);
@@ -116,7 +99,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
       <div className="scanner-view-container relative h-full w-full flex flex-col items-center justify-center bg-black/90">
         <div className="text-white text-center p-4">
           <div className="mb-6 flex flex-col items-center">
-            <Spinner size="lg" className="border-white border-t-transparent mb-6" />
+            <div className="animate-spin h-10 w-10 border-4 border-white border-t-transparent rounded-full mb-6"></div>
             <h3 className="text-xl font-semibold mb-3">جاري تفعيل الكاميرا</h3>
             <p className="text-sm text-gray-300 mb-2">يرجى الانتظار بضع لحظات...</p>
             <p className="text-xs text-gray-400">تأكد من منح التطبيق صلاحيات الوصول للكاميرا</p>
@@ -136,18 +119,14 @@ export const ScannerView: React.FC<ScannerViewProps> = ({
 
   // عرض الماسح النشط - تم تبسيطه لتجنب مشكلة الشاشة السوداء
   return (
-    <div className="scanner-view-container relative h-full w-full">
-      {/* منطقة الكاميرا - تم تبسيطها */}
-      <div id="barcode-scanner-view" className="absolute inset-0 overflow-hidden">
-        {/* هنا سيتم إضافة عنصر فيديو الكاميرا تلقائياً */}
-        {/* تأكد من أن المنطقة لها عرض وارتفاع كامل */}
-        <div className="w-full h-full bg-transparent"></div>
-      </div>
+    <div className="scanner-container relative h-full w-full bg-black">
+      {/* عرض الكاميرا بشكل مباشر */}
+      <ActiveCameraView />
       
       {/* إطار المسح */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4/5 max-w-xs aspect-square border-2 border-white rounded-lg overflow-hidden z-10">
         {/* خط المسح المتحرك */}
-        <div className="absolute left-0 w-full h-0.5 bg-red-500 animate-scanner-line"></div>
+        <div className="absolute left-0 w-full h-0.5 bg-green-500 animate-scanner-line"></div>
         
         {/* زوايا الإطار */}
         <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white"></div>
