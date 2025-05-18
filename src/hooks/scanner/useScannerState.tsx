@@ -5,10 +5,10 @@ import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 import '@/types/barcode-scanner-augmentation.d.ts';
 
-export const useScannerState = () => {
+export const useScannerState = (autoStart = false) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
+  const [isScanning, setIsScanning] = useState(autoStart);
   const { toast } = useToast();
 
   // إنهاء عملية المسح وتحرير الموارد
