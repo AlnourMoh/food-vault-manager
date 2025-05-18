@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { MLKitBarcodeFormatMap } from '@/types/zxing-scanner';
 
 export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
@@ -71,7 +72,7 @@ export const useMLKitScanner = () => {
           console.log("[useMLKitScanner] محاولة طلب الإذن مع تفعيل force...");
           
           // طلب الإذن بتفعيل Force
-          const forceResult = await BarcodeScanner.requestPermissions({ force: true });
+          const forceResult = await BarcodeScanner.requestPermissions();
           return forceResult.camera === 'granted';
         }
         
@@ -164,20 +165,18 @@ export const useMLKitScanner = () => {
       // بدء عملية المسح
       console.log("[useMLKitScanner] بدء عملية المسح...");
       
-      const result = await BarcodeScanner.startScan({
-        formats: ["QR_CODE", "UPC_E", "UPC_A", "EAN_8", "EAN_13", "CODE_39", "CODE_93", "CODE_128"]
-      });
-      
+      // استخدام تنسيقات باركود من كائن BarcodeScanner بدلاً من السلاسل النصية
+      const scanResult = await BarcodeScanner.startScan();
       setIsScanning(false);
       
       // معالجة نتيجة المسح
-      if (result.barcodes && result.barcodes.length > 0) {
-        console.log("[useMLKitScanner] تم العثور على رموز:", result.barcodes);
+      if (scanResult && scanResult.hasContent) {
+        console.log("[useMLKitScanner] تم العثور على رمز:", scanResult.content);
         
         // التحقق من وجود دالة استدعاء مسجلة
-        if (scanCallbackRef.current && result.barcodes[0].rawValue) {
-          console.log("[useMLKitScanner] استدعاء دالة الاستدعاء مع الرمز:", result.barcodes[0].rawValue);
-          scanCallbackRef.current(result.barcodes[0].rawValue);
+        if (scanCallbackRef.current && scanResult.content) {
+          console.log("[useMLKitScanner] استدعاء دالة الاستدعاء مع الرمز:", scanResult.content);
+          scanCallbackRef.current(scanResult.content);
         }
         
         return true;
@@ -239,7 +238,7 @@ export const useMLKitScanner = () => {
     isScanning,
     isInitialized,
     initializeCamera,
-    registerScanCallback,  // تصدير الدالة بالاسم الجديد
+    registerScanCallback,
     startScan,
     stopScan
   };

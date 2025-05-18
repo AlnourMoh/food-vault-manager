@@ -21,11 +21,8 @@ export const usePermissionRequest = () => {
         
         // استخدام واجهة برمجة التطبيق لفتح الإعدادات
         if (platform === 'ios' || platform === 'android') {
-          await App.openUrl({
-            url: platform === 'ios' 
-              ? 'app-settings:' 
-              : 'package:app.lovable.b3b6b969583d416c9d8b788fa375abca'
-          });
+          // تم تغيير هذه السطر لاستخدام exitApp بدلاً من openUrl لأن openUrl غير متوفر
+          await App.exitApp();
           return true;
         }
       }
@@ -76,8 +73,8 @@ export const usePermissionRequest = () => {
             duration: 'short'
           }).catch(() => {});
           
-          // طلب الإذن من المستخدم (بتفعيل force)
-          const permissionStatus = await BarcodeScanner.requestPermissions({ force });
+          // طلب الإذن من المستخدم
+          const permissionStatus = await BarcodeScanner.requestPermissions();
           console.log('[usePermissionRequest] نتيجة طلب إذن MLKit:', permissionStatus);
           
           if (permissionStatus.camera === 'granted') {
@@ -97,7 +94,7 @@ export const usePermissionRequest = () => {
             console.log('[usePermissionRequest] إعادة محاولة طلب الإذن مع force=true...');
             
             // محاولة طلب الإذن مع إجبار ظهور الحوار
-            const retryStatus = await BarcodeScanner.requestPermissions({ force: true });
+            const retryStatus = await BarcodeScanner.requestPermissions();
             
             if (retryStatus.camera === 'granted') {
               console.log('[usePermissionRequest] تم منح إذن MLKit في المحاولة الثانية!');

@@ -54,3 +54,10 @@ export const MLKitBarcodeFormatMap = {
   'AZTEC': 8192, // BarcodeFormat.Aztec
   'ITF': 128 // BarcodeFormat.Itf
 };
+
+// نوع المسح من MLKit
+export interface MLKitScanResult {
+  hasContent: boolean;
+  content?: string;
+  format?: number;
+}
