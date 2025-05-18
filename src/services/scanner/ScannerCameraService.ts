@@ -60,9 +60,9 @@ class ScannerCameraService {
       // تحقق من توفر الملحق وإيقاف المسح
       if (window.Capacitor?.isPluginAvailable('MLKitBarcodeScanner')) {
         // إيقاف تشغيل الفلاش إن وجد
-        await BarcodeScanner.enableTorch(false).catch(() => {});
+        await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
         
-        // Fixed: call stopScan without arguments
+        // تصحيح: استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
       }
       
@@ -93,7 +93,7 @@ class ScannerCameraService {
         const isTorchEnabled = await BarcodeScanner.isTorchEnabled();
         
         // تبديل الفلاش
-        await BarcodeScanner.enableTorch(!isTorchEnabled.enabled);
+        await BarcodeScanner.enableTorch({ enable: !isTorchEnabled.enabled });
         
         return true;
       }

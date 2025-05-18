@@ -120,9 +120,9 @@ class ScannerOperationsService {
       
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         // إيقاف تشغيل الفلاش أولاً
-        await BarcodeScanner.enableTorch(false).catch(() => {});
+        await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
         
-        // Fixed: call stopScan without arguments
+        // تصحيح: استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
       }
       

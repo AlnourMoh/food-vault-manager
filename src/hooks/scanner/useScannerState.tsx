@@ -18,9 +18,9 @@ export const useScannerState = (autoStart = false) => {
     // محاولة إيقاف المسح إذا كان الملحق متاحًا
     if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
       try {
-        await BarcodeScanner.enableTorch(false).catch(() => {});
+        await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
         
-        // Fixed: call stopScan without arguments
+        // تصحيح: استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
       } catch (error) {
         console.error('[useScannerState] خطأ في إغلاق الماسح:', error);

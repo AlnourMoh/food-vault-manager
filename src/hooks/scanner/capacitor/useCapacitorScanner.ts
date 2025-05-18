@@ -36,7 +36,7 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
         }
       }
       
-      // تهيئة الماسح - using the augmented interface
+      // تهيئة الماسح - استخدام الواجهة المعززة
       try {
         await BarcodeScanner.showBackground();
         await BarcodeScanner.prepare();
@@ -60,7 +60,7 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
       setIsScanning(false);
       
       try {
-        // Fixed: call stopScan without arguments
+        // تصحيح: استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
       } catch (error) {
         console.error('[useCapacitorScanner] خطأ في إيقاف المسح:', error);
@@ -80,7 +80,7 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
       setIsScanning(false);
       
       try {
-        // Fixed: call stopScan without arguments
+        // تصحيح: استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
       } catch (err) {
         console.error('[useCapacitorScanner] خطأ في إيقاف المسح بعد خطأ:', err);
@@ -100,7 +100,7 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           await BarcodeScanner.hideBackground();
-          // Fixed: call stopScan without arguments
+          // تصحيح: استدعاء stopScan بدون معاملات
           await BarcodeScanner.stopScan();
         } catch (error) {
           console.error('[useCapacitorScanner] خطأ في إيقاف المسح:', error);

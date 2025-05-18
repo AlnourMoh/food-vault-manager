@@ -127,9 +127,9 @@ export const useScannerControls = ({ onScan, onClose }: UseScannerControlsProps)
       
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
-          await BarcodeScanner.enableTorch(false).catch(() => {});
+          await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
           
-          // Fixed: call stopScan without arguments
+          // تصحيح: استدعاء stopScan بدون معاملات
           await BarcodeScanner.stopScan();
         } catch (error) {
           console.error('Error stopping scan:', error);

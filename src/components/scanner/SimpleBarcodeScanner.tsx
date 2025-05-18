@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 
-import { useScannerState } from './hooks/useScannerState';
+import { useScannerState } from '@/hooks/scanner/useScannerState';
 import { useScannerActions } from './hooks/useScannerActions';
 import { BrowserView, ScannerLayout } from './components';
 import { platformService } from '@/services/scanner/PlatformService';

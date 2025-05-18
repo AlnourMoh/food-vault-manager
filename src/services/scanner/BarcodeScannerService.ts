@@ -119,9 +119,9 @@ class BarcodeScannerService {
         console.log('[BarcodeScannerService] إيقاف المسح...');
         
         // إيقاف الفلاش إذا كان مفعلاً
-        await BarcodeScanner.enableTorch(false).catch(() => {});
+        await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
         
-        // Fixed: call stopScan without arguments
+        // تصحيح: استدعاء stopScan بدون معاملات
         await BarcodeScanner.stopScan();
         
         return true;
