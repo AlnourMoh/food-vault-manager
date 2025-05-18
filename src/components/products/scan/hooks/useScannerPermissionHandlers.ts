@@ -11,8 +11,9 @@ export const useScannerPermissionHandlers = (
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const handleRequestPermission = async (): Promise<void> => {
-    console.log('ScanProductContent: محاولة طلب إذن الكاميرا...');
     try {
+      console.log('ScanProductContent: محاولة طلب إذن الكاميرا...');
+      
       // عرض رسالة توضيحية
       await Toast.show({
         text: 'جاري طلب إذن الكاميرا...',
