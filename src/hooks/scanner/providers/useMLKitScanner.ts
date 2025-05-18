@@ -5,9 +5,14 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Toast } from '@capacitor/toast';
 import '@/types/barcode-scanner-augmentation.d.ts';
 
-export const useMLKitScanner = (onScan?: (code: string) => void) => {
+export const useMLKitScanner = () => {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanError, setScanError] = useState<boolean>(false);
+  const [onScanCallback, setOnScanCallback] = useState<((code: string) => void) | null>(null);
+
+  const setOnScanCallback = useCallback((callback: (code: string) => void) => {
+    setOnScanCallback(callback);
+  }, []);
 
   const startScan = useCallback(async (): Promise<boolean> => {
     try {
@@ -26,7 +31,9 @@ export const useMLKitScanner = (onScan?: (code: string) => void) => {
       
       // تهيئة الماسح
       try {
+        console.log('[useMLKitScanner] تحضير الماسح...');
         await BarcodeScanner.prepare();
+        console.log('[useMLKitScanner] تم تحضير الماسح');
       } catch (error) {
         console.error('[useMLKitScanner] خطأ في تهيئة الماسح:', error);
       }
@@ -48,16 +55,23 @@ export const useMLKitScanner = (onScan?: (code: string) => void) => {
       }
       
       // بدء المسح
+      console.log('[useMLKitScanner] إظهار خلفية الماسح');
+      await BarcodeScanner.showBackground();
+      
       setIsScanning(true);
+      console.log('[useMLKitScanner] بدء مسح الباركود');
+      
       const result = await BarcodeScanner.scan();
+      console.log('[useMLKitScanner] نتيجة المسح:', result);
+      
       setIsScanning(false);
       
       // معالجة النتيجة
       if (result.barcodes && result.barcodes.length > 0) {
         const code = result.barcodes[0].rawValue;
-        if (code) {
+        if (code && onScanCallback) {
           console.log('[useMLKitScanner] تم مسح الرمز:', code);
-          onScan?.(code);
+          onScanCallback(code);
           return true;
         }
       }
@@ -69,7 +83,7 @@ export const useMLKitScanner = (onScan?: (code: string) => void) => {
       setScanError(true);
       return false;
     }
-  }, [onScan]);
+  }, [onScanCallback]);
   
   const stopScan = useCallback(async (): Promise<boolean> => {
     try {
@@ -77,6 +91,9 @@ export const useMLKitScanner = (onScan?: (code: string) => void) => {
       
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         // إيقاف المسح
+        console.log('[useMLKitScanner] إخفاء خلفية الماسح');
+        await BarcodeScanner.hideBackground();
+        console.log('[useMLKitScanner] إيقاف المسح');
         await BarcodeScanner.stopScan();
       }
       
@@ -91,6 +108,7 @@ export const useMLKitScanner = (onScan?: (code: string) => void) => {
     isScanning,
     scanError,
     startScan,
-    stopScan
+    stopScan,
+    setOnScanCallback
   };
 };

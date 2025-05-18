@@ -19,121 +19,119 @@ class BarcodeScannerService {
     }
     return BarcodeScannerService.instance;
   }
-  
+
   /**
-   * التحقق من دعم المسح
-   */
-  public async isSupported(): Promise<boolean> {
-    try {
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        return false;
-      }
-      
-      const result = await BarcodeScanner.isSupported();
-      return result.supported;
-    } catch (error) {
-      console.error('[BarcodeScannerService] خطأ في التحقق من دعم المسح:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * التحقق من إذن الكاميرا
-   */
-  public async checkPermission(): Promise<boolean> {
-    return scannerPermissionService.checkPermission();
-  }
-  
-  /**
-   * طلب إذن الكاميرا
-   */
-  public async requestPermission(): Promise<boolean> {
-    return scannerPermissionService.requestPermission();
-  }
-  
-  /**
-   * فتح إعدادات التطبيق
-   */
-  public async openAppSettings(): Promise<boolean> {
-    return await scannerPermissionService.openAppSettings();
-  }
-  
-  /**
-   * بدء المسح
+   * بدء عملية المسح
    */
   public async startScan(): Promise<boolean> {
     try {
-      // التحقق من دعم الماسح
-      const isSupported = await this.isSupported();
-      if (!isSupported) {
-        console.log('[BarcodeScannerService] الماسح غير مدعوم على هذا الجهاز');
-        await Toast.show({
-          text: 'هذا الجهاز لا يدعم ماسح الباركود',
-          duration: 'long'
-        });
+      console.log('[BarcodeScannerService] بدء المسح');
+      
+      if (!Capacitor.isNativePlatform()) {
+        console.log('[BarcodeScannerService] ليست منصة أصلية');
         return false;
       }
       
-      // التحقق من إذن الكاميرا
-      const hasPermission = await scannerPermissionService.checkPermission();
-      if (!hasPermission) {
-        console.log('[BarcodeScannerService] لا يوجد إذن للكاميرا، محاولة طلبه...');
-        
-        const permissionGranted = await this.requestPermission();
-        if (!permissionGranted) {
-          console.log('[BarcodeScannerService] تم رفض إذن الكاميرا');
+      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('[BarcodeScannerService] ملحق MLKit غير متوفر');
+        return false;
+      }
+      
+      // التحقق من الإذن
+      const permission = await scannerPermissionService.checkPermission();
+      if (!permission) {
+        console.log('[BarcodeScannerService] طلب إذن الكاميرا');
+        const granted = await scannerPermissionService.requestPermission();
+        if (!granted) {
+          console.log('[BarcodeScannerService] تم رفض طلب الإذن');
           await Toast.show({
-            text: 'تم رفض إذن الكاميرا. لا يمكن استخدام الماسح الضوئي بدون هذا الإذن.',
+            text: 'يجب منح إذن الكاميرا لاستخدام الماسح',
             duration: 'long'
           });
           return false;
         }
       }
       
+      // تهيئة الماسح
+      try {
+        console.log('[BarcodeScannerService] تحضير الماسح');
+        await BarcodeScanner.prepare();
+      } catch (error) {
+        console.error('[BarcodeScannerService] خطأ في تحضير الماسح:', error);
+      }
+      
+      // إظهار خلفية الماسح
+      try {
+        console.log('[BarcodeScannerService] إظهار خلفية الماسح');
+        await BarcodeScanner.showBackground();
+      } catch (error) {
+        console.error('[BarcodeScannerService] خطأ في إظهار خلفية الماسح:', error);
+      }
+      
       // بدء المسح
+      console.log('[BarcodeScannerService] بدء مسح الباركود');
       const result = await BarcodeScanner.scan();
       
-      // التحقق من النتيجة
+      console.log('[BarcodeScannerService] نتيجة المسح:', result);
+      
       if (result.barcodes && result.barcodes.length > 0) {
-        console.log('[BarcodeScannerService] تم مسح الباركود:', result.barcodes);
-        
-        // يمكن إضافة معالجة إضافية هنا
-        
-        return true;
-      } else {
-        console.log('[BarcodeScannerService] لم يتم العثور على باركود');
-        return false;
+        const code = result.barcodes[0].rawValue;
+        if (code) {
+          await Toast.show({
+            text: `تم مسح الرمز: ${code}`,
+            duration: 'short'
+          });
+          
+          // هنا يمكن إضافة معالج النتيجة
+          
+          // إخفاء خلفية الماسح بعد المسح
+          try {
+            await BarcodeScanner.hideBackground();
+          } catch (error) {
+            console.error('[BarcodeScannerService] خطأ في إخفاء خلفية الماسح:', error);
+          }
+          
+          return true;
+        }
       }
+      
+      return false;
     } catch (error) {
-      console.error('[BarcodeScannerService] خطأ في بدء المسح:', error);
+      console.error('[BarcodeScannerService] خطأ في المسح:', error);
       return false;
     }
   }
-  
+
   /**
-   * إيقاف المسح
+   * إيقاف عملية المسح
    */
-  public async stopScan(): Promise<boolean> {
+  public async stopScan(): Promise<void> {
     try {
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('[BarcodeScannerService] إيقاف المسح...');
-        
-        // إيقاف الفلاش إذا كان مفعلاً
-        await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
-        
-        // تصحيح: استدعاء stopScan بدون معاملات
-        await BarcodeScanner.stopScan();
-        
-        return true;
+      console.log('[BarcodeScannerService] إيقاف المسح');
+      
+      if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        return;
       }
       
-      return false;
+      // إيقاف الفلاش أولاً
+      await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
+      
+      // إخفاء خلفية الماسح
+      try {
+        await BarcodeScanner.hideBackground();
+      } catch (error) {
+        console.error('[BarcodeScannerService] خطأ في إخفاء خلفية الماسح:', error);
+      }
+      
+      // إيقاف المسح
+      await BarcodeScanner.stopScan();
+      
+      console.log('[BarcodeScannerService] تم إيقاف المسح');
     } catch (error) {
       console.error('[BarcodeScannerService] خطأ في إيقاف المسح:', error);
-      return false;
     }
   }
 }
 
-// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
+// تصدير مثيل واحد من الخدمة
 export const barcodeScannerService = BarcodeScannerService.getInstance();

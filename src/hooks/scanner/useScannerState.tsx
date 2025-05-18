@@ -20,7 +20,7 @@ export const useScannerState = (autoStart = false) => {
       try {
         await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
         
-        // تصحيح: استدعاء stopScan بدون معاملات
+        // إيقاف المسح
         await BarcodeScanner.stopScan();
       } catch (error) {
         console.error('[useScannerState] خطأ في إغلاق الماسح:', error);
