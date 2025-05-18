@@ -1,7 +1,7 @@
-
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 
 /**
  * التحقق من وجود إذن الكاميرا
@@ -244,18 +244,14 @@ export const openAppSettings = async (): Promise<boolean> => {
         if (Capacitor.getPlatform() === 'android') {
           try {
             // فتح إعدادات التطبيق مباشرة في أندرويد
-            // نستخدم أنواعًا خاصة لتمرير القيم المطلوبة
             const appInfo = await App.getInfo();
             console.log('معلومات التطبيق:', appInfo);
             
-            // استخدام URL أكثر دقة للوصول لإعدادات التطبيق
-            const specificUrl = `package:${appInfo.id || 'app.lovable.b3b6b969583d416c9d8b788fa375abca'}`;
-            console.log('محاولة فتح:', specificUrl);
-            
+            // استخدام Browser.open بدلاً من App.openUrl
             try {
               // محاولة فتح الإعدادات عبر نظام أندرويد
-              await App.openUrl({
-                url: `app-settings:${specificUrl}`
+              await Browser.open({
+                url: `package:${appInfo.id || 'app.lovable.b3b6b969583d416c9d8b788fa375abca'}`
               });
               return true;
             } catch (e) {
@@ -263,7 +259,7 @@ export const openAppSettings = async (): Promise<boolean> => {
               
               // محاولة بديلة لأندرويد
               try {
-                await App.openUrl({ url: 'app-settings:' });
+                await Browser.open({ url: 'app-settings:' });
                 return true;
               } catch (innerError) {
                 console.error('فشل أيضًا في محاولة فتح إعدادات التطبيق العامة:', innerError);
@@ -275,7 +271,7 @@ export const openAppSettings = async (): Promise<boolean> => {
         } else if (Capacitor.getPlatform() === 'ios') {
           // على نظام iOS، نحاول فتح إعدادات التطبيق
           try {
-            await App.openUrl({ url: 'app-settings:' });
+            await Browser.open({ url: 'app-settings:' });
             return true;
           } catch (e) {
             console.error('خطأ في فتح إعدادات التطبيق على iOS:', e);
@@ -288,7 +284,7 @@ export const openAppSettings = async (): Promise<boolean> => {
     const platform = Capacitor.getPlatform();
     const message = platform === 'android' 
       ? 'يرجى فتح إعدادات > التطبيقات > مخزن الطعام > الأذونات لتمكين الكاميرا'
-      : 'يرجى فتح إعدادات > الخصوصية > الكاميرا لتمكين الإذن لتطبيقنا';
+      : 'يرجى فتح إعدادات > ال��صوصية > الكاميرا لتمكين الإذن لتطبيقنا';
     
     console.log('عرض تعليمات الإعدادات اليدوية:', message);
     await Toast.show({ text: message, duration: 'long' });
