@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
@@ -21,7 +20,7 @@ export const usePermissionRequest = () => {
         
         // استخدام واجهة برمجة التطبيق لفتح الإعدادات
         if (platform === 'ios' || platform === 'android') {
-          // تم تغيير هذه السطر لاستخدام exitApp بدلاً من openUrl لأن openUrl غير متوفر
+          // استخدام exitApp بدلا من openUrl غير المتوفر
           await App.exitApp();
           return true;
         }

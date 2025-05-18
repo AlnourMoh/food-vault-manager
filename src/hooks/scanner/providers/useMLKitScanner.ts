@@ -166,15 +166,15 @@ export const useMLKitScanner = () => {
       console.log("[useMLKitScanner] بدء عملية المسح...");
       
       try {
-        // استخدام startScan بدون معاملات
-        const result = await BarcodeScanner.startScan();
+        // استخدام startScan بدون معاملات وتخزين النتيجة بشكل صحيح
+        const result: MLKitScanResult = await BarcodeScanner.startScan();
         console.log("[useMLKitScanner] نتيجة المسح:", result);
         
         setIsScanning(false);
         
         // معالجة نتيجة المسح - التحقق من وجود محتوى
-        if (result && typeof result === 'object' && 'hasContent' in result && result.hasContent) {
-          if ('content' in result && typeof result.content === 'string') {
+        if (result && result.hasContent) {
+          if (result.content && typeof result.content === 'string') {
             console.log("[useMLKitScanner] تم العثور على رمز:", result.content);
             
             // التحقق من وجود دالة استدعاء مسجلة
