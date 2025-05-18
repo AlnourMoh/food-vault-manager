@@ -1,7 +1,9 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '@/hooks/use-toast';
 import { platformService } from '@/services/scanner/PlatformService';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 export interface ScannerActionsProps {
   onScan: (code: string) => void;

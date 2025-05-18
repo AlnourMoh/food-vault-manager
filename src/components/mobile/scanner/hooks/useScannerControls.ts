@@ -6,6 +6,7 @@ import { useAppSettings } from '@/hooks/camera/useAppSettings';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
+import '@/types/barcode-scanner-augmentation.d.ts';
 
 interface UseScannerControlsProps {
   onScan: (code: string) => void;

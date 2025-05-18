@@ -97,8 +97,6 @@ export const useScannerState = ({
     } catch (error) {
       console.error('[useScannerState] خطأ في إيقاف المسح:', error);
       return false;
-    } finally {
-      setIsScanning(false);
     }
   }, []);
   
