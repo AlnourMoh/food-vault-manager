@@ -10,7 +10,7 @@ export const useMLKitScanner = () => {
   const [scanError, setScanError] = useState<boolean>(false);
   const [onScanCallback, setOnScanCallback] = useState<((code: string) => void) | null>(null);
 
-  const setOnScanCallback = useCallback((callback: (code: string) => void) => {
+  const registerScanCallback = useCallback((callback: (code: string) => void) => {
     setOnScanCallback(callback);
   }, []);
 
@@ -109,6 +109,6 @@ export const useMLKitScanner = () => {
     scanError,
     startScan,
     stopScan,
-    setOnScanCallback
+    setOnScanCallback: registerScanCallback
   };
 };

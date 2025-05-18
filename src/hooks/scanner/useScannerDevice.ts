@@ -37,12 +37,13 @@ export const useScannerDevice = () => {
         try {
           console.log("[useScannerDevice] محاولة استخدام MLKit للمسح");
           
-          // استخدام دالة startScan من كائن mlkitScanner
+          // تسجيل دالة معالجة نتيجة المسح
           mlkitScanner.setOnScanCallback((code) => {
             console.log("[useScannerDevice] تم استلام رمز من MLKit:", code);
             onSuccess(code);
           });
           
+          // استخدام دالة startScan من كائن mlkitScanner
           const mlkitResult = await mlkitScanner.startScan();
           return mlkitResult;
         } catch (mlkitError) {
