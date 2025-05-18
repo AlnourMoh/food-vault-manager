@@ -1,0 +1,38 @@
+
+/* ... keep existing code */
+
+/* أنماط الماسح الضوئي */
+.scanner-view {
+  position: absolute;
+  inset: 0;
+  background-color: black;
+  overflow: hidden;
+}
+
+/* تنسيق كاميرا الماسح */
+.scanner-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* تأكيد إظهار عنصر الفيديو في الواجهة */
+#scanner-camera-view video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* تخفي أي عناصر تحكم افتراضية للفيديو */
+video::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+/* تخفي رأس التطبيق أثناء المسح */
+.app-header {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+/* ... keep existing code */

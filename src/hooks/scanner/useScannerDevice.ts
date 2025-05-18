@@ -4,7 +4,6 @@ import { useDeviceDetection } from './device/useDeviceDetection';
 import { useMockScanner } from './useMockScanner';
 import { useMLKitScanner } from './providers/useMLKitScanner';
 import { useTraditionalScanner } from './providers/useTraditionalScanner';
-import { barcodeScannerService } from '@/services/scanner/BarcodeScannerService';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
 
@@ -30,47 +29,55 @@ export const useScannerDevice = () => {
         platform: Capacitor.getPlatform()
       });
       
-      // عرض إشعار لوضع المسح
-      try {
-        await Toast.show({
-          text: isNative ? 'جاري تهيئة الماسح الضوئي...' : 'المسح الضوئي غير متاح في هذه البيئة',
-          duration: 'short'
-        });
-      } catch (toastError) {
-        console.error("[useScannerDevice] خطأ في عرض الإشعار:", toastError);
-      }
-      
-      // استخدام خدمة الماسح الضوئي الموحدة أولاً
+      // تهيئة الكاميرا أولاً قبل المسح إذا كنا في منصة أصلية
       if (isNative && hasBarcodePlugin) {
         try {
-          console.log("[useScannerDevice] محاولة استخدام خدمة الماسح الموحدة");
+          // تهيئة كاميرا MLKit
+          await mlkitScanner.initializeCamera();
           
-          // تسجيل معالج للمسح مع MLKit أولاً
+          // تسجيل معالج للمسح
           mlkitScanner.setOnScanCallback((code) => {
             console.log("[useScannerDevice] تم استلام رمز من MLKit:", code);
             onSuccess(code);
           });
           
-          // محاولة استخدام MLKit للمسح
+          // محاولة بدء المسح باستخدام MLKit
           console.log("[useScannerDevice] محاولة استخدام MLKit للمسح");
           const mlkitResult = await mlkitScanner.startScan();
           
           if (mlkitResult) {
             console.log("[useScannerDevice] نجح المسح باستخدام MLKit");
             return true;
+          } else {
+            console.warn("[useScannerDevice] لم ينجح المسح باستخدام MLKit، المحاولة بالماسح التقليدي");
           }
-          
-          console.warn("[useScannerDevice] فشل المسح باستخدام MLKit، جاري المحاولة بالماسح التقليدي");
         } catch (mlkitError) {
-          console.warn("[useScannerDevice] خطأ في استخدام MLKit:", mlkitError);
+          console.error("[useScannerDevice] خطأ في استخدام MLKit:", mlkitError);
+          
+          // عرض إشعار عن الخطأ
+          try {
+            await Toast.show({
+              text: `حدث خطأ في MLKit: ${mlkitError.message || 'خطأ غير معروف'}`,
+              duration: 'short'
+            });
+          } catch (e) {}
         }
         
         // محاولة استخدام الماسح التقليدي كاحتياطي
         try {
           console.log("[useScannerDevice] محاولة استخدام الماسح التقليدي");
-          return await startTraditionalScan(onSuccess);
+          const traditionalResult = await startTraditionalScan(onSuccess);
+          return traditionalResult;
         } catch (bsError) {
           console.error("[useScannerDevice] فشل المسح التقليدي:", bsError);
+          
+          // عرض إشعار عن الخطأ
+          try {
+            await Toast.show({
+              text: `فشل المسح التقليدي: ${bsError.message || 'خطأ غير معروف'}`,
+              duration: 'short'
+            });
+          } catch (e) {}
         }
       }
       

@@ -10,6 +10,7 @@ export const useScannerState = (autoStart = false) => {
   const [hasError, setHasError] = useState(false);
   const [isScanning, setIsScanning] = useState(autoStart);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
   const { toast } = useToast();
 
   // تهيئة الماسح
@@ -30,8 +31,8 @@ export const useScannerState = (autoStart = false) => {
         return;
       }
       
+      // التحقق من دعم المسح
       try {
-        // التحقق من دعم المسح
         const { supported } = await BarcodeScanner.isSupported();
         console.log('[useScannerState] هل المسح مدعوم؟', supported);
         
@@ -43,17 +44,42 @@ export const useScannerState = (autoStart = false) => {
         }
       } catch (error) {
         console.warn('[useScannerState] خطأ في التحقق من دعم المسح:', error);
-        // حتى مع وجود خطأ، سنحاول المتابعة
       }
       
-      // محاولة تهيئة الماسح بشكل مباشر
+      // التحقق من أذونات الكاميرا
       try {
-        console.log('[useScannerState] تهيئة الماسح...');
+        const permissionStatus = await BarcodeScanner.checkPermissions();
+        if (permissionStatus.camera !== 'granted') {
+          console.log('[useScannerState] طلب إذن الكاميرا');
+          const result = await BarcodeScanner.requestPermissions();
+          if (result.camera !== 'granted') {
+            setErrorMessage('تم رفض إذن الكاميرا');
+            setHasError(true);
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (permError) {
+        console.warn('[useScannerState] خطأ في فحص/طلب الإذن:', permError);
+      }
+      
+      // تحضير الماسح
+      try {
+        console.log('[useScannerState] تحضير الماسح...');
         await BarcodeScanner.prepare();
-        console.log('[useScannerState] تم تهيئة الماسح بنجاح');
+        console.log('[useScannerState] تم تحضير الماسح بنجاح');
+        
+        // محاولة إظهار خلفية الكاميرا
+        try {
+          await BarcodeScanner.hideBackground();
+          await BarcodeScanner.showBackground();
+          setCameraActive(true);
+          console.log('[useScannerState] تم إظهار خلفية الكاميرا بنجاح');
+        } catch (backgroundError) {
+          console.warn('[useScannerState] خطأ في إظهار خلفية الكاميرا:', backgroundError);
+        }
       } catch (error) {
-        console.warn('[useScannerState] خطأ في تهيئة الماسح:', error);
-        // سنحاول المتابعة رغم الخطأ
+        console.warn('[useScannerState] خطأ في تحضير الماسح:', error);
       }
       
       setIsLoading(false);
@@ -70,8 +96,8 @@ export const useScannerState = (autoStart = false) => {
     try {
       console.log('[useScannerState] تنظيف الماسح');
       setIsScanning(false);
+      setCameraActive(false);
       
-      // محاولة إيقاف المسح إذا كان الملحق متاحًا
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           // إيقاف الفلاش إذا كان مفعلاً
@@ -112,6 +138,8 @@ export const useScannerState = (autoStart = false) => {
     setErrorMessage,
     isScanning,
     setIsScanning,
+    cameraActive,
+    setCameraActive,
     initializeScanner,
     cleanupScanner
   };
