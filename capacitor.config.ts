@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.foodvault.manager',
-  appName: 'مخزن الطعام',
+  appName: 'FoodVault',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
@@ -22,10 +22,10 @@ const config: CapacitorConfig = {
       spinnerColor: "#2E7D32",
     },
     Camera: {
-      promptLabelHeader: "الوصول إلى الكاميرا",
-      promptLabelText: "يحتاج التطبيق إلى إذن الكاميرا لمسح الباركود",
-      promptLabelCancel: "إلغاء",
-      promptLabelConfirm: "السماح"
+      promptLabelHeader: "Camera Access",
+      promptLabelText: "The app needs camera permission to scan barcodes",
+      promptLabelCancel: "Cancel",
+      promptLabelConfirm: "Allow"
     },
     CapacitorHttp: {
       enabled: true
@@ -34,7 +34,7 @@ const config: CapacitorConfig = {
     MLKitBarcodeScanner: {
       formats: [1, 32, 64, 16, 512, 1024], // QR_CODE, EAN_13, CODE_128, CODE_39, UPC_A, UPC_E
       detectionSpeed: "fast",
-      cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+      cameraPermissionText: "The app needs camera permission to scan barcodes",
       lensFacing: "back" // توجيه الكاميرا الخلفية افتراضياً
     }
   },
@@ -66,7 +66,7 @@ const config: CapacitorConfig = {
     permissions: [
       {
         name: "Camera",
-        usageDescription: "تطبيق مخزن الطعام يحتاج إلى الوصول إلى الكاميرا لمسح الباركود وقراءة رموز المنتجات"
+        usageDescription: "The FoodVault app needs camera access to scan barcodes and read product codes"
       }
     ]
   }
