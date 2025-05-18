@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissionStatus } from '@/hooks/camera/usePermissionStatus';

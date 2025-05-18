@@ -4,6 +4,9 @@ import { useScannerControls } from './scanner/hooks/useScannerControls';
 import { ScannerContainer } from './scanner/ScannerContainer';
 import { Capacitor } from '@capacitor/core';
 
+// Import the augmentation to ensure TypeScript recognizes the extended methods
+import '@/types/barcode-scanner-augmentation.d.ts';
+
 interface ZXingBarcodeScannerProps {
   onScan: (code: string) => void;
   onClose: () => void;
