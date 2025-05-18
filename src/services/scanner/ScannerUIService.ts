@@ -42,9 +42,18 @@ class ScannerUIService {
         }
       });
       
-      // تعديل نمط الجسم للمسح
+      // تعديل نمط الجسم للمسح - لا تجعل الخلفية سوداء
       document.body.style.overflow = 'hidden';
-      document.body.style.backgroundColor = 'black';
+      
+      // تأكد من أن عناصر الكاميرا مرئية
+      const videoElements = document.querySelectorAll('video');
+      videoElements.forEach(video => {
+        if (video instanceof HTMLVideoElement) {
+          video.style.opacity = '1';
+          video.style.visibility = 'visible';
+          video.style.display = 'block';
+        }
+      });
     } catch (error) {
       console.error('[ScannerUIService] خطأ في إعداد واجهة المستخدم:', error);
     }
@@ -79,7 +88,6 @@ class ScannerUIService {
       
       // استعادة نمط الجسم
       document.body.style.overflow = '';
-      document.body.style.backgroundColor = '';
       
       // مسح الأنماط المحفوظة
       this.originalStyles.clear();
@@ -87,6 +95,36 @@ class ScannerUIService {
       console.error('[ScannerUIService] خطأ في استعادة واجهة المستخدم:', error);
       // مسح الأنماط المحفوظة في حالة الخطأ
       this.originalStyles.clear();
+    }
+  }
+  
+  /**
+   * تحديث رؤية عناصر الفيديو
+   * هذه الوظيفة الجديدة تساعد في حل مشكلة الشاشة السوداء
+   */
+  public updateVideoVisibility(visible: boolean): void {
+    try {
+      // البحث عن جميع عناصر الفيديو
+      const videoElements = document.querySelectorAll('video');
+      console.log(`[ScannerUIService] تحديث رؤية ${videoElements.length} عناصر فيديو، الحالة: ${visible ? 'مرئي' : 'مخفي'}`);
+      
+      videoElements.forEach(video => {
+        if (video instanceof HTMLVideoElement) {
+          // تطبيق أنماط الرؤية
+          video.style.opacity = visible ? '1' : '0';
+          video.style.visibility = visible ? 'visible' : 'hidden';
+          video.style.display = visible ? 'block' : 'none';
+          
+          if (visible && video.paused && video.srcObject) {
+            // محاولة تشغيل الفيديو إذا كان متوقفاً
+            video.play().catch(err => {
+              console.warn('[ScannerUIService] تعذر تشغيل الفيديو:', err);
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('[ScannerUIService] خطأ في تحديث رؤية الفيديو:', error);
     }
   }
 }

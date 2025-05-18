@@ -4,7 +4,7 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #000;
+  background: rgba(0, 0, 0, 0.8); /* جعل الخلفية شفافة قليلاً */
   display: flex;
   flex-direction: column;
 }
@@ -95,6 +95,9 @@
   width: 100%;
   max-height: 70vh;
   object-fit: cover;
+  opacity: 1 !important; /* التأكد من أن الفيديو مرئي */
+  visibility: visible !important;
+  display: block !important;
 }
 
 /* رسالة عدم توفر الماسح في المتصفح */
@@ -142,26 +145,72 @@
   background-color: #2c5282;
 }
 
-/* IMPORTANT: Add these styles to force scanner visibility */
+/* ضمان ظهور عناصر الماسح */
 body.zxing-scanning .scanner-container {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-/* Force visibility of dialog content */
+/* ضمان ظهور محتوى الحوار */
 [role="dialog"] > div {
   max-height: 100vh !important;
   height: 100vh !important;
   overflow: visible !important;
 }
 
-/* Always keep scanner content visible */
+/* الحفاظ على رؤية محتوى الماسح */
 .scanner-view-container {
   min-height: 80vh !important;
   display: flex !important;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.8); /* خلفية شفافة قليلاً */
+}
+
+/* تعديلات لإصلاح مشكلة الشاشة السوداء */
+video {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  z-index: 999 !important;
+  position: relative !important;
+}
+
+/* إضافة أنماط للعناصر المخصصة للمسح */
+#barcode-scanner-view {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#barcode-scanner-view video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  top: 0;
+  left: 0;
+  opacity: 1 !important;
+  z-index: 5;
+}
+
+/* إضافة أنماط جديدة لتحريك خط المسح */
+@keyframes scanner-line {
+  0% {
+    top: 10%;
+  }
+  50% {
+    top: 90%;
+  }
+  100% {
+    top: 10%;
+  }
+}
+
+.animate-scanner-line {
+  animation: scanner-line 2s ease-in-out infinite;
 }
