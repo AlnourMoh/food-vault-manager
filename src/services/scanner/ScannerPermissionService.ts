@@ -291,45 +291,30 @@ export class ScannerPermissionService {
           try {
             // تجربة عدة صيغ من URL
             settingsUrl = `package:${appId}`;
-            await App.openUrl({ url: settingsUrl });
+            // استخدام Browser.open بدلاً من App.openUrl
+            await Browser.open({ url: settingsUrl });
             console.log(`[ScannerPermissionService] تم فتح URL: ${settingsUrl}`);
             return true;
           } catch (e) {
-            console.error('[ScannerPermissionService] فشل في فتح App.openUrl:', e);
+            console.error('[ScannerPermissionService] فشل في فتح Browser.open:', e);
             
-            // نجرب باستخدام Browser API
-            try {
-              console.log('[ScannerPermissionService] نجرب استخدام Browser API...');
-              await Browser.open({ url: settingsUrl });
-              return true;
-            } catch (browserError) {
-              console.error('[ScannerPermissionService] فشل في فتح Browser.open:', browserError);
-              
-              // كإجراء أخير، نعرض رسالة للمستخدم
-              await Toast.show({
-                text: 'يرجى فتح إعدادات التطبيق يدوياً وتمكين أذونات الكاميرا',
-                duration: 'long'
-              });
-            }
+            // كإجراء أخير، نعرض رسالة للمستخدم
+            await Toast.show({
+              text: 'يرجى فتح إعدادات التطبيق يدويًا وتمكين أذونات الكاميرا',
+              duration: 'long'
+            });
           }
         } else if (platform === 'ios') {
           console.log('[ScannerPermissionService] فتح إعدادات iOS...');
           
           try {
             // على iOS نستخدم URL خاص
-            await App.openUrl({ url: 'app-settings:' });
+            // استخدام Browser.open بدلاً من App.openUrl
+            await Browser.open({ url: 'app-settings:' });
             console.log('[ScannerPermissionService] تم فتح إعدادات التطبيق');
             return true;
           } catch (e) {
             console.error('[ScannerPermissionService] فشل في فتح إعدادات iOS:', e);
-            
-            // نجرب باستخدام Browser API
-            try {
-              await Browser.open({ url: 'app-settings:' });
-              return true;
-            } catch (browserError) {
-              console.error('[ScannerPermissionService] فشل في فتح Browser.open على iOS:', browserError);
-            }
           }
         }
       } else {

@@ -10,6 +10,7 @@ import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { Browser } from '@capacitor/browser';
 import { PermissionState } from '@capacitor/core';
 
 const MobileApp: React.FC = () => {
@@ -69,9 +70,9 @@ const MobileApp: React.FC = () => {
               
               const appId = 'app.lovable.foodvault.manager';
               if (Capacitor.getPlatform() === 'android') {
-                // محاولة فتح إعدادات الأندرويد باستخدام App.openUrl
+                // محاولة فتح إعدادات الأندرويد باستخدام Browser.open
                 try {
-                  await App.openUrl({ url: `package:${appId}` });
+                  await Browser.open({ url: `package:${appId}` });
                 } catch (e) {
                   console.error('MobileApp: خطأ في فتح إعدادات التطبيق:', e);
                   await Toast.show({
@@ -117,23 +118,34 @@ const MobileApp: React.FC = () => {
   useEffect(() => {
     console.log('MobileApp: تسجيل مستمع لتغيير حالة التطبيق');
     
-    const appStateChangeListener = App.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) {
-        console.log('MobileApp: التطبيق نشط، فحص أذونات الكاميرا');
-        // فحص الأذونات عند استعادة التطبيق للنشاط
-        scannerPermissionService.checkPermission()
-          .then(hasPermission => {
-            console.log('MobileApp: حالة إذن الكاميرا عند استعادة النشاط:', hasPermission);
-          })
-          .catch(error => {
-            console.error('MobileApp: خطأ في فحص إذن الكاميرا عند استعادة النشاط:', error);
-          });
-      }
-    });
+    // نستخدم متغيراً مؤقتاً لحفظ نتيجة إضافة المستمع
+    let appStateChangeListener: { remove: () => void } | null = null;
+    
+    // إضافة المستمع وتخزينه في المتغير المؤقت
+    const setupListener = async () => {
+      appStateChangeListener = await App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          console.log('MobileApp: التطبيق نشط، فحص أذونات الكاميرا');
+          // فحص الأذونات عند استعادة التطبيق للنشاط
+          scannerPermissionService.checkPermission()
+            .then(hasPermission => {
+              console.log('MobileApp: حالة إذن الكاميرا عند استعادة النشاط:', hasPermission);
+            })
+            .catch(error => {
+              console.error('MobileApp: خطأ في فحص إذن الكاميرا عند استعادة النشاط:', error);
+            });
+        }
+      });
+    };
+    
+    // تنفيذ الإعداد
+    setupListener();
     
     // تنظيف المستمع عند إزالة المكون
     return () => {
-      appStateChangeListener.remove();
+      if (appStateChangeListener) {
+        appStateChangeListener.remove();
+      }
     };
   }, []);
   
