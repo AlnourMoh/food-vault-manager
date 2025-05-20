@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useBackButtonHandler } from '@/hooks/mobile/useBackButtonHandler';
 import { useNetworkConnectionHandler } from '@/hooks/mobile/useNetworkConnectionHandler';
 import { AppRoutes } from './routes/AppRoutes';
@@ -8,55 +8,133 @@ import NetworkErrorView from './NetworkErrorView';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { PermissionState } from '@capacitor/core';
 
 const MobileApp: React.FC = () => {
   // Use our custom hooks
   useBackButtonHandler();
   const { networkError, handleRetryConnection } = useNetworkConnectionHandler();
+  const [permissionRequested, setPermissionRequested] = useState(false);
   
-  // طلب إذن الكاميرا عند بدء تشغيل التطبيق
+  // طلب إذن الكاميرا عند بدء تشغيل التطبيق بعدة طرق
   useEffect(() => {
-    const requestCameraPermissionOnStartup = async () => {
+    const requestCameraPermission = async () => {
       try {
-        console.log('MobileApp: التحقق من دعم الماسح ومحاولة طلب إذن الكاميرا عند بدء التطبيق');
+        console.log('MobileApp: بدء تشغيل التطبيق ومحاولة طلب إذن الكاميرا');
         
-        // التحقق أولاً من دعم الماسح على الجهاز
-        const isSupported = await scannerPermissionService.isSupported();
-        if (!isSupported) {
-          console.log('MobileApp: الماسح غير مدعوم على هذا الجهاز');
+        // التحقق مما إذا كنا في بيئة تطبيق أصلي
+        if (!Capacitor.isNativePlatform()) {
+          console.log('MobileApp: لسنا في بيئة تطبيق أصلي');
           return;
         }
         
-        // نطلب الإذن مباشرة بدلاً من التحقق منه فقط
-        if (Capacitor.isNativePlatform()) {
-          console.log('MobileApp: جاري طلب إذن الكاميرا عند بدء التطبيق مباشرة');
+        // عرض رسالة للمستخدم
+        await Toast.show({
+          text: 'جاري التحقق من أذونات الكاميرا...',
+          duration: 'short'
+        });
+        
+        // التحقق من حالة الإذن الحالية
+        let hasPermission = false;
+        
+        // الطريقة 1: استخدام BarcodeScanner إذا كان متاحًا
+        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+          console.log('MobileApp: التحقق باستخدام MLKitBarcodeScanner');
+          const status = await BarcodeScanner.checkPermissions();
+          console.log('MobileApp: حالة إذن BarcodeScanner:', status);
           
-          // انتظار قصير لضمان تحميل التطبيق بشكل كامل
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          hasPermission = status.camera === 'granted';
           
-          await Toast.show({
-            text: 'التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود',
-            duration: 'long'
-          });
-          
-          // طلب الإذن مباشرة
-          const granted = await scannerPermissionService.requestPermission();
-          console.log('MobileApp: نتيجة طلب إذن الكاميرا عند بدء التطبيق:', granted);
-          
-          // محاولة طلب الإذن مرة أخرى بعد تأخير قصير إذا لم يتم منحه
-          if (!granted) {
-            setTimeout(async () => {
-              await scannerPermissionService.requestPermission();
-            }, 5000);
+          if (!hasPermission) {
+            // طلب الإذن مباشرة
+            await Toast.show({
+              text: 'التطبيق بحاجة لإذن الكاميرا لمسح الباركود',
+              duration: 'long'
+            });
+            
+            console.log('MobileApp: طلب إذن BarcodeScanner');
+            const result = await BarcodeScanner.requestPermissions();
+            console.log('MobileApp: نتيجة طلب إذن BarcodeScanner:', result);
+            
+            hasPermission = result.camera === 'granted';
+            
+            // إذا لم يتم منح الإذن، نفتح الإعدادات
+            if (!hasPermission && result.camera === 'denied') {
+              await Toast.show({
+                text: 'تم رفض إذن الكاميرا. سنحاول فتح إعدادات التطبيق',
+                duration: 'long'
+              });
+              
+              const appId = 'app.lovable.foodvault.manager';
+              if (Capacitor.getPlatform() === 'android') {
+                // محاولة فتح إعدادات الأندرويد باستخدام App.openUrl
+                try {
+                  await App.openUrl({ url: `package:${appId}` });
+                } catch (e) {
+                  console.error('MobileApp: خطأ في فتح إعدادات التطبيق:', e);
+                  await Toast.show({
+                    text: 'يرجى فتح إعدادات التطبيق يدويًا وتمكين إذن الكاميرا',
+                    duration: 'long'
+                  });
+                }
+              }
+            }
           }
         }
+        
+        // تحديث حالة طلب الإذن
+        setPermissionRequested(true);
+        
       } catch (error) {
-        console.error('MobileApp: خطأ في طلب إذن الكاميرا عند بدء التطبيق:', error);
+        console.error('MobileApp: خطأ في طلب إذن الكاميرا:', error);
+        
+        // عرض رسالة خطأ للمستخدم
+        try {
+          await Toast.show({
+            text: 'حدث خطأ أثناء طلب إذن الكاميرا',
+            duration: 'long'
+          });
+        } catch (e) {
+          console.error('MobileApp: خطأ في عرض رسالة Toast:', e);
+        }
       }
     };
     
-    // تنفيذ الدالة
-    requestCameraPermissionOnStartup();
+    // تنفيذ طلب الإذن بعد تأخير قصير لضمان تهيئة المكونات
+    const timer = setTimeout(() => {
+      if (!permissionRequested) {
+        requestCameraPermission();
+      }
+    }, 1000);
+    
+    // تنظيف المؤقت عند إزالة المكون
+    return () => clearTimeout(timer);
+  }, [permissionRequested]);
+  
+  // تسجيل مستمع حدث تغيير حالة التطبيق
+  useEffect(() => {
+    console.log('MobileApp: تسجيل مستمع لتغيير حالة التطبيق');
+    
+    const appStateChangeListener = App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        console.log('MobileApp: التطبيق نشط، فحص أذونات الكاميرا');
+        // فحص الأذونات عند استعادة التطبيق للنشاط
+        scannerPermissionService.checkPermission()
+          .then(hasPermission => {
+            console.log('MobileApp: حالة إذن الكاميرا عند استعادة النشاط:', hasPermission);
+          })
+          .catch(error => {
+            console.error('MobileApp: خطأ في فحص إذن الكاميرا عند استعادة النشاط:', error);
+          });
+      }
+    });
+    
+    // تنظيف المستمع عند إزالة المكون
+    return () => {
+      appStateChangeListener.remove();
+    };
   }, []);
   
   // Check authentication state
