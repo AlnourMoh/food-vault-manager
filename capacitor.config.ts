@@ -7,10 +7,10 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    // استخدام التطبيق بدون الاعتماد على خادم خارجي
+    // Use the app without relying on an external server
     url: 'https://b3b6b969-583d-416c-9d8b-788fa375abca.lovableproject.com?forceHideBadge=true',
     cleartext: true,
-    // السماح بتشغيل التطبيق في وضع عدم الاتصال مع المحتوى المخزن مؤقتًا
+    // Allow the app to run offline with cached content
     allowNavigation: ['*'],
     errorPath: 'error.html'
   },
@@ -22,21 +22,21 @@ const config: CapacitorConfig = {
       spinnerColor: "#2E7D32",
     },
     Camera: {
-      promptLabelHeader: "Camera Access",
-      promptLabelText: "The app needs camera permission to scan barcodes",
+      promptLabelHeader: "Camera Access Required",
+      promptLabelText: "Food Vault needs camera permission to scan barcodes",
       promptLabelCancel: "Cancel",
       promptLabelConfirm: "Allow"
     },
     CapacitorHttp: {
       enabled: true
     },
-    // تحسين إعدادات الماسح الضوئي
+    // Improved scanner settings
     MLKitBarcodeScanner: {
       formats: [1, 32, 64, 16, 512, 1024], // QR_CODE, EAN_13, CODE_128, CODE_39, UPC_A, UPC_E
       detectionSpeed: "fast",
-      cameraPermissionText: "The app needs camera permission to scan barcodes",
-      lensFacing: "back", // توجيه الكاميرا الخلفية افتراضياً
-      detectorSize: 0.7 // تحديد حجم منطقة الكشف
+      cameraPermissionText: "Food Vault needs camera permission to scan barcodes",
+      lensFacing: "back", // Use back camera by default
+      detectorSize: 0.7 // Set detection area size
     }
   },
   android: {

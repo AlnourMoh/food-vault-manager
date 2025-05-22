@@ -9,58 +9,58 @@ export class CameraPermissionRequester {
   private permissionAttempts = 0;
   
   /**
-   * طلب إذن الكاميرا
+   * Request camera permission
    */
   public async requestPermission(): Promise<boolean> {
     try {
-      console.log('CameraPermissionRequester: طلب إذن الكاميرا');
+      console.log('CameraPermissionRequester: Requesting camera permission');
       this.permissionAttempts++;
       
-      // التحقق من العدد الأقصى من المحاولات لتجنب طلبات متكررة مزعجة
+      // Check for maximum number of attempts to avoid annoying repeated requests
       if (this.permissionAttempts > 2) {
-        console.log('CameraPermissionRequester: تم تجاوز الحد الأقصى من محاولات طلب الإذن');
-        // محاولة فتح إعدادات التطبيق للحصول على الإذن يدوياً
+        console.log('CameraPermissionRequester: Exceeded maximum permission request attempts');
+        // Try to open app settings to get permission manually
         await Toast.show({
-          text: 'سيتم توجيهك إلى إعدادات التطبيق لتمكين إذن الكاميرا يدوياً',
+          text: 'You will be directed to app settings to enable camera permission manually',
           duration: 'short'
         });
         return await AppSettingsOpener.openAppSettings();
       }
       
-      // في حالة بيئة الويب نطلب الإذن من المتصفح
+      // In case of web environment, request permission from the browser
       if (!Capacitor.isNativePlatform()) {
-        console.log('CameraPermissionRequester: نحن في بيئة الويب، استخدام API الويب');
+        console.log('CameraPermissionRequester: We are in web environment, using web API');
         
         if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
           try {
-            // عرض شرح للمستخدم
+            // Show explanation to user
             await Toast.show({
-              text: 'سيطلب المتصفح منك السماح باستخدام الكاميرا. يرجى الموافقة لتمكين المسح الضوئي',
+              text: 'The browser will ask you to allow camera access. Please accept to enable scanning',
               duration: 'long'
             });
             
-            // نحاول الوصول إلى الكاميرا مباشرة
+            // Try to access the camera directly
             const stream = await navigator.mediaDevices.getUserMedia({ 
               video: {
-                facingMode: 'environment' // استخدام الكاميرا الخلفية إن أمكن
+                facingMode: 'environment' // Use the rear camera if possible
               } 
             });
             
-            // إغلاق المسار فوراً لأننا نحتاج فقط التحقق من الإذن
+            // Close the stream immediately as we only need to check permission
             stream.getTracks().forEach(track => track.stop());
-            console.log('CameraPermissionRequester: تم منح إذن كاميرا المتصفح بنجاح');
+            console.log('CameraPermissionRequester: Browser camera permission granted successfully');
             
             await Toast.show({
-              text: 'تم منح إذن الكاميرا بنجاح',
+              text: 'Camera permission granted successfully',
               duration: 'short'
             });
             
             return true;
           } catch (error) {
-            console.log('CameraPermissionRequester: تم رفض إذن كاميرا المتصفح:', error);
+            console.log('CameraPermissionRequester: Browser camera permission denied:', error);
             
             await Toast.show({
-              text: 'تم رفض إذن الكاميرا. يرجى السماح بالوصول من إعدادات المتصفح',
+              text: 'Camera permission denied. Please allow access from browser settings',
               duration: 'short'
             });
             
@@ -68,61 +68,61 @@ export class CameraPermissionRequester {
           }
         }
         
-        console.log('CameraPermissionRequester: لا يدعم المتصفح getUserMedia، لا يمكن استخدام الكاميرا');
+        console.log('CameraPermissionRequester: Browser does not support getUserMedia, camera cannot be used');
         return false;
       }
       
-      // تحديد المنصة لتخصيص التجربة
+      // Determine platform to customize experience
       const platform = Capacitor.getPlatform();
-      console.log(`CameraPermissionRequester: المنصة الحالية: ${platform}`);
+      console.log(`CameraPermissionRequester: Current platform: ${platform}`);
       
-      // في الأجهزة الجوالة
-      // التحقق من توفر مكتبة MLKit أولاً
+      // On mobile devices
+      // Check for MLKit availability first
       if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('CameraPermissionRequester: استخدام MLKitBarcodeScanner لطلب الإذن');
+        console.log('CameraPermissionRequester: Using MLKitBarcodeScanner for permission');
         
         try {
-          // عرض شرح للمستخدم
+          // Show explanation to user
           await Toast.show({
-            text: 'سيطلب التطبيق إذن الكاميرا لمسح الباركود',
+            text: 'The app will request camera permission for barcode scanning',
             duration: 'short'
           });
           
           const result = await BarcodeScanner.requestPermissions();
-          console.log('نتيجة طلب أذونات MLKit:', result);
+          console.log('MLKit permission request result:', result);
           
           if (result.camera === 'granted') {
             await Toast.show({
-              text: 'تم منح إذن الكاميرا بنجاح',
+              text: 'Camera permission granted successfully',
               duration: 'short'
             });
             return true;
           } else if (result.camera === 'denied') {
-            console.log('تم رفض إذن MLKit، محاولة فتح الإعدادات');
+            console.log('MLKit permission denied, trying to open settings');
             
             await Toast.show({
-              text: 'تم رفض إذن الكاميرا. سيتم توجيهك إلى الإعدادات',
+              text: 'Camera permission denied. You will be directed to settings',
               duration: 'short'
             });
             
-            // استراتيجية رفع مستوى الأهمية بعد الرفض الأول
+            // Escalation strategy after first rejection
             if (this.permissionAttempts > 1) {
               return await AppSettingsOpener.openAppSettings();
             }
           }
         } catch (mlkitError) {
-          console.error('خطأ في طلب أذونات MLKit:', mlkitError);
-          // استمرار للطريقة التالية
+          console.error('Error requesting MLKit permissions:', mlkitError);
+          // Continue to next method
         }
       }
       
-      // استخدام ملحق الكاميرا كبديل
+      // Use Camera plugin as fallback
       if (Capacitor.isPluginAvailable('Camera')) {
-        console.log('CameraPermissionRequester: استخدام Camera لطلب الإذن');
+        console.log('CameraPermissionRequester: Using Camera for permission');
         try {
-          // عرض شرح للمستخدم
+          // Show explanation to user
           await Toast.show({
-            text: 'سيطلب التطبيق إذن الكاميرا لمسح الباركود',
+            text: 'The app will request camera permission for barcode scanning',
             duration: 'short'
           });
           
@@ -130,37 +130,37 @@ export class CameraPermissionRequester {
             permissions: ['camera']
           });
           
-          console.log('نتيجة طلب أذونات الكاميرا:', result);
+          console.log('Camera permission request result:', result);
           
           if (result.camera === 'granted') {
             await Toast.show({
-              text: 'تم منح إذن الكاميرا بنجاح',
+              text: 'Camera permission granted successfully',
               duration: 'short'
             });
             return true;
           } else if (result.camera === 'denied') {
-            console.log('تم رفض إذن الكاميرا، محاولة فتح الإعدادات');
+            console.log('Camera permission denied, trying to open settings');
             
             await Toast.show({
-              text: 'تم رفض إذن الكاميرا. سيتم توجيهك إلى الإعدادات',
+              text: 'Camera permission denied. You will be directed to settings',
               duration: 'short'
             });
             
-            // استراتيجية رفع مستوى الأهمية بعد الرفض الأول
+            // Escalation strategy after first rejection
             if (this.permissionAttempts > 1) {
               return await AppSettingsOpener.openAppSettings();
             }
           }
         } catch (cameraError) {
-          console.error('خطأ في طلب أذونات الكاميرا:', cameraError);
+          console.error('Error requesting Camera permissions:', cameraError);
         }
       }
       
-      // في حالة عدم توفر أي من المكتبات، نفتح الإعدادات
-      console.warn('CameraPermissionRequester: لا يوجد ملحق متاح لطلب إذن الكاميرا، محاولة فتح الإعدادات');
+      // If no plugin is available, open settings
+      console.warn('CameraPermissionRequester: No plugin available to request camera permission, trying to open settings');
       return await AppSettingsOpener.openAppSettings();
     } catch (error) {
-      console.error('CameraPermissionRequester: خطأ في طلب الإذن:', error);
+      console.error('CameraPermissionRequester: Error requesting permission:', error);
       return false;
     }
   }
