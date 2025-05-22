@@ -33,6 +33,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            debuggable true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -84,6 +87,7 @@ dependencies {
     implementation project(':capacitor-camera')
     implementation project(':capacitor-mlkit-barcode-scanning')
     implementation project(':capacitor-toast')
+    implementation project(':capacitor-browser')
 }
 
 apply from: 'capacitor.build.gradle'
