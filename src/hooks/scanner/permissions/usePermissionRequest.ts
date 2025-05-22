@@ -41,7 +41,7 @@ export const usePermissionRequest = () => {
           
           // عرض رسالة توضيحية للمستخدم قبل طلب الإذن
           await Toast.show({
-            text: 'التطبيق يحتاج إلى إذن الكاميرا للقيام بعمليات المسح الضوئي',
+            text: 'The app needs camera permission for barcode scanning',
             duration: 'short'
           }).catch(() => {});
           
@@ -54,7 +54,7 @@ export const usePermissionRequest = () => {
             
             // عرض رسالة نجاح
             await Toast.show({
-              text: 'تم منح إذن الكاميرا بنجاح!',
+              text: 'Camera permission granted successfully!',
               duration: 'short'
             }).catch(() => {});
             
@@ -72,7 +72,7 @@ export const usePermissionRequest = () => {
               console.log('[usePermissionRequest] تم منح إذن MLKit في المحاولة الثانية!');
               
               await Toast.show({
-                text: 'تم منح إذن الكاميرا بنجاح!',
+                text: 'Camera permission granted successfully!',
                 duration: 'short'
               }).catch(() => {});
               
@@ -101,7 +101,7 @@ export const usePermissionRequest = () => {
           
           // عرض رسالة توضيحية للمستخدم
           await Toast.show({
-            text: 'التطبيق يحتاج إلى إذن الكاميرا للقيام بعمليات المسح الضوئي',
+            text: 'The app needs camera permission for barcode scanning',
             duration: 'short'
           }).catch(() => {});
           
@@ -116,7 +116,7 @@ export const usePermissionRequest = () => {
             
             // عرض رسالة نجاح
             await Toast.show({
-              text: 'تم منح إذن الكاميرا بنجاح!',
+              text: 'Camera permission granted successfully!',
               duration: 'short'
             }).catch(() => {});
             
@@ -126,7 +126,7 @@ export const usePermissionRequest = () => {
             
             // إظهار رسالة توجيهية للمستخدم
             await Toast.show({
-              text: 'يرجى تمكين إذن الكاميرا من إعدادات جهازك للاستمرار',
+              text: 'Please enable camera permission in your device settings',
               duration: 'long'
             }).catch(() => {});
             
@@ -157,8 +157,8 @@ export const usePermissionRequest = () => {
       
       // عرض رسالة خطأ للمستخدم
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء طلب إذن الكاميرا",
+        title: "Error",
+        description: "An error occurred while requesting camera permission",
         variant: "destructive"
       });
       
