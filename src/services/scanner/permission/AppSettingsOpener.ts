@@ -45,8 +45,8 @@ export class AppSettingsOpener {
             duration: 'short'
           });
           
-          // Use Capacitor App API to open app settings
-          await App.openUrl({ url: 'app-settings:' });
+          // Use Browser to open app settings URL for iOS
+          await Browser.open({ url: 'app-settings:' });
           return true;
         } catch (error) {
           console.error('Failed to open iOS settings:', error);
