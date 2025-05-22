@@ -42,6 +42,20 @@ class PlatformService {
   }
   
   /**
+   * Check if the app is installed (as opposed to running in a browser)
+   * This checks if the app is running in standalone mode
+   */
+  public isInstalledApp(): boolean {
+    // Check for iOS standalone mode
+    const isIOSStandalone = (window.navigator as any).standalone === true;
+    
+    // Check for display-mode: standalone (PWA)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    return isIOSStandalone || isStandalone;
+  }
+  
+  /**
    * Get detailed platform information
    */
   public getPlatformInfo(): { 
@@ -49,6 +63,7 @@ class PlatformService {
     isNative: boolean;
     isWebView: boolean;
     isMobile: boolean;
+    isInstalledApp: boolean;
     userAgent: string;
   } {
     return {
@@ -56,6 +71,7 @@ class PlatformService {
       isNative: this.isNativePlatform(),
       isWebView: this.isWebView(),
       isMobile: this.isMobileDevice(),
+      isInstalledApp: this.isInstalledApp(),
       userAgent: navigator.userAgent
     };
   }
