@@ -1,5 +1,4 @@
 
-import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { Toast } from '@capacitor/toast';
@@ -13,24 +12,24 @@ export class AppSettingsOpener {
       console.log('AppSettingsOpener: Attempting to open app settings');
       
       const platform = Capacitor.getPlatform();
-      const appId = 'app.lovable.foodvault.manager';
+      console.log('Current platform:', platform);
       
       if (platform === 'android') {
-        // For Android devices
         try {
-          // Show message to user
           await Toast.show({
             text: 'Opening app settings. Please enable camera permission',
             duration: 'short'
           });
           
-          // Try using Android's app details page
-          await Browser.open({ url: `package:${appId}` });
+          // For Android, try to open app-specific settings
+          await Browser.open({ 
+            url: 'app-settings:',
+            windowName: '_system'
+          });
           return true;
         } catch (error) {
           console.error('Failed to open Android settings:', error);
           
-          // Fallback for Android - show instructions
           await Toast.show({
             text: 'Please open Settings > Apps > Food Vault > Permissions and enable Camera',
             duration: 'long'
@@ -38,20 +37,20 @@ export class AppSettingsOpener {
           return false;
         }
       } else if (platform === 'ios') {
-        // For iOS devices
         try {
           await Toast.show({
             text: 'Opening app settings. Please enable camera permission',
             duration: 'short'
           });
           
-          // Use Browser to open app settings URL for iOS
-          await Browser.open({ url: 'app-settings:' });
+          await Browser.open({ 
+            url: 'app-settings:',
+            windowName: '_system'
+          });
           return true;
         } catch (error) {
           console.error('Failed to open iOS settings:', error);
           
-          // Fallback for iOS - show instructions
           await Toast.show({
             text: 'Please open Settings > Food Vault > Camera and enable the permission',
             duration: 'long'
@@ -59,7 +58,6 @@ export class AppSettingsOpener {
           return false;
         }
       } else {
-        // For web environment
         console.log('Cannot open app settings in web environment');
         await Toast.show({
           text: 'Please enable camera permission in your browser settings',
@@ -69,6 +67,10 @@ export class AppSettingsOpener {
       }
     } catch (error) {
       console.error('AppSettingsOpener: Error opening settings:', error);
+      await Toast.show({
+        text: 'Could not open settings. Please manually enable camera permission',
+        duration: 'long'
+      });
       return false;
     }
   }

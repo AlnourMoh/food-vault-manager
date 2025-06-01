@@ -1,151 +1,90 @@
 
-import { Toast } from '@capacitor/toast';
+import { useToast } from '@/hooks/use-toast';
+import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
-import { Capacitor } from '@capacitor/core';
-import { usePermissionStatus } from './usePermissionStatus';
-import { useAppSettings } from './useAppSettings';
+import { Toast } from '@capacitor/toast';
 
-export const usePermissionRequest = (permissionStatus: ReturnType<typeof usePermissionStatus>) => {
-  const { setIsLoading, setHasPermission, permissionDeniedCount, setPermissionDeniedCount } = permissionStatus;
-  const { openAppSettings } = useAppSettings();
+export const usePermissionRequest = (permissionStatus: any) => {
+  const { setIsLoading, setHasPermission } = permissionStatus;
+  const { toast } = useToast();
 
-  const requestCameraPermission = async () => {
+  const requestCameraPermission = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      console.log("طلب إذن الكاميرا، المحاولة رقم:", permissionDeniedCount + 1);
-      
-      // تسجيل عدد المحاولات
-      const attemptCount = permissionDeniedCount + 1;
-      
-      // إذا تجاوزنا 3 محاولات، نحاول فتح الإعدادات مباشرة
-      if (attemptCount > 3) {
-        console.log("تجاوز عدد المحاولات، فتح الإعدادات مباشرة");
-        await Toast.show({
-          text: 'حاولت عدة مرات، يبدو أنك بحاجة لتمكين الإذن يدوياً من إعدادات جهازك',
-          duration: 'short'
-        });
-        
-        const opened = await openAppSettings();
-        return opened;
-      }
-      
-      // استراتيجية متعددة للمحاولة - على أساس المنصة
-      
-      // 1. في بيئة الويب
+
       if (!Capacitor.isNativePlatform()) {
-        console.log("محاولة طلب إذن الكاميرا في المتصفح");
-        
-        // إذا كان المتصفح يدعم واجهات برمجة الكاميرا
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            // تم منح الإذن، إغلاق التدفق فورًا
-            stream.getTracks().forEach(track => track.stop());
-            console.log("تم منح إذن كاميرا المتصفح");
-            setHasPermission(true);
-            setPermissionDeniedCount(0);
-            return true;
-          } catch (error) {
-            console.error("تم رفض إذن كاميرا المتصفح:", error);
-            setHasPermission(false);
-            setPermissionDeniedCount(prev => prev + 1);
-            
-            // عرض رسالة للمستخدم
-            await Toast.show({
-              text: 'تم رفض إذن الكاميرا. يرجى تمكينه من إعدادات المتصفح.',
-              duration: 'long'
-            });
-            return false;
-          }
-        } else {
-          console.warn("المتصفح لا يدعم واجهة mediaDevices");
-          setHasPermission(false);
-          await Toast.show({
-            text: 'متصفحك لا يدعم الوصول إلى الكاميرا.',
-            duration: 'long'
-          });
-          return false;
-        }
-      }
-      
-      // 2. في بيئة التطبيق الأصلي
-      let granted = false;
-      
-      // محاولة استخدام MLKitBarcodeScanner
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log("استخدام MLKitBarcodeScanner لطلب الإذن");
-        
-        // عرض رسالة توضيحية
-        await Toast.show({
-          text: 'التطبيق يحتاج لإذن الكاميرا لمسح الباركود',
-          duration: 'short'
+        toast({
+          title: "Not Supported",
+          description: "Camera permissions are not supported in browser",
+          variant: "destructive"
         });
-        
-        // طلب الإذن
-        const result = await BarcodeScanner.requestPermissions();
-        granted = result.camera === 'granted';
-        console.log("نتيجة طلب إذن MLKitBarcodeScanner:", granted);
-        
-        if (granted) {
-          setHasPermission(true);
-          setPermissionDeniedCount(0);
-          return true;
-        }
+        return false;
       }
-      
-      // إذا لم ننجح، جرب ملحق الكاميرا
-      if (!granted && Capacitor.isPluginAvailable('Camera')) {
-        console.log("استخدام Camera لطلب الإذن");
-        
-        // عرض رسالة توضيحية
-        await Toast.show({
-          text: 'يرجى السماح باستخدام الكاميرا لمسح الباركود',
-          duration: 'short'
-        });
-        
-        // طلب الإذن
-        const result = await Camera.requestPermissions({
-          permissions: ['camera']
-        });
-        granted = result.camera === 'granted';
-        console.log("نتيجة طلب إذن Camera:", granted);
-        
-        if (granted) {
-          setHasPermission(true);
-          setPermissionDeniedCount(0);
-          return true;
-        }
-      }
-      
-      // زيادة عداد المحاولات الفاشلة
-      setPermissionDeniedCount(prev => prev + 1);
-      setHasPermission(false);
-      
-      // إذا وصلنا إلى هنا، فإن الإذن تم رفضه
-      console.log("تم رفض إذن الكاميرا في جميع المحاولات");
-      
-      // عرض رسالة توضيحية للمستخدم
+
+      // Show explanatory message
       await Toast.show({
-        text: 'لم يتم منح إذن الكاميرا. يرجى تمكينه من إعدادات جهازك للمتابعة.',
-        duration: 'long'
+        text: 'The app needs camera permission for barcode scanning',
+        duration: 'short'
       });
-      
-      // بعد محاولتين، نوجه المستخدم لإعدادات التطبيق
-      if (attemptCount >= 2) {
-        console.log("محاولة فتح الإعدادات بعد رفض متكرر");
-        setTimeout(() => openAppSettings(), 1500);
+
+      // Try MLKit first
+      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        const result = await BarcodeScanner.requestPermissions();
+        const granted = result.camera === 'granted';
+        
+        setHasPermission(granted);
+        
+        if (granted) {
+          await Toast.show({
+            text: 'Camera permission granted successfully!',
+            duration: 'short'
+          });
+        }
+        
+        return granted;
       }
+
+      // Fallback to Camera plugin
+      if (Capacitor.isPluginAvailable('Camera')) {
+        const result = await Camera.requestPermissions();
+        const granted = result.camera === 'granted';
+        
+        setHasPermission(granted);
+        
+        if (granted) {
+          await Toast.show({
+            text: 'Camera permission granted successfully!',
+            duration: 'short'
+          });
+        }
+        
+        return granted;
+      }
+
+      toast({
+        title: "Error",
+        description: "No camera plugin available",
+        variant: "destructive"
+      });
       
       return false;
     } catch (error) {
-      console.error("خطأ في طلب الإذن:", error);
-      setHasPermission(false);
+      console.error('Error requesting permission:', error);
+      
+      toast({
+        title: "Error",
+        description: "Failed to request camera permission",
+        variant: "destructive"
+      });
+      
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { requestCameraPermission };
+  return {
+    requestCameraPermission
+  };
 };
