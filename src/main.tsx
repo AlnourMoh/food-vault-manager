@@ -1,14 +1,15 @@
 
-import React from 'react'
-import ReactDOM from 'react-dom/client'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
 import App from './App'
 import './styles/base.css'
 import './styles/tailwind.css'
 import './styles/legacy.css'
-import './styles/zxing-scanner.css' // استيراد أنماط الماسح الضوئي
+import './styles/zxing-scanner.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+const root = createRoot(document.getElementById('root')!)
+root.render(
+  <StrictMode>
     <App />
-  </React.StrictMode>,
+  </StrictMode>
 )
