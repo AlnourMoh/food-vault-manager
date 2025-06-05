@@ -1,55 +1,76 @@
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { platformService } from '@/services/scanner/PlatformService';
 
 /**
- * Hook للحصول على معلومات حول بيئة تشغيل الماسح
+ * هوك للتعرف على بيئة تشغيل الماسح الضوئي وتوفر المكونات
  */
 export const useScannerEnvironment = () => {
-  return useMemo(() => {
-    const isNativePlatform = Capacitor.isNativePlatform();
-    
-    // التحقق من WebView في أندرويد
-    const isWebView = /wv|WebView/.test(navigator.userAgent);
-    
-    // هل التطبيق مثبت
-    const isInstalledApp = window.matchMedia('(display-mode: standalone)').matches || 
-                          (window.navigator as any).standalone === true;
-    
-    // اعتبار البيئة أصلية إذا تم تصنيفها هكذا بأي من الطرق
-    const isEffectivelyNative = isNativePlatform || isWebView || isInstalledApp;
-    
-    // التحقق من جهاز الجوّال
-    const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
-    // التعرف على نظام التشغيل
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    
-    // تحقق من وجود Capacitor
-    const hasCapacitor = typeof window.Capacitor !== 'undefined';
-    
-    // تحقق من وجود الملحقات
-    const availablePlugins = {
-      mlkitScanner: Capacitor.isPluginAvailable('MLKitBarcodeScanner'),
-      barcodeScanner: Capacitor.isPluginAvailable('BarcodeScanner'),
-      camera: Capacitor.isPluginAvailable('Camera'),
-      app: Capacitor.isPluginAvailable('App'),
-      browser: Capacitor.isPluginAvailable('Browser')
+  const [environment, setEnvironment] = useState({
+    isNativePlatform: false,
+    platform: 'web',
+    isWebView: false,
+    hasCapacitor: false,
+    availablePlugins: {
+      mlkitScanner: false,
+      camera: false,
+      barcodeScanner: false,
+      app: false
+    }
+  });
+
+  useEffect(() => {
+    const detectEnvironment = async () => {
+      try {
+        // التحقق من بيئة التشغيل
+        const isNative = platformService.isNativePlatform();
+        const isWebView = platformService.isWebView();
+        const platform = platformService.getPlatform();
+        
+        // نعتبر أنفسنا في بيئة أصلية إذا كنا في WebView أو إذا كان Capacitor يقول ذلك
+        const effectivelyNative = isNative || isWebView;
+        
+        // التحقق من وجود WebView
+        const userAgent = navigator.userAgent.toLowerCase();
+        const hasWebViewMarkers = userAgent.includes('wv') || 
+                          userAgent.includes('foodvaultmanage') || 
+                          userAgent.includes('capacitor');
+        
+        // التحقق من توفر المكونات الإضافية
+        const hasCapacitor = platformService.hasCapacitor();
+        const availablePlugins = {
+          mlkitScanner: Capacitor.isPluginAvailable('MLKitBarcodeScanner'),
+          camera: Capacitor.isPluginAvailable('Camera'),
+          barcodeScanner: Capacitor.isPluginAvailable('BarcodeScanner'),
+          app: Capacitor.isPluginAvailable('App')
+        };
+        
+        // تعيين حالة البيئة المحسّنة
+        setEnvironment({
+          // اعتبار التطبيق في بيئة أصلية إذا كان في WebView أيضاً
+          isNativePlatform: effectivelyNative,
+          platform,
+          isWebView: isWebView || hasWebViewMarkers,
+          hasCapacitor,
+          availablePlugins
+        });
+        
+        console.log('[useScannerEnvironment] تم تشخيص البيئة بالطريقة المحسّنة:', {
+          isNativePlatform: effectivelyNative,
+          platform,
+          isWebView: isWebView || hasWebViewMarkers,
+          userAgent,
+          hasCapacitor,
+          availablePlugins
+        });
+      } catch (error) {
+        console.error('[useScannerEnvironment] خطأ في اكتشاف البيئة:', error);
+      }
     };
     
-    return {
-      isNativePlatform,
-      isWebView,
-      isInstalledApp,
-      isEffectivelyNative,
-      isMobileDevice,
-      isAndroid,
-      isIOS,
-      platform: Capacitor.getPlatform(),
-      userAgent: navigator.userAgent,
-      hasCapacitor,
-      availablePlugins
-    };
+    detectEnvironment();
   }, []);
+
+  return environment;
 };

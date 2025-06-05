@@ -1,8 +1,7 @@
 
 import { useState } from 'react';
 import { Toast } from '@capacitor/toast';
-import { Browser } from '@capacitor/browser';
-import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 export const useScannerPermissionHandlers = (
   requestPermission: () => Promise<boolean>,
@@ -11,9 +10,8 @@ export const useScannerPermissionHandlers = (
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const handleRequestPermission = async (): Promise<void> => {
+    console.log('ScanProductContent: محاولة طلب إذن الكاميرا...');
     try {
-      console.log('ScanProductContent: محاولة طلب إذن الكاميرا...');
-      
       // عرض رسالة توضيحية
       await Toast.show({
         text: 'جاري طلب إذن الكاميرا...',
@@ -50,7 +48,7 @@ export const useScannerPermissionHandlers = (
       
       // محاولة أخيرة للتعامل مع الخطأ
       try {
-        const platform = Capacitor.getPlatform();
+        const platform = window.Capacitor?.getPlatform();
         const message = platform === 'ios' 
           ? 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا لتمكين الإذن' 
           : 'يرجى فتح إعدادات التطبيق > الأذونات لتمكين الكاميرا';
@@ -75,7 +73,7 @@ export const useScannerPermissionHandlers = (
       
       if (!opened) {
         // إرشاد المستخدم لفتح الإعدادات يدويًا
-        const platform = Capacitor.getPlatform();
+        const platform = window.Capacitor?.getPlatform();
         const message = platform === 'ios' 
           ? 'يرجى فتح إعدادات جهازك > الخصوصية > الكاميرا لتمكين الإذن' 
           : 'يرجى فتح إعدادات جهازك > التطبيقات > مخزن الطعام > الأذونات';
@@ -89,7 +87,7 @@ export const useScannerPermissionHandlers = (
       console.error('ScanProductContent: خطأ في فتح الإعدادات:', error);
       
       // إرشاد المستخدم لفتح الإعدادات يدويًا مع معلومات تفصيلية
-      const platformText = Capacitor.getPlatform() === 'ios' 
+      const platformText = window.Capacitor?.getPlatform() === 'ios' 
         ? 'فتح الإعدادات > الخصوصية > الكاميرا > تطبيق مخزن الطعام' 
         : 'فتح الإعدادات > التطبيقات > مخزن الطعام > الأذونات';
       

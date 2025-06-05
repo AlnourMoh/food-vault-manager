@@ -1,6 +1,5 @@
 
 import { Plugin } from '@capacitor/core';
-import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
 declare global {
   interface Window {
@@ -10,6 +9,9 @@ declare global {
     };
   }
 }
+
+// استخدام BarcodeFormat مباشرة من مكتبة MLKit
+import { BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 
 // تحديث ScanOptions ليتوافق مع واجهة التطبيق
 export interface ScanOptions {
@@ -41,9 +43,10 @@ export interface BarcodeScannerPlugin extends Plugin {
   
   /**
    * بدء عملية المسح الضوئي
+   * @param options خيارات المسح
    * @returns وعد بنتيجة المسح
    */
-  startScan(): Promise<ScanResult>;
+  startScan(options?: ScanOptions): Promise<ScanResult>;
   
   /**
    * إيقاف عملية المسح الضوئي

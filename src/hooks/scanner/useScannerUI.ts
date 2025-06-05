@@ -14,6 +14,12 @@ export const useScannerUI = () => {
       if (Capacitor.isNativePlatform()) {
         if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
           try {
+            // استخدام MLKit BarcodeScanner لإخفاء خلفية التطبيق
+            console.log('[useScannerUI] إخفاء خلفية التطبيق باستخدام MLKit...');
+            
+            // لن نحتاج لهذا عندما نستخدم طريقة الفتح المباشر
+            // await BarcodeScanner.hideBackground();
+            
             // تطبيق أنماط CSS لإخفاء العناصر الأخرى
             document.documentElement.style.setProperty('--app-bg-opacity', '0');
             
@@ -28,34 +34,12 @@ export const useScannerUI = () => {
               }
             });
             
-            // تأكد من أن عناصر الفيديو مرئية
-            const videoElements = document.querySelectorAll('video');
-            videoElements.forEach(video => {
-              if (video instanceof HTMLVideoElement) {
-                video.style.opacity = '1';
-                video.style.visibility = 'visible';
-                video.style.display = 'block';
-                video.style.zIndex = '999';
-              }
-            });
-            
             return true;
           } catch (e) {
             console.error('[useScannerUI] خطأ في إخفاء خلفية MLKit:', e);
           }
         }
       }
-      
-      // حتى في بيئة الويب، تأكد من أن عناصر الفيديو مرئية
-      const videoElements = document.querySelectorAll('video');
-      videoElements.forEach(video => {
-        if (video instanceof HTMLVideoElement) {
-          video.style.opacity = '1';
-          video.style.visibility = 'visible';
-          video.style.display = 'block';
-          video.style.zIndex = '999';
-        }
-      });
       
       return false;
     } catch (error) {
@@ -83,21 +67,15 @@ export const useScannerUI = () => {
         }
       });
       
-      // إضافة تشخيص للكاميرا عند الاستعادة
-      const videoElements = document.querySelectorAll('video');
-      console.log(`[useScannerUI] استعادة عدد ${videoElements.length} عناصر فيديو`);
-      videoElements.forEach((video, index) => {
-        if (video instanceof HTMLVideoElement) {
-          console.log(`[useScannerUI] حالة فيديو ${index}:`, {
-            active: !video.paused,
-            muted: video.muted,
-            srcObject: video.srcObject ? 'موجود' : 'غير موجود',
-            display: video.style.display,
-            visibility: video.style.visibility,
-            opacity: video.style.opacity
-          });
+      // إظهار الخلفية باستخدام MLKit إذا كانت متاحة
+      if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        try {
+          // لم نعد نحتاج لهذا لأننا نستخدم طريقة أخرى للمسح
+          // await BarcodeScanner.showBackground();
+        } catch (e) {
+          console.error('[useScannerUI] خطأ في إظهار خلفية MLKit:', e);
         }
-      });
+      }
       
       return true;
     } catch (error) {
@@ -122,24 +100,6 @@ export const useScannerUI = () => {
           console.error('[useScannerUI] خطأ في إيقاف المسح عند التنظيف:', e);
         }
       }
-      
-      // إضافة تشخيص للكاميرا
-      const videoElements = document.querySelectorAll('video');
-      videoElements.forEach((video) => {
-        if (video instanceof HTMLVideoElement && video.srcObject) {
-          try {
-            // إيقاف جميع المسارات
-            const tracks = (video.srcObject as MediaStream).getTracks();
-            tracks.forEach(track => {
-              track.stop();
-              console.log('[useScannerUI] تم إيقاف مسار الكاميرا');
-            });
-            video.srcObject = null;
-          } catch (e) {
-            console.error('[useScannerUI] خطأ في إيقاف مسارات الكاميرا:', e);
-          }
-        }
-      });
       
     } catch (error) {
       console.error('[useScannerUI] خطأ في تنظيف الماسح:', error);

@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useScannerUI } from '@/hooks/scanner/useScannerUI';
-import { Capacitor } from '@capacitor/core';
 
 export const useScannerInitialization = () => {
   const [isInitializing, setIsInitializing] = useState(false);
@@ -14,10 +13,6 @@ export const useScannerInitialization = () => {
     // وضع الكود في كتلة try-catch لتفادي انهيار التطبيق بسبب أخطاء غير متوقعة
     try {
       setIsInitializing(true);
-      
-      // تسجيل بيانات تشخيصية
-      console.log("[useScannerInitialization] المنصة:", Capacitor.getPlatform());
-      console.log("[useScannerInitialization] هل هي بيئة أصلية؟", Capacitor.isNativePlatform());
       
       // نستخدم Promise.resolve().then() لتأخير تنفيذ الكود بشكل طفيف
       // هذا يساعد في تجنب مشاكل التوقيت المحتملة في دورة حياة المكون
@@ -47,8 +42,8 @@ export const useScannerInitialization = () => {
     };
   }, []);
   
-  // نعيد isInitializing بشكل صحيح
+  // نعيد isInitializing: false بشكل مباشر لتجنب مشاكل الوصول المبكر للماسح
   return { 
-    isInitializing 
+    isInitializing: false 
   };
 };

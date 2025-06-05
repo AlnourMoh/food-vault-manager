@@ -1,29 +1,40 @@
 
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import MobileApp from './components/mobile/MobileApp';
-import { Toaster } from './components/ui/toaster';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeProvider } from "@/providers/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-// Import Tailwind CSS
-import './index.css';
+import { DesktopRoutes } from "./routes/DesktopRoutes";
+import { MobileRoutes } from "./routes/MobileRoutes";
+import MobileInventory from '@/pages/mobile/MobileInventory';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 function App() {
+  const isMobile = useIsMobile();
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <MobileApp />
-        <Toaster />
-      </Router>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <TooltipProvider>
+          <div className="min-h-screen bg-background">
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* صفحات مباشرة لتسهيل الوصول من الهاتف المحمول */}
+                <Route path="/inventory" element={<MobileInventory />} />
+                
+                {/* المسارات الأخرى */}
+                <Route path="/*" element={isMobile ? <MobileRoutes /> : <DesktopRoutes />} />
+              </Routes>
+            </BrowserRouter>
+          </div>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -11,7 +11,6 @@ import { BrowserView } from '@/components/mobile/scanner/components/BrowserView'
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { ScannerErrorBanner, ScannerErrorCard } from '@/components/mobile/scanner/components/ScannerErrorBanner';
 
 const ProductScan = () => {
   const navigate = useNavigate();
@@ -29,9 +28,7 @@ const ProductScan = () => {
   } = useProductScanLogic();
   
   // التحقق من بيئة التشغيل - تعامل مع البيئة دائماً على أنها تطبيق جوال
-  const isNativePlatform = Capacitor.isNativePlatform();
-  const isWebView = navigator.userAgent.toLowerCase().includes('wv');
-  const isMobileApp = isNativePlatform || isWebView;
+  const isNativePlatform = true; // Force native platform view
   
   // نطبع معلومات البيئة للتشخيص
   useEffect(() => {
@@ -76,36 +73,14 @@ const ProductScan = () => {
     );
   }
 
-  // إذا كان هناك خطأ في المسح أو لسنا في بيئة التطبيق
-  if (!isMobileApp) {
-    return (
-      <div className="container py-6 space-y-6">
-        <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
-        
-        {/* رسالة خطأ بالأحمر تظهر في أعلى الصفحة */}
-        <ScannerErrorBanner 
-          message="المسح غير متاح في المتصفح" 
-          subMessage="يرجى استخدام تطبيق الجوال للقيام بعمليات المسح"
-        />
-        
-        {/* رسالة خطأ مع زر إعادة المحاولة */}
-        <ScannerErrorCard
-          message="المسح غير متاح في المتصفح"
-          onRetry={handleOpenScanner}
-        />
-      </div>
-    );
-  }
-
   // إذا كان هناك خطأ في المسح
   if (scanError) {
     return (
       <div className="container py-6 space-y-6">
         <h1 className="text-2xl font-bold text-center">مسح المنتجات</h1>
-        
-        <ScannerErrorCard 
-          message={scanError}
-          onRetry={handleOpenScanner}
+        <ErrorDisplay 
+          error={scanError} 
+          onRetry={handleOpenScanner} 
         />
       </div>
     );

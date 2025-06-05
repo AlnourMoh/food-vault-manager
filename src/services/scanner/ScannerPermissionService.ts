@@ -1,335 +1,235 @@
 
 /**
- * Scanner permission service
+ * خدمة إدارة أذونات الماسح الضوئي
  */
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Camera } from '@capacitor/camera';
-import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
-import { Toast } from '@capacitor/toast';
 import { platformService } from './PlatformService';
 
-class ScannerPermissionService {
-  private permissionRequestCount = 0;
-  
+export class ScannerPermissionService {
   /**
-   * Check if device supports scanner
+   * التحقق من دعم الجهاز للماسح
    */
   public async isSupported(): Promise<boolean> {
     try {
-      // First check if we're in a native platform
+      // التحقق أولاً إذا كنا في منصة أصلية
       if (!platformService.isNativePlatform()) {
-        console.warn('[ScannerPermissionService] We are in a browser environment, scanner is not supported');
+        console.warn('[ScannerPermissionService] نحن في بيئة المتصفح، الماسح غير مدعوم');
         return false;
       }
       
-      // Log information about platform and plugin availability
-      console.log(`[ScannerPermissionService] Platform: ${platformService.getPlatform()}`);
+      // طباعة معلومات عن المنصة وتوفر الملحقات
+      console.log(`[ScannerPermissionService] منصة: ${platformService.getPlatform()}`);
       console.log(`[ScannerPermissionService] MLKitBarcodeScanner: ${platformService.isPluginAvailable('MLKitBarcodeScanner')}`);
       console.log(`[ScannerPermissionService] Camera: ${platformService.isPluginAvailable('Camera')}`);
       
-      // Check if barcode scanner plugin is supported
+      // التحقق من دعم ملحق الماسح الضوئي
       if (platformService.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           const result = await BarcodeScanner.isSupported();
-          console.log('[ScannerPermissionService] isSupported result from BarcodeScanner:', result);
+          console.log('[ScannerPermissionService] نتيجة isSupported من BarcodeScanner:', result);
           return result.supported;
         } catch (error) {
-          console.error('[ScannerPermissionService] Error checking BarcodeScanner support:', error);
+          console.error('[ScannerPermissionService] خطأ في التحقق من دعم BarcodeScanner:', error);
         }
       }
 
-      // As a fallback, check if getUserMedia is supported
+      // كخطة بديلة، التحقق من دعم getUserMedia
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
-          // Check for video input devices
+          // التحقق من دعم مدخلات الفيديو
           const devices = await navigator.mediaDevices.enumerateDevices();
           const hasVideoInput = devices.some(device => device.kind === 'videoinput');
           
           if (hasVideoInput) {
-            console.log('[ScannerPermissionService] Camera detected using enumerateDevices');
+            console.log('[ScannerPermissionService] تم اكتشاف كاميرا باستخدام enumerateDevices');
             return true;
           } else {
-            console.warn('[ScannerPermissionService] No cameras available on this device');
+            console.warn('[ScannerPermissionService] لا توجد كاميرات متاحة على هذا الجهاز');
           }
         } catch (error) {
-          console.error('[ScannerPermissionService] Error using enumerateDevices:', error);
+          console.error('[ScannerPermissionService] خطأ في استخدام enumerateDevices:', error);
         }
       } else {
-        console.warn('[ScannerPermissionService] getUserMedia not supported in this browser');
+        console.warn('[ScannerPermissionService] getUserMedia غير مدعوم في هذا المتصفح');
       }
       
-      // On mobile, assume camera exists even if we can't verify it
+      // في بيئة الجوال، نفترض وجود الكاميرا حتى لو لم نتمكن من التحقق منها
       if (platformService.isNativePlatform()) {
-        console.log('[ScannerPermissionService] On mobile, assuming camera support');
+        console.log('[ScannerPermissionService] في بيئة الجوال، نفترض دعم الكاميرا');
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('[ScannerPermissionService] Error checking support:', error);
-      // In case of error on mobile, assume support as a fallback
+      console.error('[ScannerPermissionService] خطأ في التحقق من الدعم:', error);
+      // في حالة الخطأ في بيئة الجوال، نفترض وجود الدعم كإجراء احتياطي
       return platformService.isNativePlatform();
     }
   }
 
   /**
-   * Check camera permission without requesting it
+   * التحقق من إذن الكاميرا دون طلب الإذن
    */
   public async checkPermission(): Promise<boolean> {
     try {
-      console.log('[ScannerPermissionService] Checking camera permission...');
+      console.log('[ScannerPermissionService] التحقق من إذن الكاميرا...');
       
       if (!await this.isSupported()) {
-        console.warn('[ScannerPermissionService] Device does not support scanning');
+        console.warn('[ScannerPermissionService] الجهاز لا يدعم المسح الضوئي');
         return false;
       }
       
-      // In native app environment
+      // في بيئة التطبيق الأصلي
       if (platformService.isNativePlatform()) {
-        // Try BarcodeScanner first
+        // محاولة استخدام BarcodeScanner أولاً
         if (platformService.isPluginAvailable('MLKitBarcodeScanner')) {
-          console.log('[ScannerPermissionService] Checking permission using MLKitBarcodeScanner');
+          console.log('[ScannerPermissionService] التحقق من الإذن باستخدام MLKitBarcodeScanner');
           const status = await BarcodeScanner.checkPermissions();
-          console.log('[ScannerPermissionService] MLKitBarcodeScanner permission status:', status);
-          
-          // Show permission status to user
-          await Toast.show({
-            text: `Camera permission status: ${status.camera}`,
-            duration: 'short'
-          });
-          
+          console.log('[ScannerPermissionService] حالة إذن MLKitBarcodeScanner:', status);
           return status.camera === 'granted';
         }
         
-        // Use standard Camera plugin
+        // استخدام ملحق الكاميرا العادي
         if (platformService.isPluginAvailable('Camera')) {
-          console.log('[ScannerPermissionService] Checking permission using Camera');
+          console.log('[ScannerPermissionService] التحقق من الإذن باستخدام Camera');
           const status = await Camera.checkPermissions();
-          console.log('[ScannerPermissionService] Camera permission status:', status);
-          
-          // Show permission status to user
-          await Toast.show({
-            text: `Camera permission status: ${status.camera}`,
-            duration: 'short'
-          });
-          
+          console.log('[ScannerPermissionService] حالة إذن Camera:', status);
           return status.camera === 'granted';
         }
         
-        console.warn('[ScannerPermissionService] No plugin available to check permission');
+        console.warn('[ScannerPermissionService] لا يوجد ملحق متاح للتحقق من الإذن');
         return false;
       }
       
-      // In browser environment, check for camera access
-      // but don't actually access it to avoid triggering permission popup
+      // في بيئة المتصفح، نتحقق من إمكانية الوصول إلى الكاميرا
+      // ولكن لا نحاول الوصول إليها فعليًا لتجنب ظهور النافذة المنبثقة للإذن
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         
-        // If there are video devices, we might have permission or it might not have been requested yet
-        // We can't accurately know permission state without trying to access the camera
+        // إذا كانت هناك أجهزة فيديو، فهناك احتمال أن يكون لدينا إذن أو لم يتم طلبه بعد
+        // لا يمكننا معرفة حالة الإذن بدقة بدون محاولة الوصول للكاميرا
         return videoDevices.length > 0;
       } catch (error) {
-        console.error('[ScannerPermissionService] Error checking video devices:', error);
+        console.error('[ScannerPermissionService] خطأ في التحقق من أجهزة الفيديو:', error);
         return false;
       }
     } catch (error) {
-      console.error('[ScannerPermissionService] Error checking camera permission:', error);
+      console.error('[ScannerPermissionService] خطأ في التحقق من إذن الكاميرا:', error);
       return false;
     }
   }
   
   /**
-   * Request camera permission
+   * طلب إذن الكاميرا
    */
   public async requestPermission(): Promise<boolean> {
     try {
-      console.log('[ScannerPermissionService] Requesting camera permission...');
+      console.log('[ScannerPermissionService] طلب إذن الكاميرا...');
       
       if (!await this.isSupported()) {
-        console.warn('[ScannerPermissionService] Device does not support scanning');
+        console.warn('[ScannerPermissionService] الجهاز لا يدعم المسح الضوئي');
         return false;
       }
-
-      // Increment permission request counter
-      this.permissionRequestCount++;
-      console.log(`[ScannerPermissionService] Permission request attempt: ${this.permissionRequestCount}`);
       
-      // Show message to user before requesting permission
-      await Toast.show({
-        text: 'App needs camera permission to scan barcodes',
-        duration: 'long'
-      });
-      
-      // In native app environment
+      // في بيئة التطبيق الأصلي
       if (platformService.isNativePlatform()) {
-        // Try BarcodeScanner first
+        // محاولة استخدام BarcodeScanner أولاً
         if (platformService.isPluginAvailable('MLKitBarcodeScanner')) {
-          console.log('[ScannerPermissionService] Requesting permission using MLKitBarcodeScanner');
+          console.log('[ScannerPermissionService] طلب الإذن باستخدام MLKitBarcodeScanner');
+          const status = await BarcodeScanner.checkPermissions();
           
-          try {
-            const status = await BarcodeScanner.checkPermissions();
-            
-            if (status.camera === 'granted') {
-              console.log('[ScannerPermissionService] Permission already granted');
-              return true;
-            }
-            
-            // Request permission if not already granted
-            console.log('[ScannerPermissionService] Requesting permission through MLKitBarcodeScanner.requestPermissions...');
-            const result = await BarcodeScanner.requestPermissions();
-            console.log('[ScannerPermissionService] Permission request result:', result);
-            
-            if (result.camera === 'granted') {
-              await Toast.show({
-                text: 'Camera permission granted successfully',
-                duration: 'short'
-              });
-              return true;
-            } else if (result.camera === 'denied') {
-              // Open app settings directly after denial
-              await Toast.show({
-                text: 'Camera permission denied. Opening settings...',
-                duration: 'short'
-              });
-              await this.openAppSettings();
-              return false;
-            }
-          } catch (error) {
-            console.error('[ScannerPermissionService] Error requesting permission using MLKitBarcodeScanner:', error);
+          if (status.camera === 'granted') {
+            console.log('[ScannerPermissionService] الإذن ممنوح بالفعل');
+            return true;
           }
+          
+          // طلب الإذن إذا لم يكن ممنوحاً
+          console.log('[ScannerPermissionService] طلب الإذن من خلال requestPermissions...');
+          const result = await BarcodeScanner.requestPermissions();
+          console.log('[ScannerPermissionService] نتيجة طلب الإذن:', result);
+          return result.camera === 'granted';
         }
         
-        // Use standard Camera plugin
+        // استخدام ملحق الكاميرا العادي
         if (platformService.isPluginAvailable('Camera')) {
-          console.log('[ScannerPermissionService] Requesting permission using Camera');
+          console.log('[ScannerPermissionService] طلب الإذن باستخدام Camera');
+          const status = await Camera.checkPermissions();
           
-          try {
-            const status = await Camera.checkPermissions();
-            
-            if (status.camera === 'granted') {
-              console.log('[ScannerPermissionService] Permission already granted');
-              return true;
-            }
-            
-            // Request permission if not already granted
-            console.log('[ScannerPermissionService] Requesting permission through Camera.requestPermissions...');
-            const result = await Camera.requestPermissions();
-            console.log('[ScannerPermissionService] Permission request result:', result);
-            
-            if (result.camera === 'granted') {
-              await Toast.show({
-                text: 'Camera permission granted successfully',
-                duration: 'short'
-              });
-              return true;
-            } else if (result.camera === 'denied') {
-              // Open app settings directly after denial
-              await Toast.show({
-                text: 'Camera permission denied. Opening settings...',
-                duration: 'short'
-              });
-              await this.openAppSettings();
-              return false;
-            }
-          } catch (error) {
-            console.error('[ScannerPermissionService] Error requesting permission using Camera:', error);
+          if (status.camera === 'granted') {
+            console.log('[ScannerPermissionService] الإذن ممنوح بالفعل');
+            return true;
           }
+          
+          // طلب الإذن إذا لم يكن ممنوحاً
+          console.log('[ScannerPermissionService] طلب الإذن من خلال Camera.requestPermissions...');
+          const result = await Camera.requestPermissions();
+          console.log('[ScannerPermissionService] نتيجة طلب الإذن:', result);
+          return result.camera === 'granted';
         }
         
-        // If we reach here and haven't succeeded, try opening app settings
-        await Toast.show({
-          text: 'Unable to get camera permission. Opening app settings',
-          duration: 'short'
-        });
-        await this.openAppSettings();
+        console.warn('[ScannerPermissionService] لا يوجد ملحق متاح لطلب الإذن');
         return false;
       }
       
-      // In browser environment - try accessing the camera
+      // في بيئة المتصفح - محاولة الوصول إلى الكاميرا
       try {
-        console.log('[ScannerPermissionService] Attempting to access camera in browser...');
+        console.log('[ScannerPermissionService] محاولة الوصول إلى الكاميرا في المتصفح...');
         const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { facingMode: 'environment' } 
         });
         
-        // Success! Stop all tracks
+        // إغلاق المسار فوراً لأننا نحتاج فقط التحقق من الإذن
         stream.getTracks().forEach(track => track.stop());
+        
+        console.log('[ScannerPermissionService] تم الحصول على إذن الكاميرا بنجاح');
+        
         return true;
       } catch (error) {
-        console.error('[ScannerPermissionService] Error accessing camera in browser:', error);
+        console.error('[ScannerPermissionService] خطأ في طلب إذن الكاميرا:', error);
         return false;
       }
     } catch (error) {
-      console.error('[ScannerPermissionService] Error requesting camera permission:', error);
+      console.error('[ScannerPermissionService] خطأ في طلب إذن الكاميرا:', error);
       return false;
     }
   }
   
   /**
-   * Open app settings
+   * فتح إعدادات التطبيق
    */
   public async openAppSettings(): Promise<boolean> {
     try {
-      console.log('[ScannerPermissionService] Attempting to open app settings...');
-
-      // Check if we're in a native Capacitor app
+      console.log('[ScannerPermissionService] محاولة فتح إعدادات التطبيق...');
+      
       if (platformService.isNativePlatform()) {
-        // Try using Browser to open settings
-        try {
-          if (platformService.getPlatform() === 'android') {
-            try {
-              // Get app info
-              const appInfo = await App.getInfo();
-              console.log('App info:', appInfo);
-              
-              // Use Browser.open to open settings on Android
-              await Browser.open({
-                url: `package:${appInfo.id || 'app.lovable.foodvault.manager'}`
-              });
-              return true;
-            } catch (e) {
-              console.error('Error opening specific URL:', e);
-              
-              // Alternative attempt for Android
-              try {
-                await Browser.open({ url: 'app-settings:' });
-                return true;
-              } catch (innerError) {
-                console.error('Failed to open general app settings:', innerError);
-              }
-            }
-          } else if (platformService.getPlatform() === 'ios') {
-            // For iOS, try to open app settings
-            try {
-              await Browser.open({ url: 'app-settings:' });
-              return true;
-            } catch (e) {
-              console.error('Error opening app settings on iOS:', e);
-            }
+        // محاولة استخدام واجهة برمجة التطبيق لفتح الإعدادات
+        if (platformService.isPluginAvailable('App')) {
+          // استخدام طريقة آمنة للوصول للإعدادات
+          const appInfo = await App.getInfo();
+          console.log('[ScannerPermissionService] معلومات التطبيق:', appInfo);
+          
+          // استخدام exitApp بدلاً من openUrl (الذي تسبب في الخطأ)
+          try {
+            console.log('[ScannerPermissionService] محاولة استخدام exitApp...');
+            await App.exitApp();
+            return true;
+          } catch (e) {
+            console.error('[ScannerPermissionService] خطأ في محاولة الخروج من التطبيق:', e);
+            return false;
           }
-        } catch (error) {
-          console.error('Error opening app settings:', error);
         }
       }
-      
-      // If we reach here, tell user to open settings manually
-      const platform = platformService.getPlatform();
-      const message = platform === 'android' 
-        ? 'Please open Settings > Apps > Food Vault > Permissions to enable camera'
-        : 'Please open Settings > Privacy > Camera to enable permission for our app';
-      
-      console.log('Showing manual settings instructions:', message);
-      await Toast.show({ text: message, duration: 'long' });
-      
       return false;
     } catch (error) {
-      console.error('Error opening app settings:', error);
+      console.error('[ScannerPermissionService] خطأ في فتح إعدادات التطبيق:', error);
       return false;
     }
   }
 }
 
+// تصدير مثيل واحد من الخدمة للاستخدام في جميع أنحاء التطبيق
 export const scannerPermissionService = new ScannerPermissionService();

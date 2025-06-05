@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useBackButtonHandler } from '@/hooks/mobile/useBackButtonHandler';
 import { useNetworkConnectionHandler } from '@/hooks/mobile/useNetworkConnectionHandler';
 import { AppRoutes } from './routes/AppRoutes';
@@ -8,148 +8,55 @@ import NetworkErrorView from './NetworkErrorView';
 import { scannerPermissionService } from '@/services/scanner/ScannerPermissionService';
 import { Toast } from '@capacitor/toast';
 import { Capacitor } from '@capacitor/core';
-import { App } from '@capacitor/app';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Browser } from '@capacitor/browser';
 
 const MobileApp: React.FC = () => {
   // Use our custom hooks
   useBackButtonHandler();
   const { networkError, handleRetryConnection } = useNetworkConnectionHandler();
-  const [permissionRequested, setPermissionRequested] = useState(false);
   
-  // Request camera permission when the app starts
+  // طلب إذن الكاميرا عند بدء تشغيل التطبيق
   useEffect(() => {
-    const requestCameraPermission = async () => {
+    const requestCameraPermissionOnStartup = async () => {
       try {
-        console.log('MobileApp: Starting app and requesting camera permission');
+        console.log('MobileApp: التحقق من دعم الماسح ومحاولة طلب إذن الكاميرا عند بدء التطبيق');
         
-        // Check if we're in a native app environment
-        if (!Capacitor.isNativePlatform()) {
-          console.log('MobileApp: Not in native platform');
+        // التحقق أولاً من دعم الماسح على الجهاز
+        const isSupported = await scannerPermissionService.isSupported();
+        if (!isSupported) {
+          console.log('MobileApp: الماسح غير مدعوم على هذا الجهاز');
           return;
         }
         
-        // Show a message to the user
-        await Toast.show({
-          text: 'Checking camera permissions...',
-          duration: 'short'
-        });
-        
-        // Check current permission status
-        let hasPermission = false;
-        
-        // Method 1: Use BarcodeScanner if available
-        if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-          console.log('MobileApp: Checking using MLKitBarcodeScanner');
-          const status = await BarcodeScanner.checkPermissions();
-          console.log('MobileApp: BarcodeScanner permission status:', status);
+        // نطلب الإذن مباشرة بدلاً من التحقق منه فقط
+        if (Capacitor.isNativePlatform()) {
+          console.log('MobileApp: جاري طلب إذن الكاميرا عند بدء التطبيق مباشرة');
           
-          hasPermission = status.camera === 'granted';
+          // انتظار قصير لضمان تحميل التطبيق بشكل كامل
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          if (!hasPermission) {
-            // Request permission directly
-            await Toast.show({
-              text: 'App requires camera permission to scan barcodes',
-              duration: 'long'
-            });
-            
-            console.log('MobileApp: Requesting BarcodeScanner permission');
-            const result = await BarcodeScanner.requestPermissions();
-            console.log('MobileApp: BarcodeScanner permission request result:', result);
-            
-            hasPermission = result.camera === 'granted';
-            
-            // If permission is denied, try to open settings
-            if (!hasPermission && result.camera === 'denied') {
-              await Toast.show({
-                text: 'Camera permission denied. Will try to open app settings',
-                duration: 'long'
-              });
-              
-              const appId = 'app.lovable.foodvault.manager';
-              if (Capacitor.getPlatform() === 'android') {
-                // Try to open Android settings using Browser.open
-                try {
-                  await Browser.open({ url: `package:${appId}` });
-                } catch (e) {
-                  console.error('MobileApp: Error opening app settings:', e);
-                  await Toast.show({
-                    text: 'Please manually open app settings and enable camera permission',
-                    duration: 'long'
-                  });
-                }
-              }
-            }
-          }
-        }
-        
-        // Update permission request state
-        setPermissionRequested(true);
-        
-      } catch (error) {
-        console.error('MobileApp: Error requesting camera permission:', error);
-        
-        // Show error message to the user
-        try {
           await Toast.show({
-            text: 'Error requesting camera permission',
+            text: 'التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود',
             duration: 'long'
           });
-        } catch (e) {
-          console.error('MobileApp: Error showing Toast message:', e);
-        }
-      }
-    };
-    
-    // Execute permission request after a short delay to ensure components are initialized
-    const timer = setTimeout(() => {
-      if (!permissionRequested) {
-        requestCameraPermission();
-      }
-    }, 1000);
-    
-    // Clean up timer when component is unmounted
-    return () => clearTimeout(timer);
-  }, [permissionRequested]);
-  
-  // Register app state change listener
-  useEffect(() => {
-    console.log('MobileApp: Registering app state change listener');
-    
-    // Use a temporary variable to store the listener result
-    let appStateChangeListener: any = null;
-    
-    // Add the listener and store it in the temporary variable
-    const setupListener = async () => {
-      try {
-        appStateChangeListener = await App.addListener('appStateChange', ({ isActive }) => {
-          if (isActive) {
-            console.log('MobileApp: App is active, checking camera permissions');
-            // Check permissions when app becomes active
-            scannerPermissionService.checkPermission()
-              .then(hasPermission => {
-                console.log('MobileApp: Camera permission status when resuming:', hasPermission);
-              })
-              .catch(error => {
-                console.error('MobileApp: Error checking camera permission when resuming:', error);
-              });
+          
+          // طلب الإذن مباشرة
+          const granted = await scannerPermissionService.requestPermission();
+          console.log('MobileApp: نتيجة طلب إذن الكاميرا عند بدء التطبيق:', granted);
+          
+          // محاولة طلب الإذن مرة أخرى بعد تأخير قصير إذا لم يتم منحه
+          if (!granted) {
+            setTimeout(async () => {
+              await scannerPermissionService.requestPermission();
+            }, 5000);
           }
-        });
+        }
       } catch (error) {
-        console.error('MobileApp: Error setting up app state listener:', error);
+        console.error('MobileApp: خطأ في طلب إذن الكاميرا عند بدء التطبيق:', error);
       }
     };
     
-    // Execute setup
-    setupListener();
-    
-    // Clean up listener when component is unmounted
-    return () => {
-      if (appStateChangeListener) {
-        appStateChangeListener.remove();
-      }
-    };
+    // تنفيذ الدالة
+    requestCameraPermissionOnStartup();
   }, []);
   
   // Check authentication state

@@ -1,13 +1,12 @@
 
 import { useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { BarcodeFormat, BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Toast } from '@capacitor/toast';
+import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
 import { useToast } from '@/hooks/use-toast';
 
-// Import the augmented type definitions
-import '@/types/barcode-scanner-augmentation.d.ts';
-
+/**
+ * هوك للتعامل مع عمليات المسح في Capacitor
+ */
 export const useCapacitorScanner = (onScan?: (code: string) => void) => {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanError, setScanError] = useState<boolean>(false);
@@ -18,73 +17,65 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
    */
   const startScan = useCallback(async (): Promise<boolean> => {
     try {
-      if (!Capacitor.isNativePlatform()) {
-        console.log('MLKitScanner: ليست منصة أصلية، لن يتم بدء المسح');
+      if (!Capacitor.isNativePlatform() || !Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
+        console.log('المنصة أو الملحق غير متاح');
         return false;
       }
-
-      const hasPermission = await BarcodeScanner.checkPermissions();
-      if (hasPermission.camera !== 'granted') {
-        const requestResult = await BarcodeScanner.requestPermissions();
-        if (requestResult.camera !== 'granted') {
-          toast({
-            title: "فشل في بدء المسح",
-            description: "يجب منح إذن الكاميرا لاستخدام الماسح الضوئي",
-            variant: "destructive"
-          });
-          return false;
-        }
-      }
       
-      // تهيئة الماسح - استخدام الواجهة المعززة
+      setScanError(false);
+      setIsScanning(true);
+      
       try {
+        // تجهيز الماسح
         await BarcodeScanner.showBackground();
         await BarcodeScanner.prepare();
-      } catch (error) {
-        console.error('[useCapacitorScanner] خطأ في تهيئة الماسح:', error);
-      }
-      
-      setIsScanning(true);
-
-      const result = await BarcodeScanner.scan({
-        formats: [
-          BarcodeFormat.QrCode,
-          BarcodeFormat.Ean13,
-          BarcodeFormat.Code128,
-          BarcodeFormat.Code39,
-          BarcodeFormat.UpcA,
-          BarcodeFormat.UpcE
-        ]
-      });
-
-      setIsScanning(false);
-      
-      try {
-        // تصحيح: استدعاء stopScan بدون معاملات
-        await BarcodeScanner.stopScan();
-      } catch (error) {
-        console.error('[useCapacitorScanner] خطأ في إيقاف المسح:', error);
-      }
-
-      if (result.barcodes && result.barcodes.length > 0) {
-        const barcodeValue = result.barcodes[0].rawValue;
-        if (barcodeValue) {
-          onScan?.(barcodeValue);
-          return true;
+        
+        // بدء المسح
+        const result = await BarcodeScanner.scan({
+          formats: [
+            BarcodeFormat.QrCode,
+            BarcodeFormat.Ean13,
+            BarcodeFormat.Code128,
+            BarcodeFormat.Code39,
+            BarcodeFormat.UpcA,
+            BarcodeFormat.UpcE
+          ]
+        });
+        
+        // معالجة النتيجة
+        if (result.barcodes && result.barcodes.length > 0) {
+          const code = result.barcodes[0].rawValue;
+          if (code && onScan) {
+            onScan(code);
+          }
         }
+        
+        return true;
+      } catch (error) {
+        console.error('خطأ في عملية المسح:', error);
+        setScanError(true);
+        
+        toast({
+          title: "خطأ في المسح",
+          description: "حدث خطأ أثناء عملية المسح",
+          variant: "destructive"
+        });
+        
+        return false;
+      } finally {
+        // تنظيف موارد الماسح
+        await stopScan();
       }
-      
-      return false;
     } catch (error) {
-      console.error('[useCapacitorScanner] خطأ في المسح:', error);
+      console.error('خطأ في بدء المسح:', error);
+      setScanError(true);
       setIsScanning(false);
       
-      try {
-        // تصحيح: استدعاء stopScan بدون معاملات
-        await BarcodeScanner.stopScan();
-      } catch (err) {
-        console.error('[useCapacitorScanner] خطأ في إيقاف المسح بعد خطأ:', err);
-      }
+      toast({
+        title: "خطأ في بدء المسح",
+        description: "تعذر بدء عملية المسح",
+        variant: "destructive"
+      });
       
       return false;
     }
@@ -100,16 +91,15 @@ export const useCapacitorScanner = (onScan?: (code: string) => void) => {
       if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
         try {
           await BarcodeScanner.hideBackground();
-          // تصحيح: استدعاء stopScan بدون معاملات
           await BarcodeScanner.stopScan();
         } catch (error) {
-          console.error('[useCapacitorScanner] خطأ في إيقاف المسح:', error);
+          console.error('خطأ في إيقاف المسح:', error);
         }
       }
       
       return true;
     } catch (error) {
-      console.error('[useCapacitorScanner] خطأ في إيقاف المسح:', error);
+      console.error('خطأ في إيقاف المسح:', error);
       return false;
     }
   }, []);

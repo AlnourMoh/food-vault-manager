@@ -3,14 +3,14 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.foodvault.manager',
-  appName: 'Food Vault',
+  appName: 'مخزن الطعام',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    // Use the app without relying on an external server
+    // استخدام التطبيق بدون الاعتماد على خادم خارجي
     url: 'https://b3b6b969-583d-416c-9d8b-788fa375abca.lovableproject.com?forceHideBadge=true',
     cleartext: true,
-    // Allow the app to run offline with cached content
+    // السماح بتشغيل التطبيق في وضع عدم الاتصال مع المحتوى المخزن مؤقتًا
     allowNavigation: ['*'],
     errorPath: 'error.html'
   },
@@ -22,21 +22,20 @@ const config: CapacitorConfig = {
       spinnerColor: "#2E7D32",
     },
     Camera: {
-      promptLabelHeader: "Camera Access Required",
-      promptLabelText: "Food Vault needs camera permission to scan barcodes",
-      promptLabelCancel: "Cancel",
-      promptLabelConfirm: "Allow"
+      promptLabelHeader: "الوصول إلى الكاميرا",
+      promptLabelText: "يحتاج التطبيق إلى إذن الكاميرا لمسح الباركود",
+      promptLabelCancel: "إلغاء",
+      promptLabelConfirm: "السماح"
     },
     CapacitorHttp: {
       enabled: true
     },
-    // Improved scanner settings
+    // تحسين إعدادات الماسح الضوئي
     MLKitBarcodeScanner: {
       formats: [1, 32, 64, 16, 512, 1024], // QR_CODE, EAN_13, CODE_128, CODE_39, UPC_A, UPC_E
       detectionSpeed: "fast",
-      cameraPermissionText: "Food Vault needs camera permission to scan barcodes",
-      lensFacing: "back", // Use back camera by default
-      detectorSize: 0.7 // Set detection area size
+      cameraPermissionText: "التطبيق يحتاج إلى إذن الكاميرا لمسح الباركود",
+      lensFacing: "back" // توجيه الكاميرا الخلفية افتراضياً
     }
   },
   android: {
@@ -67,7 +66,7 @@ const config: CapacitorConfig = {
     permissions: [
       {
         name: "Camera",
-        usageDescription: "Food Vault app needs access to the camera to scan barcodes and read product codes"
+        usageDescription: "تطبيق مخزن الطعام يحتاج إلى الوصول إلى الكاميرا لمسح الباركود وقراءة رموز المنتجات"
       }
     ]
   }

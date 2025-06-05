@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Spinner } from '@/components/ui/spinner';
+import { AlertCircle, Camera, Check } from 'lucide-react';
 
 interface ScannerStatusIndicatorProps {
   isActive: boolean;
@@ -8,33 +8,36 @@ interface ScannerStatusIndicatorProps {
   hasError: boolean;
 }
 
-export const ScannerStatusIndicator: React.FC<ScannerStatusIndicatorProps> = ({
-  isActive,
+export const ScannerStatusIndicator: React.FC<ScannerStatusIndicatorProps> = ({ 
+  isActive, 
   cameraActive,
-  hasError
+  hasError 
 }) => {
+  // تحديد حالة ولون المؤشر
+  let Icon = Camera;
+  let bgColor = "bg-yellow-500";
+  let statusText = "جاري التهيئة...";
+  
   if (hasError) {
-    return null;
+    Icon = AlertCircle;
+    bgColor = "bg-red-500";
+    statusText = "خطأ في المسح";
+  } else if (isActive && cameraActive) {
+    Icon = Camera;
+    bgColor = "bg-green-500";
+    statusText = "جاري المسح...";
+  } else if (cameraActive) {
+    Icon = Camera;
+    bgColor = "bg-blue-500";
+    statusText = "الكاميرا جاهزة";
   }
-
-  if (!cameraActive) {
-    return (
-      <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-        <Spinner size="lg" className="mb-4" />
-        <p className="text-white">جاري تفعيل الكاميرا...</p>
+  
+  return (
+    <div className="absolute top-6 inset-x-0 flex justify-center">
+      <div className={`${bgColor} text-white px-4 py-2 rounded-full flex items-center shadow-lg`}>
+        <Icon className="h-5 w-5 ml-2" />
+        <span className="text-sm font-medium">{statusText}</span>
       </div>
-    );
-  }
-
-  if (!isActive && cameraActive) {
-    return (
-      <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-        <p className="text-white bg-black/50 backdrop-blur-sm py-1 px-3 rounded-full text-sm">
-          المسح متوقف
-        </p>
-      </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 };

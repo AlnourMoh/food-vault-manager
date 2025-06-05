@@ -14,14 +14,10 @@ export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* توجيه مسار تسجيل الدخول إلى المخزون مباشرة */}
-      <Route path="/login" element={<Navigate to="/mobile/inventory" replace />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
       
       {/* الصفحة الرئيسية تعرض المخزون */}
-      <Route path="/" element={<Navigate to="/mobile/inventory" replace />} />
-      <Route path="/mobile" element={<Navigate to="/mobile/inventory" replace />} />
-      
-      {/* مسارات المخزون */}
-      <Route path="/mobile/inventory" element={
+      <Route path="/" element={
         <ProtectedRoute>
           <MobileLayout>
             <MobileInventory />
@@ -29,7 +25,7 @@ export const AppRoutes: React.FC = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="/mobile/scan" element={
+      <Route path="/scan" element={
         <ProtectedRoute>
           <MobileLayout>
             <ProductScan />
@@ -38,7 +34,7 @@ export const AppRoutes: React.FC = () => {
       } />
       
       {/* Add the scan-product route that uses the redirect component */}
-      <Route path="/mobile/scan-product" element={
+      <Route path="/scan-product" element={
         <ProtectedRoute>
           <MobileLayout>
             <ScanProductRedirect />
@@ -46,7 +42,7 @@ export const AppRoutes: React.FC = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="/mobile/products/add" element={
+      <Route path="/products/add" element={
         <ProtectedRoute>
           <MobileLayout>
             <ProductManagement />
@@ -54,18 +50,21 @@ export const AppRoutes: React.FC = () => {
         </ProtectedRoute>
       } />
       
-      <Route path="/mobile/account" element={
+      <Route path="/inventory" element={
+        <ProtectedRoute>
+          <MobileLayout>
+            <MobileInventory />
+          </MobileLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/account" element={
         <ProtectedRoute>
           <MobileLayout>
             <MobileAccount />
           </MobileLayout>
         </ProtectedRoute>
       } />
-      
-      {/* مسارات مباشرة للتوافق مع الإصدارات السابقة */}
-      <Route path="/inventory" element={<Navigate to="/mobile/inventory" replace />} />
-      <Route path="/scan" element={<Navigate to="/mobile/scan" replace />} />
-      <Route path="/scan-product" element={<Navigate to="/mobile/scan-product" replace />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

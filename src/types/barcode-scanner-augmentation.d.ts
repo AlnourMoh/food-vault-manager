@@ -1,18 +1,22 @@
 
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { MLKitScanResult } from './zxing-scanner';
+import { BarcodeFormat, BarcodeScannerPlugin } from './barcode-scanner';
 
-// إضافة الدوال الناقصة إلى واجهة برمجة التطبيقات
+// Extend the existing BarcodeScanner interface from @capacitor-mlkit/barcode-scanning
 declare module '@capacitor-mlkit/barcode-scanning' {
   interface BarcodeScannerPlugin {
-    showBackground(): Promise<void>;
-    hideBackground(): Promise<void>;
+    /**
+     * تحضير الماسح الضوئي للاستخدام
+     */
     prepare(): Promise<void>;
-    isTorchEnabled(): Promise<{ enabled: boolean }>;
-    enableTorch(options: { enable: boolean }): Promise<void>;
-    startScan(): Promise<MLKitScanResult>; // تحديد نوع الإرجاع بوضوح
+    
+    /**
+     * إظهار خلفية الكاميرا
+     */
+    showBackground(): Promise<void>;
+    
+    /**
+     * إخفاء خلفية الكاميرا
+     */
+    hideBackground(): Promise<void>;
   }
 }
-
-export {};
-

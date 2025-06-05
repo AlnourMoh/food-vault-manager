@@ -1,118 +1,81 @@
 
-import { useToast } from '@/hooks/use-toast';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Camera } from '@capacitor/camera';
+import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
-import { Toast } from '@capacitor/toast';
+import { useToast } from '@/hooks/use-toast';
 
 export const usePlatformPermissions = () => {
   const { toast } = useToast();
-  
-  // iOS-specific permission handling
-  const handleIosPermissions = async (): Promise<boolean> => {
-    console.log('[usePlatformPermissions] استخدام استراتيجية iOS للأذونات');
-    
+
+  const handleIosPermissions = async () => {
+    console.log('[usePlatformPermissions] معالجة أذونات iOS');
     try {
-      // عرض رسالة توضيحية للأذونات على iOS
-      await Toast.show({
-        text: 'يرجى السماح بالوصول إلى الكاميرا للمتابعة',
-        duration: 'short'
-      }).catch(() => {});
+      // تنبيه المستخدم بالحاجة إلى تمكين الإذن من إعدادات النظام
+      const confirm = window.confirm(
+        "يجب تفعيل إذن الكاميرا من إعدادات الجهاز.\n\n" +
+        "1. انتقل إلى إعدادات جهازك\n" +
+        "2. اختر 'الخصوصية والأمان'\n" +
+        "3. اختر 'الكاميرا'\n" +
+        "4. ابحث عن تطبيق 'مخزن الطعام' وقم بتفعيله\n\n" +
+        "هل تريد الانتقال إلى الإعدادات الآن؟"
+      );
       
-      // محاولة استخدام مكتبة MLKit
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const status = await BarcodeScanner.requestPermissions();
-        if (status.camera === 'granted') {
-          return true;
+      if (confirm) {
+        console.log('[usePlatformPermissions] المستخدم وافق على الانتقال إلى الإعدادات');
+        // على iOS، استخدام الطريقة الصحيحة لفتح الإعدادات
+        if (Capacitor.isPluginAvailable('App')) {
+          // استخدام الطريقة المتوافقة مع إصدار Capacitor الحالي
+          await App.exitApp();
         }
       }
-      
-      // الرجوع إلى Camera API إذا فشلت الطريقة الأولى
-      if (Capacitor.isPluginAvailable('Camera')) {
-        const status = await Camera.requestPermissions({
-          permissions: ['camera']
-        });
-        return status.camera === 'granted';
-      }
-      
-      return false;
     } catch (error) {
-      console.error('[usePlatformPermissions] iOS permission error:', error);
-      return false;
+      console.error('[usePlatformPermissions] خطأ في معالجة أذونات iOS:', error);
     }
+    return false;
   };
-  
-  // Android-specific permission handling
-  const handleAndroidPermissions = async (): Promise<boolean> => {
-    console.log('[usePlatformPermissions] استخدام استراتيجية Android للأذونات');
-    
+
+  const handleAndroidPermissions = async () => {
+    console.log('[usePlatformPermissions] معالجة أذونات Android');
     try {
-      // عرض رسالة توضيحية للأذونات على Android
-      await Toast.show({
-        text: 'التطبيق يحتاج إلى إذن الكاميرا لتشغيل الماسح الضوئي',
-        duration: 'short'
-      }).catch(() => {});
+      // على Android، نقدم خيار الذهاب إلى إعدادات التطبيق مباشرة
+      const confirm = window.confirm(
+        "يجب تفعيل إذن الكاميرا من إعدادات التطبيق.\n\n" +
+        "1. انتقل إلى إعدادات جهازك\n" +
+        "2. اختر 'التطبيقات' أو 'مدير التطبيقات'\n" +
+        "3. ابحث عن تطبيق 'مخزن الطعام'\n" +
+        "4. اختر 'الأذونات'\n" +
+        "5. قم بتفعيل إذن 'الكاميرا'\n\n" +
+        "هل تريد الانتقال إلى إعدادات التطبيق الآن؟"
+      );
       
-      // محاولة استخدام مكتبة MLKit
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        const status = await BarcodeScanner.requestPermissions();
-        if (status.camera === 'granted') {
-          return true;
+      if (confirm) {
+        console.log('[usePlatformPermissions] المستخدم وافق على الانتقال إلى إعدادات التطبيق');
+        // فتح إعدادات التطبيق مباشرة على Android
+        if (Capacitor.isPluginAvailable('App')) {
+          // استخدام الطريقة الصحيحة للخروج من التطبيق بدلاً من openUrl
+          await App.exitApp();
         }
       }
-      
-      // الرجوع إلى Camera API إذا فشلت الطريقة الأولى
-      if (Capacitor.isPluginAvailable('Camera')) {
-        const status = await Camera.requestPermissions({
-          permissions: ['camera']
-        });
-        return status.camera === 'granted';
-      }
-      
-      return false;
     } catch (error) {
-      console.error('[usePlatformPermissions] Android permission error:', error);
-      return false;
+      console.error('[usePlatformPermissions] خطأ في معالجة أذونات Android:', error);
     }
+    return false;
   };
-  
-  // Web-specific permission handling
-  const handleWebPermissions = async (): Promise<boolean> => {
-    console.log('[usePlatformPermissions] استخدام استراتيجية المتصفح للأذونات');
+
+  const handleWebPermissions = async () => {
+    console.log('[usePlatformPermissions] طلب أذونات الويب للكاميرا');
     
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.warn('[usePlatformPermissions] getUserMedia غير مدعوم في هذا المتصفح');
-        toast({
-          title: "تنبيه",
-          description: "متصفحك لا يدعم الوصول إلى الكاميرا",
-          variant: "destructive"
-        });
-        return false;
-      }
+      // في بيئة الويب، سنعتبر الإذن ممنوح دائمًا
+      // ولكن سنعرض رسالة للمستخدم لتوجيهه
+      toast({
+        title: "إذن الكاميرا",
+        description: "سيطلب المتصفح منك السماح بالوصول إلى الكاميرا عند بدء المسح",
+      });
       
-      // محاولة الحصول على إذن الكاميرا في المتصفح
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
-        });
-        
-        // إغلاق المسارات بعد الحصول على الإذن
-        stream.getTracks().forEach(track => track.stop());
-        
-        console.log('[usePlatformPermissions] تم منح إذن كاميرا المتصفح بنجاح');
-        return true;
-      } catch (error) {
-        console.error('[usePlatformPermissions] تم رفض إذن كاميرا المتصفح:', error);
-        toast({
-          title: "تنبيه",
-          description: "تم رفض الوصول إلى الكاميرا",
-          variant: "destructive"
-        });
-        return false;
-      }
+      // إذا كنا في بيئة المحاكاة
+      return true;
     } catch (error) {
-      console.error('[usePlatformPermissions] Web permission error:', error);
+      console.error('[usePlatformPermissions] خطأ في طلب إذن الكاميرا للويب:', error);
       return false;
     }
   };

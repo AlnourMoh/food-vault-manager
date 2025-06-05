@@ -1,75 +1,64 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { platformService } from '@/services/scanner/PlatformService';
 import { useScannerEnvironment } from '@/hooks/useScannerEnvironment';
 
 /**
- * مكون لاختبار قدرات Capacitor والبيئة
+ * مكون مساعد للتشخيص، يعرض معلومات حول بيئة Capacitor
  */
 const CapacitorTester: React.FC = () => {
-  const [expanded, setExpanded] = useState(false);
+  const [info, setInfo] = useState<{key: string; value: string}[]>([]);
   const environment = useScannerEnvironment();
-
-  return (
-    <div className="border border-slate-200 rounded-md p-3 text-xs bg-slate-50 text-slate-700">
-      <div className="flex justify-between items-center">
-        <h3 className="font-bold">Capacitor Environment Tester</h3>
-        <button 
-          onClick={() => setExpanded(!expanded)} 
-          className="text-blue-500 underline"
-        >
-          {expanded ? "إخفاء التفاصيل" : "عرض التفاصيل"}
-        </button>
-      </div>
+  
+  useEffect(() => {
+    // محاولة اكتشاف إذا كنا في WebView
+    const userAgent = navigator.userAgent;
+    const isWebView = platformService.isWebView();
+    const isNative = platformService.isNativePlatform();
       
-      {expanded && (
-        <div className="mt-2 space-y-2">
-          <div className="flex justify-between">
-            <span>Capacitor Version:</span>
-            <span>{Capacitor.getPlatform()}</span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Is Native Platform:</span>
-            <span className={environment.isNativePlatform ? "text-green-600" : "text-red-600"}>
-              {String(environment.isNativePlatform)}
-            </span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Is WebView:</span>
-            <span className={environment.isWebView ? "text-green-600" : "text-red-600"}>
-              {String(environment.isWebView)}
-            </span>
-          </div>
-          
-          <div className="flex justify-between">
-            <span>Is Effectively Native:</span>
-            <span className={environment.isEffectivelyNative ? "text-green-600" : "text-red-600"}>
-              {String(environment.isEffectivelyNative)}
-            </span>
-          </div>
-          
-          <div className="mt-2 pt-2 border-t border-slate-200">
-            <h4 className="font-bold mb-1">Available Plugins:</h4>
-            <ul className="space-y-1">
-              {Object.entries(environment.availablePlugins).map(([plugin, available]) => (
-                <li key={plugin} className="flex justify-between">
-                  <span>{plugin}:</span>
-                  <span className={available ? "text-green-600" : "text-red-600"}>
-                    {String(available)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="mt-2 pt-2 border-t border-slate-200 break-words text-[10px]">
-            <h4 className="font-bold mb-1">User Agent:</h4>
-            <p>{navigator.userAgent}</p>
-          </div>
-        </div>
-      )}
+    // جمع معلومات التشخيص
+    const diagnosticInfo = [
+      { key: "Capacitor.isNativePlatform()", value: `${Capacitor.isNativePlatform()}` },
+      { key: "platformService.isNativePlatform()", value: `${isNative}` },
+      { key: "useScannerEnvironment.isNativePlatform", value: `${environment.isNativePlatform}` },
+      { key: "Capacitor.platform", value: Capacitor.getPlatform() },
+      { key: "platformService.getPlatform()", value: platformService.getPlatform() },
+      { key: "WebView (detected)", value: `${isWebView}` },
+      { key: "WebView (hook)", value: `${environment.isWebView}` },
+      { key: "Window.Capacitor exists", value: `${typeof window !== 'undefined' && !!(window as any).Capacitor}` },
+      { key: "Plugin: MLKitBarcodeScanner", value: `${Capacitor.isPluginAvailable('MLKitBarcodeScanner')}` },
+      { key: "Plugin: Camera", value: `${Capacitor.isPluginAvailable('Camera')}` },
+      { key: "Plugin: BarcodeScanner", value: `${Capacitor.isPluginAvailable('BarcodeScanner')}` },
+      { key: "Plugin: App", value: `${Capacitor.isPluginAvailable('App')}` },
+      { key: "User Agent", value: userAgent },
+      { key: "Document: WebView", value: "WV" in navigator ? "مكتشف" : "غير مكتشف" }
+    ];
+    
+    setInfo(diagnosticInfo);
+    
+    // طباعة معلومات التشخيص في وحدة التحكم
+    console.log('CapacitorTester: معلومات التشخيص:', 
+      diagnosticInfo.reduce((obj, item) => {
+        obj[item.key] = item.value;
+        return obj;
+      }, {} as Record<string, string>)
+    );
+  }, [environment.isNativePlatform, environment.isWebView]);
+  
+  return (
+    <div className="bg-gray-100 p-3 rounded-md text-xs overflow-auto max-h-[300px] dir-ltr">
+      <h4 className="font-bold mb-2 text-gray-700">Capacitor Diagnostic:</h4>
+      <table className="w-full text-left">
+        <tbody>
+          {info.map((item, index) => (
+            <tr key={index} className={index % 2 === 0 ? "bg-gray-200" : ""}>
+              <td className="px-2 py-1 font-medium">{item.key}:</td>
+              <td className="px-2 py-1 break-all">{item.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

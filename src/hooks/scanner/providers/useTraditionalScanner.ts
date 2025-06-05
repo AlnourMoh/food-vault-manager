@@ -1,3 +1,4 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { useScannerUI } from '../useScannerUI';
 
@@ -75,8 +76,7 @@ export const useTraditionalScanner = () => {
       if (window.Capacitor?.isPluginAvailable('BarcodeScanner')) {
         const { BarcodeScanner } = await import('@capacitor-community/barcode-scanner');
         await BarcodeScanner.showBackground().catch(() => {});
-        // تصحيح: إزالة المعامل من دالة stopScan
-        await BarcodeScanner.stopScan();
+        await BarcodeScanner.stopScan().catch(() => {});
       }
       
       throw error;
@@ -95,8 +95,9 @@ export const useTraditionalScanner = () => {
         await BarcodeScanner.showBackground().catch((e) => {
           console.log("[useTraditionalScanner] تعذر إظهار الخلفية:", e);
         });
-        // تصحيح: إزالة المعامل من دالة stopScan
-        await BarcodeScanner.stopScan();
+        await BarcodeScanner.stopScan().catch((e) => {
+          console.log("[useTraditionalScanner] تعذر إيقاف المسح:", e);
+        });
       }
     } catch (error) {
       console.error('[useTraditionalScanner] خطأ في إيقاف المسح:', error);

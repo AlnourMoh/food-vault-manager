@@ -1,146 +1,141 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Capacitor } from '@capacitor/core';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import '@/types/barcode-scanner-augmentation.d.ts';
+import { useCameraPermissions } from '@/hooks/useCameraPermissions';
+import { useMLKitScanner } from './providers/useMLKitScanner';
+import { useScannerUI } from './useScannerUI';
 
-export const useScannerState = (autoStart = false) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [isScanning, setIsScanning] = useState(autoStart);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
+interface UseScannerStateProps {
+  onScan: (code: string) => void;
+  onClose: () => void;
+  autoActivateCamera?: boolean;
+}
+
+export const useScannerState = ({ onScan, onClose, autoActivateCamera = false }: UseScannerStateProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
+  const [isScanningActive, setIsScanningActive] = useState(false);
+  const [isManualEntry, setIsManualEntry] = useState(false);
+  const [hasScannerError, setHasScannerError] = useState(false);
+  
+  const { hasPermission, requestPermission } = useCameraPermissions();
+  const { isScanning, startMLKitScan, stopMLKitScan } = useMLKitScanner();
+  const { setupScannerBackground, restoreUIAfterScanning, cleanup } = useScannerUI();
+  
   const { toast } = useToast();
-
-  // تهيئة الماسح
-  const initializeScanner = useCallback(async () => {
-    try {
-      console.log('[useScannerState] تهيئة الماسح...');
-      
-      if (!Capacitor.isNativePlatform()) {
-        console.log('[useScannerState] ليست منصة أصلية، لن يتم تهيئة الماسح');
-        setIsLoading(false);
-        return;
-      }
-      
-      // التحقق من توفر الملحق
-      if (!Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        console.log('[useScannerState] ملحق المسح غير متوفر');
-        setIsLoading(false);
-        return;
-      }
-      
-      // التحقق من دعم المسح
-      try {
-        const { supported } = await BarcodeScanner.isSupported();
-        console.log('[useScannerState] هل المسح مدعوم؟', supported);
-        
-        if (!supported) {
-          setErrorMessage('الجهاز لا يدعم مسح الباركود');
-          setHasError(true);
-          setIsLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.warn('[useScannerState] خطأ في التحقق من دعم المسح:', error);
-      }
-      
-      // التحقق من أذونات الكاميرا
-      try {
-        const permissionStatus = await BarcodeScanner.checkPermissions();
-        if (permissionStatus.camera !== 'granted') {
-          console.log('[useScannerState] طلب إذن الكاميرا');
-          const result = await BarcodeScanner.requestPermissions();
-          if (result.camera !== 'granted') {
-            setErrorMessage('تم رفض إذن الكاميرا');
-            setHasError(true);
-            setIsLoading(false);
-            return;
-          }
-        }
-      } catch (permError) {
-        console.warn('[useScannerState] خطأ في فحص/طلب الإذن:', permError);
-      }
-      
-      // تحضير الماسح
-      try {
-        console.log('[useScannerState] تحضير الماسح...');
-        await BarcodeScanner.prepare();
-        console.log('[useScannerState] تم تحضير الماسح بنجاح');
-        
-        // محاولة إظهار خلفية الكاميرا
-        try {
-          await BarcodeScanner.hideBackground();
-          await BarcodeScanner.showBackground();
-          setCameraActive(true);
-          console.log('[useScannerState] تم إظهار خلفية الكاميرا بنجاح');
-        } catch (backgroundError) {
-          console.warn('[useScannerState] خطأ في إظهار خلفية الكاميرا:', backgroundError);
-        }
-      } catch (error) {
-        console.warn('[useScannerState] خطأ في تحضير الماسح:', error);
-      }
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error('[useScannerState] خطأ في تهيئة الماسح:', error);
-      setHasError(true);
-      setErrorMessage('تعذر تهيئة الماسح الضوئي');
-      setIsLoading(false);
-    }
-  }, []);
-
-  // إنهاء عملية المسح وتحرير الموارد
-  const cleanupScanner = useCallback(async () => {
-    try {
-      console.log('[useScannerState] تنظيف الماسح');
-      setIsScanning(false);
-      setCameraActive(false);
-      
-      if (Capacitor.isPluginAvailable('MLKitBarcodeScanner')) {
-        try {
-          // إيقاف الفلاش إذا كان مفعلاً
-          await BarcodeScanner.enableTorch({ enable: false }).catch(() => {});
-          
-          // إخفاء خلفية الماسح
-          await BarcodeScanner.hideBackground().catch(() => {});
-          
-          // إيقاف المسح
-          await BarcodeScanner.stopScan().catch(() => {});
-          
-          console.log('[useScannerState] تم إيقاف المسح بنجاح');
-        } catch (error) {
-          console.error('[useScannerState] خطأ في إيقاف المسح:', error);
-        }
-      }
-    } catch (error) {
-      console.error('[useScannerState] خطأ في تنظيف الماسح:', error);
-    }
-  }, []);
-
-  // تهيئة الماسح عند تحميل المكون
+  
+  // تفعيل الكاميرا تلقائيًا إذا تم طلب ذلك
   useEffect(() => {
-    initializeScanner();
-    
-    // تنظيف الموارد عند إزالة المكون
+    if (autoActivateCamera && !isScanningActive) {
+      console.log('[useScannerState] تفعيل الكاميرا تلقائيًا حسب الإعداد');
+      startScan().catch(error => {
+        console.error('[useScannerState] خطأ في التفعيل التلقائي للكاميرا:', error);
+      });
+    }
+  }, [autoActivateCamera]);
+  
+  // بدء المسح
+  const startScan = useCallback(async () => {
+    try {
+      console.log('[useScannerState] بدء المسح...');
+      setIsLoading(true);
+      
+      // التحقق من الأذونات وطلبها إذا لزم الأمر
+      if (hasPermission === false) {
+        const granted = await requestPermission();
+        if (!granted) {
+          console.log('[useScannerState] لم يتم منح إذن الكاميرا');
+          setIsLoading(false);
+          return false;
+        }
+      }
+      
+      // إعداد الواجهة للمسح
+      await setupScannerBackground();
+      setIsScanningActive(true);
+      setIsLoading(false);
+      
+      // بدء المسح
+      const success = await startMLKitScan((code) => {
+        console.log('[useScannerState] تم المسح بنجاح:', code);
+        setLastScannedCode(code);
+        onScan(code);
+      });
+      
+      if (!success) {
+        console.log('[useScannerState] فشل المسح');
+        stopScan();
+        setHasScannerError(true);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('[useScannerState] خطأ في بدء المسح:', error);
+      setIsLoading(false);
+      stopScan();
+      setHasScannerError(true);
+      return false;
+    }
+  }, [hasPermission, requestPermission, onScan, setupScannerBackground, startMLKitScan, stopMLKitScan]);
+
+  // إيقاف المسح
+  const stopScan = useCallback(async () => {
+    try {
+      console.log('[useScannerState] إيقاف المسح...');
+      setIsScanningActive(false);
+      
+      // إيقاف المسح في MLKit
+      await stopMLKitScan();
+      
+      // تنظيف واجهة المستخدم
+      await restoreUIAfterScanning();
+      
+      return true;
+    } catch (error) {
+      console.error('[useScannerState] خطأ في إيقاف المسح:', error);
+      return false;
+    }
+  }, [stopMLKitScan, restoreUIAfterScanning]);
+
+  // وظيفة للتعامل مع الإدخال اليدوي
+  const handleManualEntry = useCallback(() => {
+    setIsManualEntry(true);
+    stopScan();
+  }, [stopScan]);
+
+  // وظيفة لإلغاء الإدخال اليدوي
+  const handleManualCancel = useCallback(() => {
+    setIsManualEntry(false);
+  }, []);
+
+  // وظيفة لإعادة المحاولة بعد الخطأ
+  const handleRetry = useCallback(() => {
+    setHasScannerError(false);
+    startScan();
+  }, [startScan]);
+
+  // تنظيف عند إلغاء تحميل المكون
+  useEffect(() => {
     return () => {
-      cleanupScanner();
+      console.log('[useScannerState] تنظيف المكون...');
+      stopScan().catch(e => 
+        console.error('[useScannerState] خطأ في إيقاف المسح عند التنظيف:', e)
+      );
     };
-  }, [initializeScanner, cleanupScanner]);
+  }, [stopScan]);
 
   return {
     isLoading,
-    setIsLoading,
-    hasError,
-    setHasError,
-    errorMessage,
-    setErrorMessage,
-    isScanning,
-    setIsScanning,
-    cameraActive,
-    setCameraActive,
-    initializeScanner,
-    cleanupScanner
+    hasPermission,
+    isScanningActive,
+    lastScannedCode,
+    isManualEntry,
+    hasScannerError,
+    startScan,
+    stopScan,
+    requestPermission,
+    handleManualEntry,
+    handleManualCancel,
+    handleRetry
   };
 };

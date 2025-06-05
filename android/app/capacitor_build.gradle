@@ -15,7 +15,6 @@ dependencies {
     implementation project(':capacitor-camera')
     implementation project(':capacitor-mlkit-barcode-scanning')
     implementation project(':capacitor-toast')
-    implementation project(':capacitor-browser')
 
     // Fix compatibility issues
     implementation 'androidx.appcompat:appcompat:1.6.1'
