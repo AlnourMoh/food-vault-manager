@@ -23,9 +23,7 @@ export const DesktopRoutes = () => {
       ))}
       
       {/* Restaurant Routes */}
-      {RestaurantRoutes.map((route, index) => (
-        <Fragment key={`restaurant-route-${index}`}>{route}</Fragment>
-      ))}
+      <Route path="/restaurant/*" element={<RestaurantRoutes />} />
       
       {/* Redirect legacy routes */}
       <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
