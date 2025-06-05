@@ -1,44 +1,30 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ProductBarcodes from './pages/ProductBarcodes';
-import CameraTest from './pages/CameraTest';
-import BarcodeScannerTest from './pages/BarcodeScannerTest';
-import SystemTest from './pages/SystemTest';
+import { BrowserRouter as Router } from 'react-router-dom';
+import MobileApp from './components/mobile/MobileApp';
+import { Toaster } from './components/ui/toaster';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Import Tailwind CSS
 import './index.css';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/product/:productId/barcodes" element={<ProductBarcodes />} />
-        <Route path="/restaurant/product/:productId/barcodes" element={<ProductBarcodes />} />
-        <Route path="/camera-test" element={<CameraTest />} />
-        <Route path="/barcode-scanner" element={<BarcodeScannerTest />} />
-        <Route path="/system-test" element={<SystemTest />} />
-        <Route path="/" element={
-          <div className="container py-8">
-            <h1 className="text-3xl font-bold mb-6">اختبار مكونات التطبيق</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a href="/system-test" className="p-6 bg-white rounded-lg border hover:shadow-md transition-shadow">
-                <h2 className="text-xl font-bold mb-2">اختبار النظام</h2>
-                <p className="text-gray-600">فحص شامل لحالة النظام والأذونات</p>
-              </a>
-              <a href="/barcode-scanner" className="p-6 bg-white rounded-lg border hover:shadow-md transition-shadow">
-                <h2 className="text-xl font-bold mb-2">اختبار قارئ الباركود</h2>
-                <p className="text-gray-600">اختبار قراءة الباركود باستخدام كاميرا الجهاز</p>
-              </a>
-              <a href="/camera-test" className="p-6 bg-white rounded-lg border hover:shadow-md transition-shadow">
-                <h2 className="text-xl font-bold mb-2">اختبار الكاميرا</h2>
-                <p className="text-gray-600">اختبار إمكانيات الكاميرا والأذونات</p>
-              </a>
-            </div>
-          </div>
-        } />
-      </Routes>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <MobileApp />
+        <Toaster />
+      </Router>
+    </QueryClientProvider>
   );
 }
 
