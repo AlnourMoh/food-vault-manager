@@ -25,6 +25,13 @@ export const DesktopRoutes = () => {
       {/* Restaurant Routes */}
       <Route path="/restaurant/*" element={<RestaurantRoutes />} />
       
+      {/* Mobile App Routes */}
+      <Route path="/mobile/*" element={<MobileApp />} />
+      
+      {/* Direct mobile routes for backward compatibility */}
+      <Route path="/mobile/inventory" element={<MobileInventory />} />
+      <Route path="/mobile/scan" element={<ProductScan />} />
+      
       {/* Redirect legacy routes */}
       <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/restaurants" element={<Navigate to="/admin/restaurants" replace />} />
@@ -37,9 +44,6 @@ export const DesktopRoutes = () => {
       {/* Direct scan routes for both desktop and mobile access */}
       <Route path="/scan" element={<ProductScan />} />
       <Route path="/scan-product" element={<Navigate to="/scan" replace />} />
-      
-      {/* Mobile route for desktop testing */}
-      <Route path="/mobile/*" element={<MobileApp />} />
       
       {/* Catch-all route */}
       <Route path="*" element={<NotFound />} />

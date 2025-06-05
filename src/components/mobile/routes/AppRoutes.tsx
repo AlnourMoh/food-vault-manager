@@ -14,10 +14,19 @@ export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* توجيه مسار تسجيل الدخول إلى المخزون مباشرة */}
-      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/login" element={<Navigate to="/inventory" replace />} />
       
       {/* الصفحة الرئيسية تعرض المخزون */}
       <Route path="/" element={
+        <ProtectedRoute>
+          <MobileLayout>
+            <MobileInventory />
+          </MobileLayout>
+        </ProtectedRoute>
+      } />
+      
+      {/* مسارات المخزون */}
+      <Route path="/inventory" element={
         <ProtectedRoute>
           <MobileLayout>
             <MobileInventory />
@@ -46,14 +55,6 @@ export const AppRoutes: React.FC = () => {
         <ProtectedRoute>
           <MobileLayout>
             <ProductManagement />
-          </MobileLayout>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/inventory" element={
-        <ProtectedRoute>
-          <MobileLayout>
-            <MobileInventory />
           </MobileLayout>
         </ProtectedRoute>
       } />
